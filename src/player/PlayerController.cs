@@ -17,25 +17,43 @@ public partial class PlayerController : CharacterBody2D
     public int CurrentXp { get; private set; }
     public int XpToNextLevel { get; private set; } = 20;
 
+    private static readonly Texture2D CharTex =
+        GD.Load<Texture2D>("res://assets/kenney_topdown_rpg/Roguelike Characters Pack/Spritesheet/roguelikeChar_transparent.png");
+
     public override void _Ready()
     {
         var manager = GetNodeOrNull<Character.CharacterManager>("/root/CharacterManager");
+        Character.CharacterType type = Character.CharacterType.Warrior;
         if (manager?.SelectedCharacter != null)
         {
             var (hp, spd, dmg) = manager.SelectedCharacter.BaseStats();
             MaxHealth = hp;
             Speed = spd;
+            type = manager.SelectedCharacter.Type;
             GetNodeOrNull<Weapon.WeaponController>("Weapon")?.SetDamage(dmg);
         }
 
         CurrentHealth = MaxHealth;
         AddToGroup("player");
-        QueueRedraw();
+        SetupSprite(type);
     }
 
-    public override void _Draw()
+    private void SetupSprite(Character.CharacterType type)
     {
-        DrawCircle(Vector2.Zero, 16f, Colors.CornflowerBlue);
+        int row = type switch
+        {
+            Character.CharacterType.Warrior => 3,
+            Character.CharacterType.Rogue   => 0,
+            Character.CharacterType.Mage    => 5,
+            _                               => 0
+        };
+        AddChild(new Sprite2D
+        {
+            Texture       = CharTex,
+            RegionEnabled = true,
+            RegionRect    = new Rect2(0, row * 17, 16, 16),
+            Scale         = new Vector2(2f, 2f)
+        });
     }
 
     public override void _PhysicsProcess(double delta)

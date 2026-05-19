@@ -9,6 +9,8 @@ public partial class EnemyController : CharacterBody2D
         GD.Load<PackedScene>("res://src/xp/xp_gem.tscn");
     private static readonly PackedScene CoinScene =
         GD.Load<PackedScene>("res://src/meta/coin_pickup.tscn");
+    private static readonly Texture2D EnemyTex =
+        GD.Load<Texture2D>("res://assets/kenney_topdown_rpg/Topdown Shooter (Pixel)/Tilesheet/tilesheet_transparent.png");
 
     [Signal] public delegate void DiedEventHandler(Vector2 position);
 
@@ -26,12 +28,13 @@ public partial class EnemyController : CharacterBody2D
         _currentHealth = MaxHealth;
         _player = GetTree().GetFirstNodeInGroup("player") as CharacterBody2D;
         AddToGroup("enemies");
-        QueueRedraw();
-    }
-
-    public override void _Draw()
-    {
-        DrawCircle(Vector2.Zero, 14f, Colors.Tomato);
+        AddChild(new Sprite2D
+        {
+            Texture       = EnemyTex,
+            RegionEnabled = true,
+            RegionRect    = new Rect2(476, 102, 16, 16),
+            Scale         = new Vector2(2f, 2f)
+        });
     }
 
     public override void _PhysicsProcess(double delta)
