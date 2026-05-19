@@ -1,0 +1,26 @@
+# Godot
+.godot/
+*.translation
+
+# Mono/C#
+.mono/
+data_*/
+mono_crash.*.json
+bin/
+obj/
+*.user
+*.suo
+*.csproj.user
+
+# VS/Rider
+.vs/
+.idea/
+*.DotSettings.user
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local tooling
+.claude/
+*.csproj.old
