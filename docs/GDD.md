@@ -16,7 +16,7 @@ A top-down auto-attack horde survival game. The player takes a persistent charac
 
 ### Combat
 - **Auto-attack only** — no manual firing
-- Single weapon per run, upgradeable via level-up choices
+- Single weapon per character; damage scales with character level
 - Weapon targets nearest enemy automatically on a cooldown timer
 
 ### Interaction
@@ -75,55 +75,52 @@ A run cannot start without a selected character.
 
 ## Run Structure
 
-- **Duration:** Fixed time limit (~20-30 min) [TBD exact value]
+- **Duration:** Fixed time limit (target ~5 min; currently 5s for testing)
 - **Difficulty scaling:** Enemy count, speed, and variety increase over time
 - **Run end conditions:**
-  - Player dies → run over, partial rewards
-  - Timer expires → final boss spawns → defeat boss to win run
-- **Run rewards:** Coins earned carry over to meta layer
+  - Player dies → run over
+  - Timer expires → run won [boss mechanic TBD]
+- **Run rewards:** Level, XP, and coins earned persist to the character; player returns to the character screen
 
 ---
 
 ## Enemies
 
-| Type    | Behavior                    | Notes      |
-|---------|-----------------------------|------------|
-| [TBD]   | Chase player (basic)        | Common     |
-| [TBD]   | Ranged attacker             | Uncommon   |
-| [TBD]   | Boss (end of run)           | Unique     |
+| Type     | Behavior          | Unlocks | Notes                        |
+|----------|-------------------|---------|------------------------------|
+| Standard | Chase player      | 0:00    | Balanced — grey sprite       |
+| Runner   | Chase player fast | 1:00    | Fragile, high speed — purple |
+| Tank     | Chase player slow | 2:00    | High HP, high damage — orange|
+| [TBD]    | Ranged attacker   | —       | Future type                  |
+| [TBD]    | Boss              | Run end | Spawns when timer expires    |
 
-Difficulty scales with elapsed time — more enemies, faster spawns, tougher variants.
+All types scale with elapsed time — speed and HP increase per minute. Spawn rate also accelerates.
 
 ---
 
 ## Meta-Progression (Between Runs)
 
-### Character-Level Progression
-Each character independently accumulates permanent stat bonuses between runs:
+### Level Bonuses (automatic)
+Each level gained during a run permanently improves the character:
 
-| Bonus           | Effect                      |
-|-----------------|-----------------------------|
-| +Max Health     | Raises HP ceiling for runs  |
-| +Speed          | Increases movement speed    |
-| +Damage         | Increases weapon damage     |
+| Per level gained | Effect                  |
+|------------------|-------------------------|
+| +5 Max Health    | Permanent HP increase   |
+| +1 Weapon Damage | Permanent damage increase|
 
-Bonuses are funded by currency earned in runs and are permanent to the character.
+These stack across all runs. A level-10 character has +45 HP and +9 damage above their archetype base.
 
-### Gear Slots
-Equipment persisted between runs. Equipped before starting a run.
+### Coin-Funded Upgrades (purchased between runs)
+Spend coins on the character screen between runs:
 
-| Slot       | Effect type          |
-|------------|----------------------|
-| Weapon     | Determines starting weapon / attack style |
-| Armour     | Defence / HP modifiers |
-| Accessory  | Passive ability or stat modifier |
+| Upgrade      | Cost (per tier) | Max tiers |
+|--------------|-----------------|-----------|
+| +10 Max HP   | 50 / 100 / 150 / 200 / 250 | 5 |
+| +10 Speed    | 50 / 100 / …   | 5         |
+| +2 Damage    | 50 / 100 / …   | 5         |
 
-### Permanent Upgrades
-Spend coins at a permanent upgrade shop (per-character). Examples:
-- Max health increase
-- Move speed increase
-- Starting XP boost
-- Coin magnet range
+### [TBD] Gear Slots
+Equipment persisted between runs — weapons, armour, accessories. Not yet implemented.
 
 ---
 
@@ -137,17 +134,18 @@ Spend coins at a permanent upgrade shop (per-character). Examples:
 
 ### Menus
 - **Main Menu** → title screen, Play button
-- **Character Select** → list characters, create new (name + archetype), delete, start run
-- Pause menu
-- Run results / rewards screen
-- Per-character upgrade screen (between runs)
+- **Character Select** → list characters, create new (name + archetype), delete; clicking a character navigates to their screen
+- **Character Screen** → character stats, Start Run button, future home of upgrades / gear / crafting
+- Run results overlay → shown at run end; return button goes back to character screen
+- [TBD] Pause menu
 
 ---
 
 ## Win / Lose Conditions
 
-| Condition        | Outcome                                  |
-|------------------|------------------------------------------|
-| Player HP = 0    | Run lost — partial coin rewards          |
-| Timer expires    | Boss spawns — defeat to complete the run |
-| Boss defeated    | Run won — full rewards                   |
+| Condition     | Outcome                                                        |
+|---------------|----------------------------------------------------------------|
+| Player HP = 0 | Run lost — level and XP still saved; coins earned still saved |
+| Timer expires | Run won — all rewards saved; [boss mechanic TBD]              |
+
+In both cases the player is returned to the character screen. There is no death penalty — every run makes the character stronger regardless of outcome.

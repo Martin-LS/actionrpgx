@@ -65,14 +65,11 @@ Main (Node)
 │   ├── Camera2D
 │   └── Weapon (Node)
 ├── Background (Node2D)
-├── Hud (CanvasLayer)
+├── Hud (CanvasLayer)          ← health bar, XP bar, level, coin counter, run timer
 ├── EnemySpawner (Node)
-├── UpgradePicker (CanvasLayer)  ← shown on LeveledUp; pauses tree
-├── RunSession (Node)            ← tracks elapsed time; emits RunEnded(won, level, elapsed)
-└── RunEndOverlay (CanvasLayer)  ← shown on RunEnded; returns to main menu
+├── RunSession (Node)          ← tracks elapsed time; emits RunEnded(won, level, elapsed)
+└── RunEndOverlay (CanvasLayer)← shown on RunEnded; returns to character_screen.tscn
 ```
-
-> Provisional — update as scenes are created.
 
 ---
 
@@ -89,7 +86,8 @@ Main (Node)
 | Hud               | Health bar, XP bar, level, coin counter, run timer           | `res://src/hud/`          | ✅ done |
 | RunSession        | Run timer, win/lose detection, emits RunEnded signal         | `res://src/run/`          | ✅ done |
 | UpgradePicker     | (removed from scene — code kept dormant)                     | `res://src/ui/`           | ❌ removed |
-| RunEndOverlay     | Show win/die results, flush run to character, return to menu | `res://src/ui/`           | ✅ done |
+| CharacterScreen   | Per-character hub: stats display, Start Run, future upgrades | `res://src/ui/`           | ✅ done |
+| RunEndOverlay     | Show win/die results, flush run to character, return to character screen | `res://src/ui/` | ✅ done |
 | CoinPickup        | Coin drop (25% on enemy death) — reports to RunSession       | `res://src/meta/`         | ✅ done |
 | MetaProgression   | Per-character coin bank + permanent upgrades (HP/Speed/DMG)  | `res://src/meta/`, `src/ui/` | ✅ done |
 | HealthPickup      | Health drop (10% on enemy death) — heals player on contact   | `res://src/health/`       | ✅ done |
@@ -144,34 +142,26 @@ If multi-user slots or cloud saves are ever needed, evaluate wrapping save data 
 
 ---
 
-## Weapon Upgrade Path
+## Weapon
 
-Weapon is a single entity that evolves. On level-up, one upgrade choice may advance the weapon along its path.
+Single weapon per character. Damage is set at run start from `CharacterData.BaseStats()` plus level bonuses (`+1 per level above 1`). `WeaponController` exposes `SetDamage(float)` and `AddDamage(float)`.
 
-```
-WeaponData
-  └── UpgradePath: WeaponUpgradeData[]
-        [0] → Stage 1 (base)
-        [1] → Stage 2 (faster fire)
-        [2] → Stage 3 (piercing)
-        [3] → Stage 4 (AoE explosion)
-```
-
-Current stage index stored on the player/weapon instance during the run.
+[TBD] Weapon upgrade path (stages, piercing, AoE) — deferred until UpgradePicker or equivalent is reintroduced.
 
 ---
 
 ## Enemy Spawner — Wave Scaling
 
 Time-driven, no fixed waves. `EnemySpawner` recalculates each spawn:
-- **Spawn rate** — increases with time; `InitialInterval / (1 + minutes * 0.5)`, clamped to `MinInterval = 0.3s`
+- **Spawn rate** — starts immediately at t=0; interval = `InitialInterval / (1 + minutes * 0.5)`, clamped to `MinInterval = 0.3s`
+- **Spawn position** — fixed-radius ring (350px) around the player; viewport-size-independent
 - **Enemy types** — unlocked by elapsed minutes, chosen randomly from the available pool:
 
 | Type     | Sprite row | Unlocks | Speed | HP | Damage |
 |----------|-----------|---------|-------|----|--------|
-| Standard | 6 (grey)  | 0:00    | 80    | 30 | 10     |
-| Runner   | 4 (purple)| 1:00    | 140   | 15 | 8      |
-| Tank     | 2 (orange)| 2:00    | 45    | 80 | 18     |
+| Standard | 6 (grey)  | 0:00    | 130   | 30 | 10     |
+| Runner   | 4 (purple)| 1:00    | 200   | 15 | 8      |
+| Tank     | 2 (orange)| 2:00    | 80    | 80 | 18     |
 
 All types receive a time-scaling bonus on top: `Speed += 10 * minutes`, `MaxHealth += 5 * (int)minutes`.
 
@@ -211,10 +201,7 @@ Systems communicate via signals only — no direct cross-system method calls.
 | `HealthChanged(int)`    | Player         | HUD, GameManager                 |
 | `PlayerDied`            | Player         | RunSession (end run)             |
 | `LeveledUp(int)`        | Player         | Hud (level display)              |
-| `UpgradeChosen(data)`   | UpgradePicker  | Player, WeaponController         |
-| `EnemyDied(position)`   | Enemy          | DropSpawner, RunSession (XP)     |
-| `XpCollected(int)`      | Pickup         | RunSession                       |
-| `CoinCollected(int)`    | Pickup         | RunSession                       |
+| `EnemyDied(position)`   | Enemy          | (reserved — not yet wired)       |
 | `CoinChanged(int)`      | RunSession     | Hud (coin counter)               |
 | `RunTimerExpired`       | RunSession     | EnemySpawner (spawn boss)        |
 | `RunEnded(result)`      | RunSession     | SaveManager (flush coins/rewards)|
