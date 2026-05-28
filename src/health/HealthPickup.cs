@@ -2,7 +2,7 @@ using Godot;
 
 namespace Godot1.Health;
 
-public partial class HealthPickup : Area2D
+public partial class HealthPickup : Area3D
 {
     [Export] public int HealAmount = 15;
 
@@ -12,16 +12,19 @@ public partial class HealthPickup : Area2D
     public override void _Ready()
     {
         BodyEntered += OnBodyEntered;
-        AddChild(new Sprite2D
+        AddChild(new Sprite3D
         {
             Texture       = ItemTex,
             RegionEnabled = true,
             RegionRect    = new Rect2(510, 153, 16, 16),
-            Scale         = new Vector2(1.5f, 1.5f)
+            PixelSize     = 1.5f,
+            Billboard     = BaseMaterial3D.BillboardModeEnum.Enabled,
+            Transparent   = true,
+            AlphaCut      = SpriteBase3D.AlphaCutMode.Discard,
         });
     }
 
-    private void OnBodyEntered(Node2D body)
+    private void OnBodyEntered(Node3D body)
     {
         if (body is not Player.PlayerController pc) return;
         pc.Heal(HealAmount);

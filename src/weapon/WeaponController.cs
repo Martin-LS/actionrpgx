@@ -30,8 +30,9 @@ public partial class WeaponController : Node
 
     private void FireAt(Enemies.EnemyController target)
     {
-        var origin = GetParent<Node2D>().GlobalPosition;
-        var direction = (target.GlobalPosition - origin).Normalized();
+        var origin = GetParent<Node3D>().GlobalPosition;
+        var diff = target.GlobalPosition - origin;
+        var direction = new Vector3(diff.X, 0f, diff.Z).Normalized();
 
         var projectile = ProjectileScene.Instantiate<Projectile>();
         projectile.GlobalPosition = origin;
@@ -45,7 +46,7 @@ public partial class WeaponController : Node
         Enemies.EnemyController? nearest = null;
         float nearestDist = Range;
 
-        var origin = GetParent<Node2D>().GlobalPosition;
+        var origin = GetParent<Node3D>().GlobalPosition;
 
         foreach (var node in enemies)
         {

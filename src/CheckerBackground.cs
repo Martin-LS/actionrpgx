@@ -2,44 +2,31 @@ using Godot;
 
 namespace Godot1;
 
-public partial class CheckerBackground : Node2D
+public partial class CheckerBackground : Node3D
 {
-    private const int TileSize = 64;
-
     public override void _Ready()
     {
-        ZIndex = -1;
-    }
+        var shader = new Shader();
+        shader.Code = @"
+shader_type spatial;
+render_mode unshaded, cull_disabled;
 
-    public override void _Process(double delta)
-    {
-        QueueRedraw();
-    }
+varying vec3 world_pos;
 
-    public override void _Draw()
-    {
-        var camera = GetViewport().GetCamera2D();
-        if (camera == null) return;
+void vertex() {
+    world_pos = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
+}
 
-        var center = camera.GlobalPosition;
-        var viewSize = GetViewportRect().Size;
+void fragment() {
+    vec2 tile = floor(world_pos.xz / 64.0);
+    float c = mod(tile.x + tile.y, 2.0);
+    ALBEDO = mix(vec3(0.18, 0.18, 0.18), vec3(0.28, 0.28, 0.28), c);
+}
+";
+        var mat = new ShaderMaterial { Shader = shader };
+        var plane = new PlaneMesh { Size = new Vector2(10000f, 10000f) };
+        plane.Material = mat;
 
-        var color1 = new Color(0.18f, 0.18f, 0.18f);
-        var color2 = new Color(0.28f, 0.28f, 0.28f);
-
-        int tilesX = (int)(viewSize.X / TileSize) + 2;
-        int tilesY = (int)(viewSize.Y / TileSize) + 2;
-
-        int startX = (int)Mathf.Floor((center.X - viewSize.X / 2) / TileSize);
-        int startY = (int)Mathf.Floor((center.Y - viewSize.Y / 2) / TileSize);
-
-        for (int x = startX; x < startX + tilesX; x++)
-        {
-            for (int y = startY; y < startY + tilesY; y++)
-            {
-                var color = (x + y) % 2 == 0 ? color1 : color2;
-                DrawRect(new Rect2(x * TileSize, y * TileSize, TileSize, TileSize), color);
-            }
-        }
+        AddChild(new MeshInstance3D { Mesh = plane });
     }
 }

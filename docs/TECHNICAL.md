@@ -4,7 +4,21 @@
 
 ## Architecture Overview
 
-Godot 4.6, C#, Forward Plus renderer. **3D billboard** — game world is 3D (CharacterBody3D, physics, Camera3D orthographic top-down); characters and enemies are rendered as `Sprite3D` / `AnimatedSprite3D` billboard sprites that always face the camera. UI is 2D (`Control` / `CanvasLayer`) as standard in Godot — unaffected by the 3D world. Scene composition over inheritance — each system is a self-contained scene or node that communicates via signals. Two save layers: a persistent save file (meta) and an in-memory run session (discarded on run end).
+Godot 4.6, C#, Forward Plus renderer. **3D billboard** — game world is 3D (CharacterBody3D, XZ movement plane, Y-up); characters and enemies are rendered as `Sprite3D` billboard sprites that always face the camera. Camera is orthographic, fixed ~45° isometric tilt (Diablo-style), no player rotation. UI is 2D (`Control` / `CanvasLayer`) as standard in Godot — unaffected by the 3D world. Scene composition over inheritance — each system is a self-contained scene or node that communicates via signals. Two save layers: a persistent save file (meta) and an in-memory run session (discarded on run end).
+
+> **Note:** The project is currently 2D and is being migrated to this 3D architecture. Scene layouts below reflect the target state.
+
+---
+
+## Rendering & Camera
+
+| Decision         | Choice                        | Rationale                                                                 |
+|------------------|-------------------------------|---------------------------------------------------------------------------|
+| World dimensions | 3D, XZ movement plane, Y-up   | Standard for top-down 3D; gravity, navmesh, and lighting all assume Y-up  |
+| Camera type      | `Camera3D`, orthographic      | No perspective distortion — correct pairing for billboarded sprites        |
+| Camera angle     | Fixed ~45° isometric tilt     | Diablo-style; no player rotation                                           |
+| Character render | `Sprite3D` billboard          | Kenney 2D sprite sheets; billboard faces camera at all times               |
+| Projectiles      | Physical traveling objects    | Visible projectile travel is core to ARPG feel (not raycasts)              |
 
 ---
 

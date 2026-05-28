@@ -2,16 +2,16 @@ using Godot;
 
 namespace Godot1.Weapon;
 
-public partial class Projectile : Area2D
+public partial class Projectile : Area3D
 {
     public float Damage;
     public float Speed = 500f;
     public float MaxRange = 600f;
 
-    private Vector2 _direction;
+    private Vector3 _direction;
     private float _traveled;
 
-    public void Initialize(Vector2 direction, float damage)
+    public void Initialize(Vector3 direction, float damage)
     {
         _direction = direction.Normalized();
         Damage = damage;
@@ -20,12 +20,10 @@ public partial class Projectile : Area2D
     public override void _Ready()
     {
         BodyEntered += OnBodyEntered;
-        QueueRedraw();
-    }
-
-    public override void _Draw()
-    {
-        DrawCircle(Vector2.Zero, 5f, Colors.White);
+        AddChild(new MeshInstance3D
+        {
+            Mesh = new SphereMesh { Radius = 5f, Height = 10f },
+        });
     }
 
     public override void _PhysicsProcess(double delta)
@@ -38,7 +36,7 @@ public partial class Projectile : Area2D
             QueueFree();
     }
 
-    private void OnBodyEntered(Node2D body)
+    private void OnBodyEntered(Node3D body)
     {
         if (body is Enemies.EnemyController enemy)
         {

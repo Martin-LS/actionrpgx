@@ -3,7 +3,7 @@ using Godot;
 namespace Godot1.Enemies;
 
 
-public partial class EnemyController : CharacterBody2D
+public partial class EnemyController : CharacterBody3D
 {
     private static readonly PackedScene GemScene =
         GD.Load<PackedScene>("res://src/xp/xp_gem.tscn");
@@ -14,7 +14,7 @@ public partial class EnemyController : CharacterBody2D
     private static readonly Texture2D EnemyTex =
         GD.Load<Texture2D>("res://assets/kenney_topdown_rpg/Topdown Shooter (Pixel)/Tilesheet/tilesheet_transparent.png");
 
-    [Signal] public delegate void DiedEventHandler(Vector2 position);
+    [Signal] public delegate void DiedEventHandler(Vector3 position);
 
     [Export] public float Speed = 160f;
     [Export] public int MaxHealth = 1;
@@ -24,20 +24,23 @@ public partial class EnemyController : CharacterBody2D
     public int MapLevel = 1;
 
     private int _currentHealth;
-    private CharacterBody2D? _player;
+    private CharacterBody3D? _player;
     private float _damageCooldown;
 
     public override void _Ready()
     {
         _currentHealth = MaxHealth;
-        _player = GetTree().GetFirstNodeInGroup("player") as CharacterBody2D;
+        _player = GetTree().GetFirstNodeInGroup("player") as CharacterBody3D;
         AddToGroup("enemies");
-        AddChild(new Sprite2D
+        AddChild(new Sprite3D
         {
             Texture       = EnemyTex,
             RegionEnabled = true,
             RegionRect    = new Rect2(476, SpriteRow * 17, 16, 16),
-            Scale         = new Vector2(4f, 4f)
+            PixelSize     = 2f,
+            Billboard     = BaseMaterial3D.BillboardModeEnum.Enabled,
+            Transparent   = true,
+            AlphaCut      = SpriteBase3D.AlphaCutMode.Discard,
         });
     }
 
@@ -45,7 +48,8 @@ public partial class EnemyController : CharacterBody2D
     {
         if (_player == null) return;
 
-        var direction = (_player.GlobalPosition - GlobalPosition).Normalized();
+        var diff = _player.GlobalPosition - GlobalPosition;
+        var direction = new Vector3(diff.X, 0f, diff.Z).Normalized();
         Velocity = direction * Speed;
         MoveAndSlide();
 

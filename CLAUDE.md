@@ -1,6 +1,5 @@
 # CLAUDE.md — godot1
 
-> **Maintenance rule:** Keep this file and everything in `docs/` in sync with the actual project. Any time you add, move, rename, or delete a scene, script, system, or doc — update the affected files and this file before considering the task done.
 
 ## Project Overview
 
@@ -60,3 +59,4 @@ src/ui/main_menu.tscn  →  src/ui/character_select.tscn  →  src/ui/character_
 
 - **Godot MCP Pro** is connected — use `mcp__godot-mcp-pro__*` tools to inspect/modify the live editor
 - MCP tools are auto-approved globally
+- Claude can and should initiate playtests and inspect the running game via MCP without waiting to be asked — use `play_scene`, `get_game_screenshot`, `get_output_log`, `get_editor_errors`, etc. to verify changes work before reporting done

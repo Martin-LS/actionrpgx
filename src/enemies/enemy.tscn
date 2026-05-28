@@ -2,11 +2,11 @@
 
 [ext_resource type="Script" uid="uid://bteeh63ief2wn" path="res://src/enemies/EnemyController.cs" id="1_a8hw6"]
 
-[sub_resource type="CircleShape2D" id="CircleShape2D_jg4ye"]
+[sub_resource type="SphereShape3D" id="SphereShape3D_enemy"]
 radius = 14.0
 
-[node name="Enemy" type="CharacterBody2D" unique_id=1899836598]
+[node name="Enemy" type="CharacterBody3D" unique_id=1899836598]
 script = ExtResource("1_a8hw6")
 
-[node name="CollisionShape" type="CollisionShape2D" parent="." unique_id=1523911860]
-shape = SubResource("CircleShape2D_jg4ye")
+[node name="CollisionShape" type="CollisionShape3D" parent="." unique_id=1523911860]
+shape = SubResource("SphereShape3D_enemy")

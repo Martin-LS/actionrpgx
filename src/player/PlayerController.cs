@@ -2,7 +2,7 @@ using Godot;
 
 namespace Godot1.Player;
 
-public partial class PlayerController : CharacterBody2D
+public partial class PlayerController : CharacterBody3D
 {
     [Signal] public delegate void HealthChangedEventHandler(int newHealth);
     [Signal] public delegate void PlayerDiedEventHandler();
@@ -62,19 +62,22 @@ public partial class PlayerController : CharacterBody2D
             Character.CharacterType.Mage    => 5,
             _                               => 0
         };
-        AddChild(new Sprite2D
+        AddChild(new Sprite3D
         {
             Texture       = CharTex,
             RegionEnabled = true,
             RegionRect    = new Rect2(0, row * 17, 16, 16),
-            Scale         = new Vector2(2f, 2f)
+            PixelSize     = 2f,
+            Billboard     = BaseMaterial3D.BillboardModeEnum.Enabled,
+            Transparent   = true,
+            AlphaCut      = SpriteBase3D.AlphaCutMode.Discard,
         });
     }
 
     public override void _PhysicsProcess(double delta)
     {
-        var direction = Input.GetVector("move_left", "move_right", "move_up", "move_down");
-        Velocity = direction * Speed;
+        var input = Input.GetVector("move_left", "move_right", "move_up", "move_down");
+        Velocity = new Vector3(input.X, 0f, input.Y) * Speed;
         MoveAndSlide();
     }
 

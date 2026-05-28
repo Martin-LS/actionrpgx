@@ -2,11 +2,11 @@
 
 [ext_resource type="Script" uid="uid://dcoinpksc01" path="res://src/meta/CoinPickup.cs" id="1_coin"]
 
-[sub_resource type="CircleShape2D" id="CircleShape2D_coin"]
+[sub_resource type="SphereShape3D" id="SphereShape3D_coin"]
 radius = 6.0
 
-[node name="CoinPickup" type="Area2D"]
+[node name="CoinPickup" type="Area3D"]
 script = ExtResource("1_coin")
 
-[node name="CollisionShape" type="CollisionShape2D" parent="."]
-shape = SubResource("CircleShape2D_coin")
+[node name="CollisionShape" type="CollisionShape3D" parent="."]
+shape = SubResource("SphereShape3D_coin")

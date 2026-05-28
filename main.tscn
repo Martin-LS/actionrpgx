@@ -6,31 +6,28 @@
 [ext_resource type="PackedScene" uid="uid://c000f6ave0x4q" path="res://src/hud/hud.tscn" id="6_272bh"]
 [ext_resource type="Script" uid="uid://drs7mknbpx3t" path="res://src/run/RunSession.cs" id="9_rsess"]
 [ext_resource type="PackedScene" path="res://src/ui/run_end_overlay.tscn" id="10_rend"]
+[ext_resource type="Script" path="res://src/CameraFollow.cs" id="11_camf"]
 
-[sub_resource type="CircleShape2D" id="CircleShape2D_rxibo"]
-radius = 16.0
+[sub_resource type="Environment" id="Environment_main"]
+background_mode = 0
+ambient_light/source = 1
+ambient_light/color = Color(0.8, 0.8, 0.8, 1)
+ambient_light/energy = 1.0
 
 [node name="Main" type="Node" unique_id=1499980909]
 
 [node name="Player" parent="." unique_id=1376160702 instance=ExtResource("1_0xm2m")]
 
-[node name="CollisionShape2" type="CollisionShape2D" parent="Player" unique_id=1143918174]
-shape = SubResource("CircleShape2D_rxibo")
-
-[node name="Sprite2D2" type="Sprite2D" parent="Player" unique_id=2128842841]
-
-[node name="Background" type="Node2D" parent="." unique_id=1546617146]
+[node name="Background" type="Node3D" parent="." unique_id=1546617146]
 script = ExtResource("3_h2yge")
 
-[node name="Hud" parent="." unique_id=420008163 instance=ExtResource("6_272bh")]
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_main")
 
-[node name="Control2" type="Control" parent="Hud" unique_id=590774434]
-layout_mode = 3
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
+[node name="Camera3D" type="Camera3D" parent="."]
+script = ExtResource("11_camf")
+
+[node name="Hud" parent="." unique_id=420008163 instance=ExtResource("6_272bh")]
 
 [node name="EnemySpawner" type="Node" parent="." unique_id=1044822307]
 script = ExtResource("6_7mycd")

@@ -13,14 +13,14 @@ public partial class EnemySpawner : Node
 
     private float  _spawnTimer;
     private float  _elapsed;
-    private Node2D? _player;
+    private Node3D? _player;
     private Run.RunSession? _runSession;
 
     public override void _Ready()
     {
-        _player     = GetTree().GetFirstNodeInGroup("player") as Node2D;
+        _player     = GetTree().GetFirstNodeInGroup("player") as Node3D;
         _runSession = GetNodeOrNull<Run.RunSession>("../RunSession");
-        _spawnTimer = 0f; // spawn immediately on run start
+        _spawnTimer = 0f;
     }
 
     public override void _Process(double delta)
@@ -89,13 +89,11 @@ public partial class EnemySpawner : Node
         }
     }
 
-    // Spawns at a fixed radius ring around the player so engagement distance is
-    // consistent regardless of viewport size. Switch to viewport-edge for production.
-    private Vector2 RandomRingPosition()
+    private Vector3 RandomRingPosition()
     {
         var   center = _player!.GlobalPosition;
         float angle  = (float)GD.RandRange(0.0, Mathf.Tau);
         float dist   = (float)GD.RandRange(SpawnRadius, SpawnRadius * 1.2f);
-        return center + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * dist;
+        return center + new Vector3(Mathf.Cos(angle), 0f, Mathf.Sin(angle)) * dist;
     }
 }
