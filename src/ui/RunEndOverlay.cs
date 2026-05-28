@@ -28,8 +28,10 @@ public partial class RunEndOverlay : CanvasLayer
 
         int min = (int)elapsed / 60;
         int sec = (int)elapsed % 60;
-        int coins = GetParent().GetNodeOrNull<Run.RunSession>("RunSession")?.CoinsEarned ?? 0;
-        _statsLabel.Text = $"Level reached:   {levelReached}\nTime survived:   {min}m {sec:D2}s\nCoins earned:    {coins}";
+        var session = GetParent().GetNodeOrNull<Run.RunSession>("RunSession");
+        int coins  = session?.CoinsEarned ?? 0;
+        int crafting = session?.CraftingCurrency1Earned ?? 0;
+        _statsLabel.Text = $"Level reached:      {levelReached}\nTime survived:      {min}m {sec:D2}s\nCoins earned:       {coins}\nCrafting currency:  {crafting}";
 
         Visible = true;
         GetTree().Paused = true;
@@ -40,7 +42,11 @@ public partial class RunEndOverlay : CanvasLayer
         var manager = GetNode<Character.CharacterManager>("/root/CharacterManager");
         var player  = GetTree().GetFirstNodeInGroup("player") as Player.PlayerController;
         var session = GetParent().GetNodeOrNull<Run.RunSession>("RunSession");
-        manager.RecordRunCompletion(player?.Level ?? 1, player?.CurrentXp ?? 0, session?.CoinsEarned ?? 0);
+        manager.RecordRunCompletion(
+            player?.Level ?? 1,
+            player?.CurrentXp ?? 0,
+            session?.CoinsEarned ?? 0,
+            session?.CraftingCurrency1Earned ?? 0);
 
         GetTree().Paused = false;
         GetTree().ChangeSceneToFile("res://src/ui/character_screen.tscn");

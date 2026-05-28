@@ -58,24 +58,44 @@ A run cannot start without a selected character.
 ## In-Run Progression
 
 ### Level Up
-- Killing enemies drops **XP gems**
-- Collecting XP gems fills the XP bar
+- Killing an enemy grants **`1 XP × map level`** instantly (kill reward, no pickup required)
+- Killing enemies also drops **XP gems** — collecting them adds further XP
+- Both sources fill the same XP bar
 - On level up: automatic permanent bonuses are applied — **+5 Max Health, +1 Weapon Damage**
 - Level and XP within the current level persist when the run ends; the character picks up exactly where they left off
 - No popup or pause — levelling up is seamless
 
 ### Enemy Drops
-| Drop        | Effect                              | Drop chance  |
-|-------------|-------------------------------------|--------------|
-| XP gem      | Feeds level-up bar                  | Common       |
-| Coin        | Added to meta currency bank on run end | Uncommon  |
-| Health pickup | Restores HP instantly             | Rare         |
+| Drop               | Effect                                         | Drop chance |
+|--------------------|------------------------------------------------|-------------|
+| XP gem             | Feeds level-up bar                             | 100%        |
+| Coin               | Added to coin bank on run end                  | 25%         |
+| Health pickup      | Restores HP instantly                          | 10%         |
+| Crafting material (common) | Added to crafting-currency-1 bank on run end | 20% |
+| Crafting material (higher tiers) | Added to respective material bank on run end | [TBD — rarer, tied to item tier] |
+
+Drop rarity for crafting materials scales with tier — the more exotic the items a material can produce, the rarer it drops.
+
+---
+
+## Maps
+
+Maps are the arenas where runs take place. Each map has **attributes** that modify the run.
+
+### Map Attributes
+
+| Attribute   | Description                                                                 |
+|-------------|-----------------------------------------------------------------------------|
+| Map Level   | Scales kill XP reward — killing an enemy grants `1 XP × map level` directly, on top of any XP gem the enemy drops |
+
+More attributes will be added in future (e.g. enemy density modifiers, environmental hazards, drop bonuses).
 
 ---
 
 ## Run Structure
 
 - **Duration:** Fixed time limit (target ~5 min; currently 5s for testing)
+- **Map:** Each run takes place on a map; the map's attributes apply for the full run
 - **Difficulty scaling:** Enemy count, speed, and variety increase over time
 - **Run end conditions:**
   - Player dies → run over
@@ -119,8 +139,63 @@ Spend coins on the character screen between runs:
 | +10 Speed    | 50 / 100 / …   | 5         |
 | +2 Damage    | 50 / 100 / …   | 5         |
 
-### [TBD] Gear Slots
-Equipment persisted between runs — weapons, armour, accessories. Not yet implemented.
+### Gear Slots
+
+Characters can equip up to 3 items, one per slot. Items persist between runs and provide flat stat bonuses on top of archetype base stats and coin upgrades.
+
+| Slot      | Bonus type              |
+|-----------|-------------------------|
+| Weapon    | Damage (primary), HP    |
+| Armor     | HP (primary), Speed     |
+| Accessory | Speed, HP, Damage (mixed)|
+
+**Starter items (9 total):**
+
+| Item            | Slot      | HP  | Speed | Damage |
+|-----------------|-----------|-----|-------|--------|
+| Iron Sword      | Weapon    | —   | —     | +3     |
+| Battle Axe      | Weapon    | —   | -15   | +6     |
+| Enchanted Blade | Weapon    | +10 | —     | +2     |
+| Leather Vest    | Armor     | +20 | —     | —      |
+| Chain Mail      | Armor     | +40 | -10   | —      |
+| Mage Robe       | Armor     | +15 | +15   | —      |
+| Swift Ring      | Accessory | —   | +20   | —      |
+| Vitality Charm  | Accessory | +30 | —     | —      |
+| War Band        | Accessory | +10 | —     | +2     |
+
+**Starter gear:** Each character starts with three items, one per slot, chosen to match their archetype:
+
+| Archetype | Weapon          | Armor       | Accessory      |
+|-----------|-----------------|-------------|----------------|
+| Warrior   | Iron Sword      | Chain Mail  | War Band       |
+| Rogue     | Iron Sword      | Leather Vest| Swift Ring     |
+| Mage      | Enchanted Blade | Mage Robe   | Vitality Charm |
+
+**Acquisition:** Gear is not dropped by enemies. New items come from crafting (crafting-currency-1 funded — see below). Gear is never lost.
+
+**Inventory:** Each character owns a persistent collection of items. The full inventory is visible on the Character Screen — every owned item is listed with its slot, stat bonuses, and equipped status.
+
+**Equipping:** Click a slot button (Weapon / Armor / Accessory) to open the item picker for that slot. Select an owned item to equip it; "Unequip" removes the current item from the slot without discarding it from inventory.
+
+---
+
+## Currencies
+
+### Coins
+Earned during runs (25% enemy drop). Spent on permanent meta upgrades (HP / Speed / Damage tiers) on the Character Screen between runs.
+
+### Crafting Materials
+Crafting materials are tiered — common through exotic. Each tier drops at a different rate during runs and enables crafting of items at the corresponding tier. Items are crafted from **combinations** of materials, not a single currency spend.
+
+| Tier    | Current name        | Drop rate | Enables                          |
+|---------|---------------------|-----------|----------------------------------|
+| Common  | crafting-currency-1 | 20%       | Low-tier items                   |
+| [TBD]   | —                   | Rarer     | Mid-tier items                   |
+| Exotic  | —                   | Very rare | Exotic / high-tier items         |
+
+- All materials are per-character and persist between runs
+- The more exotic the craftable item, the rarer its required materials
+- Specific tiers, drop rates, and material combinations will be designed when crafting is fleshed out
 
 ---
 
@@ -135,7 +210,11 @@ Equipment persisted between runs — weapons, armour, accessories. Not yet imple
 ### Menus
 - **Main Menu** → title screen, Play button
 - **Character Select** → list characters, create new (name + archetype), delete; clicking a character navigates to their screen
-- **Character Screen** → character stats, Start Run button, future home of upgrades / gear / crafting
+- **Character Screen** → character stats, three tabs, Start Run button
+  - **Equipment tab** *(default)* — gear slot buttons (Weapon / Armor / Accessory)
+  - **Sigils tab** — visible, empty (reserved for future sigil system)
+  - **Skills tab** — visible, empty (reserved for future skill tree system)
+  - All three tabs are always visible; empty tabs are not locked or greyed out
 - Run results overlay → shown at run end; return button goes back to character screen
 - [TBD] Pause menu
 

@@ -36,6 +36,43 @@ text = "Level 1   XP: 0"
 layout_mode = 2
 text = "Stats"
 
+[node name="GearPanel" type="VBoxContainer" parent="VBox" unique_id=5551111011]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="GearLabel" type="Label" parent="VBox/GearPanel" unique_id=5551111012]
+layout_mode = 2
+text = "— Gear —"
+
+[node name="WeaponSlotButton" type="Button" parent="VBox/GearPanel" unique_id=5551111013]
+layout_mode = 2
+text = "Weapon: Empty"
+
+[node name="ArmorSlotButton" type="Button" parent="VBox/GearPanel" unique_id=5551111014]
+layout_mode = 2
+text = "Armor: Empty"
+
+[node name="AccessorySlotButton" type="Button" parent="VBox/GearPanel" unique_id=5551111015]
+layout_mode = 2
+text = "Accessory: Empty"
+
+[node name="InventoryPanel" type="VBoxContainer" parent="VBox" unique_id=5551111016]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="InventoryLabel" type="Label" parent="VBox/InventoryPanel" unique_id=5551111017]
+layout_mode = 2
+text = "— Inventory —"
+
+[node name="InventoryScroll" type="ScrollContainer" parent="VBox/InventoryPanel" unique_id=5551111018]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 120)
+
+[node name="InventoryList" type="VBoxContainer" parent="VBox/InventoryPanel/InventoryScroll" unique_id=5551111019]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 4
+
 [node name="Spacer" type="Control" parent="VBox" unique_id=5551111007]
 layout_mode = 2
 size_flags_vertical = 3

@@ -16,11 +16,12 @@ public partial class EnemyController : CharacterBody2D
 
     [Signal] public delegate void DiedEventHandler(Vector2 position);
 
-    [Export] public float Speed = 80f;
-    [Export] public int MaxHealth = 30;
+    [Export] public float Speed = 160f;
+    [Export] public int MaxHealth = 1;
     [Export] public int ContactDamage = 10;
     [Export] public float DamageInterval = 1f;
     [Export] public int SpriteRow = 6;
+    public int MapLevel = 1;
 
     private int _currentHealth;
     private CharacterBody2D? _player;
@@ -68,6 +69,9 @@ public partial class EnemyController : CharacterBody2D
     {
         EmitSignal(SignalName.Died, GlobalPosition);
 
+        if (_player is Player.PlayerController pc)
+            pc.CollectXp(MapLevel);
+
         var gem = GemScene.Instantiate<Xp.XpGem>();
         gem.GlobalPosition = GlobalPosition;
         GetParent().AddChild(gem);
@@ -84,6 +88,12 @@ public partial class EnemyController : CharacterBody2D
             var hp = HealthScene.Instantiate<Health.HealthPickup>();
             hp.GlobalPosition = GlobalPosition;
             GetParent().AddChild(hp);
+        }
+
+        if (GD.Randf() < 0.20f)
+        {
+            var session = GetParent().GetNodeOrNull<Run.RunSession>("RunSession");
+            session?.AddCraftingCurrency1(1);
         }
 
         QueueFree();

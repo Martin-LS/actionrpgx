@@ -35,7 +35,6 @@ size_flags_horizontal = 3
 layout_mode = 2
 text = "+ New Character"
 
-
 [node name="Right" type="VBoxContainer" parent="HSplit" unique_id=1325313161]
 layout_mode = 2
 
@@ -76,4 +75,3 @@ text = "Create"
 [node name="CancelBtn" type="Button" parent="HSplit/Right/CreatePanel/VBox" unique_id=441765050]
 layout_mode = 2
 text = "Cancel"
-

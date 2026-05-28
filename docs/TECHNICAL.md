@@ -4,7 +4,7 @@
 
 ## Architecture Overview
 
-Godot 4.6, C#, Forward Plus renderer. Scene composition over inheritance — each system is a self-contained scene or node that communicates via signals. Two save layers: a persistent save file (meta) and an in-memory run session (discarded on run end).
+Godot 4.6, C#, Forward Plus renderer. **3D billboard** — game world is 3D (CharacterBody3D, physics, Camera3D orthographic top-down); characters and enemies are rendered as `Sprite3D` / `AnimatedSprite3D` billboard sprites that always face the camera. UI is 2D (`Control` / `CanvasLayer`) as standard in Godot — unaffected by the 3D world. Scene composition over inheritance — each system is a self-contained scene or node that communicates via signals. Two save layers: a persistent save file (meta) and an in-memory run session (discarded on run end).
 
 ---
 
@@ -50,12 +50,34 @@ CharacterScreen (Control)
     ├── TypeLabel (Label)
     ├── LevelLabel (Label)
     ├── StatsLabel (Label)
+    ├── GearPanel (VBoxContainer)
+    │   ├── GearLabel (Label)
+    │   ├── WeaponSlotButton (Button)    ← click → ItemPickerPanel for Weapon slot
+    │   ├── ArmorSlotButton (Button)     ← click → ItemPickerPanel for Armor slot
+    │   └── AccessorySlotButton (Button) ← click → ItemPickerPanel for Accessory slot
+    ├── InventoryPanel (VBoxContainer)
+    │   ├── InventoryLabel (Label)
+    │   └── InventoryScroll (ScrollContainer, min height 120px)
+    │       └── InventoryList (VBoxContainer) ← labels added at runtime, one per owned item
     ├── Spacer (Control, expand)
     └── Buttons (HBoxContainer)
         ├── BackButton  → character_select.tscn
         └── StartRunButton → main.tscn
 ```
-> Future home of: meta-upgrade panel, gear slots, crafting.
+
+### `src/ui/item_picker_panel.tscn`
+Modal overlay opened from CharacterScreen slot buttons.
+```
+ItemPickerPanel (Control, full-screen)
+├── Dim (ColorRect, semi-transparent black)
+└── Panel (PanelContainer, centered)
+    └── VBox (VBoxContainer)
+        ├── TitleLabel (Label)
+        ├── Scroll (ScrollContainer)
+        │   └── ItemList (VBoxContainer) ← buttons added at runtime, one per owned item in slot
+        ├── UnequipButton (Button)
+        └── CloseButton (Button)
+```
 
 ### `main.tscn` (run scene)
 ```
@@ -86,7 +108,9 @@ Main (Node)
 | Hud               | Health bar, XP bar, level, coin counter, run timer           | `res://src/hud/`          | ✅ done |
 | RunSession        | Run timer, win/lose detection, emits RunEnded signal         | `res://src/run/`          | ✅ done |
 | UpgradePicker     | (removed from scene — code kept dormant)                     | `res://src/ui/`           | ❌ removed |
-| CharacterScreen   | Per-character hub: stats display, Start Run, future upgrades | `res://src/ui/`           | ✅ done |
+| CharacterScreen   | Per-character hub: stats, gear slots, Start Run              | `res://src/ui/`           | ✅ done |
+| ItemPickerPanel   | Modal picker for equipping/unequipping gear by slot          | `res://src/ui/`           | ✅ done |
+| ItemRegistry      | Static catalogue of all `ItemData` records (9 starter items) | `res://src/items/`        | ✅ done |
 | RunEndOverlay     | Show win/die results, flush run to character, return to character screen | `res://src/ui/` | ✅ done |
 | CoinPickup        | Coin drop (25% on enemy death) — reports to RunSession       | `res://src/meta/`         | ✅ done |
 | MetaProgression   | Per-character coin bank + permanent upgrades (HP/Speed/DMG)  | `res://src/meta/`, `src/ui/` | ✅ done |
@@ -98,8 +122,11 @@ Main (Node)
 
 | Class               | Kind        | Fields                                                         |
 |---------------------|-------------|----------------------------------------------------------------|
-| `CharacterData`     | Plain C#    | Id, Name, Type (enum), RunsCompleted, CurrentLevel, CurrentXp, CoinBank, BonusMaxHealth, BonusSpeed, BonusDamage |
+| `CharacterData`     | Plain C#    | Id, Name, Type (enum), RunsCompleted, CurrentLevel, CurrentXp, CoinBank, CraftingCurrency1, BonusMaxHealth, BonusSpeed, BonusDamage, OwnedItemIds, EquippedItems |
 | `CharacterType`     | C# enum     | Warrior, Rogue, Mage                                           |
+| `ItemData`          | C# record   | Id, Name, Slot (enum), BonusHp, BonusSpeed, BonusDamage       |
+| `ItemSlot`          | C# enum     | Weapon, Armor, Accessory                                       |
+| `ItemRegistry`      | Static class| `All` dict, `Get(id)`, `ForSlot(slot)`, `RandomDrop()`        |
 | `WeaponData`        | Godot Resource | Name, base damage, cooldown, upgrade path                   |
 | `WeaponUpgradeData` | Godot Resource | Damage delta, cooldown delta, new behaviour flags           |
 | `UpgradeOptionData` | Godot Resource | Display name, description, effect type + value              |
@@ -122,13 +149,17 @@ Managed by `CharacterManager` autoload. Written on every create/delete/upgrade.
       "currentLevel": 7,
       "currentXp": 12,
       "coinBank": 150,
+      "craftingCurrency1": 30,
       "bonusMaxHealth": 10,
       "bonusSpeed": 0,
-      "bonusDamage": 5
+      "bonusDamage": 5,
+      "ownedItemIds": ["iron_sword", "leather_vest"],
+      "equippedItems": { "Weapon": "iron_sword", "Armor": "leather_vest" }
     }
   ]
 }
 ```
+`ownedItemIds` and `equippedItems` default to empty if absent — backwards-compatible with saves written before the items system. New characters are seeded with 3 archetype-specific items by `CharacterManager.SeedStarterGear()`. `craftingCurrency1` defaults to 0 if absent.
 
 ### Run Session (in-memory only)
 Lives on the `RunSession` node. Discarded when the scene unloads. On run end, `CharacterManager.RecordRunCompletion(finalLevel, finalXp, coinsEarned)` writes the persistent state.
@@ -159,23 +190,41 @@ Time-driven, no fixed waves. `EnemySpawner` recalculates each spawn:
 
 | Type     | Sprite row | Unlocks | Speed | HP | Damage |
 |----------|-----------|---------|-------|----|--------|
-| Standard | 6 (grey)  | 0:00    | 130   | 30 | 10     |
-| Runner   | 4 (purple)| 1:00    | 200   | 15 | 8      |
-| Tank     | 2 (orange)| 2:00    | 80    | 80 | 18     |
+| Standard | 6 (grey)  | 0:00    | 260   | 1  | 10     |
+| Runner   | 4 (purple)| 1:00    | 400   | 1  | 8      |
+| Tank     | 2 (orange)| 2:00    | 160   | 1  | 18     |
 
 All types receive a time-scaling bonus on top: `Speed += 10 * minutes`, `MaxHealth += 5 * (int)minutes`.
 
 ---
 
+## Map Attributes
+
+Each run is played on a map. Maps carry an attribute set that modifies run behaviour. The attribute set is small now and will grow.
+
+| Attribute  | Type  | Effect                                                                     |
+|------------|-------|----------------------------------------------------------------------------|
+| `MapLevel` | `int` | On enemy death, `PlayerController.CollectXp(MapLevel)` is called directly — no pickup required. Stacks on top of any XP gem drop. |
+
+`MapLevel` is passed into the run scene at startup (e.g. via `RunSession` or a `MapData` resource — exact wiring TBD when maps are selectable).
+
+---
+
 ## Drop System
 
-Current implementation — drops are hardcoded in `EnemyController.Die()`:
+On enemy death, two XP sources fire independently:
 
-| Drop         | Chance | Notes                                                          |
-|--------------|--------|----------------------------------------------------------------|
-| XP gem       | 100%   | Always dropped; value = 5 XP                                  |
-| Coin         | 25%    | `CoinPickup` auto-collected; reports to `RunSession.AddCoin()` |
-| Health pack  | 10%    | `HealthPickup` heals player for 15 HP on contact              |
+1. **Kill XP** — `1 × MapLevel` XP granted instantly via `PlayerController.CollectXp()`
+2. **XP gem drop** — physical `XpGem` scene spawned; player must walk over it (value = 5 XP)
+
+Other drops hardcoded in `EnemyController.Die()`:
+
+| Drop              | Chance | Notes                                                                  |
+|-------------------|--------|------------------------------------------------------------------------|
+| XP gem            | 100%   | Always dropped; value = 5 XP                                           |
+| Coin              | 25%    | `CoinPickup` auto-collected; reports to `RunSession.AddCoin()`         |
+| Health pack       | 10%    | `HealthPickup` heals player for 15 HP on contact                       |
+| Crafting currency | 20%    | Instant; calls `RunSession.AddCraftingCurrency1(1)` — no pickup scene  |
 
 > Planned: large XP gems, weighted drop tables via `EnemyData` resource.
 

@@ -14,10 +14,12 @@ public partial class EnemySpawner : Node
     private float  _spawnTimer;
     private float  _elapsed;
     private Node2D? _player;
+    private Run.RunSession? _runSession;
 
     public override void _Ready()
     {
         _player     = GetTree().GetFirstNodeInGroup("player") as Node2D;
+        _runSession = GetNodeOrNull<Run.RunSession>("../RunSession");
         _spawnTimer = 0f; // spawn immediately on run start
     }
 
@@ -51,6 +53,7 @@ public partial class EnemySpawner : Node
 
         enemy.Speed     += 10f * minutes;
         enemy.MaxHealth += 5 * (int)minutes;
+        enemy.MapLevel   = _runSession?.MapLevel ?? 1;
 
         GetParent().AddChild(enemy);
     }
@@ -66,22 +69,22 @@ public partial class EnemySpawner : Node
         if (roll == 0)
         {
             enemy.SpriteRow     = 6;
-            enemy.Speed         = 130f;
-            enemy.MaxHealth     = 30;
+            enemy.Speed         = 260f;
+            enemy.MaxHealth     = 1;
             enemy.ContactDamage = 10;
         }
         else if (roll == 1 && runnerUnlocked)
         {
             enemy.SpriteRow     = 4;
-            enemy.Speed         = 200f;
-            enemy.MaxHealth     = 15;
+            enemy.Speed         = 400f;
+            enemy.MaxHealth     = 1;
             enemy.ContactDamage = 8;
         }
         else
         {
             enemy.SpriteRow     = 2;
-            enemy.Speed         = 80f;
-            enemy.MaxHealth     = 80;
+            enemy.Speed         = 160f;
+            enemy.MaxHealth     = 1;
             enemy.ContactDamage = 18;
         }
     }
