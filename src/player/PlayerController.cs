@@ -13,6 +13,7 @@ public partial class PlayerController : CharacterBody3D
     [Export] public int MaxHealth = 100;
 
     private Stats.StatBlock _statBlock = new();
+    private Node3D _model = null!;
 
     public int CurrentHealth { get; private set; }
     public int Level { get; private set; } = 1;
@@ -48,18 +49,20 @@ public partial class PlayerController : CharacterBody3D
 
         CurrentHealth = MaxHealth;
         AddToGroup("player");
-        AddChild(new MeshInstance3D
-        {
-            Mesh     = new BoxMesh { Size = new Vector3(32f, 48f, 32f) },
-            Position = new Vector3(0f, 24f, 0f),
-        });
+        _model = GD.Load<PackedScene>("res://assets/models/characters/Knight.glb").Instantiate<Node3D>();
+        _model.Scale = new Vector3(24f, 24f, 24f);
+        AddChild(_model);
     }
 
     public override void _PhysicsProcess(double delta)
     {
         var input = Input.GetVector("move_left", "move_right", "move_up", "move_down");
-        Velocity = new Vector3(input.X, 0f, input.Y) * Speed;
+        var direction = new Vector3(input.X, 0f, input.Y);
+        Velocity = direction * Speed;
         MoveAndSlide();
+
+        if (direction.LengthSquared() > 0.01f)
+            _model.LookAt(GlobalPosition + direction, Vector3.Up);
     }
 
     public void TakeDamage(int amount)

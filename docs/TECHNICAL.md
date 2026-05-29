@@ -4,7 +4,7 @@
 
 ## Architecture Overview
 
-Godot 4.6, C#, Forward Plus renderer. Game world is 3D (CharacterBody3D, XZ movement plane, Y-up); characters and enemies are rendered as `MeshInstance3D` primitive geometry. Camera is perspective, fixed ~60° from horizontal (Diablo 4-style), no player rotation, parented to player. UI is 2D (`Control` / `CanvasLayer`) as standard in Godot — unaffected by the 3D world. Scene composition over inheritance — each system is a self-contained scene or node that communicates via signals. Two save layers: a persistent save file (meta) and an in-memory run session (discarded on run end).
+Godot 4.6, C#, Forward Plus renderer. Game world is 3D (CharacterBody3D, XZ movement plane, Y-up); characters and enemies are rendered as KayKit `.glb` models loaded at runtime as `PackedScene` child nodes. Camera is perspective, fixed ~60° from horizontal (Diablo 4-style), no player rotation, parented to player. UI is 2D (`Control` / `CanvasLayer`) as standard in Godot — unaffected by the 3D world. Scene composition over inheritance — each system is a self-contained scene or node that communicates via signals. Two save layers: a persistent save file (meta) and an in-memory run session (discarded on run end).
 
 ---
 
@@ -15,7 +15,7 @@ Godot 4.6, C#, Forward Plus renderer. Game world is 3D (CharacterBody3D, XZ move
 | World dimensions | 3D, XZ movement plane, Y-up   | Standard for top-down 3D; gravity, navmesh, and lighting all assume Y-up  |
 | Camera type      | `Camera3D`, perspective       | Subtle depth like Diablo 4; fixed angle, no player rotation               |
 | Camera angle     | Fixed ~60° from horizontal    | Closer to overhead than classic 45° isometric; Diablo 4 reference         |
-| Character render | `MeshInstance3D` (geometry)   | Primitive meshes; visual appearance is GD's concern, opaque to all systems |
+| Character render | KayKit `.glb` loaded as `PackedScene`, instanced as child `Node3D` | Player = Knight.glb (scale 24), enemies = Skeleton_Minion.glb (scale 20). Model child rotates independently via `_model.LookAt()` — CharacterBody3D stays unrotated so camera doesn't spin. |
 | Lighting         | Single `DirectionalLight3D` parented to `Camera3D` | Global main light source, moves with camera; one light for now |
 | Projectiles      | Physical traveling objects    | Visible projectile travel is core to ARPG feel (not raycasts)              |
 | Target aspect ratio | 16:9, PC primary           | All UI scenes must use Godot anchor presets (no absolute offsets) — makes ratio changes free later. Mobile not in scope. |
@@ -173,19 +173,24 @@ Main (Node)
 | `ItemData`          | C# record   | Id, Name, Slot (enum), BonusHp, BonusSpeed, BonusDamage, IconPath (string `res://` path to item texture) |
 | `ItemSlot`          | C# enum     | Weapon, Armor, Accessory                                       |
 | `ItemRegistry`      | Static class| `All` dict, `Get(id)`, `ForSlot(slot)`, `RandomDrop()`        |
-| `WeaponData`        | Godot Resource | Name, base damage, cooldown, upgrade path                   |
-| `WeaponUpgradeData` | Godot Resource | Damage delta, cooldown delta, new behaviour flags           |
-| `UpgradeOptionData` | Godot Resource | Display name, description, effect type + value              |
+| `WeaponData`        | Godot Resource (planned) | Name, base damage, cooldown, upgrade path — not yet implemented; `WeaponController` manages damage as a plain `float` |
+| `WeaponUpgradeData` | Godot Resource (planned) | Damage delta, cooldown delta, new behaviour flags — not yet implemented |
+| `UpgradeOptionData` | Godot Resource (planned) | Display name, description, effect type + value — not yet implemented (UpgradePicker dormant) |
 | `EnemyData`         | C# record      | EnemyType (string), BaseSpeed, BaseHealth, ContactDamage, DamageInterval |
 
 ---
 
 ## Save Layers
 
-### Character Save (`user://characters.json`)
+### Character Save (`user://save.json`)
 Managed by `CharacterManager` autoload. Written on every create/delete/upgrade.
 ```json
 {
+  "profile": {
+    "coinBank": 150,
+    "craftingCurrency1": 30,
+    "ownedItemIds": ["swift_ring"]
+  },
   "characters": [
     {
       "id": "<guid>",
@@ -194,12 +199,6 @@ Managed by `CharacterManager` autoload. Written on every create/delete/upgrade.
       "runsCompleted": 3,
       "currentLevel": 7,
       "currentXp": 12,
-      "coinBank": 150,
-      "craftingCurrency1": 30,
-      "bonusMaxHealth": 10,
-      "bonusSpeed": 0,
-      "bonusDamage": 5,
-      "ownedItemIds": ["swift_ring"],
       "equippedItems": { "Weapon": "iron_sword", "Armor": "leather_vest" }
     }
   ]
@@ -296,10 +295,10 @@ Systems communicate via signals only — no direct cross-system method calls.
 | `HealthChanged(int)`    | Player         | HUD, GameManager                 |
 | `PlayerDied`            | Player         | RunSession (end run)             |
 | `LeveledUp(int)`        | Player         | Hud (level display)              |
-| `EnemyDied(position)`   | Enemy          | (reserved — not yet wired)       |
+| `Died(position)`        | Enemy          | (reserved — not yet wired)       |
 | `CoinChanged(int)`      | RunSession     | Hud (coin counter)               |
 | `RunTimerExpired`       | RunSession     | EnemySpawner (spawn boss)        |
-| `RunEnded(result)`      | RunSession     | SaveManager (flush coins/rewards)|
+| `RunEnded(result)`      | RunSession     | CharacterManager (flush coins/XP/level via `RecordRunCompletion`) |
 
 ---
 
@@ -310,3 +309,4 @@ Systems communicate via signals only — no direct cross-system method calls.
 | Godot MCP Pro  | AI-assisted editor control via Claude |
 | Themey         | Free open-source Godot 4 UI theme pack — Spacey theme in use (`res://addons/Themey/`) |
 | Ravenmore Fantasy Icon Pack | Item slot icons (`res://assets/icons/items/`) — CC-BY 3.0, credit: ravenmore.itch.io |
+| KayKit (Kay Lousberg)       | Character models for testing — Knight (player), Skeleton_Minion (enemies) (`res://assets/models/`) — CC0, no attribution required |

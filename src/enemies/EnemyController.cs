@@ -28,11 +28,9 @@ public partial class EnemyController : CharacterBody3D
         _currentHealth = MaxHealth;
         _player = GetTree().GetFirstNodeInGroup("player") as CharacterBody3D;
         AddToGroup("enemies");
-        AddChild(new MeshInstance3D
-        {
-            Mesh     = new BoxMesh { Size = new Vector3(28f, 28f, 28f) },
-            Position = new Vector3(0f, 14f, 0f),
-        });
+        var enemyModel = GD.Load<PackedScene>("res://assets/models/enemies/Skeleton_Minion.glb").Instantiate<Node3D>();
+        enemyModel.Scale = new Vector3(20f, 20f, 20f);
+        AddChild(enemyModel);
     }
 
     public override void _PhysicsProcess(double delta)
@@ -43,6 +41,9 @@ public partial class EnemyController : CharacterBody3D
         var direction = new Vector3(diff.X, 0f, diff.Z).Normalized();
         Velocity = direction * Speed;
         MoveAndSlide();
+
+        if (direction.LengthSquared() > 0.01f)
+            LookAt(GlobalPosition + direction, Vector3.Up);
 
         _damageCooldown -= (float)delta;
         if (_damageCooldown <= 0f && GlobalPosition.DistanceTo(_player.GlobalPosition) < 32f)
