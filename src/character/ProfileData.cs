@@ -4,7 +4,7 @@ namespace Godot1.Character;
 
 public class ProfileData
 {
-    public const int MaxInventory = 10;
+    public const int MaxInventory = 50;
 
     public int CoinBank { get; set; } = 0;
     public int CraftingCurrency1 { get; set; } = 0;

@@ -38,11 +38,16 @@ public partial class ItemPickerPanel : Control
 
         _titleLabel.Text = $"Choose {_slot}";
 
-        _closeBtn.Pressed   += Close;
+        _closeBtn.Pressed += Close;
+
+        // Unequip is only relevant when the slot is currently occupied.
+        _unequipBtn.Visible = _character.EquippedItems.ContainsKey(_slot.ToString());
         _unequipBtn.Pressed += () =>
         {
-            _manager.UnequipItem(_character.Id, _slot);
-            Close();
+            if (_manager.UnequipItem(_character.Id, _slot))
+                Close();
+            else
+                _titleLabel.Text = "Inventory full — cannot unequip";
         };
 
         PopulateItems();

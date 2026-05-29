@@ -43,8 +43,8 @@ public partial class AccountScreen : Control
         _manager = GetNode<Character.CharacterManager>("/root/CharacterManager");
 
         // Left panel
-        _inventoryInfo = GetNode<Label>        ("VBox/HSplit/LeftPanel/InventoryInfo");
-        _inventoryGrid = GetNode<GridContainer>("VBox/HSplit/LeftPanel/InventoryGrid");
+        _inventoryInfo = GetNode<Label>        ("VBox/HSplit/LeftPanel/LeftVBox/InventoryInfo");
+        _inventoryGrid = GetNode<GridContainer>("VBox/HSplit/LeftPanel/LeftVBox/InventoryScroll/InventoryGrid");
 
         // Characters tab — roster
         _rosterView    = GetNode<Control>      ($"{RosterBase}");
@@ -52,33 +52,37 @@ public partial class AccountScreen : Control
         _createPanel   = GetNode<Control>      ($"{RosterBase}/CreatePanel");
         _nameInput     = GetNode<LineEdit>     ($"{RosterBase}/CreatePanel/VBox/NameInput");
 
-        GetNode<Button>($"{RosterBase}/NewCharacterButton").Pressed                   += () => _createPanel.Visible = true;
-        GetNode<Button>($"{RosterBase}/CreatePanel/VBox/WarriorBtn").Pressed          += () => _pendingType = Character.CharacterType.Warrior;
-        GetNode<Button>($"{RosterBase}/CreatePanel/VBox/RogueBtn").Pressed            += () => _pendingType = Character.CharacterType.Rogue;
-        GetNode<Button>($"{RosterBase}/CreatePanel/VBox/MageBtn").Pressed             += () => _pendingType = Character.CharacterType.Mage;
-        GetNode<Button>($"{RosterBase}/CreatePanel/VBox/ConfirmBtn").Pressed          += OnConfirmCreate;
-        GetNode<Button>($"{RosterBase}/CreatePanel/VBox/CancelBtn").Pressed           += () => _createPanel.Visible = false;
+        var confirmBtn = GetNode<Button>($"{RosterBase}/CreatePanel/VBox/ConfirmBtn");
+        confirmBtn.Disabled = true;
+        _nameInput.TextChanged += text => confirmBtn.Disabled = text.Trim().Length == 0;
+
+        GetNode<Button>($"{RosterBase}/NewCharacterButton").Pressed         += () => _createPanel.Visible = true;
+        GetNode<Button>($"{RosterBase}/CreatePanel/VBox/WarriorBtn").Pressed += () => _pendingType = Character.CharacterType.Warrior;
+        GetNode<Button>($"{RosterBase}/CreatePanel/VBox/RogueBtn").Pressed   += () => _pendingType = Character.CharacterType.Rogue;
+        GetNode<Button>($"{RosterBase}/CreatePanel/VBox/MageBtn").Pressed    += () => _pendingType = Character.CharacterType.Mage;
+        confirmBtn.Pressed                                                   += OnConfirmCreate;
+        GetNode<Button>($"{RosterBase}/CreatePanel/VBox/CancelBtn").Pressed  += () => _createPanel.Visible = false;
 
         // Characters tab — character view
         _characterView = GetNode<Control>($"{CharViewBase}");
-        _nameLabel     = GetNode<Label>  ($"{CharViewBase}/VBox/NameLabel");
-        _typeLabel     = GetNode<Label>  ($"{CharViewBase}/VBox/TypeLabel");
-        _levelLabel    = GetNode<Label>  ($"{CharViewBase}/VBox/LevelLabel");
-        _statsLabel    = GetNode<Label>  ($"{CharViewBase}/VBox/StatsLabel");
-        _weaponBtn     = GetNode<Button> ($"{CharViewBase}/VBox/GearPanel/WeaponSlotButton");
-        _armorBtn      = GetNode<Button> ($"{CharViewBase}/VBox/GearPanel/ArmorSlotButton");
-        _accBtn        = GetNode<Button> ($"{CharViewBase}/VBox/GearPanel/AccessorySlotButton");
+        _nameLabel     = GetNode<Label>  ($"{CharViewBase}/HSplit/InfoVBox/NameLabel");
+        _typeLabel     = GetNode<Label>  ($"{CharViewBase}/HSplit/InfoVBox/TypeLabel");
+        _levelLabel    = GetNode<Label>  ($"{CharViewBase}/HSplit/InfoVBox/LevelLabel");
+        _statsLabel    = GetNode<Label>  ($"{CharViewBase}/HSplit/InfoVBox/StatsLabel");
+        _weaponBtn     = GetNode<Button> ($"{CharViewBase}/HSplit/GearPanel/WeaponSlot/WeaponSlotButton");
+        _armorBtn      = GetNode<Button> ($"{CharViewBase}/HSplit/GearPanel/ArmorSlot/ArmorSlotButton");
+        _accBtn        = GetNode<Button> ($"{CharViewBase}/HSplit/GearPanel/AccessorySlot/AccessorySlotButton");
 
-        _weaponBtn.Pressed += () => OpenPicker(ItemSlot.Weapon);
-        _armorBtn.Pressed  += () => OpenPicker(ItemSlot.Armor);
-        _accBtn.Pressed    += () => OpenPicker(ItemSlot.Accessory);
+        _weaponBtn.Pressed += () => OnGearSlotPressed(ItemSlot.Weapon);
+        _armorBtn.Pressed  += () => OnGearSlotPressed(ItemSlot.Armor);
+        _accBtn.Pressed    += () => OnGearSlotPressed(ItemSlot.Accessory);
 
-        GetNode<Button>($"{CharViewBase}/VBox/Buttons/ChangeCharacterButton").Pressed += () =>
+        GetNode<Button>($"{CharViewBase}/HSplit/InfoVBox/Buttons/ChangeCharacterButton").Pressed += () =>
         {
             _manager.SelectCharacter("");
             ShowRoster();
         };
-        GetNode<Button>($"{CharViewBase}/VBox/Buttons/StartRunButton").Pressed += () =>
+        GetNode<Button>($"{CharViewBase}/HSplit/InfoVBox/Buttons/StartRunButton").Pressed += () =>
             GetTree().ChangeSceneToFile("res://main.tscn");
 
         // Crafting tab
@@ -170,23 +174,25 @@ public partial class AccountScreen : Control
 
     private static void RefreshSlotButton(Button btn, Character.CharacterData c, ItemSlot slot, string slotName)
     {
-        btn.AddThemeConstantOverride("icon_max_width", 40);
-
         if (c.EquippedItems.TryGetValue(slot.ToString(), out var id))
         {
             var item = ItemRegistry.Get(id);
             if (item != null)
             {
-                btn.Text = $"{slotName}: {item.Name}";
-                btn.Icon = !string.IsNullOrEmpty(item.IconPath)
-                    ? GD.Load<Texture2D>(item.IconPath)
-                    : null;
+                btn.Text        = "";
+                btn.Icon        = !string.IsNullOrEmpty(item.IconPath) ? GD.Load<Texture2D>(item.IconPath) : null;
+                btn.ExpandIcon  = true;
+                btn.TooltipText = BuildTooltip(item);
+                btn.Modulate    = Colors.White;
                 return;
             }
         }
 
-        btn.Icon = null;
-        btn.Text = $"{slotName}: Empty";
+        btn.Icon        = null;
+        btn.ExpandIcon  = false;
+        btn.Text        = "—";
+        btn.TooltipText = $"{slotName}: Empty";
+        btn.Modulate    = new Color(1f, 1f, 1f, 0.4f);
     }
 
     private void RefreshInventory()
@@ -221,6 +227,10 @@ public partial class AccountScreen : Control
                         btn.AddThemeFontSizeOverride("font_size", 10);
                     }
                     btn.TooltipText = BuildTooltip(item);
+                    var capturedId   = id;
+                    var capturedItem = item;
+                    var capturedBtn  = btn;
+                    btn.Pressed += () => ShowInventoryItemPopup(capturedId, capturedItem, capturedBtn);
                 }
             }
             else
@@ -260,6 +270,75 @@ public partial class AccountScreen : Control
         _createPanel.Visible = false;
         RefreshRoster();
         RefreshInventory();
+    }
+
+    private void OnGearSlotPressed(ItemSlot slot)
+    {
+        var c = _manager.SelectedCharacter;
+        if (c == null) return;
+        var anchor = slot switch
+        {
+            ItemSlot.Weapon    => _weaponBtn,
+            ItemSlot.Armor     => _armorBtn,
+            _                  => _accBtn,
+        };
+        if (c.EquippedItems.ContainsKey(slot.ToString()))
+            ShowEquippedItemPopup(slot, anchor);
+        else
+            OpenPicker(slot);
+    }
+
+    private void ShowInventoryItemPopup(string itemId, ItemData item, Button anchor)
+    {
+        var popup = new PopupMenu();
+        var c     = _manager.SelectedCharacter;
+
+        if (c != null) popup.AddItem("Equip",  0);
+        popup.AddItem("Delete", 1);
+
+        popup.IdPressed += (long id) =>
+        {
+            if (id == 0 && c != null)
+                _manager.EquipItem(c.Id, item.Slot, itemId);
+            else if (id == 1)
+                _manager.DeleteItem(itemId);
+            Refresh();
+        };
+
+        ShowPopupAt(popup, anchor);
+    }
+
+    private void ShowEquippedItemPopup(ItemSlot slot, Button anchor)
+    {
+        var c = _manager.SelectedCharacter!;
+        if (!c.EquippedItems.TryGetValue(slot.ToString(), out var itemId)) return;
+
+        bool inventoryFull = _manager.Profile.OwnedItemIds.Count >= Character.ProfileData.MaxInventory;
+        var  popup         = new PopupMenu();
+
+        popup.AddItem(inventoryFull ? "Unequip  (inventory full)" : "Unequip", 0);
+        if (inventoryFull) popup.SetItemDisabled(0, true);
+        popup.AddItem("Delete", 1);
+
+        popup.IdPressed += (long id) =>
+        {
+            if (id == 0)
+                _manager.UnequipItem(c.Id, slot);
+            else if (id == 1)
+                _manager.DeleteItem(itemId);
+            Refresh();
+        };
+
+        ShowPopupAt(popup, anchor);
+    }
+
+    private void ShowPopupAt(PopupMenu popup, Button anchor)
+    {
+        AddChild(popup);
+        popup.PopupHide += popup.QueueFree;
+        popup.ResetSize();
+        var rect = anchor.GetGlobalRect();
+        popup.PopupOnParent(new Rect2I((int)rect.Position.X, (int)rect.Position.Y, (int)rect.Size.X, (int)rect.Size.Y));
     }
 
     private void OpenPicker(ItemSlot slot)

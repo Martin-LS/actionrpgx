@@ -64,7 +64,7 @@ Every run requires a character. Characters are created by the player, persist be
 | Mage      | 100    | 200   | 35          | Magic       | Glass cannon      |
 
 ### Character Lifecycle
-1. **Create** — player picks a name and archetype
+1. **Create** — player picks a name (required) and archetype
 2. **Select** — choose a character from the roster before a run
 3. **Run** — character starts at their saved level; every new level gained during the run is permanent
 4. **Grow** — level and XP carry over to the character; coins and crafting materials go to the shared account pool; permanent stat bonuses can be purchased between runs
@@ -201,9 +201,9 @@ Characters can equip up to 3 items, one per slot. Items persist between runs and
 
 **Item identity:** Each item is a fixed, unique definition with its own ID and icon. Progression produces *new* items — a higher-tier crafted weapon is a new item with its own ID, not an upgraded version of an existing one. Icons never change dynamically; an item always looks the same regardless of who owns it or has it equipped.
 
-**Inventory:** All crafted items go into the **account inventory** — a single shared pool accessible by every character. The full inventory is visible on the Character Screen — every owned item is listed with its slot, stat bonuses, and which character (if any) currently has it equipped.
+**Inventory:** Crafted (unequipped) items go into the **account inventory** — a shared pool accessible by every character, capacity **50 items**. Equipped items are held separately in the character's gear slots and do not count against inventory capacity. The inventory is visible on the Character Screen as a scrollable 5-column icon grid.
 
-**Equipping:** Click a slot button (Weapon / Armor / Accessory) to open the item picker for that slot. Select any item from the account inventory to equip it; "Unequip" removes it from the slot and returns it to the shared pool.
+**Equipping:** Click an inventory item → popup → **Equip** to move it into its slot on the selected character (any currently equipped item swaps back to inventory). Click an occupied gear slot → popup → **Unequip** (returns item to inventory; blocked if inventory is full) or **Delete** (removes permanently). Empty gear slots open the item picker to select from compatible inventory items.
 
 ---
 

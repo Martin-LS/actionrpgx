@@ -37,10 +37,7 @@ public partial class CharacterManager : Node
             _                     => ("iron_sword",      "leather_vest",  "war_band"),
         };
 
-        foreach (var id in new[] { weapon, armor, accessory })
-            if (!Profile.OwnedItemIds.Contains(id) && Profile.OwnedItemIds.Count < ProfileData.MaxInventory)
-                Profile.OwnedItemIds.Add(id);
-
+        // Starter items go straight into gear slots — not the shared inventory pool.
         c.EquippedItems[ItemSlot.Weapon.ToString()]    = weapon;
         c.EquippedItems[ItemSlot.Armor.ToString()]     = armor;
         c.EquippedItems[ItemSlot.Accessory.ToString()] = accessory;
@@ -80,15 +77,38 @@ public partial class CharacterManager : Node
     {
         var c = _characters.FirstOrDefault(x => x.Id == characterId);
         if (c == null || !Profile.OwnedItemIds.Contains(itemId)) return;
+
+        // Return the currently-equipped item to the inventory pool.
+        if (c.EquippedItems.TryGetValue(slot.ToString(), out var oldId))
+            Profile.OwnedItemIds.Add(oldId);
+
+        Profile.OwnedItemIds.Remove(itemId);
         c.EquippedItems[slot.ToString()] = itemId;
         Save();
     }
 
-    public void UnequipItem(string characterId, ItemSlot slot)
+    // Returns false if the inventory is full and the item cannot be returned.
+    public bool UnequipItem(string characterId, ItemSlot slot)
     {
         var c = _characters.FirstOrDefault(x => x.Id == characterId);
-        if (c == null) return;
+        if (c == null || !c.EquippedItems.TryGetValue(slot.ToString(), out var itemId)) return false;
+        if (Profile.OwnedItemIds.Count >= ProfileData.MaxInventory) return false;
+
         c.EquippedItems.Remove(slot.ToString());
+        Profile.OwnedItemIds.Add(itemId);
+        Save();
+        return true;
+    }
+
+    // Removes an item from wherever it lives — inventory or any character's gear slot.
+    public void DeleteItem(string itemId)
+    {
+        Profile.OwnedItemIds.Remove(itemId);
+        foreach (var c in _characters)
+        {
+            var key = c.EquippedItems.FirstOrDefault(kv => kv.Value == itemId).Key;
+            if (key != null) c.EquippedItems.Remove(key);
+        }
         Save();
     }
 
@@ -174,5 +194,10 @@ public partial class CharacterManager : Node
             }
             _characters.Add(CharacterData.FromDict(d));
         }
+
+        // Migrate old saves: equipped items must not also sit in the inventory pool.
+        foreach (var c in _characters)
+            foreach (var id in c.EquippedItems.Values)
+                Profile.OwnedItemIds.Remove(id);
     }
 }

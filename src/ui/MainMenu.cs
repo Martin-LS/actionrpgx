@@ -6,7 +6,7 @@ public partial class MainMenu : Control
 {
     public override void _Ready()
     {
-        GetNode<Button>("VBox/PlayButton").Pressed += OnPlayPressed;
+        GetNode<Button>("MenuCard/VBox/PlayButton").Pressed += OnPlayPressed;
     }
 
     private void OnPlayPressed()
