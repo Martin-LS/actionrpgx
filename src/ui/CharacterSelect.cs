@@ -16,12 +16,16 @@ public partial class CharacterSelect : Control
         _createPanel   = GetNode<Panel>("HSplit/Right/CreatePanel");
         _nameInput     = GetNode<LineEdit>("HSplit/Right/CreatePanel/VBox/NameInput");
 
+        var confirmBtn = GetNode<Button>("HSplit/Right/CreatePanel/VBox/ConfirmBtn");
+        _nameInput.TextChanged += text => confirmBtn.Disabled = text.Trim().Length == 0;
+
         GetNode<Button>("HSplit/Left/NewCharacterButton").Pressed += () => _createPanel.Visible = true;
+        GetNode<Button>("HSplit/Left/BackButton").Pressed         += () => GetTree().ChangeSceneToFile("res://src/ui/main_menu.tscn");
 
         GetNode<Button>("HSplit/Right/CreatePanel/VBox/WarriorBtn").Pressed += () => _pendingType = CharacterType.Warrior;
         GetNode<Button>("HSplit/Right/CreatePanel/VBox/RogueBtn").Pressed   += () => _pendingType = CharacterType.Rogue;
         GetNode<Button>("HSplit/Right/CreatePanel/VBox/MageBtn").Pressed    += () => _pendingType = CharacterType.Mage;
-        GetNode<Button>("HSplit/Right/CreatePanel/VBox/ConfirmBtn").Pressed += OnConfirmCreate;
+        confirmBtn.Pressed                                                  += OnConfirmCreate;
         GetNode<Button>("HSplit/Right/CreatePanel/VBox/CancelBtn").Pressed  += () => _createPanel.Visible = false;
 
         _createPanel.Visible = false;

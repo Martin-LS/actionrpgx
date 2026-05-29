@@ -49,6 +49,6 @@ public partial class RunEndOverlay : CanvasLayer
             session?.CraftingCurrency1Earned ?? 0);
 
         GetTree().Paused = false;
-        GetTree().ChangeSceneToFile("res://src/ui/account_screen.tscn");
+        GetTree().ChangeSceneToFile("res://src/ui/character_screen.tscn");
     }
 }

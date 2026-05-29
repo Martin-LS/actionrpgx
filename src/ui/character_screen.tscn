@@ -3,7 +3,19 @@
 [ext_resource type="Script" uid="uid://ccharscreen1" path="res://src/ui/CharacterScreen.cs" id="1_chr01"]
 [ext_resource type="Theme" path="res://src/ui/game_theme.tres" id="2_theme"]
 
-[node name="CharacterScreen" type="Control" unique_id=5551111001]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_left_panel"]
+bg_color = Color(0.15, 0.10, 0.06, 1)
+border_width_left = 0
+border_width_top = 0
+border_width_right = 1
+border_width_bottom = 0
+border_color = Color(0.52, 0.36, 0.14, 1)
+content_margin_left = 8.0
+content_margin_right = 8.0
+content_margin_top = 8.0
+content_margin_bottom = 8.0
+
+[node name="CharacterScreen" type="Control" unique_id=6001000001]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -13,99 +25,205 @@ grow_vertical = 2
 theme = ExtResource("2_theme")
 script = ExtResource("1_chr01")
 
-[node name="VBox" type="VBoxContainer" parent="." unique_id=5551111002]
+[node name="Bg" type="ColorRect" parent="." unique_id=6001000050]
 layout_mode = 1
-anchor_left = 0.5
-anchor_top = 0.0
-anchor_right = 0.5
+anchors_preset = 15
+anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -280.0
-offset_right = 280.0
-offset_top = 32.0
-offset_bottom = -32.0
-grow_horizontal = 2
+color = Color(0.10, 0.07, 0.04, 1)
+
+[node name="VBox" type="VBoxContainer" parent="." unique_id=6001000002]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_top = 12.0
+offset_right = -16.0
+offset_bottom = -12.0
+theme_override_constants/separation = 12
+
+[node name="BackButton" type="Button" parent="VBox" unique_id=6001000003]
+custom_minimum_size = Vector2(180, 40)
+layout_mode = 2
+size_flags_horizontal = 0
+text = "← Change Character"
+
+[node name="HSplit" type="HSplitContainer" parent="VBox" unique_id=6001000004]
+layout_mode = 2
+size_flags_vertical = 3
+split_offset = 80
+
+[node name="LeftPanel" type="PanelContainer" parent="VBox/HSplit" unique_id=6001000005]
+layout_mode = 2
+custom_minimum_size = Vector2(280, 0)
+theme_override_styles/panel = SubResource("StyleBoxFlat_left_panel")
+
+[node name="LeftVBox" type="VBoxContainer" parent="VBox/HSplit/LeftPanel" unique_id=6001000051]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 8
+
+[node name="InventoryTitle" type="Label" parent="VBox/HSplit/LeftPanel/LeftVBox" unique_id=6001000006]
+layout_mode = 2
+text = "Account Inventory"
+theme_override_font_sizes/font_size = 18
+
+[node name="InventoryInfo" type="Label" parent="VBox/HSplit/LeftPanel/LeftVBox" unique_id=6001000007]
+layout_mode = 2
+text = "0 / 50"
+theme_override_font_sizes/font_size = 13
+
+[node name="InventoryScroll" type="ScrollContainer" parent="VBox/HSplit/LeftPanel/LeftVBox" unique_id=6001000008]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="InventoryGrid" type="GridContainer" parent="VBox/HSplit/LeftPanel/LeftVBox/InventoryScroll" unique_id=6001000009]
+layout_mode = 2
+size_flags_horizontal = 3
+columns = 5
+theme_override_constants/h_separation = 4
+theme_override_constants/v_separation = 4
+
+[node name="RightPanel" type="VBoxContainer" parent="VBox/HSplit" unique_id=6001000010]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="TabContainer" type="TabContainer" parent="VBox/HSplit/RightPanel" unique_id=6001000011]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Equipment" type="VBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer" unique_id=6001000012]
+layout_mode = 2
+
+[node name="CharacterView" type="VBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer/Equipment" unique_id=6001000026]
+layout_mode = 2
+size_flags_vertical = 3
 theme_override_constants/separation = 14
 
-[node name="NameLabel" type="Label" parent="VBox" unique_id=5551111003]
+[node name="HSplit" type="HBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer/Equipment/CharacterView" unique_id=6001000027]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 16
+
+[node name="InfoVBox" type="VBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer/Equipment/CharacterView/HSplit" unique_id=6001000060]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 12
+
+[node name="NameLabel" type="Label" parent="VBox/HSplit/RightPanel/TabContainer/Equipment/CharacterView/HSplit/InfoVBox" unique_id=6001000028]
 layout_mode = 2
 text = "Character Name"
-theme_override_font_sizes/font_size = 32
+theme_override_font_sizes/font_size = 28
 
-[node name="TypeLabel" type="Label" parent="VBox" unique_id=5551111004]
+[node name="TypeLabel" type="Label" parent="VBox/HSplit/RightPanel/TabContainer/Equipment/CharacterView/HSplit/InfoVBox" unique_id=6001000029]
 layout_mode = 2
-text = "Type"
+text = "Archetype"
 theme_override_font_sizes/font_size = 16
 
-[node name="LevelLabel" type="Label" parent="VBox" unique_id=5551111005]
+[node name="LevelLabel" type="Label" parent="VBox/HSplit/RightPanel/TabContainer/Equipment/CharacterView/HSplit/InfoVBox" unique_id=6001000030]
 layout_mode = 2
 text = "Level 1   XP: 0"
 theme_override_font_sizes/font_size = 16
 
-[node name="StatsLabel" type="Label" parent="VBox" unique_id=5551111006]
+[node name="StatsLabel" type="Label" parent="VBox/HSplit/RightPanel/TabContainer/Equipment/CharacterView/HSplit/InfoVBox" unique_id=6001000031]
 layout_mode = 2
 text = "Stats"
 theme_override_font_sizes/font_size = 16
 
-[node name="GearPanel" type="VBoxContainer" parent="VBox" unique_id=5551111011]
-layout_mode = 2
-theme_override_constants/separation = 8
-
-[node name="GearLabel" type="Label" parent="VBox/GearPanel" unique_id=5551111012]
-layout_mode = 2
-text = "— Equipment —"
-theme_override_font_sizes/font_size = 16
-
-[node name="WeaponSlotButton" type="Button" parent="VBox/GearPanel" unique_id=5551111013]
-custom_minimum_size = Vector2(0, 44)
-layout_mode = 2
-text = "Weapon: Empty"
-
-[node name="ArmorSlotButton" type="Button" parent="VBox/GearPanel" unique_id=5551111014]
-custom_minimum_size = Vector2(0, 44)
-layout_mode = 2
-text = "Armor: Empty"
-
-[node name="AccessorySlotButton" type="Button" parent="VBox/GearPanel" unique_id=5551111015]
-custom_minimum_size = Vector2(0, 44)
-layout_mode = 2
-text = "Accessory: Empty"
-
-[node name="InventoryPanel" type="VBoxContainer" parent="VBox" unique_id=5551111016]
-layout_mode = 2
-size_flags_vertical = 3
-theme_override_constants/separation = 6
-
-[node name="InventoryLabel" type="Label" parent="VBox/InventoryPanel" unique_id=5551111017]
-layout_mode = 2
-text = "— Inventory —"
-theme_override_font_sizes/font_size = 16
-
-[node name="InventoryScroll" type="ScrollContainer" parent="VBox/InventoryPanel" unique_id=5551111018]
-layout_mode = 2
-size_flags_vertical = 3
-custom_minimum_size = Vector2(0, 80)
-
-[node name="InventoryList" type="VBoxContainer" parent="VBox/InventoryPanel/InventoryScroll" unique_id=5551111019]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_constants/separation = 4
-
-[node name="Spacer" type="Control" parent="VBox" unique_id=5551111007]
+[node name="Spacer" type="Control" parent="VBox/HSplit/RightPanel/TabContainer/Equipment/CharacterView/HSplit/InfoVBox" unique_id=6001000037]
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="Buttons" type="HBoxContainer" parent="VBox" unique_id=5551111008]
+[node name="Buttons" type="HBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer/Equipment/CharacterView/HSplit/InfoVBox" unique_id=6001000038]
 layout_mode = 2
-theme_override_constants/separation = 16
+theme_override_constants/separation = 12
 
-[node name="BackButton" type="Button" parent="VBox/Buttons" unique_id=5551111009]
-custom_minimum_size = Vector2(0, 48)
-layout_mode = 2
-size_flags_horizontal = 3
-text = "Back"
-
-[node name="StartRunButton" type="Button" parent="VBox/Buttons" unique_id=5551111010]
+[node name="StartRunButton" type="Button" parent="VBox/HSplit/RightPanel/TabContainer/Equipment/CharacterView/HSplit/InfoVBox/Buttons" unique_id=6001000040]
 custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Start Run"
+
+[node name="GearPanel" type="VBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer/Equipment/CharacterView/HSplit" unique_id=6001000032]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="GearLabel" type="Label" parent="VBox/HSplit/RightPanel/TabContainer/Equipment/CharacterView/HSplit/GearPanel" unique_id=6001000033]
+layout_mode = 2
+text = "— Equipment —"
+theme_override_font_sizes/font_size = 16
+
+[node name="WeaponSlot" type="VBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer/Equipment/CharacterView/HSplit/GearPanel" unique_id=6001000061]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="WeaponLabel" type="Label" parent="VBox/HSplit/RightPanel/TabContainer/Equipment/CharacterView/HSplit/GearPanel/WeaponSlot" unique_id=6001000062]
+layout_mode = 2
+text = "Weapon"
+theme_override_font_sizes/font_size = 13
+
+[node name="WeaponSlotButton" type="Button" parent="VBox/HSplit/RightPanel/TabContainer/Equipment/CharacterView/HSplit/GearPanel/WeaponSlot" unique_id=6001000034]
+custom_minimum_size = Vector2(60, 60)
+layout_mode = 2
+size_flags_horizontal = 0
+text = "—"
+
+[node name="ArmorSlot" type="VBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer/Equipment/CharacterView/HSplit/GearPanel" unique_id=6001000063]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="ArmorLabel" type="Label" parent="VBox/HSplit/RightPanel/TabContainer/Equipment/CharacterView/HSplit/GearPanel/ArmorSlot" unique_id=6001000064]
+layout_mode = 2
+text = "Armor"
+theme_override_font_sizes/font_size = 13
+
+[node name="ArmorSlotButton" type="Button" parent="VBox/HSplit/RightPanel/TabContainer/Equipment/CharacterView/HSplit/GearPanel/ArmorSlot" unique_id=6001000035]
+custom_minimum_size = Vector2(60, 60)
+layout_mode = 2
+size_flags_horizontal = 0
+text = "—"
+
+[node name="AccessorySlot" type="VBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer/Equipment/CharacterView/HSplit/GearPanel" unique_id=6001000065]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="AccessoryLabel" type="Label" parent="VBox/HSplit/RightPanel/TabContainer/Equipment/CharacterView/HSplit/GearPanel/AccessorySlot" unique_id=6001000066]
+layout_mode = 2
+text = "Accessory"
+theme_override_font_sizes/font_size = 13
+
+[node name="AccessorySlotButton" type="Button" parent="VBox/HSplit/RightPanel/TabContainer/Equipment/CharacterView/HSplit/GearPanel/AccessorySlot" unique_id=6001000036]
+custom_minimum_size = Vector2(60, 60)
+layout_mode = 2
+size_flags_horizontal = 0
+text = "—"
+
+[node name="Crafting" type="VBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer" unique_id=6001000041]
+layout_mode = 2
+
+[node name="VBox" type="VBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer/Crafting" unique_id=6001000042]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="CraftLabel" type="Label" parent="VBox/HSplit/RightPanel/TabContainer/Crafting/VBox" unique_id=6001000043]
+layout_mode = 2
+text = "Crafting  (v1 — free)"
+theme_override_font_sizes/font_size = 20
+
+[node name="CraftWeaponButton" type="Button" parent="VBox/HSplit/RightPanel/TabContainer/Crafting/VBox" unique_id=6001000044]
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+text = "Craft Weapon  (Iron Sword  +3 DMG)"
+
+[node name="CraftArmorButton" type="Button" parent="VBox/HSplit/RightPanel/TabContainer/Crafting/VBox" unique_id=6001000045]
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+text = "Craft Armor  (Leather Vest  +20 HP)"
+
+[node name="CraftAccessoryButton" type="Button" parent="VBox/HSplit/RightPanel/TabContainer/Crafting/VBox" unique_id=6001000046]
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+text = "Craft Accessory  (Swift Ring  +20 Speed)"

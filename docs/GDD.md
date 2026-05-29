@@ -87,7 +87,7 @@ A run cannot start without a selected character.
 - Killing an enemy grants **`1 XP × map level`** instantly (kill reward, no pickup required)
 - Killing enemies also drops **XP gems** — collecting them adds further XP
 - Both sources fill the same XP bar
-- On level up: automatic permanent bonuses are applied — **+5 Max Health, +1 Weapon Damage**
+- On level up: automatic permanent bonuses are applied — **+5 Max Health, +1 Damage**
 - Level and XP within the current level persist when the run ends; the character picks up exactly where they left off
 - No popup or pause — levelling up is seamless
 
@@ -197,7 +197,7 @@ Characters can equip up to 3 items, one per slot. Items persist between runs and
 | Rogue     | Iron Sword      | Leather Vest| Swift Ring     |
 | Mage      | Enchanted Blade | Mage Robe   | Vitality Charm |
 
-**Acquisition:** Gear is not dropped by enemies. New items come from crafting — each item has a recipe requiring a combination of materials (see Currencies). Gear is never lost.
+**Acquisition:** Gear is not dropped by enemies. New items come from crafting — each item has a recipe requiring a combination of materials (see Currencies).
 
 **Item identity:** Each item is a fixed, unique definition with its own ID and icon. Progression produces *new* items — a higher-tier crafted weapon is a new item with its own ID, not an upgraded version of an existing one. Icons never change dynamically; an item always looks the same regardless of who owns it or has it equipped.
 
@@ -238,13 +238,16 @@ Crafting materials are tiered — common through exotic. Each tier drops at a di
 
 ### Menus
 - **Main Menu** → title screen, Play button
-- **Character Select** → list characters, create new (name + archetype), delete; clicking a character navigates to their screen
-- **Character Screen** → character stats, three tabs, Start Run button
-  - **Equipment tab** *(default)* — gear slot buttons (Weapon / Armor / Accessory)
+- **Character Select** → roster only; list characters, create new (name + archetype), delete. No inventory visible here — the player's only job is choosing who to play. Clicking a character navigates to their Character Screen.
+- **Character Screen** → full management hub for the selected character: inventory (left), character stats + gear + tabs (right), Start Run button
+  - **Inventory** (left panel) — account-shared item pool, 5-column scrollable grid, 50-item capacity. Clicking a filled slot opens a popup (Equip / Delete). Equipped items are not shown here — they live in the gear slots.
+  - **Equipment tab** *(default)* — gear slot buttons (Weapon / Armor / Accessory) showing equipped items. Clicking an occupied slot: popup (Unequip / Delete). Clicking an empty slot: item picker filtered to that slot.
+  - **Crafting tab** — craft new items from materials
   - **Sigils tab** — visible, empty (reserved for future sigil system)
   - **Skills tab** — visible, empty (reserved for future skill tree system)
-  - All three tabs are always visible; empty tabs are not locked or greyed out
-- Run results overlay → shown at run end; return button goes back to character screen
+  - All four tabs are always visible; empty tabs are not locked or greyed out
+  - Back button returns to Character Select
+- **Run results overlay** → shown at run end; return button goes back to Character Screen
 - **Pause menu** — ESC during a run; second ESC or Resume button closes it; run is paused while open
   - **Resume** button — closes menu, run continues
   - **End Run** button — exits immediately to character screen; all progress from this run is discarded (level, XP, coins, crafting materials). Warning text alongside: *"All progress from this run will be lost."*

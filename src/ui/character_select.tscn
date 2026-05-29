@@ -47,6 +47,11 @@ custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
 text = "+ New Character"
 
+[node name="BackButton" type="Button" parent="HSplit/Left" unique_id=29767035]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+text = "← Back to Menu"
+
 [node name="Right" type="VBoxContainer" parent="HSplit" unique_id=1325313161]
 layout_mode = 2
 
@@ -92,6 +97,7 @@ text = "Mage  —  100 HP   200 Spd   35 DMG"
 [node name="ConfirmBtn" type="Button" parent="HSplit/Right/CreatePanel/VBox" unique_id=1438081010]
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
+disabled = true
 text = "Create"
 
 [node name="CancelBtn" type="Button" parent="HSplit/Right/CreatePanel/VBox" unique_id=441765050]

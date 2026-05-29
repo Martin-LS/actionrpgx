@@ -11,6 +11,6 @@ public partial class MainMenu : Control
 
     private void OnPlayPressed()
     {
-        GetTree().ChangeSceneToFile("res://src/ui/account_screen.tscn");
+        GetTree().ChangeSceneToFile("res://src/ui/character_select.tscn");
     }
 }

@@ -44,47 +44,47 @@ MainMenu (Control)
 ```
 
 ### `src/ui/character_select.tscn`
+Roster-only screen. No inventory shown here — player's only job is choosing who to play.
 ```
 CharacterSelect (Control)
 └── HSplit (HSplitContainer)
     ├── Left (VBoxContainer)
     │   ├── CharactersLabel (Label)
-    │   ├── Scroll (ScrollContainer)
-    │   │   └── CharacterList (VBoxContainer)  ← cards added at runtime; clicking a card navigates to character_screen
-    │   └── NewCharacterButton (Button)
+    │   ├── Scroll (ScrollContainer, expand)
+    │   │   └── CharacterList (VBoxContainer) ← character cards added at runtime
+    │   ├── NewCharacterButton (Button)
+    │   └── BackButton (Button) ← "← Back to Menu" → main_menu.tscn
     └── Right (VBoxContainer)
-        └── CreatePanel (Panel)
-            └── VBox (VBoxContainer)
-                ├── CreateLabel, NameInput, WarriorBtn, RogueBtn, MageBtn
-                └── ConfirmBtn, CancelBtn
+        └── CreatePanel (Panel) ← shown when New clicked; hidden by default
+            └── VBox
+                ├── CreateLabel, NameInput (ConfirmBtn disabled until name entered)
+                ├── WarriorBtn, RogueBtn, MageBtn
+                ├── ConfirmBtn, CancelBtn
 ```
+On character selected: `CharacterManager.SelectCharacter(id)` → `character_screen.tscn`.
 
-### `src/ui/account_screen.tscn`
-Active character management screen (replaces old character_select + character_screen flow).
+### `src/ui/character_screen.tscn`
+Full management hub for the selected character. Always has a character in context.
 ```
-AccountScreen (Control)
+CharacterScreen (Control)
 └── VBox (VBoxContainer)
-    ├── BackButton (Button)
+    ├── BackButton (Button) ← "← Change Character" → character_select.tscn
     └── HSplit (HSplitContainer)
-        ├── LeftPanel (VBoxContainer, min width 280)
-        │   ├── InventoryTitle (Label)
-        │   ├── InventoryInfo (Label)  ← "N / 50  Coins: X  Crafting: Y"
-        │   └── InventoryScroll (ScrollContainer, expand vertical)
-        │       └── InventoryGrid (GridContainer, 5 cols) ← 50 Button slots, runtime-populated
-        │           └── [50× slot buttons] ← icon from ItemData.IconPath; dimmed if empty
+        ├── LeftPanel (PanelContainer, min width 280)
+        │   └── LeftVBox (VBoxContainer)
+        │       ├── InventoryTitle (Label)
+        │       ├── InventoryInfo (Label)  ← "N / 50  Coins: X  Crafting: Y"
+        │       └── InventoryScroll (ScrollContainer, expand vertical)
+        │           └── InventoryGrid (GridContainer, 5 cols) ← 50 Button slots, runtime-populated
         └── RightPanel (VBoxContainer)
             └── TabContainer
-                ├── Characters tab
-                │   ├── RosterView (VBoxContainer) ← character cards at runtime
-                │   │   ├── Scroll/CharacterList
-                │   │   ├── NewCharacterButton
-                │   │   └── CreatePanel (Panel, hidden until New clicked)
-                │   └── CharacterView (VBoxContainer, hidden until character selected)
+                ├── Equipment tab (VBoxContainer)
+                │   └── CharacterView (VBoxContainer, always visible)
                 │       └── HSplit (HBoxContainer)
                 │           ├── InfoVBox (VBoxContainer, expand) ← name/type/level/stats labels
                 │           │   ├── NameLabel, TypeLabel, LevelLabel, StatsLabel
                 │           │   ├── Spacer (expand)
-                │           │   └── Buttons ← ChangeCharacterButton, StartRunButton
+                │           │   └── Buttons ← StartRunButton
                 │           └── GearPanel (VBoxContainer) ← right column, shrink width
                 │               ├── GearLabel ("— Equipment —")
                 │               ├── WeaponSlot (VBoxContainer)
@@ -95,10 +95,10 @@ AccountScreen (Control)
                 └── Crafting tab
                     └── VBox ← CraftWeaponButton, CraftArmorButton, CraftAccessoryButton
 ```
-**Inventory grid:** 50 slots (5 cols, scrollable), all always visible. Empty slots are dimmed. Clicking a filled slot opens a `PopupMenu` (Equip / Delete). Equip auto-routes to the item's slot on the selected character, swapping out any currently equipped item. Capacity defined by `ProfileData.MaxInventory = 50` — counts only unequipped items; equipped items live separately in `CharacterData.EquippedItems`.
+**Inventory grid:** 50 slots (5 cols, scrollable), all always visible. Empty slots are dimmed. Clicking a filled slot opens a `PopupMenu` (Equip / Delete). Equip auto-routes to the item's slot on the selected character, swapping out any currently equipped item. Capacity defined by `ProfileData.MaxInventory = 50` — counts only unequipped items; equipped items live separately in `CharacterData.EquippedItems`. If `SelectedCharacter` is null on `_Ready`, redirects to `character_select.tscn`.
 
 ### `src/ui/item_picker_panel.tscn`
-Modal overlay opened from gear slot buttons **when the slot is empty**. UnequipButton is hidden when slot is empty; shown (and functional) only when opened for an occupied slot.
+Modal overlay opened from gear slot buttons **when the slot is empty**. Occupied slots use a PopupMenu (Unequip / Delete) instead — ItemPickerPanel is never opened for an occupied slot.
 ```
 ItemPickerPanel (Control, full-screen)
 ├── Dim (ColorRect, semi-transparent black)
@@ -107,7 +107,6 @@ ItemPickerPanel (Control, full-screen)
         ├── TitleLabel (Label)
         ├── Scroll (ScrollContainer)
         │   └── ItemList (VBoxContainer) ← buttons added at runtime, one per owned item in slot
-        ├── UnequipButton (Button)
         └── CloseButton (Button)
 ```
 
@@ -140,7 +139,8 @@ Main (Node)
 | Hud               | Health bar, XP bar, level, coin counter, run timer           | `res://src/hud/`          | ✅ done |
 | RunSession        | Run timer, win/lose detection, emits RunEnded signal         | `res://src/run/`          | ✅ done |
 | UpgradePicker     | (removed from scene — code kept dormant)                     | `res://src/ui/`           | ❌ removed |
-| CharacterScreen   | Per-character hub: stats, gear slots, Start Run              | `res://src/ui/`           | ✅ done |
+| CharacterSelect   | Roster screen: list, create, delete characters; no inventory | `res://src/ui/`           | ✅ done |
+| CharacterScreen   | Per-character hub: inventory, gear slots, tabs, Start Run    | `res://src/ui/`           | ✅ done |
 | ItemPickerPanel   | Modal picker for equipping/unequipping gear by slot          | `res://src/ui/`           | ✅ done |
 | ItemRegistry      | Static catalogue of all `ItemData` records (9 starter items) | `res://src/items/`        | ✅ done |
 | RunEndOverlay     | Show win/die results, flush run to character, return to character screen | `res://src/ui/` | ✅ done |
@@ -154,7 +154,8 @@ Main (Node)
 
 | Class               | Kind        | Fields                                                         |
 |---------------------|-------------|----------------------------------------------------------------|
-| `CharacterData`     | Plain C#    | Id, Name, Type (enum), RunsCompleted, CurrentLevel, CurrentXp, CoinBank, CraftingCurrency1, BonusMaxHealth, BonusSpeed, BonusDamage, OwnedItemIds, EquippedItems |
+| `ProfileData`       | Plain C#    | CoinBank, CraftingCurrency1, OwnedItemIds (List\<string\>), MaxInventory (const = 50) — account-shared across all characters |
+| `CharacterData`     | Plain C#    | Id, Name, Type (enum), RunsCompleted, CurrentLevel, CurrentXp, BonusMaxHealth, BonusSpeed, BonusDamage, EquippedItems |
 | `CharacterType`     | C# enum     | Warrior, Rogue, Mage                                           |
 | `ItemData`          | C# record   | Id, Name, Slot (enum), BonusHp, BonusSpeed, BonusDamage, IconPath (string `res://` path to item texture) |
 | `ItemSlot`          | C# enum     | Weapon, Armor, Accessory                                       |
