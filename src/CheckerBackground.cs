@@ -8,12 +8,18 @@ public partial class CheckerBackground : Node3D
     private const int TileSize = 16;
     private const int TileStep = 17; // 16px tile + 1px spacing
 
-    // Ground tiles decoded from Kenney's TMX sample map Ground/terrain layer
-    private static readonly Vector2I[] GroundTiles =
+    // Confirmed clean flat-ground center tiles (col=5, block center row).
+    private static readonly Vector2I[] TerrainTypes =
     {
-        new(2, 0), new(3, 0), new(4, 0), new(5, 0),
-        new(0, 1), new(1, 1), new(2, 1), new(3, 1), new(4, 1), new(5, 1),
-        new(1, 2), new(2, 2), new(3, 2), new(4, 2),
+        new(5,  1),  // green grass (confirmed)
+        new(5, 16),  // grey stone  (confirmed)
+    };
+
+    // Water-dominant tiles from the water+grass autotile block (rows 0-2).
+    // Used to fill random pool patches on top of the base terrain.
+    private static readonly Vector2I[] WaterTiles =
+    {
+        new(0, 1), new(1, 1), new(2, 1), new(3, 1),
     };
 
     public override void _Ready()
@@ -28,22 +34,39 @@ public partial class CheckerBackground : Node3D
         var rng = new RandomNumberGenerator();
         rng.Randomize();
 
-        // Each run picks a primary tile type; 15% chance of variation per tile
-        var primary = GroundTiles[rng.RandiRange(0, GroundTiles.Length - 1)];
-
+        // Fill base terrain
+        var chosen = TerrainTypes[rng.RandiRange(0, TerrainTypes.Length - 1)];
+        var baseSrc = new Rect2I(chosen.X * TileStep, chosen.Y * TileStep, TileSize, TileSize);
         for (int ty = 0; ty < mapTiles; ty++)
-        {
             for (int tx = 0; tx < mapTiles; tx++)
-            {
-                var tile = rng.Randf() < 0.85f
-                    ? primary
-                    : GroundTiles[rng.RandiRange(0, GroundTiles.Length - 1)];
+                mapImage.BlitRect(sheetImage, baseSrc, new Vector2I(tx * TileSize, ty * TileSize));
 
-                mapImage.BlitRect(
-                    sheetImage,
-                    new Rect2I(tile.X * TileStep, tile.Y * TileStep, TileSize, TileSize),
-                    new Vector2I(tx * TileSize, ty * TileSize));
+        // Scatter random water pools on top.
+        // Half are placed near spawn centre (tile 64,64) so at least some are always visible.
+        int numPools = rng.RandiRange(6, 12);
+        int cx = mapTiles / 2;
+        for (int p = 0; p < numPools; p++)
+        {
+            int poolW = rng.RandiRange(4, 10);
+            int poolH = rng.RandiRange(4, 10);
+            int px, py;
+            if (p < numPools / 2)
+            {
+                // Near-centre — within ±20 tiles of spawn (guaranteed visible)
+                px = Mathf.Clamp(cx + rng.RandiRange(-20, 20) - poolW / 2, 2, mapTiles - poolW - 2);
+                py = Mathf.Clamp(cx + rng.RandiRange(-20, 20) - poolH / 2, 2, mapTiles - poolH - 2);
             }
+            else
+            {
+                // Anywhere on the map for further variety
+                px = rng.RandiRange(2, mapTiles - poolW - 2);
+                py = rng.RandiRange(2, mapTiles - poolH - 2);
+            }
+            var wt   = WaterTiles[rng.RandiRange(0, WaterTiles.Length - 1)];
+            var wSrc = new Rect2I(wt.X * TileStep, wt.Y * TileStep, TileSize, TileSize);
+            for (int wy = 0; wy < poolH; wy++)
+                for (int wx = 0; wx < poolW; wx++)
+                    mapImage.BlitRect(sheetImage, wSrc, new Vector2I((px + wx) * TileSize, (py + wy) * TileSize));
         }
 
         var texture = ImageTexture.CreateFromImage(mapImage);
