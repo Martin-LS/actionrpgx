@@ -2,16 +2,16 @@ using Godot;
 using System.Collections.Generic;
 using System.Linq;
 using Godot1.Items;
-using Godot1.Meta;
 
 namespace Godot1.Character;
 
 public partial class CharacterManager : Node
 {
-    private const string SavePath = "user://characters.json";
+    private const string SavePath = "user://save.json";
 
     private List<CharacterData> _characters = new();
 
+    public ProfileData Profile { get; private set; } = new();
     public CharacterData? SelectedCharacter { get; private set; }
 
     public override void _Ready() => Load();
@@ -27,22 +27,23 @@ public partial class CharacterManager : Node
         return c;
     }
 
-    private static void SeedStarterGear(CharacterData c)
+    private void SeedStarterGear(CharacterData c)
     {
         var (weapon, armor, accessory) = c.Type switch
         {
-            CharacterType.Warrior => ("iron_sword",      "chain_mail",   "war_band"),
-            CharacterType.Rogue   => ("iron_sword",      "leather_vest", "swift_ring"),
-            CharacterType.Mage    => ("enchanted_blade", "mage_robe",    "vitality_charm"),
-            _                     => ("iron_sword",      "leather_vest", "war_band"),
+            CharacterType.Warrior => ("iron_sword",      "chain_mail",    "war_band"),
+            CharacterType.Rogue   => ("iron_sword",      "leather_vest",  "swift_ring"),
+            CharacterType.Mage    => ("enchanted_blade", "mage_robe",     "vitality_charm"),
+            _                     => ("iron_sword",      "leather_vest",  "war_band"),
         };
 
-        c.OwnedItemIds.Add(weapon);
-        c.OwnedItemIds.Add(armor);
-        c.OwnedItemIds.Add(accessory);
-        c.EquippedItems[Items.ItemSlot.Weapon.ToString()]    = weapon;
-        c.EquippedItems[Items.ItemSlot.Armor.ToString()]     = armor;
-        c.EquippedItems[Items.ItemSlot.Accessory.ToString()] = accessory;
+        foreach (var id in new[] { weapon, armor, accessory })
+            if (!Profile.OwnedItemIds.Contains(id) && Profile.OwnedItemIds.Count < ProfileData.MaxInventory)
+                Profile.OwnedItemIds.Add(id);
+
+        c.EquippedItems[ItemSlot.Weapon.ToString()]    = weapon;
+        c.EquippedItems[ItemSlot.Armor.ToString()]     = armor;
+        c.EquippedItems[ItemSlot.Accessory.ToString()] = accessory;
     }
 
     public void Delete(string id)
@@ -62,52 +63,23 @@ public partial class CharacterManager : Node
         SelectedCharacter.RunsCompleted++;
         SelectedCharacter.CurrentLevel     = finalLevel;
         SelectedCharacter.CurrentXp        = finalXp;
-        SelectedCharacter.CoinBank        += coinsEarned;
-        SelectedCharacter.CraftingCurrency1 += craftingCurrency1Earned;
+        Profile.CoinBank          += coinsEarned;
+        Profile.CraftingCurrency1 += craftingCurrency1Earned;
         Save();
     }
 
-    public bool PurchaseUpgrade(string characterId, MetaUpgradeType type)
+    public bool AddItemToInventory(string itemId)
     {
-        var c = _characters.FirstOrDefault(x => x.Id == characterId);
-        if (c == null) return false;
-
-        int level = type switch
-        {
-            MetaUpgradeType.MaxHealth => c.BonusMaxHealth / 10,
-            MetaUpgradeType.Speed     => (int)(c.BonusSpeed / 10f),
-            MetaUpgradeType.Damage    => (int)(c.BonusDamage / 2f),
-            _                         => 0
-        };
-
-        if (level >= 5) return false;
-        int cost = (level + 1) * 50;
-        if (c.CoinBank < cost) return false;
-
-        c.CoinBank -= cost;
-        switch (type)
-        {
-            case MetaUpgradeType.MaxHealth: c.BonusMaxHealth += 10;  break;
-            case MetaUpgradeType.Speed:     c.BonusSpeed     += 10f; break;
-            case MetaUpgradeType.Damage:    c.BonusDamage    += 2f;  break;
-        }
+        if (Profile.OwnedItemIds.Count >= ProfileData.MaxInventory) return false;
+        Profile.OwnedItemIds.Add(itemId);
         Save();
         return true;
-    }
-
-    public void AddItemToInventory(string characterId, string itemId)
-    {
-        var c = _characters.FirstOrDefault(x => x.Id == characterId);
-        if (c == null) return;
-        if (!c.OwnedItemIds.Contains(itemId))
-            c.OwnedItemIds.Add(itemId);
-        Save();
     }
 
     public void EquipItem(string characterId, ItemSlot slot, string itemId)
     {
         var c = _characters.FirstOrDefault(x => x.Id == characterId);
-        if (c == null || !c.OwnedItemIds.Contains(itemId)) return;
+        if (c == null || !Profile.OwnedItemIds.Contains(itemId)) return;
         c.EquippedItems[slot.ToString()] = itemId;
         Save();
     }
@@ -122,35 +94,40 @@ public partial class CharacterManager : Node
 
     private void Save()
     {
-        var list = new Godot.Collections.Array();
+        var ownedArr = new Godot.Collections.Array();
+        foreach (var id in Profile.OwnedItemIds) ownedArr.Add(id);
+
+        var profileDict = new Godot.Collections.Dictionary
+        {
+            ["coinBank"]          = Profile.CoinBank,
+            ["craftingCurrency1"] = Profile.CraftingCurrency1,
+            ["ownedItemIds"]      = ownedArr,
+        };
+
+        var charList = new Godot.Collections.Array();
         foreach (var c in _characters)
         {
-            var ownedArr = new Godot.Collections.Array();
-            foreach (var id in c.OwnedItemIds) ownedArr.Add(id);
-
             var equippedDict = new Godot.Collections.Dictionary();
             foreach (var kv in c.EquippedItems) equippedDict[kv.Key] = kv.Value;
 
-            var gd = new Godot.Collections.Dictionary
+            charList.Add(new Godot.Collections.Dictionary
             {
-                ["id"]             = c.Id,
-                ["name"]           = c.Name,
-                ["type"]           = c.Type.ToString(),
-                ["runsCompleted"]  = c.RunsCompleted,
-                ["currentLevel"]   = c.CurrentLevel,
-                ["currentXp"]      = c.CurrentXp,
-                ["coinBank"]           = c.CoinBank,
-                ["craftingCurrency1"]  = c.CraftingCurrency1,
-                ["bonusMaxHealth"] = c.BonusMaxHealth,
-                ["bonusSpeed"]     = c.BonusSpeed,
-                ["bonusDamage"]    = c.BonusDamage,
-                ["ownedItemIds"]   = ownedArr,
-                ["equippedItems"]  = equippedDict,
-            };
-            list.Add(gd);
+                ["id"]            = c.Id,
+                ["name"]          = c.Name,
+                ["type"]          = c.Type.ToString(),
+                ["runsCompleted"] = c.RunsCompleted,
+                ["currentLevel"]  = c.CurrentLevel,
+                ["currentXp"]     = c.CurrentXp,
+                ["equippedItems"] = equippedDict,
+            });
         }
 
-        var root = new Godot.Collections.Dictionary { ["characters"] = list };
+        var root = new Godot.Collections.Dictionary
+        {
+            ["profile"]    = profileDict,
+            ["characters"] = charList,
+        };
+
         using var file = FileAccess.Open(SavePath, FileAccess.ModeFlags.Write);
         file?.StoreString(Json.Stringify(root));
     }
@@ -163,7 +140,16 @@ public partial class CharacterManager : Node
 
         var parsed = Json.ParseString(file.GetAsText());
         if (parsed.Obj is not Godot.Collections.Dictionary root) return;
-        if (root["characters"].Obj is not Godot.Collections.Array list) return;
+
+        if (root.ContainsKey("profile") && root["profile"].Obj is Godot.Collections.Dictionary pd)
+        {
+            Profile.CoinBank          = pd.ContainsKey("coinBank")          ? System.Convert.ToInt32(pd["coinBank"].Obj)          : 0;
+            Profile.CraftingCurrency1 = pd.ContainsKey("craftingCurrency1") ? System.Convert.ToInt32(pd["craftingCurrency1"].Obj) : 0;
+            if (pd.ContainsKey("ownedItemIds") && pd["ownedItemIds"].Obj is Godot.Collections.Array arr)
+                Profile.OwnedItemIds = arr.Select(v => v.ToString()!).ToList();
+        }
+
+        if (!root.ContainsKey("characters") || root["characters"].Obj is not Godot.Collections.Array list) return;
 
         _characters.Clear();
         foreach (var item in list)
@@ -175,14 +161,6 @@ public partial class CharacterManager : Node
                 string key = kv.Key.ToString()!;
                 object? val = kv.Value.Obj;
 
-                // Deserialize ownedItemIds array → List<string>
-                if (key == "ownedItemIds" && val is Godot.Collections.Array arr)
-                {
-                    d[key] = arr.Select(v => v.ToString()!).ToList();
-                    continue;
-                }
-
-                // Deserialize equippedItems dict → Dictionary<string, object?>
                 if (key == "equippedItems" && val is Godot.Collections.Dictionary eqGd)
                 {
                     var eq = new Dictionary<string, object?>();

@@ -4,7 +4,11 @@
 
 ## Overview
 
-A top-down auto-attack horde survival game. The player takes a persistent character into runs against escalating enemy waves. Killing enemies earns XP; levelling up permanently improves the character. The character's level, XP, and stats carry over between runs — each run makes the character meaningfully stronger. Between runs, coins earned fund permanent upgrades. The game is character-driven: you play to grow your character, not to build a single run's loadout.
+A top-down horde survival game (Vampire Survivors / Diablo style). The player takes a persistent character into timed runs against escalating enemy waves. Skills fire automatically on cooldown — survival is about positioning and progression, not twitch reflexes.
+
+Every run makes the character permanently stronger: level and XP carry over, stat bonuses stack, and coins and crafting materials earned go into a shared account pool. Between runs, players spend coins on meta upgrades and craft gear from materials — building both their character and their item collection over time.
+
+The game has two intertwined goals: grow your character through runs, and build your gear through crafting.
 
 ---
 
@@ -15,9 +19,31 @@ A top-down auto-attack horde survival game. The player takes a persistent charac
 - [TBD] Speed, acceleration values
 
 ### Combat
-- **Auto-attack only** — no manual firing
-- Single weapon per character; damage scales with character level
-- Weapon targets nearest enemy automatically on a cooldown timer
+
+Skills drive all combat. Each skill has a **type**:
+
+| Skill type | Behaviour |
+|---|---|
+| Active | Fires automatically when its cooldown expires. No player input required during the run. |
+| Passive | On/off toggle. Effect is always-on while enabled. |
+
+The **skill bar** on the run HUD shows all slotted skills and their cooldown / toggle state.
+
+**v1:** One active attack skill. Fires on cooldown. Cooldown values TBD.
+
+Character damage scales with character level (via level-up bonuses) and archetype base damage — not from the weapon gear slot.
+
+### Damage Types
+
+Every damage source has a **damage type**. Every entity that can take damage has a **resistance** value per type (percentage reduction).
+
+`effective damage = raw damage × (1 − resistance)`
+
+**v1 damage types:** Physical, Magic
+
+**Future expansion:** Elemental types (Fire, Lightning, Frost, etc.) will be added as the system grows — the formula and resistance model extend naturally.
+
+Resistances are always soft (never total immunity). Exact values are owned by BALANCE.md.
 
 ### Interaction
 - Collectibles auto-collected on contact (XP gems, coins, health)
@@ -31,17 +57,17 @@ Every run requires a character. Characters are created by the player, persist be
 
 ### Character Archetypes
 
-| Archetype | Max HP | Speed | Base Damage | Playstyle         |
-|-----------|--------|-------|-------------|-------------------|
-| Warrior   | 150    | 170   | 20          | Tanky brawler     |
-| Rogue     | 80     | 260   | 15          | Fast and fragile  |
-| Mage      | 100    | 200   | 35          | Glass cannon      |
+| Archetype | Max HP | Speed | Base Damage | Damage Type | Playstyle         |
+|-----------|--------|-------|-------------|-------------|-------------------|
+| Warrior   | 150    | 170   | 20          | Physical    | Tanky brawler     |
+| Rogue     | 80     | 260   | 15          | Physical    | Fast and fragile  |
+| Mage      | 100    | 200   | 35          | Magic       | Glass cannon      |
 
 ### Character Lifecycle
 1. **Create** — player picks a name and archetype
 2. **Select** — choose a character from the roster before a run
 3. **Run** — character starts at their saved level; every new level gained during the run is permanent
-4. **Grow** — level, XP, and coin bank carry over between runs; permanent stat bonuses can be purchased between runs
+4. **Grow** — level and XP carry over to the character; coins and crafting materials go to the shared account pool; permanent stat bonuses can be purchased between runs
 5. **Delete** — player can permanently remove a character (irreversible)
 
 A run cannot start without a selected character.
@@ -100,19 +126,19 @@ More attributes will be added in future (e.g. enemy density modifiers, environme
 - **Run end conditions:**
   - Player dies → run over
   - Timer expires → run won [boss mechanic TBD]
-- **Run rewards:** Level, XP, and coins earned persist to the character; player returns to the character screen
+- **Run rewards:** Level, XP, coins, and crafting materials earned all persist; player returns to the character screen
 
 ---
 
 ## Enemies
 
-| Type     | Behavior          | Unlocks | Notes                        |
-|----------|-------------------|---------|------------------------------|
-| Standard | Chase player      | 0:00    | Balanced — grey sprite       |
-| Runner   | Chase player fast | 1:00    | Fragile, high speed — purple |
-| Tank     | Chase player slow | 2:00    | High HP, high damage — orange|
-| [TBD]    | Ranged attacker   | —       | Future type                  |
-| [TBD]    | Boss              | Run end | Spawns when timer expires    |
+| Type     | Behavior          | Unlocks | Physical Resist | Magic Resist | Notes                        |
+|----------|-------------------|---------|-----------------|--------------|------------------------------|
+| Standard | Chase player      | 0:00    | 0%              | 0%           | Balanced — grey sprite       |
+| Runner   | Chase player fast | 1:00    | 0%              | 15%          | Fragile, high speed — purple |
+| Tank     | Chase player slow | 2:00    | 20%             | 0%           | High HP, high damage — orange|
+| [TBD]    | Ranged attacker   | —       | —               | —            | Future type                  |
+| [TBD]    | Boss              | Run end | —               | —            | Spawns when timer expires    |
 
 All types scale with elapsed time — speed and HP increase per minute. Spawn rate also accelerates.
 
@@ -126,7 +152,7 @@ Each level gained during a run permanently improves the character:
 | Per level gained | Effect                  |
 |------------------|-------------------------|
 | +5 Max Health    | Permanent HP increase   |
-| +1 Weapon Damage | Permanent damage increase|
+| +1 Damage        | Permanent damage increase (applies to attack skill) |
 
 These stack across all runs. A level-10 character has +45 HP and +9 damage above their archetype base.
 
@@ -145,7 +171,7 @@ Characters can equip up to 3 items, one per slot. Items persist between runs and
 
 | Slot      | Bonus type              |
 |-----------|-------------------------|
-| Weapon    | Damage (primary), HP    |
+| Weapon    | HP, Speed               |
 | Armor     | HP (primary), Speed     |
 | Accessory | Speed, HP, Damage (mixed)|
 
@@ -153,9 +179,9 @@ Characters can equip up to 3 items, one per slot. Items persist between runs and
 
 | Item            | Slot      | HP  | Speed | Damage |
 |-----------------|-----------|-----|-------|--------|
-| Iron Sword      | Weapon    | —   | —     | +3     |
-| Battle Axe      | Weapon    | —   | -15   | +6     |
-| Enchanted Blade | Weapon    | +10 | —     | +2     |
+| Iron Sword      | Weapon    | +10 | +10   | —      |
+| Battle Axe      | Weapon    | +25 | -15   | —      |
+| Enchanted Blade | Weapon    | +15 | +20   | —      |
 | Leather Vest    | Armor     | +20 | —     | —      |
 | Chain Mail      | Armor     | +40 | -10   | —      |
 | Mage Robe       | Armor     | +15 | +15   | —      |
@@ -171,18 +197,20 @@ Characters can equip up to 3 items, one per slot. Items persist between runs and
 | Rogue     | Iron Sword      | Leather Vest| Swift Ring     |
 | Mage      | Enchanted Blade | Mage Robe   | Vitality Charm |
 
-**Acquisition:** Gear is not dropped by enemies. New items come from crafting (crafting-currency-1 funded — see below). Gear is never lost.
+**Acquisition:** Gear is not dropped by enemies. New items come from crafting — each item has a recipe requiring a combination of materials (see Currencies). Gear is never lost.
 
-**Inventory:** Each character owns a persistent collection of items. The full inventory is visible on the Character Screen — every owned item is listed with its slot, stat bonuses, and equipped status.
+**Item identity:** Each item is a fixed, unique definition with its own ID and icon. Progression produces *new* items — a higher-tier crafted weapon is a new item with its own ID, not an upgraded version of an existing one. Icons never change dynamically; an item always looks the same regardless of who owns it or has it equipped.
 
-**Equipping:** Click a slot button (Weapon / Armor / Accessory) to open the item picker for that slot. Select an owned item to equip it; "Unequip" removes the current item from the slot without discarding it from inventory.
+**Inventory:** All crafted items go into the **account inventory** — a single shared pool accessible by every character. The full inventory is visible on the Character Screen — every owned item is listed with its slot, stat bonuses, and which character (if any) currently has it equipped.
+
+**Equipping:** Click a slot button (Weapon / Armor / Accessory) to open the item picker for that slot. Select any item from the account inventory to equip it; "Unequip" removes it from the slot and returns it to the shared pool.
 
 ---
 
 ## Currencies
 
 ### Coins
-Earned during runs (25% enemy drop). Spent on permanent meta upgrades (HP / Speed / Damage tiers) on the Character Screen between runs.
+Earned during runs (25% enemy drop). **Account-shared** — earned by any character, spendable by any. Spent on permanent meta upgrades (HP / Speed / Damage tiers) on the Character Screen between runs.
 
 ### Crafting Materials
 Crafting materials are tiered — common through exotic. Each tier drops at a different rate during runs and enables crafting of items at the corresponding tier. Items are crafted from **combinations** of materials, not a single currency spend.
@@ -193,7 +221,7 @@ Crafting materials are tiered — common through exotic. Each tier drops at a di
 | [TBD]   | —                   | Rarer     | Mid-tier items                   |
 | Exotic  | —                   | Very rare | Exotic / high-tier items         |
 
-- All materials are per-character and persist between runs
+- All materials are **account-shared** — earned by any character, spendable by any character
 - The more exotic the craftable item, the rarer its required materials
 - Specific tiers, drop rates, and material combinations will be designed when crafting is fleshed out
 
@@ -205,6 +233,7 @@ Crafting materials are tiered — common through exotic. Each tier drops at a di
 - XP bar + current level
 - Coin counter (this run)
 - Elapsed time / countdown
+- **Skill bar** — shows slotted skills with cooldown state (active) or toggle state (passive)
 - [TBD] Minimap
 
 ### Menus
@@ -227,7 +256,7 @@ Crafting materials are tiered — common through exotic. Each tier drops at a di
 
 | Condition     | Outcome                                                        |
 |---------------|----------------------------------------------------------------|
-| Player HP = 0 | Run lost — level and XP still saved; coins earned still saved |
+| Player HP = 0 | Run lost — level, XP, coins, and crafting materials earned still saved |
 | Timer expires | Run won — all rewards saved; [boss mechanic TBD]              |
 
 In both cases the player is returned to the character screen. There is no death penalty — every run makes the character stronger regardless of outcome.

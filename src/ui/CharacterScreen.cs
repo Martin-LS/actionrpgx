@@ -1,8 +1,10 @@
 using Godot;
 using Godot1.Items;
+using Godot1.Stats;
 
 namespace Godot1.Ui;
 
+// Kept for compatibility — the account_screen.tscn supersedes this scene.
 public partial class CharacterScreen : Control
 {
     private Label         _nameLabel     = null!;
@@ -29,7 +31,7 @@ public partial class CharacterScreen : Control
         _inventoryList = GetNode<VBoxContainer>("VBox/InventoryPanel/InventoryScroll/InventoryList");
 
         GetNode<Button>("VBox/Buttons/BackButton").Pressed     += () =>
-            GetTree().ChangeSceneToFile("res://src/ui/character_select.tscn");
+            GetTree().ChangeSceneToFile("res://src/ui/account_screen.tscn");
         GetNode<Button>("VBox/Buttons/StartRunButton").Pressed += () =>
             GetTree().ChangeSceneToFile("res://main.tscn");
 
@@ -41,7 +43,7 @@ public partial class CharacterScreen : Control
         _character = _manager.SelectedCharacter!;
         if (_character == null)
         {
-            GetTree().ChangeSceneToFile("res://src/ui/character_select.tscn");
+            GetTree().ChangeSceneToFile("res://src/ui/account_screen.tscn");
             return;
         }
 
@@ -50,15 +52,18 @@ public partial class CharacterScreen : Control
 
     private void Refresh()
     {
-        var (hp, spd, dmg) = _character.BaseStats();
-        int levelsAboveOne = _character.CurrentLevel - 1;
-        int   totalHp  = hp  + levelsAboveOne * 5;
-        float totalDmg = dmg + levelsAboveOne;
+        var stats     = _character.BuildStatBlock();
+        int   totalHp  = (int)stats.Get(StatId.MaxHp);
+        float totalSpd = stats.Get(StatId.Speed);
+        float totalDmg = stats.Get(StatId.Damage);
 
         _nameLabel.Text  = _character.Name;
         _typeLabel.Text  = _character.Type.ToString();
         _levelLabel.Text = $"Level {_character.CurrentLevel}   XP: {_character.CurrentXp}";
-        _statsLabel.Text = $"HP {totalHp}   Speed {spd:F0}   Damage {totalDmg:F0}\nRuns: {_character.RunsCompleted}   Coins: {_character.CoinBank}   Crafting ⚙: {_character.CraftingCurrency1}";
+        _statsLabel.Text = $"HP {totalHp}   Speed {totalSpd:F0}   Damage {totalDmg:F0}\n" +
+                           $"Runs: {_character.RunsCompleted}   " +
+                           $"Coins: {_manager.Profile.CoinBank}   " +
+                           $"Crafting: {_manager.Profile.CraftingCurrency1}";
 
         RefreshGearSlots();
         RefreshInventory();
@@ -86,19 +91,20 @@ public partial class CharacterScreen : Control
         foreach (Node child in _inventoryList.GetChildren())
             child.QueueFree();
 
-        if (_character.OwnedItemIds.Count == 0)
+        var ownedIds = _manager.Profile.OwnedItemIds;
+        if (ownedIds.Count == 0)
         {
-            _inventoryList.AddChild(new Label { Text = "No items yet — earn them by defeating enemies." });
+            _inventoryList.AddChild(new Label { Text = "No items yet." });
             return;
         }
 
-        foreach (var id in _character.OwnedItemIds)
+        foreach (var id in ownedIds)
         {
             var item = ItemRegistry.Get(id);
             if (item == null) continue;
 
             string equippedTag = _character.EquippedItems.TryGetValue(item.Slot.ToString(), out var eid) && eid == id
-                ? $" [equipped]"
+                ? " [equipped]"
                 : "";
 
             string statParts = "";
@@ -106,11 +112,10 @@ public partial class CharacterScreen : Control
             if (item.BonusSpeed != 0f)  statParts += $" Spd {item.BonusSpeed:+#;-#;0}";
             if (item.BonusDamage != 0f) statParts += $" Dmg {item.BonusDamage:+#;-#;0}";
 
-            var label = new Label
+            _inventoryList.AddChild(new Label
             {
                 Text = $"[{item.Slot}] {item.Name}{statParts}{equippedTag}"
-            };
-            _inventoryList.AddChild(label);
+            });
         }
     }
 

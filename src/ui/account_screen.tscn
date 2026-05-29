@@ -1,0 +1,239 @@
+[gd_scene format=3 uid="uid://acc_screen_v1"]
+
+[ext_resource type="Script" uid="uid://accscreen_cs1" path="res://src/ui/AccountScreen.cs" id="1_accscr"]
+[ext_resource type="Theme" path="res://src/ui/game_theme.tres" id="2_theme"]
+
+[node name="AccountScreen" type="Control" unique_id=2001000001]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("2_theme")
+script = ExtResource("1_accscr")
+
+[node name="VBox" type="VBoxContainer" parent="." unique_id=2001000002]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_top = 12.0
+offset_right = -16.0
+offset_bottom = -12.0
+theme_override_constants/separation = 12
+
+[node name="BackButton" type="Button" parent="VBox" unique_id=2001000003]
+custom_minimum_size = Vector2(160, 40)
+layout_mode = 2
+size_flags_horizontal = 0
+text = "← Back to Menu"
+
+[node name="HSplit" type="HSplitContainer" parent="VBox" unique_id=2001000004]
+layout_mode = 2
+size_flags_vertical = 3
+split_offset = 80
+
+[node name="LeftPanel" type="VBoxContainer" parent="VBox/HSplit" unique_id=2001000005]
+layout_mode = 2
+custom_minimum_size = Vector2(280, 0)
+theme_override_constants/separation = 8
+
+[node name="InventoryTitle" type="Label" parent="VBox/HSplit/LeftPanel" unique_id=2001000006]
+layout_mode = 2
+text = "Account Inventory"
+theme_override_font_sizes/font_size = 18
+
+[node name="InventoryInfo" type="Label" parent="VBox/HSplit/LeftPanel" unique_id=2001000007]
+layout_mode = 2
+text = "0 / 10"
+theme_override_font_sizes/font_size = 13
+
+[node name="InventoryGrid" type="GridContainer" parent="VBox/HSplit/LeftPanel" unique_id=2001000008]
+layout_mode = 2
+columns = 5
+theme_override_constants/h_separation = 4
+theme_override_constants/v_separation = 4
+
+[node name="RightPanel" type="VBoxContainer" parent="VBox/HSplit" unique_id=2001000010]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="TabContainer" type="TabContainer" parent="VBox/HSplit/RightPanel" unique_id=2001000011]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Characters" type="VBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer" unique_id=2001000012]
+layout_mode = 2
+
+[node name="RosterView" type="VBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer/Characters" unique_id=2001000013]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 10
+
+[node name="Scroll" type="ScrollContainer" parent="VBox/HSplit/RightPanel/TabContainer/Characters/RosterView" unique_id=2001000014]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="CharacterList" type="VBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer/Characters/RosterView/Scroll" unique_id=2001000015]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="NewCharacterButton" type="Button" parent="VBox/HSplit/RightPanel/TabContainer/Characters/RosterView" unique_id=2001000016]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+text = "+ New Character"
+
+[node name="CreatePanel" type="Panel" parent="VBox/HSplit/RightPanel/TabContainer/Characters/RosterView" unique_id=2001000017]
+layout_mode = 2
+visible = false
+custom_minimum_size = Vector2(0, 300)
+
+[node name="VBox" type="VBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer/Characters/RosterView/CreatePanel" unique_id=2001000018]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_top = 16.0
+offset_right = -16.0
+offset_bottom = -16.0
+theme_override_constants/separation = 10
+
+[node name="CreateLabel" type="Label" parent="VBox/HSplit/RightPanel/TabContainer/Characters/RosterView/CreatePanel/VBox" unique_id=2001000019]
+layout_mode = 2
+text = "Create Character"
+theme_override_font_sizes/font_size = 20
+
+[node name="NameInput" type="LineEdit" parent="VBox/HSplit/RightPanel/TabContainer/Characters/RosterView/CreatePanel/VBox" unique_id=2001000020]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+placeholder_text = "Character name..."
+
+[node name="WarriorBtn" type="Button" parent="VBox/HSplit/RightPanel/TabContainer/Characters/RosterView/CreatePanel/VBox" unique_id=2001000021]
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+text = "Warrior  —  150 HP   170 Spd   20 DMG"
+
+[node name="RogueBtn" type="Button" parent="VBox/HSplit/RightPanel/TabContainer/Characters/RosterView/CreatePanel/VBox" unique_id=2001000022]
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+text = "Rogue  —  80 HP   260 Spd   15 DMG"
+
+[node name="MageBtn" type="Button" parent="VBox/HSplit/RightPanel/TabContainer/Characters/RosterView/CreatePanel/VBox" unique_id=2001000023]
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+text = "Mage  —  100 HP   200 Spd   35 DMG"
+
+[node name="ConfirmBtn" type="Button" parent="VBox/HSplit/RightPanel/TabContainer/Characters/RosterView/CreatePanel/VBox" unique_id=2001000024]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+text = "Create"
+
+[node name="CancelBtn" type="Button" parent="VBox/HSplit/RightPanel/TabContainer/Characters/RosterView/CreatePanel/VBox" unique_id=2001000025]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+text = "Cancel"
+
+[node name="CharacterView" type="VBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer/Characters" unique_id=2001000026]
+layout_mode = 2
+visible = false
+size_flags_vertical = 3
+theme_override_constants/separation = 14
+
+[node name="VBox" type="VBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer/Characters/CharacterView" unique_id=2001000027]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 12
+
+[node name="NameLabel" type="Label" parent="VBox/HSplit/RightPanel/TabContainer/Characters/CharacterView/VBox" unique_id=2001000028]
+layout_mode = 2
+text = "Character Name"
+theme_override_font_sizes/font_size = 28
+
+[node name="TypeLabel" type="Label" parent="VBox/HSplit/RightPanel/TabContainer/Characters/CharacterView/VBox" unique_id=2001000029]
+layout_mode = 2
+text = "Archetype"
+theme_override_font_sizes/font_size = 16
+
+[node name="LevelLabel" type="Label" parent="VBox/HSplit/RightPanel/TabContainer/Characters/CharacterView/VBox" unique_id=2001000030]
+layout_mode = 2
+text = "Level 1   XP: 0"
+theme_override_font_sizes/font_size = 16
+
+[node name="StatsLabel" type="Label" parent="VBox/HSplit/RightPanel/TabContainer/Characters/CharacterView/VBox" unique_id=2001000031]
+layout_mode = 2
+text = "Stats"
+theme_override_font_sizes/font_size = 16
+
+[node name="GearPanel" type="VBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer/Characters/CharacterView/VBox" unique_id=2001000032]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="GearLabel" type="Label" parent="VBox/HSplit/RightPanel/TabContainer/Characters/CharacterView/VBox/GearPanel" unique_id=2001000033]
+layout_mode = 2
+text = "— Equipment —"
+theme_override_font_sizes/font_size = 16
+
+[node name="WeaponSlotButton" type="Button" parent="VBox/HSplit/RightPanel/TabContainer/Characters/CharacterView/VBox/GearPanel" unique_id=2001000034]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+text = "Weapon: Empty"
+
+[node name="ArmorSlotButton" type="Button" parent="VBox/HSplit/RightPanel/TabContainer/Characters/CharacterView/VBox/GearPanel" unique_id=2001000035]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+text = "Armor: Empty"
+
+[node name="AccessorySlotButton" type="Button" parent="VBox/HSplit/RightPanel/TabContainer/Characters/CharacterView/VBox/GearPanel" unique_id=2001000036]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+text = "Accessory: Empty"
+
+[node name="Spacer" type="Control" parent="VBox/HSplit/RightPanel/TabContainer/Characters/CharacterView/VBox" unique_id=2001000037]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Buttons" type="HBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer/Characters/CharacterView/VBox" unique_id=2001000038]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="ChangeCharacterButton" type="Button" parent="VBox/HSplit/RightPanel/TabContainer/Characters/CharacterView/VBox/Buttons" unique_id=2001000039]
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Change Character"
+
+[node name="StartRunButton" type="Button" parent="VBox/HSplit/RightPanel/TabContainer/Characters/CharacterView/VBox/Buttons" unique_id=2001000040]
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Start Run"
+
+[node name="Crafting" type="VBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer" unique_id=2001000041]
+layout_mode = 2
+
+[node name="VBox" type="VBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer/Crafting" unique_id=2001000042]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="CraftLabel" type="Label" parent="VBox/HSplit/RightPanel/TabContainer/Crafting/VBox" unique_id=2001000043]
+layout_mode = 2
+text = "Crafting  (v1 — free)"
+theme_override_font_sizes/font_size = 20
+
+[node name="CraftWeaponButton" type="Button" parent="VBox/HSplit/RightPanel/TabContainer/Crafting/VBox" unique_id=2001000044]
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+text = "Craft Weapon  (Iron Sword  +3 DMG)"
+
+[node name="CraftArmorButton" type="Button" parent="VBox/HSplit/RightPanel/TabContainer/Crafting/VBox" unique_id=2001000045]
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+text = "Craft Armor  (Leather Vest  +20 HP)"
+
+[node name="CraftAccessoryButton" type="Button" parent="VBox/HSplit/RightPanel/TabContainer/Crafting/VBox" unique_id=2001000046]
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+text = "Craft Accessory  (Swift Ring  +20 Speed)"

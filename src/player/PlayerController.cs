@@ -12,6 +12,8 @@ public partial class PlayerController : CharacterBody3D
     [Export] public float Speed = 200f;
     [Export] public int MaxHealth = 100;
 
+    private Stats.StatBlock _statBlock = new();
+
     public int CurrentHealth { get; private set; }
     public int Level { get; private set; } = 1;
     public int CurrentXp { get; private set; }
@@ -28,22 +30,23 @@ public partial class PlayerController : CharacterBody3D
         if (manager?.SelectedCharacter != null)
         {
             var c = manager.SelectedCharacter;
-            var (hp, spd, dmg) = c.BaseStats();
+            _statBlock = c.BuildStatBlock();
 
-            MaxHealth = hp;
-            Speed     = spd;
+            MaxHealth = (int)_statBlock.Get(Stats.StatId.MaxHp);
+            Speed     = _statBlock.Get(Stats.StatId.Speed);
             type      = c.Type;
 
-            Level        = c.CurrentLevel;
-            CurrentXp    = c.CurrentXp;
+            Level         = c.CurrentLevel;
+            CurrentXp     = c.CurrentXp;
             XpToNextLevel = ComputeXpToNextLevel(Level);
 
-            int levelsAboveOne = Level - 1;
-            MaxHealth += levelsAboveOne * 5;
-            GetNodeOrNull<Weapon.WeaponController>("Weapon")?.SetDamage(dmg + levelsAboveOne);
+            GetNodeOrNull<Weapon.WeaponController>("Weapon")?.SetDamage(_statBlock.Get(Stats.StatId.Damage));
         }
         else
         {
+            _statBlock.SetBase(Stats.StatId.MaxHp,  MaxHealth);
+            _statBlock.SetBase(Stats.StatId.Speed,  Speed);
+            _statBlock.SetBase(Stats.StatId.Damage, 20f);
             XpToNextLevel = ComputeXpToNextLevel(Level);
             GetNodeOrNull<Weapon.WeaponController>("Weapon")?.SetDamage(20f);
         }
@@ -104,9 +107,11 @@ public partial class PlayerController : CharacterBody3D
             CurrentXp     -= XpToNextLevel;
             Level++;
             XpToNextLevel  = ComputeXpToNextLevel(Level);
-            MaxHealth     += 5;
+            _statBlock.AddModifier(new Stats.StatModifier(Stats.StatId.MaxHp,  Stats.ModifierType.FlatAdd, 5f, Stats.ModifierSource.Level));
+            _statBlock.AddModifier(new Stats.StatModifier(Stats.StatId.Damage, Stats.ModifierType.FlatAdd, 1f, Stats.ModifierSource.Level));
+            MaxHealth      = (int)_statBlock.Get(Stats.StatId.MaxHp);
             CurrentHealth  = Mathf.Min(CurrentHealth + 5, MaxHealth);
-            GetNodeOrNull<Weapon.WeaponController>("Weapon")?.AddDamage(1f);
+            GetNodeOrNull<Weapon.WeaponController>("Weapon")?.SetDamage(_statBlock.Get(Stats.StatId.Damage));
             EmitSignal(SignalName.LeveledUp, Level);
         }
         EmitSignal(SignalName.XpChanged, CurrentXp, XpToNextLevel);

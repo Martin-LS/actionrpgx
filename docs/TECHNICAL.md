@@ -6,6 +6,8 @@
 
 Godot 4.6, C#, Forward Plus renderer. **3D billboard** — game world is 3D (CharacterBody3D, XZ movement plane, Y-up); characters and enemies are rendered as `Sprite3D` billboard sprites that always face the camera. Camera is orthographic, fixed ~45° isometric tilt (Diablo-style), no player rotation. UI is 2D (`Control` / `CanvasLayer`) as standard in Godot — unaffected by the 3D world. Scene composition over inheritance — each system is a self-contained scene or node that communicates via signals. Two save layers: a persistent save file (meta) and an in-memory run session (discarded on run end).
 
+> **Note:** The project is currently 2D and is being migrated to this 3D architecture. Scene layouts below reflect the target state.
+
 ---
 
 ## Rendering & Camera
@@ -14,19 +16,12 @@ Godot 4.6, C#, Forward Plus renderer. **3D billboard** — game world is 3D (Cha
 |------------------|-------------------------------|---------------------------------------------------------------------------|
 | World dimensions | 3D, XZ movement plane, Y-up   | Standard for top-down 3D; gravity, navmesh, and lighting all assume Y-up  |
 | Camera type      | `Camera3D`, orthographic      | No perspective distortion — correct pairing for billboarded sprites        |
-| Camera angle     | Fixed ~51° isometric tilt     | Diablo 4 uses ~50°; no player rotation                                     |
+| Camera angle     | Fixed ~45° isometric tilt     | Diablo-style; no player rotation                                           |
 | Character render | `Sprite3D` billboard          | Kenney 2D sprite sheets; billboard faces camera at all times               |
 | Projectiles      | Physical traveling objects    | Visible projectile travel is core to ARPG feel (not raycasts)              |
-
-### Camera Values (`src/CameraFollow.cs`)
-
-| Property             | Current value       | Notes                                                         |
-|----------------------|---------------------|---------------------------------------------------------------|
-| `Offset`             | `(0, 200, 240)`     | World-unit offset from player; ratio gives ~40° tilt          |
-| `Projection`         | Orthographic        | —                                                             |
-| `Size`               | `200`               | World units visible vertically                                |
-| `Sprite3D.PixelSize` | `2.0` (player/enemy), `1.5` (pickups) | 16px sprite → 32 world units tall |
-| Checker tile size    | `16` world units    | Set in `CheckerBackground.cs` shader (`world_pos.xz / 16.0`) |
+| Target aspect ratio | 16:9, PC primary           | All UI scenes must use Godot anchor presets (no absolute offsets) — makes ratio changes free later. Mobile not in scope. |
+| Base viewport resolution | 1280×720               | Set in project.godot; Godot stretch mode scales to player's screen. |
+| Stretch mode        | `canvas_items`                | Scales UI and world together; crisp at integer multiples of 720p.  |
 
 ---
 
@@ -87,6 +82,30 @@ CharacterScreen (Control)
         └── StartRunButton → main.tscn
 ```
 
+### `src/ui/account_screen.tscn`
+Active character management screen (replaces old character_select + character_screen flow).
+```
+AccountScreen (Control)
+└── VBox (VBoxContainer)
+    ├── BackButton (Button)
+    └── HSplit (HSplitContainer)
+        ├── LeftPanel (VBoxContainer, min width 280)
+        │   ├── InventoryTitle (Label)
+        │   ├── InventoryInfo (Label)  ← "N / 10  Coins: X  Crafting: Y"
+        │   └── InventoryGrid (GridContainer, 5 cols) ← 10 TextureButton slots, runtime-populated
+        │       └── [10× slot buttons] ← icon from ItemData.IconPath; placeholder if empty
+        └── RightPanel (VBoxContainer)
+            └── TabContainer
+                ├── Characters tab
+                │   ├── RosterView (VBoxContainer) ← character cards at runtime
+                │   │   ├── Scroll/CharacterList
+                │   │   ├── NewCharacterButton
+                │   │   └── CreatePanel (Panel, hidden until New clicked)
+                └── Crafting tab
+                    └── VBox ← CraftWeaponButton, CraftArmorButton, CraftAccessoryButton
+```
+**Inventory grid:** Fixed 10 slots (5×2), all always visible. Empty slots show a placeholder texture. `TextureButton` nodes created at runtime by `AccountScreen.RefreshInventory()`. Each slot reads `ItemData.IconPath` for its texture.
+
 ### `src/ui/item_picker_panel.tscn`
 Modal overlay opened from CharacterScreen slot buttons.
 ```
@@ -104,17 +123,15 @@ ItemPickerPanel (Control, full-screen)
 ### `main.tscn` (run scene)
 ```
 Main (Node)
-├── Player (CharacterBody3D)   ← stats seeded from CharacterManager.SelectedCharacter
-│   ├── CollisionShape (CollisionShape3D)
+├── Player (CharacterBody2D)   ← stats seeded from CharacterManager.SelectedCharacter
+│   ├── CollisionShape
+│   ├── Camera2D
 │   └── Weapon (Node)
-├── Background (Node3D)        ← checker floor plane via ShaderMaterial
-├── WorldEnvironment
-├── Camera3D                   ← CameraFollow script; orthographic, ~51° isometric tilt
+├── Background (Node2D)
 ├── Hud (CanvasLayer)          ← health bar, XP bar, level, coin counter, run timer
 ├── EnemySpawner (Node)
 ├── RunSession (Node)          ← tracks elapsed time; emits RunEnded(won, level, elapsed)
-├── RunEndOverlay (CanvasLayer)← shown on RunEnded; returns to character_screen.tscn
-└── PauseMenu (CanvasLayer)   ← shown on ESC; pauses tree; Resume or End Run (discards progress)
+└── RunEndOverlay (CanvasLayer)← shown on RunEnded; returns to character_screen.tscn
 ```
 
 ---
@@ -136,7 +153,6 @@ Main (Node)
 | ItemPickerPanel   | Modal picker for equipping/unequipping gear by slot          | `res://src/ui/`           | ✅ done |
 | ItemRegistry      | Static catalogue of all `ItemData` records (9 starter items) | `res://src/items/`        | ✅ done |
 | RunEndOverlay     | Show win/die results, flush run to character, return to character screen | `res://src/ui/` | ✅ done |
-| PauseMenu         | ESC during run — pauses tree, Resume or End Run (skips RecordRunCompletion → discards progress) | `res://src/ui/` | 🔲 todo |
 | CoinPickup        | Coin drop (25% on enemy death) — reports to RunSession       | `res://src/meta/`         | ✅ done |
 | MetaProgression   | Per-character coin bank + permanent upgrades (HP/Speed/DMG)  | `res://src/meta/`, `src/ui/` | ✅ done |
 | HealthPickup      | Health drop (10% on enemy death) — heals player on contact   | `res://src/health/`       | ✅ done |
@@ -149,7 +165,7 @@ Main (Node)
 |---------------------|-------------|----------------------------------------------------------------|
 | `CharacterData`     | Plain C#    | Id, Name, Type (enum), RunsCompleted, CurrentLevel, CurrentXp, CoinBank, CraftingCurrency1, BonusMaxHealth, BonusSpeed, BonusDamage, OwnedItemIds, EquippedItems |
 | `CharacterType`     | C# enum     | Warrior, Rogue, Mage                                           |
-| `ItemData`          | C# record   | Id, Name, Slot (enum), BonusHp, BonusSpeed, BonusDamage       |
+| `ItemData`          | C# record   | Id, Name, Slot (enum), BonusHp, BonusSpeed, BonusDamage, IconPath (string `res://` path to item texture) |
 | `ItemSlot`          | C# enum     | Weapon, Armor, Accessory                                       |
 | `ItemRegistry`      | Static class| `All` dict, `Get(id)`, `ForSlot(slot)`, `RandomDrop()`        |
 | `WeaponData`        | Godot Resource | Name, base damage, cooldown, upgrade path                   |

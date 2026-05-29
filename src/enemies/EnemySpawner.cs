@@ -66,27 +66,19 @@ public partial class EnemySpawner : Node
         int pool = 1 + (runnerUnlocked ? 1 : 0) + (tankUnlocked ? 1 : 0);
         int roll = GD.RandRange(0, pool - 1);
 
+        EnemyData data;
         if (roll == 0)
-        {
-            enemy.SpriteRow     = 6;
-            enemy.Speed         = 260f;
-            enemy.MaxHealth     = 1;
-            enemy.ContactDamage = 10;
-        }
+            data = EnemyRegistry.Standard;
         else if (roll == 1 && runnerUnlocked)
-        {
-            enemy.SpriteRow     = 4;
-            enemy.Speed         = 400f;
-            enemy.MaxHealth     = 1;
-            enemy.ContactDamage = 8;
-        }
+            data = EnemyRegistry.Runner;
         else
-        {
-            enemy.SpriteRow     = 2;
-            enemy.Speed         = 160f;
-            enemy.MaxHealth     = 1;
-            enemy.ContactDamage = 18;
-        }
+            data = EnemyRegistry.Tank;
+
+        enemy.SpriteRow      = data.SpriteRow;
+        enemy.Speed          = data.BaseSpeed;
+        enemy.MaxHealth      = data.BaseHealth;
+        enemy.ContactDamage  = data.ContactDamage;
+        enemy.DamageInterval = data.DamageInterval;
     }
 
     private Vector3 RandomRingPosition()

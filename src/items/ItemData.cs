@@ -6,5 +6,6 @@ public record ItemData(
     ItemSlot  Slot,
     int       BonusHp,
     float     BonusSpeed,
-    float     BonusDamage
+    float     BonusDamage,
+    string    IconPath = ""
 );

@@ -6,15 +6,15 @@ namespace Godot1.Ui;
 
 public partial class ItemPickerPanel : Control
 {
-    private Character.CharacterManager _manager  = null!;
+    private Character.CharacterManager _manager   = null!;
     private Character.CharacterData    _character = null!;
     private ItemSlot                   _slot;
     private Action?                    _onClose;
 
-    private Label    _titleLabel  = null!;
-    private VBoxContainer _itemList = null!;
-    private Button   _unequipBtn  = null!;
-    private Button   _closeBtn    = null!;
+    private Label         _titleLabel = null!;
+    private VBoxContainer _itemList   = null!;
+    private Button        _unequipBtn = null!;
+    private Button        _closeBtn   = null!;
 
     // Must be called before AddChild so fields are set before _Ready fires.
     public void Init(
@@ -55,7 +55,7 @@ public partial class ItemPickerPanel : Control
 
         string? equippedId = _character.EquippedItems.TryGetValue(_slot.ToString(), out var eid) ? eid : null;
 
-        foreach (var itemId in _character.OwnedItemIds)
+        foreach (var itemId in _manager.Profile.OwnedItemIds)
         {
             var item = ItemRegistry.Get(itemId);
             if (item == null || item.Slot != _slot) continue;
@@ -72,17 +72,15 @@ public partial class ItemPickerPanel : Control
         }
 
         if (_itemList.GetChildCount() == 0)
-        {
             _itemList.AddChild(new Label { Text = "No items owned for this slot." });
-        }
     }
 
     private static string BuildLabel(ItemData item, bool equipped)
     {
         string parts = "";
-        if (item.BonusHp    != 0)    parts += $" HP {item.BonusHp:+#;-#;0}";
-        if (item.BonusSpeed != 0f)   parts += $" Spd {item.BonusSpeed:+#;-#;0}";
-        if (item.BonusDamage != 0f)  parts += $" Dmg {item.BonusDamage:+#;-#;0}";
+        if (item.BonusHp    != 0)   parts += $" HP {item.BonusHp:+#;-#;0}";
+        if (item.BonusSpeed != 0f)  parts += $" Spd {item.BonusSpeed:+#;-#;0}";
+        if (item.BonusDamage != 0f) parts += $" Dmg {item.BonusDamage:+#;-#;0}";
         string tag = equipped ? " [equipped]" : "";
         return $"{item.Name}{parts}{tag}";
     }
