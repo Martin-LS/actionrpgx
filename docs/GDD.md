@@ -160,15 +160,6 @@ Each level gained during a run permanently improves the character:
 
 These stack across all runs. A level-10 character has +45 HP and +9 damage above their archetype base.
 
-### Coin-Funded Upgrades (purchased between runs)
-Spend coins on the character screen between runs:
-
-| Upgrade      | Cost (per tier) | Max tiers |
-|--------------|-----------------|-----------|
-| +10 Max HP   | 50 / 100 / 150 / 200 / 250 | 5 |
-| +10 Speed    | 50 / 100 / …   | 5         |
-| +2 Damage    | 50 / 100 / …   | 5         |
-
 ### Gear Slots
 
 Characters can equip up to 3 items, one per slot. Items persist between runs. Each slot has a distinct role:
@@ -232,7 +223,7 @@ Specific item names and exact stat values are TBD.
 ## Currencies
 
 ### Coins
-Earned during runs (25% enemy drop). **Account-shared** — earned by any character, spendable by any. Spent on permanent meta upgrades (HP / Speed / Damage tiers) on the Character Screen between runs.
+Earned during runs (25% enemy drop). **Account-shared** — earned by any character, spendable by any. Spend mechanic TBD — coins accumulate but have no current use.
 
 ### Crafting Materials
 Crafting materials are tiered — common through exotic. Each tier drops at a different rate during runs and enables crafting of items at the corresponding tier. Items are crafted from **combinations** of materials, not a single currency spend.
@@ -260,7 +251,7 @@ Crafting materials are tiered — common through exotic. Each tier drops at a di
 
 ### Menus
 - **Main Menu** → title screen, Play button
-- **Character Select** → roster only; list characters, create new (name + archetype), delete. No inventory visible here — the player's only job is choosing who to play. Clicking a character navigates to their Character Screen.
+- **Account Screen** → the account-level hub. Always the first screen after Main Menu. Contains the character roster (list characters, create new, delete). Designed to grow — future account-level info (account stats, global progress, etc.) will live alongside the roster. Selecting a character navigates to their Character Screen.
 - **Character Screen** → full management hub for the selected character: inventory (left), character stats + gear + tabs (right), Start Run button
   - **Inventory** (left panel) — account-shared item pool, 5-column scrollable grid, 50-item capacity. Clicking a filled slot opens a popup (Equip / Delete). Equipped items are not shown here — they live in the gear slots.
   - **Equipment tab** *(default)* — gear slot buttons (Weapon / Armor / Accessory) showing equipped items. Clicking an occupied slot: popup (Unequip / Delete). Clicking an empty slot: item picker filtered to that slot.
@@ -268,7 +259,7 @@ Crafting materials are tiered — common through exotic. Each tier drops at a di
   - **Sigils tab** — visible, empty (reserved for future sigil system)
   - **Skills tab** — visible, empty (reserved for future skill tree system)
   - All four tabs are always visible; empty tabs are not locked or greyed out
-  - Back button returns to Character Select
+  - Back button returns to Account Screen
 - **Run results overlay** → shown at run end; return button goes back to Character Screen
 - **Pause menu** — ESC during a run; second ESC or Resume button closes it; run is paused while open
   - **Resume** button — closes menu, run continues

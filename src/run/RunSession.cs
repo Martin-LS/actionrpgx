@@ -5,7 +5,7 @@ namespace Godot1.Run;
 
 public partial class RunSession : Node
 {
-    [Export] public float RunDuration = 5f;
+    [Export] public float RunDuration = 300f;
     [Export] public int   MapLevel    = 1;
 
     [Signal] public delegate void RunEndedEventHandler(bool won, int levelReached, float elapsed);

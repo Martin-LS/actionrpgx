@@ -30,7 +30,7 @@ Godot 4.6, C#, Forward Plus renderer. Game world is 3D (CharacterBody3D, XZ move
 ## Scene Flow
 
 ```
-main_menu.tscn  →  character_select.tscn  →  character_screen.tscn  →  main.tscn
+main_menu.tscn  →  account_screen.tscn  →  character_screen.tscn  →  main.tscn
                           ↕
                  character_create.tscn
 ```
@@ -47,15 +47,19 @@ MainMenu (Control)
     └── PlayButton (Button)
 ```
 
-### `src/ui/character_select.tscn`
-Roster-only screen. Lists existing characters; "+ New Character" navigates to `character_create.tscn`.
+### `src/ui/account_screen.tscn`
+Account-level hub. Always the first screen after Main Menu. Contains the character roster; designed to grow with additional account-level info. Character create is inline (no separate scene navigation).
 ```
-CharacterSelect (Control)
+AccountScreen (Control)
 └── VBox (VBoxContainer)
-    ├── CharactersLabel (Label)
-    ├── Scroll (ScrollContainer, expand)
-    │   └── CharacterList (VBoxContainer) ← character cards added at runtime
-    ├── NewCharacterButton (Button) → character_create.tscn
+    ├── HSplit (HSplitContainer)
+    │   ├── LeftPanel ← account-level info (inventory, materials); future: account stats etc.
+    │   └── RightPanel
+    │       └── TabContainer
+    │           ├── Characters tab
+    │           │   ├── RosterView ← character list + inline create panel
+    │           │   └── (character view removed — selecting navigates to character_screen.tscn)
+    │           └── Crafting tab ← VBox, runtime-populated recipe list
     └── BackButton (Button) → main_menu.tscn
 ```
 On character selected: `CharacterManager.SelectCharacter(id)` → `character_screen.tscn`.
@@ -102,7 +106,7 @@ CharacterScreen (Control)
                 │               ├── ArmorSlot / ArmorLabel / ArmorSlotButton (same pattern)
                 │               └── AccessorySlot / AccessoryLabel / AccessorySlotButton (same pattern)
                 ├── Crafting tab
-                │   └── VBox ← CraftWeaponButton, CraftArmorButton, CraftAccessoryButton
+                │   └── VBox ← runtime-populated recipe list (materials label + one Button per RecipeRegistry entry)
                 ├── Sigils tab    ← empty; reserved for future sigil system
                 └── Skills tab    ← empty; reserved for future skill tree system
 ```
@@ -160,16 +164,16 @@ Main (Node)
 | Hud               | Health bar, XP bar, level, coin counter, run timer           | `res://src/hud/`          | ✅ done |
 | RunSession        | Run timer, win/lose detection, emits RunEnded signal         | `res://src/run/`          | ✅ done |
 | UpgradePicker     | (removed from scene — code kept dormant)                     | `res://src/ui/`           | ❌ removed |
-| CharacterSelect   | Roster screen: list and delete characters; no inventory      | `res://src/ui/`           | ✅ done |
+| AccountScreen     | Account hub: character roster, crafting tab; navigates to CharacterScreen on select | `res://src/ui/` | ✅ done |
 | CharacterCreate   | Dedicated create screen: name input + archetype choice       | `res://src/ui/`           | ✅ done |
 | CharacterScreen   | Per-character hub: inventory, gear slots, tabs, Start Run    | `res://src/ui/`           | ✅ done |
 | ItemPickerPanel   | Modal picker for equipping/unequipping gear by slot          | `res://src/ui/`           | ✅ done |
 | ItemRegistry      | Static catalogue of all `ItemData` records                   | `res://src/items/`        | ✅ done |
 | SkillRegistry     | Static catalogue of all `SkillData` records                  | `res://src/skills/`       | ✅ done |
-| RecipeRegistry    | Static catalogue of all `RecipeData` records                 | `res://src/crafting/`     | ⬜ not started |
+| RecipeRegistry    | Static catalogue of all `RecipeData` records                 | `res://src/crafting/`     | ✅ done |
 | RunEndOverlay     | Show win/die results, flush run to character, return to character screen | `res://src/ui/` | ✅ done |
 | CoinPickup        | Coin drop (25% on enemy death) — reports to RunSession       | `res://src/meta/`         | ✅ done |
-| MetaProgression   | Per-character coin bank + permanent upgrades (HP/Speed/DMG)  | `res://src/meta/`, `src/ui/` | ✅ done |
+| MetaProgression   | Level bonuses (automatic +HP/+DMG per level); coin bank accumulates — spend mechanic TBD | `res://src/meta/`, `src/ui/` | ✅ done |
 | HealthPickup      | Health drop (10% on enemy death) — heals player on contact   | `res://src/health/`       | ✅ done |
 
 ---

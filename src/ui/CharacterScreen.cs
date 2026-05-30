@@ -32,7 +32,7 @@ public partial class CharacterScreen : Control
 
         if (_manager.SelectedCharacter == null)
         {
-            GetTree().ChangeSceneToFile("res://src/ui/character_select.tscn");
+            GetTree().ChangeSceneToFile("res://src/ui/account_screen.tscn");
             return;
         }
 
@@ -57,7 +57,7 @@ public partial class CharacterScreen : Control
         _craftVBox = GetNode<VBoxContainer>($"{CraftingBase}/VBox");
 
         GetNode<Button>("VBox/BackButton").Pressed += () =>
-            GetTree().ChangeSceneToFile("res://src/ui/character_select.tscn");
+            GetTree().ChangeSceneToFile("res://src/ui/account_screen.tscn");
 
         Refresh();
     }

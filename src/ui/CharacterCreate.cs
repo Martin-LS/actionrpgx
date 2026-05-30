@@ -23,10 +23,10 @@ public partial class CharacterCreate : Control
             var name = nameInput.Text.Trim();
             if (name.Length == 0) return;
             GetNode<CharacterManager>("/root/CharacterManager").Create(name, _pendingType);
-            GetTree().ChangeSceneToFile("res://src/ui/character_select.tscn");
+            GetTree().ChangeSceneToFile("res://src/ui/account_screen.tscn");
         };
 
         GetNode<Button>("VBox/CancelBtn").Pressed += () =>
-            GetTree().ChangeSceneToFile("res://src/ui/character_select.tscn");
+            GetTree().ChangeSceneToFile("res://src/ui/account_screen.tscn");
     }
 }
