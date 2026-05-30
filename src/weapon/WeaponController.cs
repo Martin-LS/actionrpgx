@@ -15,66 +15,63 @@ public partial class WeaponController : Node
     public void SetDamage(float d) => Damage = d;
     public void AddDamage(float d) => Damage += d;
 
-    public float              SkillBonus    { get; private set; }
-    public Items.SkillCategory SkillCategory { get; private set; }
-
-    public void SetSkill(SkillData skill, float weaponSkillBonus, Items.WeaponAffinity affinity)
+    private struct SkillSlot
     {
-        SkillCategory = skill.Category;
-        Cooldown      = skill.Cooldown;
-        Range         = skill.Range;
-        bool matches = affinity switch
-        {
-            Items.WeaponAffinity.Melee          => skill.Category == Items.SkillCategory.Melee,
-            Items.WeaponAffinity.RangedPhysical => skill.Category == Items.SkillCategory.RangedPhysical,
-            Items.WeaponAffinity.RangedMagic    => skill.Category == Items.SkillCategory.RangedMagic,
-            _                                   => false,
-        };
-        SkillBonus = matches ? weaponSkillBonus : 0f;
+        public SkillData? Skill;
+        public float      CooldownTimer;
+        public float      SkillBonus;
     }
 
-    public float Cooldown { get; private set; } = 0.8f;
-    private float Range = 400f;
+    private readonly SkillSlot[] _slots = new SkillSlot[3];
 
-    public void SetCooldown(float value) => Cooldown = value;
-
-    private float _cooldownTimer;
+    public void SetSlot(int slotIndex, SkillData skill, float weaponSkillBonus)
+    {
+        if (slotIndex < 0 || slotIndex >= 3) return;
+        _slots[slotIndex].Skill         = skill;
+        _slots[slotIndex].SkillBonus    = weaponSkillBonus;
+        _slots[slotIndex].CooldownTimer = 0f;
+    }
 
     public override void _PhysicsProcess(double delta)
     {
-        _cooldownTimer -= (float)delta;
-        if (_cooldownTimer > 0f) return;
+        for (int i = 0; i < 3; i++)
+        {
+            if (_slots[i].Skill == null) continue;
+            _slots[i].CooldownTimer -= (float)delta;
+            if (_slots[i].CooldownTimer > 0f) continue;
 
-        var target = FindNearestEnemy();
-        if (target == null) return;
+            var target = FindNearestEnemy(_slots[i].Skill!.Range);
+            if (target == null) continue;
 
-        FireAt(target);
-        _cooldownTimer = Cooldown;
+            FireAt(i, target);
+            _slots[i].CooldownTimer = _slots[i].Skill!.Cooldown;
+        }
     }
 
-    private void FireAt(Enemies.EnemyController target)
+    private void FireAt(int slotIndex, Enemies.EnemyController target)
     {
+        var slot   = _slots[slotIndex];
         var origin = GetParent<Node3D>().GlobalPosition;
-        var diff = target.GlobalPosition - origin;
+        var diff   = target.GlobalPosition - origin;
         var direction = new Vector3(diff.X, 0f, diff.Z).Normalized();
 
-        var dmgType = SkillCategory switch
-        {
-            Items.SkillCategory.RangedMagic => Items.DamageType.Magic,
-            _                               => Items.DamageType.Physical,
-        };
+        var dmgType = slot.Skill!.Category == Items.SkillCategory.RangedMagic
+            ? Items.DamageType.Magic
+            : Items.DamageType.Physical;
+
         var projectile = ProjectileScene.Instantiate<Projectile>();
-        projectile.Initialize(direction, Damage + SkillBonus, dmgType);
+        projectile.Initialize(direction, Damage + slot.SkillBonus, dmgType);
         GetTree().Root.AddChild(projectile);
         projectile.GlobalPosition = origin;
-        EmitSignal(SignalName.SkillFired, 0, Cooldown);
+
+        EmitSignal(SignalName.SkillFired, slotIndex, slot.Skill.Cooldown);
     }
 
-    private Enemies.EnemyController? FindNearestEnemy()
+    private Enemies.EnemyController? FindNearestEnemy(float range)
     {
         var enemies = GetTree().GetNodesInGroup("enemies");
         Enemies.EnemyController? nearest = null;
-        float nearestDist = Range;
+        float nearestDist = range;
 
         var origin = GetParent<Node3D>().GlobalPosition;
 

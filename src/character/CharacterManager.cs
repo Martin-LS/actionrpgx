@@ -43,13 +43,15 @@ public partial class CharacterManager : Node
         c.EquippedItems[ItemSlot.Armor.ToString()]     = armor;
         c.EquippedItems[ItemSlot.Accessory.ToString()] = accessory;
 
-        c.SlottedSkillIds = c.Type switch
+        var skillId = c.Type switch
         {
-            CharacterType.Warrior => new List<string> { "attack_melee" },
-            CharacterType.Rogue   => new List<string> { "attack_ranged_physical" },
-            CharacterType.Mage    => new List<string> { "attack_ranged_magic" },
-            _                     => new List<string> { "attack_melee" },
+            CharacterType.Warrior => "attack_melee",
+            CharacterType.Rogue   => "attack_ranged_physical",
+            CharacterType.Mage    => "attack_ranged_magic",
+            _                     => "attack_melee",
         };
+        // Starter skill pre-equipped in all 3 slots — not placed in inventory.
+        c.SlottedSkillIds = new List<string> { skillId, skillId, skillId };
     }
 
     public void Delete(string id)
@@ -73,6 +75,8 @@ public partial class CharacterManager : Node
         Profile.AddMaterial("crafting_common", craftingCurrency1Earned);
         Save();
     }
+
+    // ── Gear inventory ────────────────────────────────────────────────────────
 
     public bool AddItemToInventory(string itemId)
     {
@@ -141,19 +145,93 @@ public partial class CharacterManager : Node
         Save();
     }
 
+    // ── Skill inventory ───────────────────────────────────────────────────────
+
+    public bool AddSkillToInventory(string skillId)
+    {
+        if (Profile.OwnedSkillIds.Count >= ProfileData.MaxInventory) return false;
+        Profile.OwnedSkillIds.Add(skillId);
+        Save();
+        return true;
+    }
+
+    public CraftResult CraftSkill(string recipeId)
+    {
+        var recipe = RecipeRegistry.Get(recipeId);
+        if (recipe == null) return CraftResult.InsufficientMaterials;
+
+        foreach (var (matId, qty) in recipe.MaterialCosts)
+            if (Profile.GetMaterial(matId) < qty)
+                return CraftResult.InsufficientMaterials;
+
+        if (Profile.OwnedSkillIds.Count >= ProfileData.MaxInventory)
+            return CraftResult.InventoryFull;
+
+        foreach (var (matId, qty) in recipe.MaterialCosts)
+            Profile.Materials[matId] -= qty;
+
+        Profile.OwnedSkillIds.Add(recipe.OutputItemId);
+        Save();
+        return CraftResult.Success;
+    }
+
+    // Skills are not consumed from inventory when slotted — the same skill can fill multiple slots.
+    public void EquipSkill(string charId, int slotIndex, string skillId)
+    {
+        var c = _characters.FirstOrDefault(x => x.Id == charId);
+        if (c == null) return;
+        while (c.SlottedSkillIds.Count <= slotIndex)
+            c.SlottedSkillIds.Add("");
+        c.SlottedSkillIds[slotIndex] = skillId;
+        Save();
+    }
+
+    public void UnequipSkillSlot(string charId, int slotIndex)
+    {
+        var c = _characters.FirstOrDefault(x => x.Id == charId);
+        if (c == null || slotIndex >= c.SlottedSkillIds.Count) return;
+        c.SlottedSkillIds[slotIndex] = "";
+        Save();
+    }
+
+    // Removes skill from inventory only (slots keep their reference).
+    public void DeleteSkillItem(string skillId)
+    {
+        Profile.OwnedSkillIds.Remove(skillId);
+        Save();
+    }
+
+    // Clears the slot and removes the skill from inventory if present.
+    public void DeleteSkillPermanently(string charId, int slotIndex)
+    {
+        var c = _characters.FirstOrDefault(x => x.Id == charId);
+        if (c == null || slotIndex >= c.SlottedSkillIds.Count) return;
+        var skillId = c.SlottedSkillIds[slotIndex];
+        c.SlottedSkillIds[slotIndex] = "";
+        if (!string.IsNullOrEmpty(skillId))
+            Profile.OwnedSkillIds.Remove(skillId);
+        Save();
+    }
+
+    // ── Persistence ───────────────────────────────────────────────────────────
+
     private void Save()
     {
         var ownedArr = new Godot.Collections.Array();
         foreach (var id in Profile.OwnedItemIds) ownedArr.Add(id);
+
+        var ownedSkillArr = new Godot.Collections.Array();
+        foreach (var id in Profile.OwnedSkillIds) ownedSkillArr.Add(id);
 
         var matsDict = new Godot.Collections.Dictionary();
         foreach (var kv in Profile.Materials) matsDict[kv.Key] = kv.Value;
 
         var profileDict = new Godot.Collections.Dictionary
         {
-            ["coinBank"]    = Profile.CoinBank,
-            ["materials"]   = matsDict,
-            ["ownedItemIds"] = ownedArr,
+            ["coinBank"]      = Profile.CoinBank,
+            ["materials"]     = matsDict,
+            ["ownedItemIds"]  = ownedArr,
+            ["ownedSkillIds"] = ownedSkillArr,
         };
 
         var charList = new Godot.Collections.Array();
@@ -206,8 +284,12 @@ public partial class CharacterManager : Node
                     Profile.Materials[kv.Key.ToString()!] = System.Convert.ToInt32(kv.Value.Obj);
             else if (pd.ContainsKey("craftingCurrency1"))
                 Profile.AddMaterial("crafting_common", System.Convert.ToInt32(pd["craftingCurrency1"].Obj));
+
             if (pd.ContainsKey("ownedItemIds") && pd["ownedItemIds"].Obj is Godot.Collections.Array arr)
                 Profile.OwnedItemIds = arr.Select(v => v.ToString()!).ToList();
+
+            if (pd.ContainsKey("ownedSkillIds") && pd["ownedSkillIds"].Obj is Godot.Collections.Array skillArr)
+                Profile.OwnedSkillIds = skillArr.Select(v => v.ToString()!).ToList();
         }
 
         if (!root.ContainsKey("characters") || root["characters"].Obj is not Godot.Collections.Array list) return;
@@ -231,9 +313,9 @@ public partial class CharacterManager : Node
                     continue;
                 }
 
-                if (key == "slottedSkillIds" && val is Godot.Collections.Array skillArr)
+                if (key == "slottedSkillIds" && val is Godot.Collections.Array sArr)
                 {
-                    d[key] = skillArr.Select(v => v.ToString()!).ToList();
+                    d[key] = sArr.Select(v => v.ToString()!).ToList();
                     continue;
                 }
 
@@ -247,16 +329,19 @@ public partial class CharacterManager : Node
             foreach (var id in c.EquippedItems.Values)
                 Profile.OwnedItemIds.Remove(id);
 
-        // Migrate: seed default skill for old saves with no slotted skills.
+        // Migrate: ensure every character has exactly 3 skill slots.
         foreach (var c in _characters)
-            if (c.SlottedSkillIds.Count == 0)
-                c.SlottedSkillIds.Add(c.Type switch
-                {
-                    CharacterType.Warrior => "attack_melee",
-                    CharacterType.Rogue   => "attack_ranged_physical",
-                    CharacterType.Mage    => "attack_ranged_magic",
-                    _                     => "attack_melee",
-                });
+        {
+            string defaultSkill = c.Type switch
+            {
+                CharacterType.Warrior => "attack_melee",
+                CharacterType.Rogue   => "attack_ranged_physical",
+                CharacterType.Mage    => "attack_ranged_magic",
+                _                     => "attack_melee",
+            };
+            while (c.SlottedSkillIds.Count < 3)
+                c.SlottedSkillIds.Add(c.SlottedSkillIds.Count > 0 ? c.SlottedSkillIds[0] : defaultSkill);
+        }
 
         // Migrate old item IDs to new tier-1 items.
         var oldToNew = new System.Collections.Generic.Dictionary<string, string>

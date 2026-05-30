@@ -5,15 +5,20 @@ namespace Godot1.Hud;
 public partial class Hud : CanvasLayer
 {
     private ProgressBar _healthBar = null!;
-    private ProgressBar _xpBar = null!;
-    private Label _levelLabel = null!;
-    private Label _timerLabel = null!;
-    private Label _coinLabel = null!;
+    private ProgressBar _xpBar     = null!;
+    private Label       _levelLabel = null!;
+    private Label       _timerLabel = null!;
+    private Label       _coinLabel  = null!;
 
     private Run.RunSession? _session;
-    private ProgressBar _skillCooldownBar  = null!;
-    private float       _skillCooldownMax;
-    private float       _skillCooldownRemaining;
+
+    private sealed class SkillCell
+    {
+        public ProgressBar Bar     = null!;
+        public float       Cooldown;
+        public float       Elapsed;
+    }
+    private readonly SkillCell[] _skillCells = new SkillCell[3];
 
     public override void _Ready()
     {
@@ -24,7 +29,7 @@ public partial class Hud : CanvasLayer
         _coinLabel  = GetNode<Label>("Control/CoinLabel");
 
         StyleBar(_healthBar, new Color(0.8f, 0.15f, 0.15f));
-        StyleBar(_xpBar, new Color(0.1f, 0.7f, 0.2f));
+        StyleBar(_xpBar,     new Color(0.1f,  0.7f,  0.2f));
 
         var player = GetTree().GetFirstNodeInGroup("player") as Player.PlayerController;
         if (player != null)
@@ -44,24 +49,7 @@ public partial class Hud : CanvasLayer
                 Callable.From<int, float>(OnSkillFired));
         }
 
-        // Skill bar — one cell for v1
-        _skillCooldownBar = new ProgressBar
-        {
-            MaxValue          = 1.0,
-            Value             = 0.0,
-            ShowPercentage    = false,
-            CustomMinimumSize = new Vector2(64f, 8f),
-        };
-        var cell = new PanelContainer { CustomMinimumSize = new Vector2(64f, 64f) };
-        var cellVBox = new VBoxContainer();
-        cellVBox.AddChild(new Control { SizeFlagsVertical = Control.SizeFlags.ExpandFill });
-        cellVBox.AddChild(_skillCooldownBar);
-        cell.AddChild(cellVBox);
-        var skillBar = new HBoxContainer();
-        skillBar.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.BottomLeft);
-        skillBar.Position = new Vector2(20f, -80f);
-        skillBar.AddChild(cell);
-        GetNode<Control>("Control").AddChild(skillBar);
+        BuildSkillBar();
 
         _session = GetParent().GetNodeOrNull<Run.RunSession>("RunSession");
         if (_session != null)
@@ -69,6 +57,44 @@ public partial class Hud : CanvasLayer
 
         _coinLabel.Text  = "Coins: 0";
         _timerLabel.Text = "0:00";
+    }
+
+    private void BuildSkillBar()
+    {
+        var container = GetNode<Control>("Control");
+
+        var skillBar = new HBoxContainer();
+        skillBar.AddThemeConstantOverride("separation", 6);
+        skillBar.AnchorLeft      = 0.5f;
+        skillBar.AnchorRight     = 0.5f;
+        skillBar.AnchorTop       = 1.0f;
+        skillBar.AnchorBottom    = 1.0f;
+        skillBar.GrowHorizontal  = Control.GrowDirection.Both;
+        skillBar.OffsetBottom    = -20f;
+        skillBar.OffsetTop       = -90f;
+
+        for (int i = 0; i < 3; i++)
+        {
+            var bar = new ProgressBar
+            {
+                MaxValue          = 1.0,
+                Value             = 1.0,
+                ShowPercentage    = false,
+                FillMode          = 3, // bottom-to-top
+                CustomMinimumSize = new Vector2(64f, 64f),
+                SizeFlagsHorizontal = Control.SizeFlags.Fill,
+                SizeFlagsVertical   = Control.SizeFlags.Fill,
+            };
+            StyleSkillBar(bar);
+
+            var cell = new PanelContainer { CustomMinimumSize = new Vector2(64f, 64f) };
+            cell.AddChild(bar);
+            skillBar.AddChild(cell);
+
+            _skillCells[i] = new SkillCell { Bar = bar, Cooldown = 0f, Elapsed = 0f };
+        }
+
+        container.AddChild(skillBar);
     }
 
     public override void _Process(double delta)
@@ -79,11 +105,12 @@ public partial class Hud : CanvasLayer
             _timerLabel.Text = $"{secs / 60}:{secs % 60:D2}";
         }
 
-        if (_skillCooldownRemaining > 0f)
+        for (int i = 0; i < 3; i++)
         {
-            _skillCooldownRemaining = Mathf.Max(0f, _skillCooldownRemaining - (float)delta);
-            if (_skillCooldownMax > 0f)
-                _skillCooldownBar.Value = _skillCooldownRemaining / _skillCooldownMax;
+            var cell = _skillCells[i];
+            if (cell.Cooldown <= 0f || cell.Elapsed >= cell.Cooldown) continue;
+            cell.Elapsed = Mathf.Min(cell.Cooldown, cell.Elapsed + (float)delta);
+            cell.Bar.Value = cell.Elapsed / cell.Cooldown;
         }
     }
 
@@ -91,9 +118,11 @@ public partial class Hud : CanvasLayer
 
     private void OnSkillFired(int slotIndex, float cooldown)
     {
-        _skillCooldownMax       = cooldown;
-        _skillCooldownRemaining = cooldown;
-        _skillCooldownBar.Value = 1.0;
+        if (slotIndex < 0 || slotIndex >= 3) return;
+        var cell = _skillCells[slotIndex];
+        cell.Cooldown  = cooldown;
+        cell.Elapsed   = 0f;
+        cell.Bar.Value = 0.0;
     }
 
     private void OnXpChanged(int currentXp, int xpToNextLevel)
@@ -110,6 +139,14 @@ public partial class Hud : CanvasLayer
     {
         var fill = new StyleBoxFlat { BgColor = fillColor };
         var bg   = new StyleBoxFlat { BgColor = new Color(0.1f, 0.1f, 0.1f) };
+        bar.AddThemeStyleboxOverride("fill", fill);
+        bar.AddThemeStyleboxOverride("background", bg);
+    }
+
+    private static void StyleSkillBar(ProgressBar bar)
+    {
+        var fill = new StyleBoxFlat { BgColor = new Color(0.3f, 0.55f, 0.9f) };
+        var bg   = new StyleBoxFlat { BgColor = new Color(0.15f, 0.15f, 0.15f) };
         bar.AddThemeStyleboxOverride("fill", fill);
         bar.AddThemeStyleboxOverride("background", bg);
     }

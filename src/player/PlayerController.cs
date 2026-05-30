@@ -47,14 +47,24 @@ public partial class PlayerController : CharacterBody3D
             DamageReduction    = armor?.DamageReduction    ?? 0f;
             PhysicalResistance = acc?.PhysicalResistance   ?? 0f;
 
-            var skill = c.SlottedSkillIds.Count > 0
-                ? SkillRegistry.Get(c.SlottedSkillIds[0])
-                : null;
-            skill ??= SkillRegistry.Get("attack_melee")!;
-
             var weaponController = GetNodeOrNull<Weapon.WeaponController>("Weapon");
             weaponController?.SetDamage(_statBlock.Get(Stats.StatId.Damage));
-            weaponController?.SetSkill(skill, weapon?.SkillBonus ?? 0f, weapon?.WeaponAffinity ?? Items.WeaponAffinity.None);
+
+            for (int i = 0; i < 3 && i < c.SlottedSkillIds.Count; i++)
+            {
+                var skillId = c.SlottedSkillIds[i];
+                if (string.IsNullOrEmpty(skillId)) continue;
+                var skill = SkillRegistry.Get(skillId);
+                if (skill == null) continue;
+                bool matches = weapon != null && weapon.WeaponAffinity switch
+                {
+                    Items.WeaponAffinity.Melee          => skill.Category == Items.SkillCategory.Melee,
+                    Items.WeaponAffinity.RangedPhysical => skill.Category == Items.SkillCategory.RangedPhysical,
+                    Items.WeaponAffinity.RangedMagic    => skill.Category == Items.SkillCategory.RangedMagic,
+                    _                                   => false,
+                };
+                weaponController?.SetSlot(i, skill, matches ? weapon!.SkillBonus : 0f);
+            }
         }
         else
         {
@@ -62,10 +72,14 @@ public partial class PlayerController : CharacterBody3D
             _statBlock.SetBase(Stats.StatId.Speed,  Speed);
             _statBlock.SetBase(Stats.StatId.Damage, 20f);
             XpToNextLevel = ComputeXpToNextLevel(Level);
-            GetNodeOrNull<Weapon.WeaponController>("Weapon")?.SetDamage(20f);
+            var wc = GetNodeOrNull<Weapon.WeaponController>("Weapon");
+            wc?.SetDamage(20f);
+            var fallback = SkillRegistry.Get("attack_melee");
+            if (fallback != null) wc?.SetSlot(0, fallback, 0f);
         }
 
-        CurrentHealth = MaxHealth;
+        GlobalPosition = Vector3.Zero;
+        CurrentHealth  = MaxHealth;
         AddToGroup("player");
         _model = GD.Load<PackedScene>("res://assets/models/characters/Knight.glb").Instantiate<Node3D>();
         _model.Scale = new Vector3(12f, 12f, 12f);

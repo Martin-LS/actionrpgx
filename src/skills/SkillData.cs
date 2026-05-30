@@ -6,5 +6,6 @@ public record SkillData(
     SkillType           Type,
     Items.SkillCategory Category,
     float               Cooldown,
-    float               Range
+    float               Range,
+    string              IconPath = ""
 );

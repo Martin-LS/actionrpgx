@@ -83,31 +83,43 @@ CharacterScreen (Control)
         ├── LeftPanel (PanelContainer, min width 280)
         │   └── LeftVBox (VBoxContainer)
         │       ├── InventoryTitle (Label)
-        │       ├── InventoryInfo (Label)  ← "N / 50  Coins: X  Crafting: Y"
-        │       └── InventoryScroll (ScrollContainer, expand vertical)
-        │           └── InventoryGrid (GridContainer, 5 cols) ← 50 Button slots, runtime-populated
+        │       ├── InventoryInfo (Label)  ← "Gear: N/50  Skills: M/50  Coins: X  Common: Y"
+        │       └── InventoryTabs (TabContainer, expand vertical)
+        │           ├── Equipment tab
+        │           │   └── InventoryScroll (ScrollContainer)
+        │           │       └── InventoryGrid (GridContainer, 5 cols) ← 50 Button slots, runtime-populated from OwnedItemIds
+        │           └── Skills tab
+        │               └── SkillsScroll (ScrollContainer)
+        │                   └── SkillsGrid (GridContainer, 5 cols) ← 50 Button slots, runtime-populated from OwnedSkillIds
         └── RightPanel (VBoxContainer)
             └── TabContainer
                 ├── Equipment tab (VBoxContainer)
-                │   └── CharacterView (VBoxContainer, always visible)
-                │       └── HSplit (HBoxContainer)
-                │           ├── InfoVBox (VBoxContainer, expand) ← name/type/level/stats labels
-                │           │   ├── NameLabel, TypeLabel, LevelLabel, StatsLabel
-                │           │   ├── Spacer (expand)
-                │           │   └── Buttons ← StartRunButton
-                │           └── GearPanel (VBoxContainer) ← right column, shrink width
-                │               ├── GearLabel ("— Equipment —")
-                │               ├── WeaponSlot (VBoxContainer)
-                │               │   ├── WeaponLabel ("Weapon")
-                │               │   └── WeaponSlotButton (60×60, size_flags_h=shrink) ← popup (Unequip/Delete) if equipped; ItemPickerPanel if empty
-                │               ├── ArmorSlot / ArmorLabel / ArmorSlotButton (same pattern)
-                │               └── AccessorySlot / AccessoryLabel / AccessorySlotButton (same pattern)
+                │   └── CharacterView (VBoxContainer)
+                │       ├── HSplit (HBoxContainer)
+                │       │   ├── InfoVBox (VBoxContainer, expand) ← name/type/level/stats labels
+                │       │   │   └── NameLabel, TypeLabel, LevelLabel, StatsLabel
+                │       │   └── GearPanel (VBoxContainer) ← right column, shrink width
+                │       │       ├── GearLabel ("— Equipment —")
+                │       │       ├── WeaponSlot (VBoxContainer)
+                │       │       │   ├── WeaponLabel ("Weapon")
+                │       │       │   └── WeaponSlotButton (60×60, size_flags_h=shrink) ← popup (Unequip/Delete) if equipped; ItemPickerPanel if empty
+                │       │       ├── ArmorSlot / ArmorLabel / ArmorSlotButton (same pattern)
+                │       │       └── AccessorySlot / AccessoryLabel / AccessorySlotButton (same pattern)
+                │       ├── SkillBar (HBoxContainer, size_flags_h=SHRINK_CENTER) ← centered row, below HSplit
+                │       │   ├── SkillSlot1 (VBoxContainer) → SkillLabel1 ("Skill 1") + SkillSlotButton1 (60×60) ← popup (Unequip/Delete) if equipped; SkillPickerPanel if empty
+                │       │   ├── SkillSlot2 / SkillLabel2 / SkillSlotButton2 (same pattern)
+                │       │   └── SkillSlot3 / SkillLabel3 / SkillSlotButton3 (same pattern)
+                │       └── Buttons (HBoxContainer)
+                │           └── StartRunButton (Button, expand fill)
                 ├── Crafting tab
-                │   └── VBox ← runtime-populated recipe list (materials label + one Button per RecipeRegistry entry)
-                ├── Sigils tab    ← empty; reserved for future sigil system
-                └── Skills tab    ← empty; reserved for future skill tree system
+                │   └── VBox ← runtime-populated gear recipe list (materials label + one Button per RecipeRegistry.ForType(Gear) entry)
+                ├── Skill Crafting tab
+                │   └── VBox ← runtime-populated skill recipe list (materials label + one Button per RecipeRegistry.ForType(Skill) entry)
+                └── Sigils tab    ← empty; reserved for future sigil system
 ```
-**Inventory grid:** 50 slots (5 cols, scrollable), all always visible. Empty slots are dimmed. Clicking a filled slot opens a `PopupMenu` (Equip / Delete). Equip auto-routes to the item's slot on the selected character, swapping out any currently equipped item. Capacity defined by `ProfileData.MaxInventory = 50` — counts only unequipped items; equipped items live separately in `CharacterData.EquippedItems`. If `SelectedCharacter` is null on `_Ready`, redirects to `account_screen.tscn`.
+**Inventory grids:** Each tab has 50 slots (5 cols, scrollable), all always visible. Empty slots are dimmed. Clicking a filled slot opens a `PopupMenu` (Equip / Delete). Equip routes the item to the correct slot on the selected character, swapping any currently equipped item back to inventory. Capacity: `ProfileData.MaxInventory = 50` per tab — counts only unequipped items; equipped items live separately in `CharacterData.EquippedItems` / `SlottedSkillIds`. If `SelectedCharacter` is null on `_Ready`, redirects to `account_screen.tscn`.
+
+**Skill slots:** Skill slot buttons open a `SkillPickerPanel` (parallel to `ItemPickerPanel`) when empty — filters `OwnedSkillIds` to skills compatible with that slot. Occupied skill slots use a `PopupMenu` (Unequip / Delete).
 
 ### `src/ui/item_picker_panel.tscn`
 Modal overlay opened from gear slot buttons **when the slot is empty**. Occupied slots use a PopupMenu (Unequip / Delete) instead — ItemPickerPanel is never opened for an occupied slot.
@@ -119,6 +131,19 @@ ItemPickerPanel (Control, full-screen)
         ├── TitleLabel (Label)
         ├── Scroll (ScrollContainer)
         │   └── ItemList (VBoxContainer) ← buttons added at runtime, one per owned item in slot
+        └── CloseButton (Button)
+```
+
+### `src/ui/skill_picker_panel.tscn`
+Modal overlay opened from skill slot buttons **when the slot is empty**. Occupied skill slots use a PopupMenu (Unequip / Delete) instead.
+```
+SkillPickerPanel (Control, full-screen)
+├── Dim (ColorRect, semi-transparent black)
+└── Panel (PanelContainer, centered)
+    └── VBox (VBoxContainer)
+        ├── TitleLabel (Label) ← "Choose Skill"
+        ├── Scroll (ScrollContainer)
+        │   └── ItemList (VBoxContainer) ← buttons added at runtime, one per OwnedSkillIds entry
         └── CloseButton (Button)
 ```
 
@@ -165,6 +190,7 @@ Main (Node)
 | CharacterCreate   | Dedicated create screen: name input + archetype choice       | `res://src/ui/`           | ✅ done |
 | CharacterScreen   | Per-character hub: inventory, gear slots, tabs, Start Run    | `res://src/ui/`           | ✅ done |
 | ItemPickerPanel   | Modal picker for equipping/unequipping gear by slot          | `res://src/ui/`           | ✅ done |
+| SkillPickerPanel  | Modal picker for equipping skills into skill slots           | `res://src/ui/`           | ✅ done |
 | ItemRegistry      | Static catalogue of all `ItemData` records                   | `res://src/items/`        | ✅ done |
 | SkillRegistry     | Static catalogue of all `SkillData` records                  | `res://src/skills/`       | ✅ done |
 | RecipeRegistry    | Static catalogue of all `RecipeData` records                 | `res://src/crafting/`     | ✅ done |
@@ -179,12 +205,12 @@ Main (Node)
 
 | Class               | Kind        | Fields                                                         |
 |---------------------|-------------|----------------------------------------------------------------|
-| `ProfileData`       | Plain C#    | CoinBank, Materials (Dictionary\<string, int\> — material ID → quantity), OwnedItemIds (List\<string\>), MaxInventory (const = 50) — account-shared across all characters. Migration: old `craftingCurrency1` int field maps to `Materials["crafting_common"]` on load. |
+| `ProfileData`       | Plain C#    | CoinBank, Materials (Dictionary\<string, int\> — material ID → quantity), OwnedItemIds (List\<string\>), OwnedSkillIds (List\<string\>), MaxInventory (const = 50) — applies separately to each list. Account-shared across all characters. Migration: old `craftingCurrency1` int field maps to `Materials["crafting_common"]` on load. |
 | `CharacterData`     | Plain C#    | Id, Name, Type (enum), RunsCompleted, CurrentLevel, CurrentXp, EquippedItems (Dictionary\<string, string\>), SlottedSkillIds (List\<string\>). Archetype base stats (HP/Speed/Damage) computed inline in `BuildStatBlock()` — not stored as fields. |
 | `CharacterType`     | C# enum     | Warrior, Rogue, Mage                                           |
 | `ItemData`          | C# record   | Id, Name, Slot (enum), Tier (int), IconPath — plus slot-specific fields: `WeaponAffinity`, `SkillBonus (float)` for Weapon; `ArmorCategory`, `BonusHp`, `BonusSpeed`, `DamageReduction (float)` for Armor; `PhysicalResistance (float)` for Accessory. Unused fields default to zero. `BonusDamage` removed — weapons no longer contribute character damage. |
 | `ItemSlot`          | C# enum     | Weapon, Armor, Accessory                                       |
-| `SkillData`         | C# record   | Id, Name, Type (SkillType enum), Category (SkillCategory enum), Cooldown (float, seconds; 0 for Passive), Range (float) |
+| `SkillData`         | C# record   | Id, Name, Type (SkillType enum), Category (SkillCategory enum), Cooldown (float, seconds; 0 for Passive), Range (float), IconPath (string, default "") |
 | `SkillType`         | C# enum     | Active, Passive                                                |
 | `WeaponAffinity`    | C# enum     | None, Melee, RangedPhysical, RangedMagic                       |
 | `ArmorCategory`     | C# enum     | None, Heavy, Medium, Light                                     |
@@ -192,9 +218,10 @@ Main (Node)
 | `DamageType`        | C# enum     | Physical, Magic                                                |
 | `ItemRegistry`      | Static class| `All` dict, `Get(id)`, `ForSlot(slot)` — 7 tier-1 starter items (sword, bow, wand, heavy/medium/light armor, accessory). `RandomDrop()` removed — items are not enemy drops. |
 | `SkillRegistry`     | Static class| `All` dict, `Get(id)` — static catalog of all `SkillData` records. v1: 3 entries: `attack_melee` (Melee), `attack_ranged_physical` (RangedPhysical), `attack_ranged_magic` (RangedMagic). |
-| `RecipeData`        | C# record   | Id, OutputItemId (string), MaterialCosts (Dictionary\<string, int\> — material ID → quantity) |
+| `RecipeData`        | C# record   | Id, OutputItemId (string), RecipeType (enum), MaterialCosts (Dictionary\<string, int\> — material ID → quantity). `RecipeType.Gear` outputs to `OwnedItemIds`; `RecipeType.Skill` outputs to `OwnedSkillIds`. |
+| `RecipeType`        | C# enum     | Gear, Skill                                                    |
 | `CraftResult`       | C# enum     | Success, InsufficientMaterials, InventoryFull                  |
-| `RecipeRegistry`    | Static class| `All` dict, `Get(id)`, `ForSlot(ItemSlot)` — static catalog of all `RecipeData` records. v1: 7 tier-1 recipes (one per craftable item). Material costs TBD. |
+| `RecipeRegistry`    | Static class| `All` dict, `Get(id)`, `ForSlot(ItemSlot)`, `ForType(RecipeType)` — static catalog of all `RecipeData` records. v1: 7 tier-1 gear recipes + 3 skill recipes (Strike/Arrow/Bolt, 3× common each). |
 | `EnemyData`         | C# record   | EnemyType (string), BaseSpeed, BaseHealth, ContactDamage, DamageInterval, PhysicalResistance (float), MagicResistance (float) |
 
 ---
@@ -208,7 +235,8 @@ Managed by `CharacterManager` autoload. Written on every create/delete/upgrade.
   "profile": {
     "coinBank": 150,
     "materials": { "crafting_common": 30 },
-    "ownedItemIds": ["bow_t1"]
+    "ownedItemIds": ["bow_t1"],
+    "ownedSkillIds": []
   },
   "characters": [
     {
@@ -219,12 +247,12 @@ Managed by `CharacterManager` autoload. Written on every create/delete/upgrade.
       "currentLevel": 7,
       "currentXp": 12,
       "equippedItems": { "Weapon": "sword_t1", "Armor": "heavy_armor_t1", "Accessory": "accessory_t1" },
-      "slottedSkillIds": ["attack_melee"]
+      "slottedSkillIds": ["attack_melee", "attack_melee", "attack_melee"]
     }
   ]
 }
 ```
-`materials` holds all crafting material quantities keyed by material ID. Migration: on load, if the old `craftingCurrency1` key exists at the profile root, its value is moved into `materials["crafting_common"]`. `ownedItemIds` holds only **unequipped** inventory items; equipped items live exclusively in `equippedItems`. `EquipItem` moves an item out of `ownedItemIds` and swaps the old equipped item back in. `UnequipItem` returns `false` (blocked) if inventory is at capacity. Old saves are migrated on load — any item ID present in both lists is removed from `ownedItemIds`. Starter gear is seeded directly into `equippedItems` (not inventory) by `SeedStarterGear()`. Fields default to empty if absent.
+`materials` holds all crafting material quantities keyed by material ID. Migration: on load, if the old `craftingCurrency1` key exists at the profile root, its value is moved into `materials["crafting_common"]`. `ownedItemIds` holds only **unequipped** gear; `ownedSkillIds` holds only **unequipped** skill items. Equipped items live exclusively in `equippedItems` / `slottedSkillIds`. `EquipItem` / `EquipSkill` move items out of the owned lists and swap old equipped items back in. `UnequipItem` / `UnequipSkill` return `false` (blocked) if the respective inventory is at capacity. Starter gear is seeded into `equippedItems` by `SeedStarterGear()`; starter skills are seeded into `slottedSkillIds` (all 3 slots) by `SeedStarterSkills()`. Both seed methods write directly to the character's slot fields, not to inventory. Fields default to empty if absent.
 
 ### Run Session (in-memory only)
 Lives on the `RunSession` node. Discarded when the scene unloads. On run end, `CharacterManager.RecordRunCompletion(finalLevel, finalXp, coinsEarned)` writes the persistent state.
@@ -243,17 +271,16 @@ If multi-user slots or cloud saves are ever needed, evaluate wrapping save data 
 Single weapon per character (v1). `WeaponController` manages:
 
 - `BaseDamage (float)` — set at run start from `CharacterData` (archetype base + level bonuses + meta upgrades). The equipped weapon item does **not** contribute to base damage.
-- `SkillBonus (float)` — flat bonus added to damage when firing. Non-zero only when the equipped weapon's affinity matches the slotted skill's category.
-- `SkillCategory (SkillCategory)` — category of the slotted active skill. Determines `DamageType` (RangedMagic → Magic, else Physical) and affinity-match for `SkillBonus`.
-- `Cooldown (float)`, `Range (float)` — read from `SkillData` at run start, not exported constants.
+- `_slots[3]` — internal array of 3 slot states, each holding `{ SkillData Skill, float CooldownTimer, float SkillBonus }`. Each slot fires independently when its timer reaches 0. Empty slots (null Skill) are skipped.
+- Per slot: `SkillBonus` is non-zero only when the weapon affinity matches the slot's skill category. `DamageType` per slot: `RangedMagic → Magic`, else `Physical`. `CooldownTimer` counts down independently from each slot's `Skill.Cooldown`.
 
-Exposes: `SetDamage(float)`, `AddDamage(float)`, `SetSkill(SkillData, float weaponSkillBonus, WeaponAffinity)`.
+Exposes: `SetDamage(float)`, `AddDamage(float)`, `SetSlot(int slotIndex, SkillData, float weaponSkillBonus)`.
 
-`SetSkill` replaces the old `SetSkillBonus` — it stores SkillCategory, Cooldown, and Range from the `SkillData`, and computes `SkillBonus` from the affinity match in one call.
+`SetSlot` replaces `SetSkill` — called once per slot at run start. Stores `SkillData`, pre-computed `SkillBonus`, and seeds `CooldownTimer` to 0 so each slot fires immediately on the first frame.
 
-Effective damage per shot: `BaseDamage + SkillBonus`.
+Effective damage per shot: `BaseDamage + slot.SkillBonus`.
 
-Emits: `SkillFired(int slotIndex, float cooldown)` when a skill activates — consumed by the HUD skill bar.
+Emits: `SkillFired(int slotIndex, float cooldown)` when a slot fires — consumed by the HUD skill bar.
 
 [TBD] Weapon upgrade path (stages, piercing, AoE) — deferred.
 
@@ -261,15 +288,16 @@ Emits: `SkillFired(int slotIndex, float cooldown)` when a skill activates — co
 
 ## Skill Bar (HUD)
 
-An `HBoxContainer` in the HUD showing each slotted skill as an icon cell. v1: one cell.
+An `HBoxContainer` anchored **bottom-center** of the HUD. **3 cells**, one per skill slot.
 
 Each cell contains:
-- Skill icon (placeholder if none)
-- A `ProgressBar` overlay that drains from `cooldown → 0` over the skill's cooldown duration, then resets
+- Skill icon (placeholder if slot empty)
+- A grey overlay — visible when the slot is on cooldown, hidden when ready
+- A `ProgressBar` that **fills from bottom** (value 0 = just fired / empty, value 1.0 = ready to fire again)
 
-`Hud._Ready()` wires `WeaponController.SkillFired` → `OnSkillFired(int slotIndex, float cooldown)`. On fire: reset the matching cell's progress bar to full and begin draining. Draining is handled in `_Process` (bar value decrements by delta each frame).
+`Hud._Ready()` wires `WeaponController.SkillFired` → `OnSkillFired(int slotIndex, float cooldown)`. On fire: set the matching cell's bar to 0, show grey overlay, begin filling. Filling is handled in `_Process` (bar value increments by `delta / cooldown` each frame). When bar reaches 1.0: hide grey overlay, stop incrementing.
 
-The skill bar is the visual feedback loop for the auto-attack cadence. It gives the player a read on when the next shot fires without requiring any input.
+The skill bar is the visual feedback loop for the auto-attack cadence — 3 independent timers give the player a read on all active slots without any input required.
 
 ---
 
@@ -304,16 +332,22 @@ Save()
 return Success
 ```
 
+### `CharacterManager.CraftSkill(string recipeId) → CraftResult`
+
+Same logic as `CraftItem` but checks `OwnedSkillIds.Count >= MaxInventory` and adds to `OwnedSkillIds` on success.
+
 ### Crafting tab (CharacterScreen)
 
-The three hardcoded stub buttons are replaced by a `ScrollContainer` / `VBoxContainer` recipe list populated at runtime from `RecipeRegistry`. A `Label` at the top shows current material balances (`"Common: N"`).
+`ScrollContainer` / `VBoxContainer` recipe list populated at runtime from `RecipeRegistry.ForType(RecipeType.Gear)`. A `Label` at the top shows current material balances.
 
 Each row is a `Button`:
 - Text: `"[Item Name]  —  Common: N"`
 - Disabled when: materials insufficient **or** inventory full
 - On press: `CharacterManager.CraftItem(recipeId)`, then `Refresh()`
 
-`RecipeRegistry.ForSlot(ItemSlot)` can be used to group rows by weapon / armor / accessory if the tab gains category headers later.
+### Skill Crafting tab (CharacterScreen)
+
+Parallel structure to the Crafting tab. Recipe list populated from `RecipeRegistry.ForType(RecipeType.Skill)`. On press: `CharacterManager.CraftSkill(recipeId)`, then `Refresh()`. Capacity check is against `OwnedSkillIds`.
 
 ### Material IDs
 
@@ -353,7 +387,7 @@ Resistance values per enemy type live in `EnemyData` (`PhysicalResistance`, `Mag
 
 ### Stat seeding at run start
 
-`PlayerController._Ready()` reads `CharacterManager.SelectedCharacter` and equipped items:
+`PlayerController._Ready()` reads `CharacterManager.SelectedCharacter` and equipped items. After seeding, `GlobalPosition` is forced to `Vector3.Zero` — the map center — regardless of any saved node position in the scene file.
 
 ```
 MaxHealth          = archetype base + level bonuses + meta upgrades + armor.BonusHp
@@ -361,8 +395,12 @@ Speed              = archetype base + meta upgrades + armor.BonusSpeed  // negat
 Damage             = archetype base + level bonuses + meta upgrades
 DamageReduction    = armor.DamageReduction
 PhysicalResistance = accessory.PhysicalResistance
-skill              = SkillRegistry.Get(character.SlottedSkillIds[0])
-WeaponController.SetSkill(skill, weapon.SkillBonus, weapon.WeaponAffinity)
+for i in 0..2:
+    skillId = character.SlottedSkillIds[i]   // null/empty = skip
+    if skillId is set:
+        skill = SkillRegistry.Get(skillId)
+        bonus = (weapon.WeaponAffinity matches skill.Category) ? weapon.SkillBonus : 0
+        WeaponController.SetSlot(i, skill, bonus)
 ```
 
 ---

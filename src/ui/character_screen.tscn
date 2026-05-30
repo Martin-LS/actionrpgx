@@ -53,12 +53,38 @@ layout_mode = 2
 text = "0 / 50"
 theme_override_font_sizes/font_size = 13
 
-[node name="InventoryScroll" type="ScrollContainer" parent="VBox/HSplit/LeftPanel/LeftVBox" unique_id=6001000008]
+[node name="InventoryTabs" type="TabContainer" parent="VBox/HSplit/LeftPanel/LeftVBox" unique_id=6001000101]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Equipment" type="VBoxContainer" parent="VBox/HSplit/LeftPanel/LeftVBox/InventoryTabs" unique_id=6001000102]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="InventoryScroll" type="ScrollContainer" parent="VBox/HSplit/LeftPanel/LeftVBox/InventoryTabs/Equipment" unique_id=6001000008]
 layout_mode = 2
 size_flags_vertical = 3
 horizontal_scroll_mode = 0
 
-[node name="InventoryGrid" type="GridContainer" parent="VBox/HSplit/LeftPanel/LeftVBox/InventoryScroll" unique_id=6001000009]
+[node name="InventoryGrid" type="GridContainer" parent="VBox/HSplit/LeftPanel/LeftVBox/InventoryTabs/Equipment/InventoryScroll" unique_id=6001000009]
+layout_mode = 2
+size_flags_horizontal = 3
+columns = 5
+theme_override_constants/h_separation = 4
+theme_override_constants/v_separation = 4
+
+[node name="Skills" type="VBoxContainer" parent="VBox/HSplit/LeftPanel/LeftVBox/InventoryTabs" unique_id=6001000103]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="SkillsScroll" type="ScrollContainer" parent="VBox/HSplit/LeftPanel/LeftVBox/InventoryTabs/Skills" unique_id=6001000104]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="SkillsGrid" type="GridContainer" parent="VBox/HSplit/LeftPanel/LeftVBox/InventoryTabs/Skills/SkillsScroll" unique_id=6001000105]
 layout_mode = 2
 size_flags_horizontal = 3
 columns = 5
@@ -111,20 +137,6 @@ theme_override_font_sizes/font_size = 16
 layout_mode = 2
 text = "Stats"
 theme_override_font_sizes/font_size = 16
-
-[node name="Spacer" type="Control" parent="VBox/HSplit/RightPanel/TabContainer/Equipment/CharacterView/HSplit/InfoVBox" unique_id=6001000037]
-layout_mode = 2
-size_flags_vertical = 3
-
-[node name="Buttons" type="HBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer/Equipment/CharacterView/HSplit/InfoVBox" unique_id=6001000038]
-layout_mode = 2
-theme_override_constants/separation = 12
-
-[node name="StartRunButton" type="Button" parent="VBox/HSplit/RightPanel/TabContainer/Equipment/CharacterView/HSplit/InfoVBox/Buttons" unique_id=6001000040]
-custom_minimum_size = Vector2(0, 48)
-layout_mode = 2
-size_flags_horizontal = 3
-text = "Start Run"
 
 [node name="GearPanel" type="VBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer/Equipment/CharacterView/HSplit" unique_id=6001000032]
 layout_mode = 2
@@ -180,6 +192,66 @@ layout_mode = 2
 size_flags_horizontal = 0
 text = "—"
 
+[node name="SkillBar" type="HBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer/Equipment/CharacterView" unique_id=6001000130]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_constants/separation = 8
+
+[node name="SkillSlot1" type="VBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer/Equipment/CharacterView/SkillBar" unique_id=6001000111]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="SkillLabel1" type="Label" parent="VBox/HSplit/RightPanel/TabContainer/Equipment/CharacterView/SkillBar/SkillSlot1" unique_id=6001000112]
+layout_mode = 2
+text = "Skill 1"
+theme_override_font_sizes/font_size = 13
+horizontal_alignment = 1
+
+[node name="SkillSlotButton1" type="Button" parent="VBox/HSplit/RightPanel/TabContainer/Equipment/CharacterView/SkillBar/SkillSlot1" unique_id=6001000113]
+custom_minimum_size = Vector2(60, 60)
+layout_mode = 2
+text = "—"
+
+[node name="SkillSlot2" type="VBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer/Equipment/CharacterView/SkillBar" unique_id=6001000114]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="SkillLabel2" type="Label" parent="VBox/HSplit/RightPanel/TabContainer/Equipment/CharacterView/SkillBar/SkillSlot2" unique_id=6001000115]
+layout_mode = 2
+text = "Skill 2"
+theme_override_font_sizes/font_size = 13
+horizontal_alignment = 1
+
+[node name="SkillSlotButton2" type="Button" parent="VBox/HSplit/RightPanel/TabContainer/Equipment/CharacterView/SkillBar/SkillSlot2" unique_id=6001000116]
+custom_minimum_size = Vector2(60, 60)
+layout_mode = 2
+text = "—"
+
+[node name="SkillSlot3" type="VBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer/Equipment/CharacterView/SkillBar" unique_id=6001000117]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="SkillLabel3" type="Label" parent="VBox/HSplit/RightPanel/TabContainer/Equipment/CharacterView/SkillBar/SkillSlot3" unique_id=6001000118]
+layout_mode = 2
+text = "Skill 3"
+theme_override_font_sizes/font_size = 13
+horizontal_alignment = 1
+
+[node name="SkillSlotButton3" type="Button" parent="VBox/HSplit/RightPanel/TabContainer/Equipment/CharacterView/SkillBar/SkillSlot3" unique_id=6001000119]
+custom_minimum_size = Vector2(60, 60)
+layout_mode = 2
+text = "—"
+
+[node name="Buttons" type="HBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer/Equipment/CharacterView" unique_id=6001000038]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="StartRunButton" type="Button" parent="VBox/HSplit/RightPanel/TabContainer/Equipment/CharacterView/Buttons" unique_id=6001000040]
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Start Run"
+
 [node name="Crafting" type="VBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer" unique_id=6001000041]
 layout_mode = 2
 
@@ -187,22 +259,12 @@ layout_mode = 2
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="CraftLabel" type="Label" parent="VBox/HSplit/RightPanel/TabContainer/Crafting/VBox" unique_id=6001000043]
+[node name="SkillCrafting" type="VBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer" unique_id=6001000120]
 layout_mode = 2
-text = "Crafting  (v1 — free)"
-theme_override_font_sizes/font_size = 20
 
-[node name="CraftWeaponButton" type="Button" parent="VBox/HSplit/RightPanel/TabContainer/Crafting/VBox" unique_id=6001000044]
-custom_minimum_size = Vector2(0, 48)
+[node name="VBox" type="VBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer/SkillCrafting" unique_id=6001000121]
 layout_mode = 2
-text = "Craft Weapon  (Iron Sword  +3 DMG)"
+theme_override_constants/separation = 12
 
-[node name="CraftArmorButton" type="Button" parent="VBox/HSplit/RightPanel/TabContainer/Crafting/VBox" unique_id=6001000045]
-custom_minimum_size = Vector2(0, 48)
+[node name="Sigils" type="VBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer" unique_id=6001000122]
 layout_mode = 2
-text = "Craft Armor  (Leather Vest  +20 HP)"
-
-[node name="CraftAccessoryButton" type="Button" parent="VBox/HSplit/RightPanel/TabContainer/Crafting/VBox" unique_id=6001000046]
-custom_minimum_size = Vector2(0, 48)
-layout_mode = 2
-text = "Craft Accessory  (Swift Ring  +20 Speed)"

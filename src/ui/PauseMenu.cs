@@ -30,6 +30,6 @@ public partial class PauseMenu : CanvasLayer
     private void EndRun()
     {
         GetTree().Paused = false;
-        GetTree().ChangeSceneToFile("res://src/ui/account_screen.tscn");
+        GetTree().ChangeSceneToFile("res://src/ui/character_screen.tscn");
     }
 }

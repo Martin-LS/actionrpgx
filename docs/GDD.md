@@ -29,7 +29,7 @@ Skills drive all combat. Each skill has a **type**:
 
 The **skill bar** on the run HUD shows all slotted skills and their cooldown / toggle state.
 
-**v1:** One active attack skill. Fires on cooldown. Cooldown values TBD.
+**v1:** Three skill slots, each firing independently on its own cooldown. v1 has three skills (Strike, Arrow, Bolt — one per category). Starter characters have all 3 slots pre-filled with the same skill; players can mix freely. Cooldown: 0.8s per slot.
 
 Every skill has a **category**: Melee, Ranged-Physical, or Ranged-Magic. Category determines what weapon affinity enhances it — see Gear Slots.
 
@@ -124,6 +124,7 @@ More attributes will be added in future (e.g. enemy density modifiers, environme
 
 ## Run Structure
 
+- **Spawn:** Player always starts at the center of the map
 - **Duration:** Fixed time limit — 5 minutes
 - **Map:** Each run takes place on a map; the map's attributes apply for the full run
 - **Difficulty scaling:** Enemy count, speed, and variety increase over time
@@ -162,13 +163,22 @@ These stack across all runs. A level-10 character has +45 HP and +9 damage above
 
 ### Gear Slots
 
-Characters can equip up to 3 items, one per slot. Items persist between runs. Each slot has a distinct role:
+Characters can equip up to 3 gear items (one per gear slot) and up to 3 skill items (one per skill slot). All items persist between runs. Each slot has a distinct role:
 
 | Slot      | Role                                                             | Progression axis                    |
 |-----------|------------------------------------------------------------------|-------------------------------------|
 | Weapon    | Skill synergy — flat damage bonus to skills of matching affinity | Tier → larger bonus                 |
 | Armor     | Survival — HP, Speed, damage reduction (%) by category          | Tier → better stats within category |
 | Accessory | Mitigation — physical resistance (%)                             | Tier → higher resistance            |
+| Skill ×3  | Active/passive ability used during a run                         | Tier → stronger effect / lower cooldown |
+
+#### Skill Slots
+
+Three skill slots map directly to the 3 skill bar slots shown during a run. Whatever is equipped in skill slots 1–3 is what fires during the run.
+
+The same skill item can be equipped in multiple slots simultaneously. Any archetype can equip any skill — there are no archetype or weapon restrictions on skill slots. v1 skills: **Strike** (melee auto-attack), **Arrow** (ranged-physical auto-attack), **Bolt** (ranged-magic auto-attack).
+
+Skill items are crafted (see Skill Crafting tab) and equipped from the **Skills inventory tab**.
 
 #### Weapon
 
@@ -202,11 +212,13 @@ Accessories grant **physical resistance (%)**. No category — any character can
 
 Each character starts with one item per slot, matched to their archetype:
 
-| Archetype | Weapon          | Armor                | Accessory        |
-|-----------|-----------------|----------------------|------------------|
-| Warrior   | Sword (tier 1)  | Heavy armor (tier 1) | Accessory (tier 1) |
-| Rogue     | Bow (tier 1)    | Light armor (tier 1) | Accessory (tier 1) |
-| Mage      | Wand (tier 1)   | Medium armor (tier 1)| Accessory (tier 1) |
+| Archetype | Weapon          | Armor                | Accessory          | Skill slots (all 3) |
+|-----------|-----------------|----------------------|--------------------|---------------------|
+| Warrior   | Sword (tier 1)  | Heavy armor (tier 1) | Accessory (tier 1) | Strike ×3 |
+| Rogue     | Bow (tier 1)    | Light armor (tier 1) | Accessory (tier 1) | Arrow ×3  |
+| Mage      | Wand (tier 1)   | Medium armor (tier 1)| Accessory (tier 1) | Bolt ×3   |
+
+These are default starter loadouts only — any archetype can equip any skill. Skills are pre-equipped in all 3 slots and do not appear in the Skills inventory tab.
 
 Specific item names and exact stat values are TBD.
 
@@ -214,9 +226,16 @@ Specific item names and exact stat values are TBD.
 
 **Item identity:** Each item is a fixed, unique definition with its own ID and icon. Progression produces *new* items — a higher-tier crafted weapon is a new item with its own ID, not an upgraded version of an existing one. Icons never change dynamically; an item always looks the same regardless of who owns it or has it equipped.
 
-**Inventory:** Crafted (unequipped) items go into the **account inventory** — a shared pool accessible by every character, capacity **50 items**. Equipped items are held separately in the character's gear slots and do not count against inventory capacity. The inventory is visible on the Character Screen as a scrollable 5-column icon grid.
+**Inventory:** Crafted (unequipped) items go into the **account inventory** — a shared pool accessible by every character. The inventory has two tabs:
 
-**Equipping:** Click an inventory item → popup → **Equip** to move it into its slot on the selected character (any currently equipped item swaps back to inventory). Click an occupied gear slot → popup → **Unequip** (returns item to inventory; blocked if inventory is full) or **Delete** (removes permanently). Empty gear slots open the item picker to select from inventory items of that slot type.
+| Tab | Contents | Capacity |
+|---|---|---|
+| Equipment | Crafted gear (weapons, armor, accessories) | 50 items |
+| Skills | Crafted skill items | 50 items |
+
+Equipped items are held separately in the character's slots and do not count against inventory capacity. Each tab is visible on the Character Screen as a scrollable 5-column icon grid.
+
+**Equipping:** Click an inventory item → popup → **Equip** to move it into its slot on the selected character (any currently equipped item swaps back to inventory). Click an occupied slot → popup → **Unequip** (returns item to inventory; blocked if inventory is full) or **Delete** (removes permanently). Empty slots open the item picker filtered to that slot type.
 
 ---
 
@@ -246,19 +265,26 @@ Crafting materials are tiered — common through exotic. Each tier drops at a di
 - XP bar + current level
 - Coin counter (this run)
 - Elapsed time / countdown
-- **Skill bar** — shows slotted skills with cooldown state (active) or toggle state (passive)
+- **Skill bar** — bottom-center of the HUD. 3 slots. Shows slotted skills with cooldown/toggle state:
+  - Active skill on cooldown: slot is greyed out, fills from bottom as cooldown recovers
+  - Active skill ready: slot fully lit
+  - Passive skill: lit when toggled on, greyed when off
+  - Empty slot: visually empty (no icon)
 - [TBD] Minimap
 
 ### Menus
 - **Main Menu** → title screen, Play button
 - **Account Screen** → the account-level hub. Always the first screen after Main Menu. Contains the character roster (list characters, create new, delete). Designed to grow — future account-level info (account stats, global progress, etc.) will live alongside the roster. Selecting a character navigates to their Character Screen.
 - **Character Screen** → full management hub for the selected character: inventory (left), character stats + gear + tabs (right), Start Run button
-  - **Inventory** (left panel) — account-shared item pool, 5-column scrollable grid, 50-item capacity. Clicking a filled slot opens a popup (Equip / Delete). Equipped items are not shown here — they live in the gear slots.
-  - **Equipment tab** *(default)* — gear slot buttons (Weapon / Armor / Accessory) showing equipped items. Clicking an occupied slot: popup (Unequip / Delete). Clicking an empty slot: item picker filtered to that slot.
-  - **Crafting tab** — craft new items from materials
+  - **Inventory** (left panel) — account-shared item pool, 5-column scrollable grid. Two tabs:
+    - *Equipment tab* — crafted gear (weapon, armor, accessory), 50-item cap
+    - *Skills tab* — crafted skill items, 50-item cap
+    - Clicking a filled slot opens a popup (Equip / Delete). Equipped items are not shown here — they live in the slots.
+  - **Equipment tab** *(default)* — gear slot buttons (Weapon / Armor / Accessory) and skill slot buttons (Skill 1 / Skill 2 / Skill 3) showing equipped items. Clicking an occupied slot: popup (Unequip / Delete). Clicking an empty slot: item picker filtered to that slot type.
+  - **Crafting tab** — craft new gear items from materials
+  - **Skill Crafting tab** — craft new skill items from materials
   - **Sigils tab** — visible, empty (reserved for future sigil system)
-  - **Skills tab** — visible, empty (reserved for future skill tree system)
-  - All four tabs are always visible; empty tabs are not locked or greyed out
+  - All five tabs are always visible; empty tabs are not locked or greyed out
   - Back button returns to Account Screen
 - **Run results overlay** → shown at run end; return button goes back to Character Screen
 - **Pause menu** — ESC during a run; second ESC or Resume button closes it; run is paused while open
