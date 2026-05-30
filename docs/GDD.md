@@ -6,7 +6,7 @@
 
 A top-down horde survival game (Vampire Survivors / Diablo style). The player takes a persistent character into timed runs against escalating enemy waves. Skills fire automatically on cooldown — survival is about positioning and progression, not twitch reflexes.
 
-Every run makes the character permanently stronger: level and XP carry over, stat bonuses stack, and coins and crafting materials earned go into a shared account pool. Between runs, players spend coins on meta upgrades and craft gear from materials — building both their character and their item collection over time.
+Every run makes the character permanently stronger: level and XP carry over, stat bonuses stack, and coins and crafting materials earned go into a shared account pool. Between runs, players craft gear from materials — building both their character and their item collection over time. Coins accumulate but have no spend mechanic yet.
 
 The game has two intertwined goals: grow your character through runs, and build your gear through crafting.
 
@@ -71,7 +71,7 @@ Stat values are TBD. Default build reflects starter gear — players are free to
 1. **Create** — player picks a name (required) and archetype
 2. **Select** — choose a character from the roster before a run
 3. **Run** — character starts at their saved level; every new level gained during the run is permanent
-4. **Grow** — level and XP carry over to the character; coins and crafting materials go to the shared account pool; permanent stat bonuses can be purchased between runs
+4. **Grow** — level and XP carry over to the character; coins and crafting materials go to the shared account pool; permanent stat bonuses are applied automatically on level up
 5. **Delete** — player can permanently remove a character (irreversible)
 
 A run cannot start without a selected character.
@@ -124,7 +124,7 @@ More attributes will be added in future (e.g. enemy density modifiers, environme
 
 ## Run Structure
 
-- **Duration:** Fixed time limit (target ~5 min; currently 5s for testing)
+- **Duration:** Fixed time limit — 5 minutes
 - **Map:** Each run takes place on a map; the map's attributes apply for the full run
 - **Difficulty scaling:** Enemy count, speed, and variety increase over time
 - **Run end conditions:**

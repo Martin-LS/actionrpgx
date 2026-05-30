@@ -118,12 +118,3 @@ text = "Create"
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
 text = "Cancel"
-
-[node name="Crafting" type="VBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer" unique_id=2001000041]
-visible = false
-layout_mode = 2
-metadata/_tab_index = 1
-
-[node name="VBox" type="VBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer/Crafting" unique_id=2001000042]
-layout_mode = 2
-theme_override_constants/separation = 12

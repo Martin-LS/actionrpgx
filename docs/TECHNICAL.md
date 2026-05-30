@@ -53,13 +53,10 @@ Account-level hub. Always the first screen after Main Menu. Contains the charact
 AccountScreen (Control)
 └── VBox (VBoxContainer)
     ├── HSplit (HSplitContainer)
-    │   ├── LeftPanel ← account-level info (inventory, materials); future: account stats etc.
     │   └── RightPanel
     │       └── TabContainer
-    │           ├── Characters tab
-    │           │   ├── RosterView ← character list + inline create panel
-    │           │   └── (character view removed — selecting navigates to character_screen.tscn)
-    │           └── Crafting tab ← VBox, runtime-populated recipe list
+    │           └── Characters tab
+    │               └── RosterView ← character list + inline create panel
     └── BackButton (Button) → main_menu.tscn
 ```
 On character selected: `CharacterManager.SelectCharacter(id)` → `character_screen.tscn`.
@@ -72,8 +69,8 @@ CharacterCreate (Control)
     ├── TitleLabel (Label)
     ├── NameInput (LineEdit) ← enables ConfirmBtn when non-empty
     ├── WarriorBtn, RogueBtn, MageBtn (type selection)
-    ├── ConfirmBtn (Button) ← creates character → character_select.tscn
-    └── CancelBtn (Button) → character_select.tscn
+    ├── ConfirmBtn (Button) ← creates character → account_screen.tscn
+    └── CancelBtn (Button) → account_screen.tscn
 ```
 
 ### `src/ui/character_screen.tscn`
@@ -81,7 +78,7 @@ Full management hub for the selected character. Always has a character in contex
 ```
 CharacterScreen (Control)
 └── VBox (VBoxContainer)
-    ├── BackButton (Button) ← "← Change Character" → character_select.tscn
+    ├── BackButton (Button) ← "← Change Character" → account_screen.tscn
     └── HSplit (HSplitContainer)
         ├── LeftPanel (PanelContainer, min width 280)
         │   └── LeftVBox (VBoxContainer)
@@ -110,7 +107,7 @@ CharacterScreen (Control)
                 ├── Sigils tab    ← empty; reserved for future sigil system
                 └── Skills tab    ← empty; reserved for future skill tree system
 ```
-**Inventory grid:** 50 slots (5 cols, scrollable), all always visible. Empty slots are dimmed. Clicking a filled slot opens a `PopupMenu` (Equip / Delete). Equip auto-routes to the item's slot on the selected character, swapping out any currently equipped item. Capacity defined by `ProfileData.MaxInventory = 50` — counts only unequipped items; equipped items live separately in `CharacterData.EquippedItems`. If `SelectedCharacter` is null on `_Ready`, redirects to `character_select.tscn`.
+**Inventory grid:** 50 slots (5 cols, scrollable), all always visible. Empty slots are dimmed. Clicking a filled slot opens a `PopupMenu` (Equip / Delete). Equip auto-routes to the item's slot on the selected character, swapping out any currently equipped item. Capacity defined by `ProfileData.MaxInventory = 50` — counts only unequipped items; equipped items live separately in `CharacterData.EquippedItems`. If `SelectedCharacter` is null on `_Ready`, redirects to `account_screen.tscn`.
 
 ### `src/ui/item_picker_panel.tscn`
 Modal overlay opened from gear slot buttons **when the slot is empty**. Occupied slots use a PopupMenu (Unequip / Delete) instead — ItemPickerPanel is never opened for an occupied slot.

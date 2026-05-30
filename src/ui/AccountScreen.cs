@@ -1,25 +1,17 @@
 using Godot;
-using System.Linq;
-using Godot1.Crafting;
-using Godot1.Items;
 
 namespace Godot1.Ui;
 
 public partial class AccountScreen : Control
 {
-    // Characters tab — roster view
     private VBoxContainer _characterList = null!;
     private Control       _createPanel   = null!;
     private LineEdit      _nameInput     = null!;
     private Character.CharacterType _pendingType = Character.CharacterType.Warrior;
 
-    // Crafting tab
-    private VBoxContainer _craftVBox = null!;
-
     private Character.CharacterManager _manager = null!;
 
-    private const string RosterBase   = "VBox/HSplit/RightPanel/TabContainer/Characters/RosterView";
-    private const string CraftingBase = "VBox/HSplit/RightPanel/TabContainer/Crafting";
+    private const string RosterBase = "VBox/HSplit/RightPanel/TabContainer/Characters/RosterView";
 
     public override void _Ready()
     {
@@ -41,9 +33,6 @@ public partial class AccountScreen : Control
         confirmBtn.Pressed                                                    += OnConfirmCreate;
         GetNode<Button>($"{RosterBase}/CreatePanel/VBox/CancelBtn").Pressed  += () => _createPanel.Visible = false;
 
-        // Crafting tab
-        _craftVBox = GetNode<VBoxContainer>($"{CraftingBase}/VBox");
-
         GetNode<Button>("VBox/BackButton").Pressed += () =>
             GetTree().ChangeSceneToFile("res://src/ui/main_menu.tscn");
 
@@ -53,7 +42,6 @@ public partial class AccountScreen : Control
     private void Refresh()
     {
         RefreshRoster();
-        RefreshCrafting();
     }
 
     private void RefreshRoster()
@@ -86,51 +74,6 @@ public partial class AccountScreen : Control
             hbox.AddChild(deleteBtn);
             _characterList.AddChild(hbox);
         }
-    }
-
-    private void RefreshCrafting()
-    {
-        foreach (Node child in _craftVBox.GetChildren())
-            child.QueueFree();
-
-        var matsLabel = new Label
-        {
-            Text = $"Common materials: {_manager.Profile.GetMaterial("crafting_common")}",
-        };
-        _craftVBox.AddChild(matsLabel);
-
-        bool inventoryFull = _manager.Profile.OwnedItemIds.Count >= Character.ProfileData.MaxInventory;
-
-        foreach (var recipe in RecipeRegistry.All.Values)
-        {
-            var item = ItemRegistry.Get(recipe.OutputItemId);
-            if (item == null) continue;
-
-            string costText = string.Join(", ", recipe.MaterialCosts.Select(kv =>
-                $"{kv.Value}× {(kv.Key == "crafting_common" ? "Common" : kv.Key)}"));
-            bool canAfford = recipe.MaterialCosts.All(kv => _manager.Profile.GetMaterial(kv.Key) >= kv.Value);
-
-            var btn = new Button
-            {
-                Text     = $"{item.Name}  —  {costText}",
-                Disabled = !canAfford || inventoryFull,
-            };
-            string capturedId = recipe.Id;
-            btn.Pressed += () => { _manager.CraftItem(capturedId); Refresh(); };
-            _craftVBox.AddChild(btn);
-        }
-    }
-
-    private static string BuildTooltip(ItemData item)
-    {
-        var sb = new System.Text.StringBuilder();
-        sb.Append($"{item.Name}  [{item.Slot}]");
-        if (item.BonusHp            != 0)   sb.Append($"\nHP {item.BonusHp:+#;-#;0}");
-        if (item.BonusSpeed         != 0f)  sb.Append($"\nSpeed {item.BonusSpeed:+#;-#;0}");
-        if (item.SkillBonus         != 0f)  sb.Append($"\nSkill Bonus {item.SkillBonus:+#;-#;0}");
-        if (item.DamageReduction    != 0f)  sb.Append($"\nDamage Reduction {item.DamageReduction:P0}");
-        if (item.PhysicalResistance != 0f)  sb.Append($"\nPhys. Resist {item.PhysicalResistance:P0}");
-        return sb.ToString();
     }
 
     private void OnConfirmCreate()

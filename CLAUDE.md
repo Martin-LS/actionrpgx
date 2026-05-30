@@ -3,7 +3,7 @@
 
 ## Project Overview
 
-Top-down auto-attack horde survival game (Vampire Survivors / Diablo style). Godot 4.6, C#, Forward Plus renderer. 3D world with billboarded 2D sprites, orthographic isometric camera.
+Top-down auto-attack horde survival game (Vampire Survivors / Diablo style). Godot 4.6, C#, Forward Plus renderer. 3D world with KayKit 3D character models, perspective camera.
 
 ## Docs
 
