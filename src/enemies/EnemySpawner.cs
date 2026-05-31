@@ -60,19 +60,7 @@ public partial class EnemySpawner : Node
 
     private static void ApplyType(EnemyController enemy, float minutes)
     {
-        bool runnerUnlocked = minutes >= 1f;
-        bool tankUnlocked   = minutes >= 2f;
-
-        int pool = 1 + (runnerUnlocked ? 1 : 0) + (tankUnlocked ? 1 : 0);
-        int roll = GD.RandRange(0, pool - 1);
-
-        EnemyData data;
-        if (roll == 0)
-            data = EnemyRegistry.Standard;
-        else if (roll == 1 && runnerUnlocked)
-            data = EnemyRegistry.Runner;
-        else
-            data = EnemyRegistry.Tank;
+        var data = EnemyRegistry.Skeleton;
 
         enemy.Speed               = data.BaseSpeed;
         enemy.MaxHealth           = data.BaseHealth;
@@ -80,6 +68,7 @@ public partial class EnemySpawner : Node
         enemy.DamageInterval      = data.DamageInterval;
         enemy.PhysicalResistance  = data.PhysicalResistance;
         enemy.MagicResistance     = data.MagicResistance;
+        enemy.ModelPath           = data.ModelPath;
     }
 
     private Vector3 RandomRingPosition()

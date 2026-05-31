@@ -22,6 +22,7 @@ public partial class EnemyController : CharacterBody3D
     public int MapLevel = 1;
     public float PhysicalResistance = 0f;
     public float MagicResistance    = 0f;
+    public string ModelPath = "res://assets/models/characters/enemy_generic.glb";
 
     private int _currentHealth;
     private CharacterBody3D? _player;
@@ -35,8 +36,8 @@ public partial class EnemyController : CharacterBody3D
         _baseSpeed     = Speed;
         _player = GetTree().GetFirstNodeInGroup("player") as CharacterBody3D;
         AddToGroup("enemies");
-        var enemyModel = GD.Load<PackedScene>("res://assets/models/enemies/Skeleton_Minion.glb").Instantiate<Node3D>();
-        enemyModel.Scale = new Vector3(10f, 10f, 10f);
+        var enemyModel = GD.Load<PackedScene>(ModelPath).Instantiate<Node3D>();
+        enemyModel.Scale = new Vector3(9f, 9f, 9f);
         AddChild(enemyModel);
     }
 
@@ -56,7 +57,7 @@ public partial class EnemyController : CharacterBody3D
         if (_damageCooldown <= 0f && GlobalPosition.DistanceTo(_player.GlobalPosition) < 32f)
         {
             if (_player is Godot1.Player.PlayerController pc)
-                pc.TakeDamage(ContactDamage, Items.DamageType.Physical);
+                pc.TakeDamage(ContactDamage, Items.DamageType.Physical, this);
             _damageCooldown = DamageInterval;
         }
 
@@ -135,7 +136,10 @@ public partial class EnemyController : CharacterBody3D
         EmitSignal(SignalName.Died, GlobalPosition);
 
         if (_player is Player.PlayerController pc)
+        {
             pc.CollectXp(MapLevel);
+            pc.OnEnemyKilled();
+        }
 
         var shard = ShardScene.Instantiate<Xp.XpShard>();
         GetParent().AddChild(shard);
