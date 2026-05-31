@@ -374,8 +374,8 @@ Crafting materials are tiered — common through exotic. Each tier drops at a di
     - *Skills tab* — crafted skill items, 50-item cap
     - *Augments tab* — crafted support items, 50-item cap
     - Clicking a filled slot opens a popup (Equip / Delete). Equipped items are not shown here — they live in the slots.
-  - **Equipment tab** *(default)* — gear slot buttons (Weapon / Armor / Accessory) and skill slot buttons (Skill 1 / Skill 2 / Skill 3) showing equipped items. Clicking an occupied slot: popup (Unequip / Delete). Clicking an empty slot: item picker filtered to that slot type.
-  - **Crafting tab** — two sub-tabs:
+  - **Loadout tab** *(default)* — where the player assembles their build for the run: gear slot buttons (Weapon / Armor / Accessory) and skill slot buttons (Skill 1 / Skill 2 / Skill 3) showing equipped items. Called "Loadout" rather than "Equipment" to reflect that this is where you set up everything you're taking into a run — gear and skills together. Clicking an occupied slot: popup (Unequip / Delete). Clicking an empty slot: item picker filtered to that slot type.
+  - **Equipment Crafting tab** — two sub-tabs:
     - *Create* — craft new gear items from materials
     - *Modify* — load an existing gear item into the slot; one **Upgrade** button to increase its tier (costs 1 Common material)
   - **Skill Crafting tab** — two sub-tabs:

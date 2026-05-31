@@ -96,7 +96,7 @@ CharacterScreen (Control)
         │                   └── AugmentsGrid (GridContainer, 5 cols) ← 50 Button slots, runtime-populated from OwnedSupportInstances
         └── RightPanel (VBoxContainer)
             └── TabContainer
-                ├── Equipment tab (VBoxContainer)
+                ├── Loadout tab (VBoxContainer)
                 │   └── CharacterView (VBoxContainer)
                 │       ├── HSplit (HBoxContainer)
                 │       │   ├── InfoVBox (VBoxContainer, expand) ← name/type/level/stats labels
@@ -114,7 +114,7 @@ CharacterScreen (Control)
                 │       │   └── SkillSlot3 / SkillLabel3 / SkillSlotButton3 (same pattern)
                 │       └── Buttons (HBoxContainer)
                 │           └── StartRunButton (Button, expand fill)
-                ├── Crafting tab (CraftingTabs TabContainer)
+                ├── Equipment Crafting tab (CraftingTabs TabContainer)
                 │   ├── Create sub-tab
                 │   │   └── VBox ← materials label + one Button per RecipeRegistry.ForType(Gear) entry
                 │   └── Modify sub-tab (ModifyVBox)
@@ -408,11 +408,11 @@ Save(); return Success
 
 Sets `skill.SocketedSupportInstanceIds[slotIndex] = ""`. Free. Save().
 
-### Crafting tab — Create sub-tab (CharacterScreen)
+### Equipment Crafting tab — Create sub-tab (CharacterScreen)
 
 Recipe list from `RecipeRegistry.ForType(RecipeType.Gear)`. Each row: button disabled when materials insufficient or inventory full. On press: `CraftGearItem(recipeId)`, then `Refresh()`.
 
-### Crafting tab — Modify sub-tab (CharacterScreen)
+### Equipment Crafting tab — Modify sub-tab (CharacterScreen)
 
 Contains a single loaded-item slot (Button, 60×60) and an **Upgrade** button.
 - Slot is empty until player clicks it → opens inline `PopupMenu` listing all gear instances (owned + equipped across all characters)

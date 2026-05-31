@@ -116,191 +116,191 @@ size_flags_horizontal = 3
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="Equipment" type="VBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer" unique_id=6001000012]
+[node name="Loadout" type="VBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer" unique_id=6001000012]
 layout_mode = 2
 
-[node name="CharacterView" type="VBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer/Equipment" unique_id=6001000026]
+[node name="CharacterView" type="VBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer/Loadout" unique_id=6001000026]
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_constants/separation = 14
 
-[node name="HSplit" type="HBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer/Equipment/CharacterView" unique_id=6001000027]
+[node name="HSplit" type="HBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer/Loadout/CharacterView" unique_id=6001000027]
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_constants/separation = 16
 
-[node name="InfoVBox" type="VBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer/Equipment/CharacterView/HSplit" unique_id=6001000060]
+[node name="InfoVBox" type="VBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer/Loadout/CharacterView/HSplit" unique_id=6001000060]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 theme_override_constants/separation = 12
 
-[node name="NameLabel" type="Label" parent="VBox/HSplit/RightPanel/TabContainer/Equipment/CharacterView/HSplit/InfoVBox" unique_id=6001000028]
+[node name="NameLabel" type="Label" parent="VBox/HSplit/RightPanel/TabContainer/Loadout/CharacterView/HSplit/InfoVBox" unique_id=6001000028]
 layout_mode = 2
 text = "Character Name"
 theme_override_font_sizes/font_size = 28
 
-[node name="TypeLabel" type="Label" parent="VBox/HSplit/RightPanel/TabContainer/Equipment/CharacterView/HSplit/InfoVBox" unique_id=6001000029]
+[node name="TypeLabel" type="Label" parent="VBox/HSplit/RightPanel/TabContainer/Loadout/CharacterView/HSplit/InfoVBox" unique_id=6001000029]
 layout_mode = 2
 text = "Archetype"
 theme_override_font_sizes/font_size = 16
 
-[node name="LevelLabel" type="Label" parent="VBox/HSplit/RightPanel/TabContainer/Equipment/CharacterView/HSplit/InfoVBox" unique_id=6001000030]
+[node name="LevelLabel" type="Label" parent="VBox/HSplit/RightPanel/TabContainer/Loadout/CharacterView/HSplit/InfoVBox" unique_id=6001000030]
 layout_mode = 2
 text = "Level 1   XP: 0"
 theme_override_font_sizes/font_size = 16
 
-[node name="StatsLabel" type="Label" parent="VBox/HSplit/RightPanel/TabContainer/Equipment/CharacterView/HSplit/InfoVBox" unique_id=6001000031]
+[node name="StatsLabel" type="Label" parent="VBox/HSplit/RightPanel/TabContainer/Loadout/CharacterView/HSplit/InfoVBox" unique_id=6001000031]
 layout_mode = 2
 text = "Stats"
 theme_override_font_sizes/font_size = 16
 
-[node name="GearPanel" type="VBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer/Equipment/CharacterView/HSplit" unique_id=6001000032]
+[node name="GearPanel" type="VBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer/Loadout/CharacterView/HSplit" unique_id=6001000032]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="GearLabel" type="Label" parent="VBox/HSplit/RightPanel/TabContainer/Equipment/CharacterView/HSplit/GearPanel" unique_id=6001000033]
+[node name="GearLabel" type="Label" parent="VBox/HSplit/RightPanel/TabContainer/Loadout/CharacterView/HSplit/GearPanel" unique_id=6001000033]
 layout_mode = 2
 text = "— Equipment —"
 theme_override_font_sizes/font_size = 16
 
-[node name="WeaponSlot" type="VBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer/Equipment/CharacterView/HSplit/GearPanel" unique_id=6001000061]
+[node name="WeaponSlot" type="VBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer/Loadout/CharacterView/HSplit/GearPanel" unique_id=6001000061]
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="WeaponLabel" type="Label" parent="VBox/HSplit/RightPanel/TabContainer/Equipment/CharacterView/HSplit/GearPanel/WeaponSlot" unique_id=6001000062]
+[node name="WeaponLabel" type="Label" parent="VBox/HSplit/RightPanel/TabContainer/Loadout/CharacterView/HSplit/GearPanel/WeaponSlot" unique_id=6001000062]
 layout_mode = 2
 text = "Weapon"
 theme_override_font_sizes/font_size = 13
 
-[node name="WeaponSlotButton" type="Button" parent="VBox/HSplit/RightPanel/TabContainer/Equipment/CharacterView/HSplit/GearPanel/WeaponSlot" unique_id=6001000034]
+[node name="WeaponSlotButton" type="Button" parent="VBox/HSplit/RightPanel/TabContainer/Loadout/CharacterView/HSplit/GearPanel/WeaponSlot" unique_id=6001000034]
 custom_minimum_size = Vector2(60, 60)
 layout_mode = 2
 size_flags_horizontal = 0
 text = "—"
 
-[node name="ArmorSlot" type="VBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer/Equipment/CharacterView/HSplit/GearPanel" unique_id=6001000063]
+[node name="ArmorSlot" type="VBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer/Loadout/CharacterView/HSplit/GearPanel" unique_id=6001000063]
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="ArmorLabel" type="Label" parent="VBox/HSplit/RightPanel/TabContainer/Equipment/CharacterView/HSplit/GearPanel/ArmorSlot" unique_id=6001000064]
+[node name="ArmorLabel" type="Label" parent="VBox/HSplit/RightPanel/TabContainer/Loadout/CharacterView/HSplit/GearPanel/ArmorSlot" unique_id=6001000064]
 layout_mode = 2
 text = "Armor"
 theme_override_font_sizes/font_size = 13
 
-[node name="ArmorSlotButton" type="Button" parent="VBox/HSplit/RightPanel/TabContainer/Equipment/CharacterView/HSplit/GearPanel/ArmorSlot" unique_id=6001000035]
+[node name="ArmorSlotButton" type="Button" parent="VBox/HSplit/RightPanel/TabContainer/Loadout/CharacterView/HSplit/GearPanel/ArmorSlot" unique_id=6001000035]
 custom_minimum_size = Vector2(60, 60)
 layout_mode = 2
 size_flags_horizontal = 0
 text = "—"
 
-[node name="AccessorySlot" type="VBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer/Equipment/CharacterView/HSplit/GearPanel" unique_id=6001000065]
+[node name="AccessorySlot" type="VBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer/Loadout/CharacterView/HSplit/GearPanel" unique_id=6001000065]
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="AccessoryLabel" type="Label" parent="VBox/HSplit/RightPanel/TabContainer/Equipment/CharacterView/HSplit/GearPanel/AccessorySlot" unique_id=6001000066]
+[node name="AccessoryLabel" type="Label" parent="VBox/HSplit/RightPanel/TabContainer/Loadout/CharacterView/HSplit/GearPanel/AccessorySlot" unique_id=6001000066]
 layout_mode = 2
 text = "Accessory"
 theme_override_font_sizes/font_size = 13
 
-[node name="AccessorySlotButton" type="Button" parent="VBox/HSplit/RightPanel/TabContainer/Equipment/CharacterView/HSplit/GearPanel/AccessorySlot" unique_id=6001000036]
+[node name="AccessorySlotButton" type="Button" parent="VBox/HSplit/RightPanel/TabContainer/Loadout/CharacterView/HSplit/GearPanel/AccessorySlot" unique_id=6001000036]
 custom_minimum_size = Vector2(60, 60)
 layout_mode = 2
 size_flags_horizontal = 0
 text = "—"
 
-[node name="SkillBar" type="HBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer/Equipment/CharacterView" unique_id=6001000130]
+[node name="SkillBar" type="HBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer/Loadout/CharacterView" unique_id=6001000130]
 layout_mode = 2
 size_flags_horizontal = 4
 theme_override_constants/separation = 8
 
-[node name="SkillSlot1" type="VBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer/Equipment/CharacterView/SkillBar" unique_id=6001000111]
+[node name="SkillSlot1" type="VBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer/Loadout/CharacterView/SkillBar" unique_id=6001000111]
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="SkillLabel1" type="Label" parent="VBox/HSplit/RightPanel/TabContainer/Equipment/CharacterView/SkillBar/SkillSlot1" unique_id=6001000112]
+[node name="SkillLabel1" type="Label" parent="VBox/HSplit/RightPanel/TabContainer/Loadout/CharacterView/SkillBar/SkillSlot1" unique_id=6001000112]
 layout_mode = 2
 text = "Skill 1"
 theme_override_font_sizes/font_size = 13
 horizontal_alignment = 1
 
-[node name="SkillSlotButton1" type="Button" parent="VBox/HSplit/RightPanel/TabContainer/Equipment/CharacterView/SkillBar/SkillSlot1" unique_id=6001000113]
+[node name="SkillSlotButton1" type="Button" parent="VBox/HSplit/RightPanel/TabContainer/Loadout/CharacterView/SkillBar/SkillSlot1" unique_id=6001000113]
 custom_minimum_size = Vector2(60, 60)
 layout_mode = 2
 text = "—"
 
-[node name="SkillSlot2" type="VBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer/Equipment/CharacterView/SkillBar" unique_id=6001000114]
+[node name="SkillSlot2" type="VBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer/Loadout/CharacterView/SkillBar" unique_id=6001000114]
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="SkillLabel2" type="Label" parent="VBox/HSplit/RightPanel/TabContainer/Equipment/CharacterView/SkillBar/SkillSlot2" unique_id=6001000115]
+[node name="SkillLabel2" type="Label" parent="VBox/HSplit/RightPanel/TabContainer/Loadout/CharacterView/SkillBar/SkillSlot2" unique_id=6001000115]
 layout_mode = 2
 text = "Skill 2"
 theme_override_font_sizes/font_size = 13
 horizontal_alignment = 1
 
-[node name="SkillSlotButton2" type="Button" parent="VBox/HSplit/RightPanel/TabContainer/Equipment/CharacterView/SkillBar/SkillSlot2" unique_id=6001000116]
+[node name="SkillSlotButton2" type="Button" parent="VBox/HSplit/RightPanel/TabContainer/Loadout/CharacterView/SkillBar/SkillSlot2" unique_id=6001000116]
 custom_minimum_size = Vector2(60, 60)
 layout_mode = 2
 text = "—"
 
-[node name="SkillSlot3" type="VBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer/Equipment/CharacterView/SkillBar" unique_id=6001000117]
+[node name="SkillSlot3" type="VBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer/Loadout/CharacterView/SkillBar" unique_id=6001000117]
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="SkillLabel3" type="Label" parent="VBox/HSplit/RightPanel/TabContainer/Equipment/CharacterView/SkillBar/SkillSlot3" unique_id=6001000118]
+[node name="SkillLabel3" type="Label" parent="VBox/HSplit/RightPanel/TabContainer/Loadout/CharacterView/SkillBar/SkillSlot3" unique_id=6001000118]
 layout_mode = 2
 text = "Skill 3"
 theme_override_font_sizes/font_size = 13
 horizontal_alignment = 1
 
-[node name="SkillSlotButton3" type="Button" parent="VBox/HSplit/RightPanel/TabContainer/Equipment/CharacterView/SkillBar/SkillSlot3" unique_id=6001000119]
+[node name="SkillSlotButton3" type="Button" parent="VBox/HSplit/RightPanel/TabContainer/Loadout/CharacterView/SkillBar/SkillSlot3" unique_id=6001000119]
 custom_minimum_size = Vector2(60, 60)
 layout_mode = 2
 text = "—"
 
-[node name="Buttons" type="HBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer/Equipment/CharacterView" unique_id=6001000038]
+[node name="Buttons" type="HBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer/Loadout/CharacterView" unique_id=6001000038]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="StartRunButton" type="Button" parent="VBox/HSplit/RightPanel/TabContainer/Equipment/CharacterView/Buttons" unique_id=6001000040]
+[node name="StartRunButton" type="Button" parent="VBox/HSplit/RightPanel/TabContainer/Loadout/CharacterView/Buttons" unique_id=6001000040]
 custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Start Run"
 
-[node name="Crafting" type="VBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer" unique_id=6001000041]
+[node name="GearCrafting" type="VBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer" unique_id=6001000041]
 layout_mode = 2
 
-[node name="CraftingTabs" type="TabContainer" parent="VBox/HSplit/RightPanel/TabContainer/Crafting" unique_id=6001000200]
+[node name="CraftingTabs" type="TabContainer" parent="VBox/HSplit/RightPanel/TabContainer/GearCrafting" unique_id=6001000200]
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="Create" type="VBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer/Crafting/CraftingTabs" unique_id=6001000201]
+[node name="Create" type="VBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer/GearCrafting/CraftingTabs" unique_id=6001000201]
 layout_mode = 2
 
-[node name="VBox" type="VBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer/Crafting/CraftingTabs/Create" unique_id=6001000042]
-layout_mode = 2
-theme_override_constants/separation = 12
-
-[node name="Modify" type="VBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer/Crafting/CraftingTabs" unique_id=6001000202]
-layout_mode = 2
-
-[node name="ModifyVBox" type="VBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer/Crafting/CraftingTabs/Modify" unique_id=6001000203]
+[node name="VBox" type="VBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer/GearCrafting/CraftingTabs/Create" unique_id=6001000042]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="SlotLabel" type="Label" parent="VBox/HSplit/RightPanel/TabContainer/Crafting/CraftingTabs/Modify/ModifyVBox" unique_id=6001000204]
+[node name="Modify" type="VBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer/GearCrafting/CraftingTabs" unique_id=6001000202]
+layout_mode = 2
+
+[node name="ModifyVBox" type="VBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer/GearCrafting/CraftingTabs/Modify" unique_id=6001000203]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="SlotLabel" type="Label" parent="VBox/HSplit/RightPanel/TabContainer/GearCrafting/CraftingTabs/Modify/ModifyVBox" unique_id=6001000204]
 layout_mode = 2
 text = "Select gear to modify:"
 
-[node name="GearModifySlotBtn" type="Button" parent="VBox/HSplit/RightPanel/TabContainer/Crafting/CraftingTabs/Modify/ModifyVBox" unique_id=6001000205]
+[node name="GearModifySlotBtn" type="Button" parent="VBox/HSplit/RightPanel/TabContainer/GearCrafting/CraftingTabs/Modify/ModifyVBox" unique_id=6001000205]
 custom_minimum_size = Vector2(60, 60)
 layout_mode = 2
 size_flags_horizontal = 0
 text = "Select"
 
-[node name="GearUpgradeBtn" type="Button" parent="VBox/HSplit/RightPanel/TabContainer/Crafting/CraftingTabs/Modify/ModifyVBox" unique_id=6001000206]
+[node name="GearUpgradeBtn" type="Button" parent="VBox/HSplit/RightPanel/TabContainer/GearCrafting/CraftingTabs/Modify/ModifyVBox" unique_id=6001000206]
 layout_mode = 2
 text = "Upgrade"
 disabled = true

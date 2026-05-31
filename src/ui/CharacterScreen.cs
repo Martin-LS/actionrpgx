@@ -37,8 +37,8 @@ public partial class CharacterScreen : Control
 
     private Character.CharacterManager _manager = null!;
 
-    private const string CharViewBase      = "VBox/HSplit/RightPanel/TabContainer/Equipment/CharacterView";
-    private const string CraftingBase      = "VBox/HSplit/RightPanel/TabContainer/Crafting/CraftingTabs";
+    private const string CharViewBase      = "VBox/HSplit/RightPanel/TabContainer/Loadout/CharacterView";
+    private const string CraftingBase      = "VBox/HSplit/RightPanel/TabContainer/GearCrafting/CraftingTabs";
     private const string SkillCraftingBase = "VBox/HSplit/RightPanel/TabContainer/SkillCrafting/SkillCraftingTabs";
 
     public override void _Ready()
@@ -94,6 +94,8 @@ public partial class CharacterScreen : Control
 
         GetNode<Button>("VBox/BackButton").Pressed += () =>
             GetTree().ChangeSceneToFile("res://src/ui/account_screen.tscn");
+
+        GetNode<TabContainer>("VBox/HSplit/RightPanel/TabContainer").SetTabTitle(1, "Equipment Crafting");
 
         Refresh();
     }
