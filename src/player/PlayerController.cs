@@ -21,8 +21,7 @@ public partial class PlayerController : CharacterBody3D
     private Stats.StatBlock _statBlock = new();
     private Character.CharacterData? _charData;
     private Node3D _model = null!;
-    private AnimationPlayer? _animPlayer;
-    private bool _attackPlaying;
+    private AnimationNodeStateMachinePlayback? _smPlayback;
 
     public float CurrentHealth { get; private set; }
     public int Level { get; private set; } = 1;
@@ -137,15 +136,31 @@ public partial class PlayerController : CharacterBody3D
 
         var playerModel = GD.Load<PackedScene>("res://assets/models/characters/player.glb").Instantiate<Node3D>();
         visuals.AddChild(playerModel);
-        _animPlayer = playerModel.FindChild("AnimationPlayer", true, false) as AnimationPlayer;
-        if (_animPlayer != null)
+        var animPlayer = playerModel.FindChild("AnimationPlayer", true, false) as AnimationPlayer;
+        if (animPlayer != null)
         {
-            var runAnim    = _animPlayer.GetAnimation("run");
-            var attackAnim = _animPlayer.GetAnimation("attack");
+            var runAnim    = animPlayer.GetAnimation("run");
+            var attackAnim = animPlayer.GetAnimation("attack");
+            var idleAnim   = animPlayer.GetAnimation("idle");
             if (runAnim    != null) runAnim.LoopMode    = Animation.LoopModeEnum.Linear;
             if (attackAnim != null) attackAnim.LoopMode = Animation.LoopModeEnum.None;
-            _animPlayer.Autoplay = "";
-            _animPlayer.CallDeferred("stop");
+            if (idleAnim   != null) idleAnim.LoopMode   = Animation.LoopModeEnum.Linear;
+
+            var sm = new AnimationNodeStateMachine();
+            sm.AddNode("idle",   new AnimationNodeAnimation { Animation = "idle" },   new Vector2(  0,   0));
+            sm.AddNode("run",    new AnimationNodeAnimation { Animation = "run" },    new Vector2(200,   0));
+            sm.AddNode("attack", new AnimationNodeAnimation { Animation = "attack" }, new Vector2(100, 150));
+            sm.AddTransition("idle",   "run",    MakeTravelTransition(0.15f));
+            sm.AddTransition("run",    "idle",   MakeTravelTransition(0.15f));
+            sm.AddTransition("idle",   "attack", MakeTravelTransition(0.05f));
+            sm.AddTransition("run",    "attack", MakeTravelTransition(0.05f));
+            sm.AddTransition("attack", "idle",   MakeAutoTransition(0.15f));
+
+            var animTree = new AnimationTree { TreeRoot = sm, Active = true };
+            playerModel.AddChild(animTree);
+            animTree.AnimPlayer = animTree.GetPathTo(animPlayer);
+            _smPlayback = (AnimationNodeStateMachinePlayback)animTree.Get("parameters/playback");
+            _smPlayback.Start("idle");
         }
 
         var skeleton = playerModel.FindChild("Skeleton3D", true, false) as Skeleton3D;
@@ -221,28 +236,8 @@ public partial class PlayerController : CharacterBody3D
             _model.Rotation = new Vector3(0f, _yaw, 0f);
         }
 
-        if (_animPlayer != null)
-        {
-            if (_attackPlaying)
-            {
-                if (!_animPlayer.IsPlaying())
-                    _attackPlaying = false;
-            }
-
-            if (!_attackPlaying)
-            {
-                if (moving)
-                {
-                    if (_animPlayer.CurrentAnimation != "run")
-                        _animPlayer.Play("run");
-                }
-                else
-                {
-                    if (_animPlayer.IsPlaying())
-                        _animPlayer.Stop();
-                }
-            }
-        }
+        if (_smPlayback != null && _smPlayback.GetCurrentNode() != "attack")
+            _smPlayback.Travel(moving ? "run" : "idle");
 
         float dt = (float)delta;
         if (_dashReflexTimer > 0f) _dashReflexTimer -= dt;
@@ -346,10 +341,7 @@ public partial class PlayerController : CharacterBody3D
 
     private void OnSkillFired(int slotIndex, float cooldown)
     {
-        if (_animPlayer == null) return;
-        _attackPlaying = true;
-        _animPlayer.Stop();
-        _animPlayer.Play("attack");
+        _smPlayback?.Travel("attack");
     }
 
     private static int FindBone(Skeleton3D skeleton, string name)
@@ -418,6 +410,22 @@ public partial class PlayerController : CharacterBody3D
         weaponRoot.GetParent()?.RemoveChild(weaponRoot);
         weaponRoot.QueueFree();
     }
+
+    private static AnimationNodeStateMachineTransition MakeTravelTransition(float xfadeTime) =>
+        new AnimationNodeStateMachineTransition
+        {
+            AdvanceMode = AnimationNodeStateMachineTransition.AdvanceModeEnum.Disabled,
+            SwitchMode  = AnimationNodeStateMachineTransition.SwitchModeEnum.Immediate,
+            XfadeTime   = xfadeTime,
+        };
+
+    private static AnimationNodeStateMachineTransition MakeAutoTransition(float xfadeTime) =>
+        new AnimationNodeStateMachineTransition
+        {
+            AdvanceMode = AnimationNodeStateMachineTransition.AdvanceModeEnum.Auto,
+            SwitchMode  = AnimationNodeStateMachineTransition.SwitchModeEnum.Immediate,
+            XfadeTime   = xfadeTime,
+        };
 
     private static int ComputeXpToNextLevel(int level)
     {

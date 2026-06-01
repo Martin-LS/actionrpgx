@@ -216,6 +216,60 @@ Main (Node)
 
 ---
 
+## Player Animation (AnimationTree)
+
+`PlayerController` drives animation via an `AnimationTree` node (child of the player's model node) with an `AnimationNodeStateMachine` root. This replaces the raw `AnimationPlayer.Play()` calls and the `_attackPlaying` bool, giving proper cross-faded transitions.
+
+> **Constraint:** `AnimationNodeBlend2.AddFilter()` is absent from the Godot 4.6 C# API. Upper-body masking (attack upper body + run lower body simultaneously) is not available. All blends are full-skeleton. Acceptable at top-down camera distance.
+
+### State Machine Topology
+
+```
+idle ──(moving)──────────────────► run    [0.15s blend]
+run  ──(!moving)─────────────────► idle   [0.15s blend]
+run  ──(skill_fired)─────────────► attack [0.05s blend]
+idle ──(skill_fired)─────────────► attack [0.05s blend]
+attack ──(AtEnd, auto)───────────► idle   [0.15s blend]
+```
+
+Attack always returns to idle; idle→run fires immediately if `moving` is already true. Five transitions total.
+
+### Blend Times
+
+| Transition | Time | Rationale |
+|---|---|---|
+| idle ↔ run | 0.15s | Natural locomotion feel |
+| any → attack | 0.05s | Snappy, responsive to skill fire |
+| attack → idle | 0.15s | Settle back to stance |
+
+### C# Driver Contract
+
+`PlayerController` holds an `AnimationTree` reference and sets two parameters:
+
+| Parameter path | Type | When |
+|---|---|---|
+| `parameters/conditions/moving` | bool | Every `_PhysicsProcess` — true if `velocity.Length() > threshold` |
+| `parameters/conditions/skill_fired` | bool | On `SkillFired` signal — set `true` once; state machine resets it after the transition fires |
+
+The `_attackPlaying` bool is removed — the SM's `AtEnd` advance condition handles "play attack to completion before transitioning."
+
+### Scene Setup
+
+`AnimationTree` node sits as a child of the player model `Node3D` (same level as `AnimationPlayer`). Properties to set in editor:
+- `AnimPlayer`: path to the sibling `AnimationPlayer`
+- `TreeRoot`: `AnimationNodeStateMachine`
+- `Active`: `true`
+
+Each SM state is an `AnimationNodeAnimation` referencing the clip name (`"idle"`, `"run"`, `"attack"`). The `idle` and `run` nodes set `Play Mode = Looped`; `attack` sets `Play Mode = Once`.
+
+Transitions use `Advance Mode = Auto` for `attack → idle`; `Advance Mode = Condition` for all others, with condition names matching the parameter paths above.
+
+### Future
+
+When Rogue/Mage archetypes arrive: same SM topology, different GLB clips per archetype. If upper/lower body split is ever needed, revisit via GDScript-side masking workaround (not in scope for v1).
+
+---
+
 ## Class Conventions (C#)
 
 - **Namespaces:** `Godot1.<System>` (e.g. `Godot1.Player`, `Godot1.Combat`)
