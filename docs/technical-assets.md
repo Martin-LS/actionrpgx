@@ -234,3 +234,72 @@ After first import, configure via the Import dock:
 | Skins | On |
 
 Commit the `.import` file after configuring — Godot regenerates it from source if deleted, which loses the loop settings.
+
+---
+
+## KayKit Asset Library
+
+KayKit packs are used for prototyping. They live outside the project at `C:\work\my\assets\kaykit\` and are **not committed to git**.
+
+When a KayKit asset is needed, copy just the relevant GLB (and texture PNG if needed) into the appropriate `assets/` subfolder. Only those copied files are tracked by git.
+
+Pre-release, open the corresponding `.blend` from the library in Blender MCP to customise before re-exporting.
+
+### Packs available
+
+| Pack | Folder | Contents |
+|---|---|---|
+| Adventurers 2.0 SOURCE | `KayKit_Adventurers_2.0_SOURCE/` | 9 characters (Knight, Barbarian, Mage, Ranger, Rogue, Rogue_Hooded, Druid, Engineer, Barbarian_Large) + all props/weapons + alt textures A/B/C + `.blend` source files |
+| Adventurers 2.0 FREE | `KayKit_Adventurers_2.0_FREE/` | 5 base characters only, no source blends — subset of SOURCE |
+| Adventurers 2.0 EXTRA | `KayKit_Adventurers_2.0_EXTRA/` | Same as SOURCE minus `.blend` files — redundant if SOURCE is present |
+| Skeletons 1.1 SOURCE | `KayKit_Skeletons_1.1_SOURCE/` | 6 characters (Warrior, Mage, Rogue, Minion, Golem, Necromancer) + all weapons/accessories + textures A/B + `.blend` source files. Also includes Rig_Medium_General/MovementBasic and Rig_Large_General/MovementBasic GLBs |
+| Skeletons 1.1 EXTRA | `KayKit_Skeletons_1.1_EXTRA/` | Same as SOURCE minus `.blend` files — redundant if SOURCE is present |
+| Skeletons 1.1 FREE | `KayKit_Skeletons_1.1_FREE/` | 4 characters (Warrior, Mage, Rogue, Minion) — subset of SOURCE, no Golem/Necromancer, no `.blend` |
+| Character Animations 1.1 | `KayKit_Character_Animations_1.1/` | Full animation library for Rig_Medium and Rig_Large |
+| **Dungeon Remastered 1.1 SOURCE** | `KayKit_DungeonRemastered_1.1_SOURCE/` | **Planned map/dungeon tileset.** Full modular dungeon tile set + single `.blend` source file (`Dungeon_Remastered_1.1_Source.blend`). Files are `.gltf` + `.bin` pairs (not `.glb`) — Godot imports them the same way |
+| Dungeon Remastered 1.1 EXTRA | `KayKit_DungeonRemastered_1.1_EXTRA/` | SOURCE content + extra props (bar furniture, bookcases, mimic chest, round tables, rocks, scaffold pieces, etc.) — no `.blend` |
+| Dungeon Remastered 1.1 FREE | `KayKit_DungeonRemastered_1.1_FREE/` | Base tile set only, no `.blend`, no extra props — subset of EXTRA |
+
+### Dungeon Remastered tileset
+
+**This is the planned tile source for all maps and dungeons.**
+
+Modular stone/wood dungeon tiles designed for top-down placement. One shared texture (`dungeon_texture.png`) plus 6 alt schemes (Golden, Black & White, Sepia A/B, Night A/B).
+
+| Category | Examples |
+|---|---|
+| Floors | `floor_tile_small/large`, `floor_dirt_*`, `floor_wood_*`, `floor_tile_big_grate`, `floor_tile_big_spikes` |
+| Walls | `wall`, `wall_corner`, `wall_doorway`, `wall_arched`, `wall_window_*`, `wall_gated`, scaffold variants |
+| Stairs | `stairs`, `stairs_long`, `stairs_wide`, `stairs_wood`, modular stair pieces |
+| Props | `chest`, `barrel`, `torch_lit`, `candle_lit`, `pillar`, `column`, `table_*`, `shelf_*` |
+| Decorative | `banner_*` (6 colors × multiple patterns), `coin`, `key`, `sword_shield` |
+
+**Import note**: tiles use `.gltf` + `.bin` pairs. Copy both files when bringing a tile into the project — Godot needs the `.bin` alongside the `.gltf` or import will fail.
+
+### Skeleton characters (Rig_Medium unless noted)
+
+| File | Notes |
+|---|---|
+| `Skeleton_Warrior.glb` | Sword+shield skeleton — Rig_Medium |
+| `Skeleton_Mage.glb` | Staff skeleton — Rig_Medium |
+| `Skeleton_Rogue.glb` | Dagger skeleton — Rig_Medium |
+| `Skeleton_Minion.glb` | Small unarmed skeleton — Rig_Medium |
+| `Skeleton_Golem.glb` | Large bone golem — **Rig_Large** (use Rig_Large_* animations) |
+| `Necromancer.glb` | Hooded spellcaster — Rig_Medium (uses same animations as Adventurers) |
+
+Textures: `skeleton_texture_A.png` (bone/grey), `skeleton_texture_B.png` (darker variant).
+
+Weapons are separate GLBs (`Skeleton_Axe.glb`, `Skeleton_Blade.glb`, `Skeleton_Scythe.glb`, etc.) — attach to skeleton's `Hand_R` bone via `BoneAttachment3D`.
+
+### Animation files (Rig_Medium, used by all Adventurers and Skeletons)
+
+| File | Clips |
+|---|---|
+| `Rig_Medium_General.glb` | `Idle_A/B`, `Death_A/B`, `Hit_A/B`, `Spawn_Air/Ground`, `Interact`, `PickUp`, `Throw`, `Use_Item` |
+| `Rig_Medium_MovementBasic.glb` | `Running_A/B`, `Walking_A/B/C`, `Jump_Start/Idle/Land/Full_Short/Full_Long` |
+| `Rig_Medium_MovementAdvanced.glb` | Dodge (4 dirs), strafe, sneak, crouch, crawl, walk backwards, running with bow/rifle |
+| `Rig_Medium_CombatMelee.glb` | 1H/2H/dual-wield attacks (chop, slice, stab, spin), block, unarmed (kick, punch) |
+| `Rig_Medium_CombatRanged.glb` | Bow, 1H/2H gun, magic (spellcast, summon) |
+| `Rig_Medium_Special.glb` | Skeleton-specific: awaken, idle, taunt, walk, death, resurrect, spawn |
+| `Rig_Medium_Simulation.glb` | Sit, lie down, cheer, wave (NPC flavour) |
+| `Rig_Medium_Tools.glb` | Chop, dig, fish, hammer, pickaxe, saw, lockpick |

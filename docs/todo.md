@@ -38,7 +38,9 @@ Update this as tasks are completed or new work is identified.
 
 - [ ] Pause screen — ESC is listed as pause in GDD controls but not implemented
 - [ ] Boss mechanic — run win condition triggers when timer expires but boss is TBD
-- [ ] Map selection screen — currently always the same flat arena
+- [x] Map generation — single 24×24 KayKit dungeon arena; floor tiles, perimeter walls, corner pieces, scattered props (pillars, barrels, crates, torches); collision boundary; player spawns at centre; enemies spawn on floor tiles
+- [ ] Map selection screen — only one arena map; no selection or variety yet
+- [ ] Enemy pathfinding — enemies walk directly toward player; get stuck if spawned behind walls or in corridors leading away from player
 - [ ] Archetype defense system — Rogue dodge and Mage focus shield are future design (GDD future notes section)
 - [ ] Higher-tier crafting materials — drop system only has common tier; rarer tiers TBD
 

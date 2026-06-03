@@ -16,7 +16,7 @@
 | `StatModifier`      | Plain C#    | StatId, ModifierType (FlatAdd), Value (float), ModifierSource (Level, Item) |
 | `StatBlock`         | Plain C#    | Internal flat modifier list per `StatId`. `Get(StatId)` returns the sum of all flat modifiers for that stat — archetype multiplier is applied in `BuildStatBlock()` before the block is returned, so callers always get effective values. |
 | `ItemData`          | C# record   | Id, Name, Slot (enum), IconPath, Tags (string[] — equipment tags for augment compatibility; e.g. `["Melee"]` for Sword, `["Heavy"]` for heavy armour, `[]` for Accessory) — plus slot-specific fields: `WeaponAffinity`, `SkillBonus (float)` for Weapon; `ArmorCategory`, `BonusHp`, `BonusSpeed`, `DamageReduction (float)` for Armor; `PhysicalResistance (float)` for Accessory. Unused fields default to zero. `Tier` removed — tier lives on `GearItemInstance`, not the definition. |
-| `ItemSlot`          | C# enum     | Weapon, Armor, Accessory                                       |
+| `ItemSlot`          | C# enum     | Weapon, Hat, Body, Ring                                        |
 | `SkillData`         | C# record   | Id, Name, Type (SkillType enum), Tags (string[]) — e.g. `["Melee","Attack"]`, `["Ranged","Attack"]`, `["Ranged","Magic","Spell"]`. Cooldown (float, seconds; 0 for Passive), Range (float), IconPath (string, default ""). No Tier — tier lives on `SkillItemInstance`. |
 | `SkillType`         | C# enum     | Active, Passive                                                |
 | `WeaponAffinity`    | C# enum     | None, Melee, Ranged, Magic                                     |
@@ -328,6 +328,24 @@ Effects are applied/removed by id — no subclassing:
 
 ---
 
+## VFX
+
+Visual effects are self-contained scenes under `res://src/vfx/`. Each scene has a root `Node3D` with a GDScript that auto-frees the node after the effect finishes. Effects are spawned by game code directly: instantiate, add to scene root, set `GlobalPosition`.
+
+| Scene | Trigger | Description |
+|---|---|---|
+| `hit_melee.tscn` | `Projectile.HitEnemy()` when `IsMelee = true` | Red burst at hit position — `GPUParticles3D`, 12 particles, 0.4s lifetime, one-shot. Auto-frees after 0.6s via `create_timer`. |
+
+**Auto-free pattern** — `finished` signal on `GPUParticles3D` is unreliable in Godot 4. Use a timer instead:
+```gdscript
+func _ready() -> void:
+    get_tree().create_timer(lifetime + buffer).timeout.connect(queue_free)
+```
+
+**World scale note** — player model is scale 9. Default particle velocity (8–16) and scale (0.1–0.3) are invisible. For this project use velocity_min ≈ 200, velocity_max ≈ 400, scale_min ≈ 4, scale_max ≈ 8.
+
+---
+
 ## Damage Pipeline
 
 ### Player taking damage
@@ -371,7 +389,7 @@ PhysicalDamage     = statBlock.Get(PhysicalDamage)
 MagicDamage        = statBlock.Get(MagicDamage)
 PhysicalResistance = statBlock.Get(PhysicalResistance)
 MagicResistance    = statBlock.Get(MagicResistance)
-DamageReduction    = armor.DamageReduction        // flat item stat, not multiplied
+DamageReduction    = hat.DamageReduction + body.DamageReduction  // flat sum of hat + body, not multiplied
 
 WeaponController.SetDamage(PhysicalDamage, MagicDamage)
 
@@ -418,14 +436,14 @@ Override values are TBD — owned by the Balancer.
 
 Time-driven, no fixed waves. `EnemySpawner` recalculates each spawn:
 - **Spawn rate** — starts immediately at t=0; interval = `InitialInterval / (1 + minutes * 0.5)`, clamped to `MinInterval = 0.3s`
-- **Spawn position** — fixed-radius ring (350px) around the player; viewport-size-independent
+- **Spawn position** — random floor tile from `DungeonGenerator.FloorPositions` at least `SpawnRadius * 0.5` world units from the player; falls back to a ring spawn if no dungeon is present
 - **Enemy types** — v1: single type only (`Skeleton`). Pool will expand in future milestones.
 
-| Type     | Speed | HP | Damage | Physical Resist | Model                  |
-|----------|-------|----|--------|-----------------|------------------------|
-| Skeleton | 65    | 2  | 12     | 10%             | `enemy_skeleton.glb`   |
+| Type     | Speed | HP | Damage | Physical Resist | Model                        |
+|----------|-------|----|--------|-----------------|------------------------------|
+| Skeleton | 65    | 2  | 5      | 10%             | `kaykit_enemy_skeleton.glb`  |
 
-All types receive a time-scaling bonus on top: `Speed += 10 * minutes`, `MaxHealth += 5 * (int)minutes`.
+All types receive a time-scaling bonus on top: `Speed += 5 * minutes`, `MaxHealth += 3 * (int)minutes`.
 
 ---
 

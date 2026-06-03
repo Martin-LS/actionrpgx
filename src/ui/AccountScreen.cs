@@ -6,8 +6,6 @@ public partial class AccountScreen : Control
 {
     private VBoxContainer _characterList = null!;
     private Control       _createPanel   = null!;
-    private LineEdit      _nameInput     = null!;
-    private Character.CharacterType _pendingType = Character.CharacterType.Warrior;
 
     private Character.CharacterManager _manager = null!;
 
@@ -20,17 +18,11 @@ public partial class AccountScreen : Control
         // Characters tab — roster
         _characterList = GetNode<VBoxContainer>($"{RosterBase}/Scroll/CharacterList");
         _createPanel   = GetNode<Control>      ($"{RosterBase}/CreatePanel");
-        _nameInput     = GetNode<LineEdit>     ($"{RosterBase}/CreatePanel/VBox/NameInput");
-
-        var confirmBtn = GetNode<Button>($"{RosterBase}/CreatePanel/VBox/ConfirmBtn");
-        confirmBtn.Disabled = true;
-        _nameInput.TextChanged += text => confirmBtn.Disabled = text.Trim().Length == 0;
 
         GetNode<Button>($"{RosterBase}/NewCharacterButton").Pressed          += () => _createPanel.Visible = true;
-        GetNode<Button>($"{RosterBase}/CreatePanel/VBox/WarriorBtn").Pressed += () => _pendingType = Character.CharacterType.Warrior;
-        GetNode<Button>($"{RosterBase}/CreatePanel/VBox/RogueBtn").Pressed   += () => _pendingType = Character.CharacterType.Rogue;
-        GetNode<Button>($"{RosterBase}/CreatePanel/VBox/MageBtn").Pressed    += () => _pendingType = Character.CharacterType.Mage;
-        confirmBtn.Pressed                                                    += OnConfirmCreate;
+        GetNode<Button>($"{RosterBase}/CreatePanel/VBox/WarriorBtn").Pressed += () => CreateAndSelect(Character.CharacterType.Warrior);
+        GetNode<Button>($"{RosterBase}/CreatePanel/VBox/RogueBtn").Pressed   += () => CreateAndSelect(Character.CharacterType.Rogue);
+        GetNode<Button>($"{RosterBase}/CreatePanel/VBox/MageBtn").Pressed    += () => CreateAndSelect(Character.CharacterType.Mage);
         GetNode<Button>($"{RosterBase}/CreatePanel/VBox/CancelBtn").Pressed  += () => _createPanel.Visible = false;
 
         GetNode<Button>("VBox/BackButton").Pressed += () =>
@@ -76,13 +68,10 @@ public partial class AccountScreen : Control
         }
     }
 
-    private void OnConfirmCreate()
+    private void CreateAndSelect(Character.CharacterType type)
     {
-        var name = _nameInput.Text.Trim();
-        if (name.Length == 0) return;
-        _manager.Create(name, _pendingType);
-        _nameInput.Text      = "";
-        _createPanel.Visible = false;
-        Refresh();
+        var c = _manager.Create(type.ToString(), type);
+        _manager.SelectCharacter(c.Id);
+        GetTree().ChangeSceneToFile("res://src/ui/character_screen.tscn");
     }
 }

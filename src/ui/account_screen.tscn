@@ -86,12 +86,7 @@ theme_override_constants/separation = 10
 [node name="CreateLabel" type="Label" parent="VBox/HSplit/RightPanel/TabContainer/Characters/RosterView/CreatePanel/VBox" unique_id=2001000019]
 layout_mode = 2
 theme_override_font_sizes/font_size = 20
-text = "Create Character"
-
-[node name="NameInput" type="LineEdit" parent="VBox/HSplit/RightPanel/TabContainer/Characters/RosterView/CreatePanel/VBox" unique_id=2001000020]
-custom_minimum_size = Vector2(0, 40)
-layout_mode = 2
-placeholder_text = "Character name..."
+text = "Choose Archetype"
 
 [node name="WarriorBtn" type="Button" parent="VBox/HSplit/RightPanel/TabContainer/Characters/RosterView/CreatePanel/VBox" unique_id=2001000021]
 custom_minimum_size = Vector2(0, 48)
@@ -107,12 +102,6 @@ text = "Rogue  —  80 HP   260 Spd   15 DMG"
 custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
 text = "Mage  —  100 HP   200 Spd   35 DMG"
-
-[node name="ConfirmBtn" type="Button" parent="VBox/HSplit/RightPanel/TabContainer/Characters/RosterView/CreatePanel/VBox" unique_id=2001000024]
-custom_minimum_size = Vector2(0, 44)
-layout_mode = 2
-disabled = true
-text = "Create"
 
 [node name="CancelBtn" type="Button" parent="VBox/HSplit/RightPanel/TabContainer/Characters/RosterView/CreatePanel/VBox" unique_id=2001000025]
 custom_minimum_size = Vector2(0, 44)

@@ -11,7 +11,7 @@ Top-down auto-attack horde survival game (Vampire Survivors / Diablo style). God
 - `docs/gdd-progression.md` — Game design: meta-progression, gear, augments, crafting, currencies, UI/menus
 - `docs/technical-scene.md` — Architecture: scene layout, scene flow, core systems table, signals, C# conventions, rendering, third-party tools
 - `docs/technical-systems.md` — Architecture: data types, save format, crafting methods, EoT system, damage pipeline, enemy spawner, drop system
-- `docs/technical-assets.md` — 3D asset pipeline: visual style, proportions, rig standard, animation clip names, Blender export settings, Godot import settings
+- `docs/technical-assets.md` — 3D asset pipeline: visual style, proportions, rig standard, animation clip names, Blender export settings, Godot import settings, KayKit library reference
 - `docs/tech-tips.md` — Hard-won lessons: Blender↔Godot axes, mesh origins, BoneAttachment3D, AnimationPlayer quirks, bone naming, log file location
 - `docs/color-scheme.md` — Iron & Slate color reference: full hex palette for world surfaces, UI, loot rarity, VFX, lighting, enemy coding, and biomes. Use this for all visual work.
 - `docs/todo.md` — Pending work: visuals, animation, gameplay, systems, tech. Check and update each session.
@@ -31,6 +31,7 @@ At the start of every session: read `docs/todo.md`, note what's pending, and tic
 - MCP tools are auto-approved globally
 - Proactively use `play_scene`, `get_game_screenshot`, `get_output_log`, `get_editor_errors` to verify changes work before reporting done
 - When debugging runtime behaviour (animation, physics, signals, gameplay logic): invoke `/godot-debug` via the Skill tool to read the log file before drawing conclusions — do not guess from code alone
+- **Godot MCP Pro is the only way to do editor work.** Any task that involves creating or modifying nodes, scenes, particles, animations, materials, shaders, or any other editor resource must be done via MCP tools — never via GDScript workarounds, never by writing raw `.tscn`/`.tres` file content, never by constructing editor objects in C# `_Ready()`. If an MCP tool exists for the task, use it. If one does not exist, stop and discuss with the user before trying another approach.
 
 ## Blender Work
 

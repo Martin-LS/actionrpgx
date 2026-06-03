@@ -5,8 +5,49 @@
 [sub_resource type="SphereShape3D" id="SphereShape3D_enemy"]
 radius = 14.0
 
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_a8hw6"]
+animation = &"attack"
+
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_jg4ye"]
+animation = &"idle"
+
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_yvjb1"]
+animation = &"walk"
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_abny1"]
+advance_mode = 2
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_yk438"]
+xfade_time = 0.2
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_mpvi4"]
+xfade_time = 0.2
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_jx57g"]
+xfade_time = 0.1
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_ecx2o"]
+xfade_time = 0.1
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_k25sr"]
+xfade_time = 0.2
+switch_mode = 2
+advance_mode = 2
+
+[sub_resource type="AnimationNodeStateMachine" id="AnimationNodeStateMachine_xnooq"]
+states/attack/node = SubResource("AnimationNodeAnimation_a8hw6")
+states/attack/position = Vector2(200, 0)
+states/idle/node = SubResource("AnimationNodeAnimation_jg4ye")
+states/idle/position = Vector2(-200, 0)
+states/walk/node = SubResource("AnimationNodeAnimation_yvjb1")
+states/walk/position = Vector2(0, 0)
+transitions = ["Start", "idle", SubResource("AnimationNodeStateMachineTransition_abny1"), "idle", "walk", SubResource("AnimationNodeStateMachineTransition_yk438"), "walk", "idle", SubResource("AnimationNodeStateMachineTransition_mpvi4"), "idle", "attack", SubResource("AnimationNodeStateMachineTransition_jx57g"), "walk", "attack", SubResource("AnimationNodeStateMachineTransition_ecx2o"), "attack", "walk", SubResource("AnimationNodeStateMachineTransition_k25sr")]
+
 [node name="Enemy" type="CharacterBody3D" unique_id=1899836598]
 script = ExtResource("1_a8hw6")
 
 [node name="CollisionShape" type="CollisionShape3D" parent="." unique_id=1523911860]
 shape = SubResource("SphereShape3D_enemy")
+
+[node name="AnimationTree" type="AnimationTree" parent="." unique_id=1447741467]
+tree_root = SubResource("AnimationNodeStateMachine_xnooq")

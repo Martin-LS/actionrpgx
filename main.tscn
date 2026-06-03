@@ -1,8 +1,8 @@
 [gd_scene format=3 uid="uid://dq3x7f2rkm8yp"]
 
 [ext_resource type="PackedScene" uid="uid://b2jv4d1ynue3q" path="res://src/player/player.tscn" id="1_0xm2m"]
-[ext_resource type="Script" uid="uid://i3jqkpg3o72m" path="res://src/CheckerBackground.cs" id="3_h2yge"]
 [ext_resource type="Script" uid="uid://bpey7ysst6hsh" path="res://src/enemies/EnemySpawner.cs" id="6_7mycd"]
+[ext_resource type="Script" path="res://src/world/DungeonGenerator.cs" id="14_dungeon"]
 [ext_resource type="PackedScene" uid="uid://c000f6ave0x4q" path="res://src/hud/hud.tscn" id="6_272bh"]
 [ext_resource type="Script" uid="uid://drs7mknbpx3t" path="res://src/run/RunSession.cs" id="9_rsess"]
 [ext_resource type="PackedScene" path="res://src/ui/run_end_overlay.tscn" id="10_rend"]
@@ -20,8 +20,8 @@ ambient_light/energy = 1.0
 
 [node name="Player" parent="." unique_id=1376160702 instance=ExtResource("1_0xm2m")]
 
-[node name="Background" type="Node3D" parent="." unique_id=1546617146]
-script = ExtResource("3_h2yge")
+[node name="DungeonMap" type="Node3D" parent="."]
+script = ExtResource("14_dungeon")
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_main")

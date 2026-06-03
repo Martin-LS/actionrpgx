@@ -15,6 +15,7 @@ public partial class EnemySpawner : Node
     private float  _elapsed;
     private Node3D? _player;
     private Run.RunSession? _runSession;
+    private World.DungeonGenerator? _dungeon;
 
     public override void _Ready()
     {
@@ -55,7 +56,10 @@ public partial class EnemySpawner : Node
         enemy.MapLevel   = _runSession?.MapLevel ?? 1;
 
         GetParent().AddChild(enemy);
-        enemy.GlobalPosition = RandomRingPosition();
+        _dungeon ??= GetTree().Root.FindChild("DungeonMap", true, false) as World.DungeonGenerator;
+        enemy.GlobalPosition = _dungeon != null
+            ? _dungeon.GetSpawnPointNear(_player!.GlobalPosition, SpawnRadius * 0.5f)
+            : RandomRingPosition();
     }
 
     private static void ApplyType(EnemyController enemy, float minutes)

@@ -29,6 +29,7 @@ public partial class EnemyController : CharacterBody3D
     private float _damageCooldown;
     private readonly Dictionary<string, EotInstance> _activeEots = new();
     private float _baseSpeed;
+    private AnimationNodeStateMachinePlayback? _smPlayback;
 
     public override void _Ready()
     {
@@ -39,10 +40,34 @@ public partial class EnemyController : CharacterBody3D
         var enemyModel = GD.Load<PackedScene>(ModelPath).Instantiate<Node3D>();
         enemyModel.Scale = new Vector3(9f, 9f, 9f);
         AddChild(enemyModel);
+
+        var animPlayer = enemyModel.FindChild("AnimationPlayer", true, false) as AnimationPlayer;
+        if (animPlayer == null)
+        {
+            animPlayer = new AnimationPlayer();
+            enemyModel.AddChild(animPlayer);
+        }
+        LoadAnimClip(animPlayer, "res://assets/models/characters/kaykit_anim_general.glb",  "Idle_A",               "idle",   Animation.LoopModeEnum.Linear);
+        LoadAnimClip(animPlayer, "res://assets/models/characters/kaykit_anim_movement.glb", "Running_A",            "walk",   Animation.LoopModeEnum.Linear);
+        LoadAnimClip(animPlayer, "res://assets/models/characters/kaykit_anim_melee.glb",    "Melee_1H_Attack_Chop", "attack", Animation.LoopModeEnum.None);
+
+        var animTree = GetNodeOrNull<AnimationTree>("AnimationTree");
+        if (animTree != null)
+        {
+            animTree.AnimPlayer = animTree.GetPathTo(animPlayer);
+            animTree.Active = true;
+        }
     }
 
     public override void _PhysicsProcess(double delta)
     {
+        if (_smPlayback == null)
+        {
+            var at = GetNodeOrNull<AnimationTree>("AnimationTree");
+            if (at != null)
+                _smPlayback = at.Get("parameters/playback").As<AnimationNodeStateMachinePlayback>();
+        }
+
         if (_player == null) return;
 
         var diff = _player.GlobalPosition - GlobalPosition;
@@ -53,12 +78,17 @@ public partial class EnemyController : CharacterBody3D
         if (direction.LengthSquared() > 0.01f)
             LookAt(GlobalPosition + direction, Vector3.Up);
 
+        var current = _smPlayback?.GetCurrentNode() ?? "";
+        if (current != "attack")
+            _smPlayback?.Travel("walk");
+
         _damageCooldown -= (float)delta;
         if (_damageCooldown <= 0f && GlobalPosition.DistanceTo(_player.GlobalPosition) < 32f)
         {
             if (_player is Godot1.Player.PlayerController pc)
                 pc.TakeDamage(ContactDamage, Items.DamageType.Physical, this);
             _damageCooldown = DamageInterval;
+            _smPlayback?.Travel("attack");
         }
 
         TickEots((float)delta);
@@ -129,6 +159,24 @@ public partial class EnemyController : CharacterBody3D
         _currentHealth  -= Mathf.CeilToInt(effective);
         if (_currentHealth <= 0)
             Die();
+    }
+
+    private void LoadAnimClip(AnimationPlayer target, string sourcePath, string sourceName, string targetName, Animation.LoopModeEnum loop)
+    {
+        var sourceScene = GD.Load<PackedScene>(sourcePath);
+        if (sourceScene == null) return;
+        var sourceRoot = sourceScene.Instantiate<Node3D>();
+        AddChild(sourceRoot);
+        var sourcePlayer = sourceRoot.FindChild("AnimationPlayer", true, false) as AnimationPlayer;
+        if (sourcePlayer != null && sourcePlayer.HasAnimation(sourceName))
+        {
+            var copy = (Animation)sourcePlayer.GetAnimation(sourceName).Duplicate();
+            copy.LoopMode = loop;
+            if (!target.HasAnimationLibrary(""))
+                target.AddAnimationLibrary("", new AnimationLibrary());
+            target.GetAnimationLibrary("").AddAnimation(targetName, copy);
+        }
+        sourceRoot.QueueFree();
     }
 
     private void Die()

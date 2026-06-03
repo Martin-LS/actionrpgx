@@ -134,86 +134,48 @@ public partial class PlayerController : CharacterBody3D
         AddChild(visuals);
         _model = visuals;
 
-        var playerModel = GD.Load<PackedScene>("res://assets/models/characters/player.glb").Instantiate<Node3D>();
-        visuals.AddChild(playerModel);
-        var animPlayer = playerModel.FindChild("AnimationPlayer", true, false) as AnimationPlayer;
-        if (animPlayer != null)
+        string modelPath = _charData?.Type switch
         {
-            var runAnim    = animPlayer.GetAnimation("run");
-            var attackAnim = animPlayer.GetAnimation("attack");
-            var idleAnim   = animPlayer.GetAnimation("idle");
-            if (runAnim    != null) runAnim.LoopMode    = Animation.LoopModeEnum.Linear;
-            if (attackAnim != null) attackAnim.LoopMode = Animation.LoopModeEnum.None;
-            if (idleAnim   != null) idleAnim.LoopMode   = Animation.LoopModeEnum.Linear;
-            animPlayer.Autoplay = "";
+            Character.CharacterType.Warrior => "res://assets/models/characters/kaykit_warrior.glb",
+            Character.CharacterType.Rogue   => "res://assets/models/characters/kaykit_rogue.glb",
+            Character.CharacterType.Mage    => "res://assets/models/characters/kaykit_mage.glb",
+            _                               => "res://assets/models/characters/kaykit_warrior.glb",
+        };
+        var playerModel = GD.Load<PackedScene>(modelPath).Instantiate<Node3D>();
+        visuals.AddChild(playerModel);
 
-            var animTree = GetNodeOrNull<AnimationTree>("AnimationTree");
-            if (animTree != null)
-            {
-                animTree.AnimPlayer = animTree.GetPathTo(animPlayer);
-                animTree.Active = true;
-                _smPlayback = (AnimationNodeStateMachinePlayback)animTree.Get("parameters/playback");
-            }
+        var animPlayer = playerModel.FindChild("AnimationPlayer", true, false) as AnimationPlayer;
+        if (animPlayer == null)
+        {
+            animPlayer = new AnimationPlayer();
+            playerModel.AddChild(animPlayer);
         }
 
-        var skeleton = playerModel.FindChild("Skeleton3D", true, false) as Skeleton3D;
+        LoadAnimClip(animPlayer, "res://assets/models/characters/kaykit_anim_general.glb",  "Idle_A",              "idle",   Animation.LoopModeEnum.Linear);
+        LoadAnimClip(animPlayer, "res://assets/models/characters/kaykit_anim_movement.glb", "Running_A",           "run",    Animation.LoopModeEnum.Linear);
+        LoadAnimClip(animPlayer, "res://assets/models/characters/kaykit_anim_melee.glb",    "Melee_1H_Attack_Chop", "attack", Animation.LoopModeEnum.None);
+
+        var animTree = GetNodeOrNull<AnimationTree>("AnimationTree");
+        if (animTree != null)
+        {
+            animTree.AnimPlayer = animTree.GetPathTo(animPlayer);
+            animTree.Active = true;
+        }
 
         GetNodeOrNull<Weapon.WeaponController>("Weapon")?.Connect(
             Weapon.WeaponController.SignalName.SkillFired,
             Callable.From<int, float>(OnSkillFired));
-
-        if (_charData != null)
-        {
-            var hatItem    = GetEquippedItem(_charData, Items.ItemSlot.Hat);
-            var bodyItem   = GetEquippedItem(_charData, Items.ItemSlot.Body);
-            var weaponItem = GetEquippedItem(_charData, Items.ItemSlot.Weapon);
-
-            var hatPath = hatItem?.ArmorCategory switch
-            {
-                Items.ArmorCategory.Heavy  => "res://assets/models/equipment/hat_heavy.glb",
-                Items.ArmorCategory.Medium => "res://assets/models/equipment/hat_medium.glb",
-                Items.ArmorCategory.Light  => "res://assets/models/equipment/hat_light.glb",
-                _                          => null,
-            };
-            if (hatPath != null)
-            {
-                var armourRoot = GD.Load<PackedScene>(hatPath).Instantiate<Node3D>();
-                visuals.AddChild(armourRoot);
-                if (skeleton != null) AttachArmourToSkeleton(armourRoot, skeleton);
-            }
-
-            var bodyPath = bodyItem?.ArmorCategory switch
-            {
-                Items.ArmorCategory.Heavy  => "res://assets/models/equipment/body_heavy.glb",
-                Items.ArmorCategory.Medium => "res://assets/models/equipment/body_medium.glb",
-                Items.ArmorCategory.Light  => "res://assets/models/equipment/body_light.glb",
-                _                          => null,
-            };
-            if (bodyPath != null)
-            {
-                var armourRoot = GD.Load<PackedScene>(bodyPath).Instantiate<Node3D>();
-                visuals.AddChild(armourRoot);
-                if (skeleton != null) AttachArmourToSkeleton(armourRoot, skeleton);
-            }
-
-            var weaponPath = weaponItem?.WeaponAffinity switch
-            {
-                Items.WeaponAffinity.Melee  => "res://assets/models/equipment/weapon_sword.glb",
-                Items.WeaponAffinity.Ranged => "res://assets/models/equipment/weapon_bow.glb",
-                Items.WeaponAffinity.Magic  => "res://assets/models/equipment/weapon_wand.glb",
-                _                           => null,
-            };
-            if (weaponPath != null && skeleton != null)
-            {
-                var weaponRoot = GD.Load<PackedScene>(weaponPath).Instantiate<Node3D>();
-                visuals.AddChild(weaponRoot);
-                AttachWeaponToSkeleton(weaponRoot, skeleton);
-            }
-        }
     }
 
     public override void _PhysicsProcess(double delta)
     {
+        if (_smPlayback == null)
+        {
+            var at = GetNodeOrNull<AnimationTree>("AnimationTree");
+            if (at != null)
+                _smPlayback = at.Get("parameters/playback").As<AnimationNodeStateMachinePlayback>();
+        }
+
         var input     = Input.GetVector("move_left", "move_right", "move_up", "move_down");
         var direction = new Vector3(input.X, 0f, input.Y);
 
@@ -410,6 +372,25 @@ public partial class PlayerController : CharacterBody3D
 
         weaponRoot.GetParent()?.RemoveChild(weaponRoot);
         weaponRoot.QueueFree();
+    }
+
+    private void LoadAnimClip(AnimationPlayer target, string sourcePath, string sourceName, string targetName, Animation.LoopModeEnum loop)
+    {
+        var sourceScene = GD.Load<PackedScene>(sourcePath);
+        if (sourceScene == null) return;
+        var sourceRoot = sourceScene.Instantiate<Node3D>();
+        AddChild(sourceRoot);
+        var sourcePlayer = sourceRoot.FindChild("AnimationPlayer", true, false) as AnimationPlayer;
+        if (sourcePlayer != null && sourcePlayer.HasAnimation(sourceName))
+        {
+            var copy = (Animation)sourcePlayer.GetAnimation(sourceName).Duplicate();
+            copy.LoopMode = loop;
+
+            if (!target.HasAnimationLibrary(""))
+                target.AddAnimationLibrary("", new AnimationLibrary());
+            target.GetAnimationLibrary("").AddAnimation(targetName, copy);
+        }
+        sourceRoot.QueueFree();
     }
 
     private static int ComputeXpToNextLevel(int level)

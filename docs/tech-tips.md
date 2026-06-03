@@ -87,7 +87,7 @@ if (animTree != null)
 {
     animTree.AnimPlayer = animTree.GetPathTo(animPlayer); // animPlayer found via FindChild
     animTree.Active = true;
-    _smPlayback = (AnimationNodeStateMachinePlayback)animTree.Get("parameters/playback");
+    // Do NOT fetch _smPlayback here — AnimationTree hasn't processed a frame yet (see below)
 }
 ```
 
@@ -106,6 +106,36 @@ When the AnimationTree node pre-exists in the scene, `Travel()` works correctly 
 - `_PhysicsProcess`: if current != "attack" → Travel("run") or Travel("idle")
 - `OnSkillFired`: Travel("attack")
 - No bool flag needed — state machine tracks state
+
+**`AnimationNodeStateMachinePlayback` must be fetched lazily — never in `_Ready()`**
+
+`animTree.Get("parameters/playback")` returns an empty Variant in `_Ready()` because the AnimationTree hasn't processed its first frame yet. The cast to `AnimationNodeStateMachinePlayback` silently produces `null`, making every subsequent `_smPlayback?.Travel(...)` call a no-op with no error.
+
+Fix: initialise lazily at the top of `_PhysicsProcess`:
+
+```csharp
+if (_smPlayback == null)
+{
+    var at = GetNodeOrNull<AnimationTree>("AnimationTree");
+    if (at != null)
+        _smPlayback = at.Get("parameters/playback").As<AnimationNodeStateMachinePlayback>();
+}
+```
+
+Use `.As<T>()` rather than an explicit cast — it returns `null` on type mismatch instead of throwing.
+
+**Smoothing transitions with xfade_time**: Each transition has an `xfade_time` (seconds) that crossfades between the two clips. Default is 0 (instant cut). Set it via `execute_editor_script` — iterate by index because `find_transition(from, to)` can silently return -1:
+
+```gdscript
+var sm = EditorInterface.get_edited_scene_root().get_node("AnimationTree").tree_root
+# indices match sm.get_transition_count(); use get_transition_from/to to confirm order
+var xfade = {1: 0.2, 2: 0.2, 3: 0.1, 4: 0.1, 5: 0.2}  # skip 0 (Start→idle)
+for i in xfade:
+    sm.get_transition(i).xfade_time = xfade[i]
+EditorInterface.save_scene()
+```
+
+Recommended values for idle/run/attack: idle↔run = 0.2s (smooth stop/start), →attack = 0.1s (snappy), attack→idle = 0.2s (clean landing).
 
 ---
 
@@ -126,6 +156,20 @@ Get-Content "$env:APPDATA\Godot\app_userdata\godot1\logs\godot.log" | Select-Str
 ```
 
 Use the `/godot-debug` skill (`.claude/commands/godot-debug.md`) to automate this.
+
+---
+
+## New files copied into the project must be scanned before Godot can load them
+
+Godot only knows about files it has imported (`.import` sidecar exists). Files copied in via PowerShell/Explorer after the editor last opened will fail with `No loader found for resource` at runtime — even if the path is correct.
+
+**Fix**: trigger a filesystem scan from the editor or via MCP:
+
+```gdscript
+EditorInterface.get_resource_filesystem().scan()
+```
+
+Wait ~3 seconds, then verify `.import` files appeared beside the new assets. This is distinct from reimporting — reimport is for existing tracked files; scan is for files the editor has never seen.
 
 ---
 

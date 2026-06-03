@@ -16,14 +16,14 @@ Godot 4.6, C#, Forward Plus renderer. Game world is 3D (CharacterBody3D, XZ move
 | World dimensions | 3D, XZ movement plane, Y-up   | Standard for top-down 3D; gravity, navmesh, and lighting all assume Y-up  |
 | Camera type      | `Camera3D`, perspective       | Subtle depth like Diablo 4; fixed angle, no player rotation               |
 | Camera angle     | Fixed ~60° from horizontal    | Closer to overhead than classic 45° isometric; Diablo 4 reference         |
-| Character render | Custom voxel `.glb` loaded as `PackedScene`, instanced as child `Node3D` | Player = `player.glb` (visuals node scale 9), enemies = `enemy_skeleton.glb`. Model child rotates independently via `_model.LookAt()` — CharacterBody3D stays unrotated so camera doesn't spin. |
+| Character render | Custom voxel `.glb` loaded as `PackedScene`, instanced as child `Node3D` | Player = KayKit character GLB by archetype (scale 9), enemies = `kaykit_enemy_skeleton.glb` (scale 9). Model child rotates independently via `_model.LookAt()` — CharacterBody3D stays unrotated so camera doesn't spin. |
 | Lighting         | Single `DirectionalLight3D` parented to `Camera3D` | Global main light source, moves with camera; one light for now |
 | Projectiles      | Physical traveling objects    | Visible projectile travel is core to ARPG feel (not raycasts)              |
 | Target aspect ratio | 16:9, PC primary           | All UI scenes must use Godot anchor presets (no absolute offsets) — makes ratio changes free later. Mobile not in scope. |
 | Base viewport resolution | 1280×720               | Set in project.godot; Godot stretch mode scales to player's screen. |
 | Stretch mode        | `canvas_items`                | Scales UI and world together; crisp at integer multiples of 720p.  |
 | UI theme            | Spacey (`res://addons/Themey/themes/spacey/spacey.tres`) | Free Themey pack; set as project-wide theme — all Control nodes inherit automatically. No per-scene theme overrides. |
-| Floor               | Procedural checkerboard (`CheckerBackground.cs`) | Two-tone grey, generated at runtime — no external assets. |
+| Floor               | KayKit dungeon arena (`DungeonGenerator.cs`) | 24×24 grid of `floor_tile_large` hexagonal stone tiles. Walls + corner pieces on all four edges. Scattered pillars, barrels, crates, torches as props. Generated at run start; player spawned at arena centre (0,0,0). |
 | Pickup visuals      | Colored `BoxMesh` (10×10×10) | XP Shard = green, coin = yellow, health = red. Opaque to all systems. |
 
 ---
@@ -107,8 +107,9 @@ CharacterScreen (Control)
                 │       │       ├── WeaponSlot (VBoxContainer)
                 │       │       │   ├── WeaponLabel ("Weapon")
                 │       │       │   └── WeaponSlotButton (60×60, size_flags_h=shrink) ← popup (Unequip/Delete) if equipped; ItemPickerPanel if empty
-                │       │       ├── ArmorSlot / ArmorLabel / ArmorSlotButton (same pattern)
-                │       │       └── AccessorySlot / AccessoryLabel / AccessorySlotButton (same pattern)
+                │       │       ├── HatSlot / HatLabel / HatSlotButton (same pattern)
+                │       │       ├── BodySlot / BodyLabel / BodySlotButton (same pattern)
+                │       │       └── RingSlot / RingLabel / RingSlotButton (same pattern)
                 │       ├── SkillBar (HBoxContainer, size_flags_h=SHRINK_CENTER) ← centered row, below HSplit
                 │       │   ├── SkillSlot1 (VBoxContainer) → SkillLabel1 ("Skill 1") + SkillSlotButton1 (60×60) ← popup (Unequip/Delete) if equipped; SkillPickerPanel if empty
                 │       │   ├── SkillSlot2 / SkillLabel2 / SkillSlotButton2 (same pattern)
@@ -169,7 +170,7 @@ Main (Node)
 │   ├── Camera3D               ← perspective, ~60°, parented to player (follows automatically)
 │   │   └── DirectionalLight3D ← global main light, moves with camera
 │   └── Weapon (Node)
-├── Background (Node3D)        ← procedural floor plane
+├── DungeonMap (Node3D)        ← arena generator (DungeonGenerator.cs)
 ├── WorldEnvironment
 ├── Hud (CanvasLayer)          ← health bar, XP bar, level, coin counter, run timer, skill bar
 ├── EnemySpawner (Node)
@@ -194,7 +195,8 @@ Main (Node)
 | CharacterManager  | Autoload — load/save characters, hold selected character     | `res://src/character/`    | ✅ done |
 | Player            | Input, movement, stat sheet, taking damage                   | `res://src/player/`       | ✅ done |
 | Weapon            | Auto-attack, targeting nearest enemy, firing on cooldown     | `res://src/weapon/`       | ✅ done |
-| EnemySpawner      | Time-based wave scaling, spawning enemy scenes               | `res://src/enemies/`      | ✅ done |
+| DungeonGenerator  | Single-room arena: floor GridMap, wall meshes, props, collision boundary, player spawn | `res://src/world/` | ✅ done |
+| EnemySpawner      | Time-based wave scaling, spawning on dungeon floor tiles      | `res://src/enemies/`      | ✅ done |
 | Enemy             | AI (chase), taking damage, death + XP Shard spawning           | `res://src/enemies/`      | ✅ done |
 | XpShard           | XP Shard pickup — auto-collected on contact                  | `res://src/xp/`           | ✅ done |
 | EoT               | Effect over Time — apply, tick, expire on enemies            | `res://src/eot/`          | ✅ done |
@@ -218,55 +220,54 @@ Main (Node)
 
 ## Player Animation (AnimationTree)
 
-`PlayerController` drives animation via an `AnimationTree` node (child of the player's model node) with an `AnimationNodeStateMachine` root. This replaces the raw `AnimationPlayer.Play()` calls and the `_attackPlaying` bool, giving proper cross-faded transitions.
-
-> **Constraint:** `AnimationNodeBlend2.AddFilter()` is absent from the Godot 4.6 C# API. Upper-body masking (attack upper body + run lower body simultaneously) is not available. All blends are full-skeleton. Acceptable at top-down camera distance.
+`PlayerController` drives animation via an `AnimationTree` node (pre-created in the editor via Godot MCP Pro) with an `AnimationNodeStateMachine` root. C# code only sets the `AnimPlayer` path at runtime and calls `Travel()` — never constructs or modifies the tree structure. All blends are full-skeleton (acceptable at top-down camera distance).
 
 ### State Machine Topology
 
 ```
-idle ──(moving)──────────────────► run    [0.15s blend]
-run  ──(!moving)─────────────────► idle   [0.15s blend]
-run  ──(skill_fired)─────────────► attack [0.05s blend]
-idle ──(skill_fired)─────────────► attack [0.05s blend]
-attack ──(AtEnd, auto)───────────► idle   [0.15s blend]
+idle ──(Travel)──────────────────► run    [0.2s xfade]
+run  ──(Travel)──────────────────► idle   [0.2s xfade]
+run  ──(Travel)──────────────────► attack [0.1s xfade]
+idle ──(Travel)──────────────────► attack [0.1s xfade]
+attack ──(AtEnd, auto)───────────► idle   [0.2s xfade]
 ```
 
-Attack always returns to idle; idle→run fires immediately if `moving` is already true. Five transitions total.
+Attack always returns to idle automatically when the clip ends. Five transitions total, all Travel-driven except `attack → idle` which is AtEnd+auto.
 
 ### Blend Times
 
-| Transition | Time | Rationale |
+| Transition | xfade_time | Rationale |
 |---|---|---|
-| idle ↔ run | 0.15s | Natural locomotion feel |
-| any → attack | 0.05s | Snappy, responsive to skill fire |
-| attack → idle | 0.15s | Settle back to stance |
+| idle ↔ run | 0.2s | Smooth locomotion start/stop |
+| any → attack | 0.1s | Snappy but not jarring |
+| attack → idle | 0.2s | Clean landing back to stance |
 
 ### C# Driver Contract
 
-`PlayerController` holds an `AnimationTree` reference and sets two parameters:
+`PlayerController` holds `_smPlayback` (`AnimationNodeStateMachinePlayback`) obtained from `animTree.Get("parameters/playback")`:
 
-| Parameter path | Type | When |
-|---|---|---|
-| `parameters/conditions/moving` | bool | Every `_PhysicsProcess` — true if `velocity.Length() > threshold` |
-| `parameters/conditions/skill_fired` | bool | On `SkillFired` signal — set `true` once; state machine resets it after the transition fires |
+| When | Call |
+|---|---|
+| `_PhysicsProcess`, not in attack | `_smPlayback.Travel("run")` or `Travel("idle")` based on velocity |
+| `OnSkillFired` signal | `_smPlayback.Travel("attack")` |
 
-The `_attackPlaying` bool is removed — the SM's `AtEnd` advance condition handles "play attack to completion before transitioning."
+State is read via `_smPlayback.GetCurrentNode()` — no manual bool flags needed.
 
 ### Scene Setup
 
-`AnimationTree` node sits as a child of the player model `Node3D` (same level as `AnimationPlayer`). Properties to set in editor:
-- `AnimPlayer`: path to the sibling `AnimationPlayer`
-- `TreeRoot`: `AnimationNodeStateMachine`
-- `Active`: `true`
+`AnimationTree` is a direct child of the `Player` node in `player.tscn`. In `_Ready()`, C# resolves the `AnimPlayer` path dynamically (the player model GLB is loaded at runtime):
 
-Each SM state is an `AnimationNodeAnimation` referencing the clip name (`"idle"`, `"run"`, `"attack"`). The `idle` and `run` nodes set `Play Mode = Looped`; `attack` sets `Play Mode = Once`.
+```csharp
+animTree.AnimPlayer = animTree.GetPathTo(animPlayer); // animPlayer found via FindChild
+animTree.Active = true;
+_smPlayback = (AnimationNodeStateMachinePlayback)animTree.Get("parameters/playback");
+```
 
-Transitions use `Advance Mode = Auto` for `attack → idle`; `Advance Mode = Condition` for all others, with condition names matching the parameter paths above.
+Loop modes are set at runtime (GLB import silently ignores `.import` subresource loop flags): `idle` and `run` → `LoopModeEnum.Linear`; `attack` → `LoopModeEnum.None`.
 
 ### Future
 
-When Rogue/Mage archetypes arrive: same SM topology, different GLB clips per archetype. If upper/lower body split is ever needed, revisit via GDScript-side masking workaround (not in scope for v1).
+When Rogue/Mage archetypes arrive: same SM topology, different GLB clips per archetype.
 
 ---
 
