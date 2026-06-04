@@ -6,7 +6,7 @@ namespace Godot1.Weapon;
 
 public partial class WeaponController : Node
 {
-    [Signal] public delegate void SkillFiredEventHandler(int slotIndex, float cooldown);
+    [Signal] public delegate void SkillFiredEventHandler(int slotIndex, float cooldown, bool isMelee);
 
     private static readonly PackedScene ProjectileScene =
         GD.Load<PackedScene>("res://src/weapon/projectile.tscn");
@@ -84,7 +84,7 @@ public partial class WeaponController : Node
         GetTree().Root.AddChild(projectile);
         projectile.GlobalPosition = origin;
 
-        EmitSignal(SignalName.SkillFired, slotIndex, slot.Skill.Cooldown);
+        EmitSignal(SignalName.SkillFired, slotIndex, slot.Skill.Cooldown, isMelee);
     }
 
     private Enemies.EnemyController? FindNearestEnemy(float range)

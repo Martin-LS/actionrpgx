@@ -117,7 +117,7 @@ Exposes: `SetDamage(float physicalDamage, float magicDamage)`, `SetSlot(int slot
 
 Effective damage per shot: `BaseDamage + slot.SkillBonus`.
 
-Emits: `SkillFired(int slotIndex, float cooldown)` when a slot fires — consumed by the HUD skill bar.
+Emits: `SkillFired(int slotIndex, float cooldown, bool isMelee)` when a slot fires — consumed by the HUD skill bar and by `PlayerController` to trigger the melee swing VFX.
 
 [TBD] Weapon upgrade path (stages, piercing, AoE) — deferred.
 
@@ -334,7 +334,8 @@ Hit effects use pre-built scenes from the **EffectBlocks** pack (see `technical-
 
 | Scene | Trigger | Description |
 |---|---|---|
-| `res://PolyBlocks/EffectBlocks/assets/impacts/impact_5.tscn` | `Projectile.HitEnemy()` — every hit, melee and ranged | Orange + blue billboard sparkle burst at hit position. 4 particles, 0.5s lifetime. `activate_effects()` called via `Call()` after spawn. Auto-freed after 2s via C# `CreateTimer`. |
+| `res://PolyBlocks/EffectBlocks/assets/impacts/impact_5.tscn` | `Projectile.HitEnemy()` — every hit, melee and ranged | Orange + blue billboard sparkle burst at hit position. 4 particles, 0.5s lifetime. `activate_effects()` called via `Call()` after spawn. Auto-freed after 2s via C# `CreateTimer`. ScaleMin=40, ScaleMax=80. |
+| `res://PolyBlocks/EffectBlocks/assets/impacts/impact_5.tscn` | `PlayerController.OnSkillFired()` — melee attacks only (`isMelee = true`) | Swing VFX: same scene, larger scale (ScaleMin=35, ScaleMax=55). 12 particles, 0.6s lifetime. Spawned at `GlobalPosition + (0, 20, 0)` (character height). Auto-freed after 2s. |
 
 **Spawning from C#**:
 ```csharp
@@ -384,7 +385,7 @@ Resistance values per enemy type live in `EnemyData` (`PhysicalResistance`, `Mag
 
 ### Stat seeding at run start
 
-`PlayerController._Ready()` reads `CharacterManager.SelectedCharacter` and equipped items. After seeding, `GlobalPosition` is forced to `Vector3.Zero` — the map center — regardless of any saved node position in the scene file.
+`PlayerController._Ready()` reads `CharacterManager.SelectedCharacter` and equipped items. After seeding, `GlobalPosition` is set by `DungeonGenerator` to `SpawnPosition` (the centre floor cell, `CellToWorld(0,0)`) — not world origin. `DungeonGenerator._Ready()` runs after `PlayerController._Ready()` (scene order), so it always finds the player in the group and moves it.
 
 All stats are derived via the archetype multiplier formula (see Archetype Multiplier System below) — `BuildStatBlock()` returns pre-computed effective values.
 

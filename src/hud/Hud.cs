@@ -46,7 +46,7 @@ public partial class Hud : CanvasLayer
 
             var weaponController = player.GetNodeOrNull<Weapon.WeaponController>("Weapon");
             weaponController?.Connect(Weapon.WeaponController.SignalName.SkillFired,
-                Callable.From<int, float>(OnSkillFired));
+                Callable.From<int, float, bool>(OnSkillFired));
         }
 
         BuildSkillBar();
@@ -116,7 +116,7 @@ public partial class Hud : CanvasLayer
 
     private void OnHealthChanged(float newHealth) => _healthBar.Value = newHealth;
 
-    private void OnSkillFired(int slotIndex, float cooldown)
+    private void OnSkillFired(int slotIndex, float cooldown, bool _isMelee)
     {
         if (slotIndex < 0 || slotIndex >= 3) return;
         var cell = _skillCells[slotIndex];

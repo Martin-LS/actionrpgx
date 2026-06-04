@@ -23,7 +23,7 @@ Godot 4.6, C#, Forward Plus renderer. Game world is 3D (CharacterBody3D, XZ move
 | Base viewport resolution | 1280×720               | Set in project.godot; Godot stretch mode scales to player's screen. |
 | Stretch mode        | `canvas_items`                | Scales UI and world together; crisp at integer multiples of 720p.  |
 | UI theme            | Spacey (`res://addons/Themey/themes/spacey/spacey.tres`) | Free Themey pack; set as project-wide theme — all Control nodes inherit automatically. No per-scene theme overrides. |
-| Floor               | KayKit dungeon arena (`DungeonGenerator.cs`) | 24×24 grid of `floor_tile_large` hexagonal stone tiles. Walls + corner pieces on all four edges. Scattered pillars, barrels, crates, torches as props. Generated at run start; player spawned at arena centre (0,0,0). |
+| Floor               | KayKit dungeon arena (`DungeonGenerator.cs`) | 24×24 grid of `floor_tile_large` hexagonal stone tiles. Walls + corner pieces on all four edges. Scattered pillars, barrels, crates, torches as props. Generated at run start; player spawned at the arena centre via `DungeonGenerator.SpawnPosition` (set to `CellToWorld(0,0)` after the floor is built — not world origin). |
 | Pickup visuals      | Colored `BoxMesh` (10×10×10) | XP Shard = green, coin = yellow, health = red. Opaque to all systems. |
 
 ---
@@ -291,7 +291,7 @@ Systems communicate via signals only — no direct cross-system method calls.
 | `HealthChanged(float)`      | Player         | HUD (formats to int for display), GameManager |
 | `PlayerDied`                | Player         | RunSession (end run)             |
 | `LeveledUp(int)`            | Player         | Hud (level display)              |
-| `SkillFired(int, float)`    | WeaponController | Hud skill bar (slotIndex, cooldown — resets cooldown overlay); PlayerController (triggers attack animation) |
+| `SkillFired(int, float, bool)`    | WeaponController | Hud skill bar (slotIndex, cooldown — resets cooldown overlay); PlayerController (triggers attack animation + melee swing VFX when isMelee = true) |
 | `Died(position)`            | Enemy          | (reserved — not yet wired)       |
 | `CoinChanged(int)`          | RunSession     | Hud (coin counter)               |
 | `RunTimerExpired`           | RunSession     | EnemySpawner (spawn boss)        |

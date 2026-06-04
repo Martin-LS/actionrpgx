@@ -29,6 +29,7 @@ public partial class DungeonGenerator : Node3D
         AddChild(_gridMap);
 
         BuildFloor();
+        SpawnPosition = CellToWorld(0, 0);
         BuildWalls();
         AddPerimeterCollision();
         ScatterProps();

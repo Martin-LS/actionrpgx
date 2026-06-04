@@ -164,7 +164,7 @@ public partial class PlayerController : CharacterBody3D
 
         GetNodeOrNull<Weapon.WeaponController>("Weapon")?.Connect(
             Weapon.WeaponController.SignalName.SkillFired,
-            Callable.From<int, float>(OnSkillFired));
+            Callable.From<int, float, bool>(OnSkillFired));
     }
 
     public override void _PhysicsProcess(double delta)
@@ -186,9 +186,20 @@ public partial class PlayerController : CharacterBody3D
         bool moving = direction.LengthSquared() > 0.01f;
         if (moving)
         {
-            float targetYaw = Mathf.Atan2(direction.X, -direction.Z);
+            float targetYaw = Mathf.Atan2(direction.X, direction.Z);
             _yaw = Mathf.LerpAngle(_yaw, targetYaw, Mathf.Min(1f, RotationSpeed * (float)delta));
             _model.Rotation = new Vector3(0f, _yaw, 0f);
+        }
+        else
+        {
+            var nearest = FindNearestEnemy();
+            if (nearest != null)
+            {
+                var toEnemy = (nearest.GlobalPosition - GlobalPosition).Normalized();
+                float targetYaw = Mathf.Atan2(toEnemy.X, toEnemy.Z);
+                _yaw = Mathf.LerpAngle(_yaw, targetYaw, Mathf.Min(1f, RotationSpeed * (float)delta));
+                _model.Rotation = new Vector3(0f, _yaw, 0f);
+            }
         }
 
         if (_smPlayback != null)
@@ -302,9 +313,32 @@ public partial class PlayerController : CharacterBody3D
         return instance?.Definition;
     }
 
-    private void OnSkillFired(int slotIndex, float cooldown)
+    private static readonly PackedScene SwingVfxScene =
+        GD.Load<PackedScene>("res://PolyBlocks/EffectBlocks/assets/impacts/impact_5.tscn");
+
+    private void OnSkillFired(int slotIndex, float cooldown, bool isMelee)
     {
         _smPlayback?.Travel("attack");
+        if (!isMelee) return;
+
+        try
+        {
+            var fx  = SwingVfxScene.Instantiate<GpuParticles3D>();
+            var mat = (ParticleProcessMaterial)fx.ProcessMaterial.Duplicate();
+            mat.ScaleMin = 35f;
+            mat.ScaleMax = 55f;
+            fx.Amount    = 12;
+            fx.Lifetime  = 0.6f;
+            fx.ProcessMaterial = mat;
+            GetTree().Root.AddChild(fx);
+            fx.GlobalPosition = GlobalPosition + new Vector3(0f, 20f, 0f);
+            fx.Call("activate_effects");
+            GetTree().CreateTimer(2.0).Timeout += fx.QueueFree;
+        }
+        catch (System.Exception e)
+        {
+            GD.PrintErr($"SwingEffect failed: {e.Message}");
+        }
     }
 
     private static int FindBone(Skeleton3D skeleton, string name)
@@ -391,6 +425,19 @@ public partial class PlayerController : CharacterBody3D
             target.GetAnimationLibrary("").AddAnimation(targetName, copy);
         }
         sourceRoot.QueueFree();
+    }
+
+    private Node3D? FindNearestEnemy()
+    {
+        Node3D? nearest = null;
+        float nearestDistSq = float.MaxValue;
+        foreach (var node in GetTree().GetNodesInGroup("enemies"))
+        {
+            if (node is not Node3D enemy || enemy.IsQueuedForDeletion()) continue;
+            float distSq = GlobalPosition.DistanceSquaredTo(enemy.GlobalPosition);
+            if (distSq < nearestDistSq) { nearestDistSq = distSq; nearest = enemy; }
+        }
+        return nearest;
     }
 
     private static int ComputeXpToNextLevel(int level)
