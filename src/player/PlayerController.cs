@@ -1,6 +1,7 @@
 using Godot;
 using System.Collections.Generic;
 using Godot1.Skills;
+using Godot1;
 
 namespace Godot1.Player;
 
@@ -63,13 +64,15 @@ public partial class PlayerController : CharacterBody3D
             var body   = GetEquippedItem(c, Items.ItemSlot.Body);
 
             DamageReduction = (hat?.DamageReduction ?? 0f) + (body?.DamageReduction ?? 0f);
-            EffectiveRange  = (weapon?.WeaponRange ?? 200f) + (hat?.RangeModifier ?? 0f) + (body?.RangeModifier ?? 0f);
+            // WeaponRange and RangeModifier are in tiles; multiply by TileSize to get world units.
+            EffectiveRange  = ((weapon?.WeaponRange ?? 1.5f) + (hat?.RangeModifier ?? 0f) + (body?.RangeModifier ?? 0f)) * GameScale.TileSize;
 
             var weaponController = GetNodeOrNull<Weapon.WeaponController>("Weapon");
             weaponController?.SetDamage(
                 _statBlock.Get(Stats.StatId.PhysicalDamage),
                 _statBlock.Get(Stats.StatId.MagicDamage));
             weaponController?.SetRange(EffectiveRange);
+            weaponController?.SetPreferredDelivery(weapon?.PreferredDelivery ?? "Melee");
 
             for (int i = 0; i < 3 && i < c.SlottedSkillInstanceIds.Count; i++)
             {
@@ -119,6 +122,8 @@ public partial class PlayerController : CharacterBody3D
             XpToNextLevel = ComputeXpToNextLevel(Level);
             var wc = GetNodeOrNull<Weapon.WeaponController>("Weapon");
             wc?.SetDamage(20f, 0f);
+            wc?.SetRange(1.5f * GameScale.TileSize);
+            wc?.SetPreferredDelivery("Melee");
             var fallback = SkillRegistry.Get("strike");
             if (fallback != null) wc?.SetSlot(0, fallback);
         }
@@ -226,6 +231,15 @@ public partial class PlayerController : CharacterBody3D
                 _mendingTimer = 3.0f;
             }
         }
+    }
+
+    public override void _UnhandledInput(InputEvent @event)
+    {
+        if (@event is not InputEventKey key || !key.Pressed || key.Echo) return;
+        var wc = GetNodeOrNull<Weapon.WeaponController>("Weapon");
+        if      (key.Keycode == Key.Key1) wc?.TryFireSlot(0);
+        else if (key.Keycode == Key.Key2) wc?.TryFireSlot(1);
+        else if (key.Keycode == Key.Key3) wc?.TryFireSlot(2);
     }
 
     public void TakeDamage(float rawAmount, Items.DamageType type, Node3D? attacker = null)

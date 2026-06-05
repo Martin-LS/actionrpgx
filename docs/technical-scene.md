@@ -22,7 +22,8 @@ Godot 4.6, C#, Forward Plus renderer. Game world is 3D (CharacterBody3D, XZ move
 | Target aspect ratio | 16:9, PC primary           | All UI scenes must use Godot anchor presets (no absolute offsets) — makes ratio changes free later. Mobile not in scope. |
 | Base viewport resolution | 1280×720               | Set in project.godot; Godot stretch mode scales to player's screen. |
 | Stretch mode        | `canvas_items`                | Scales UI and world together; crisp at integer multiples of 720p.  |
-| UI theme            | Spacey (`res://addons/Themey/themes/spacey/spacey.tres`) | Free Themey pack; set as project-wide theme — all Control nodes inherit automatically. No per-scene theme overrides. |
+| UI theme            | Custom Iron & Slate theme (`res://assets/ui/game_theme.tres`) | Hand-built `Theme` resource set via `gui/theme/custom`. Covers PanelContainer/TabContainer/Panel panel styleboxes (gold `#D4A017` border, Iron Black bg), Button states (normal/hover/pressed/disabled/focus), Label/LineEdit/PopupMenu/Tooltip styles. Default font: Exo 2. No per-scene theme overrides — all Control nodes inherit automatically. |
+| Fonts               | Exo 2 (UI default), Cinzel (headings/titles), EB Garamond (body/lore), Almendra, Cinzel Decorative, Inter — all at `res://assets/fonts/` | Downloaded from Google Fonts as woff2; imported by Godot. Exo 2 set as `theme.default_font`. Bold variant (`Exo_2_2.woff2`) used for tooltip titles. |
 | Floor               | KayKit dungeon arena (`DungeonGenerator.cs`) | 24×24 grid of `floor_tile_large` hexagonal stone tiles. Walls + corner pieces on all four edges. Scattered pillars, barrels, crates, torches as props. Generated at run start; player spawned at the arena centre via `DungeonGenerator.SpawnPosition` (set to `CellToWorld(0,0)` after the floor is built — not world origin). |
 | Pickup visuals      | Colored `BoxMesh` (10×10×10) | XP Shard = green, coin = yellow, health = red. Opaque to all systems. |
 
@@ -194,7 +195,7 @@ Main (Node)
 |-------------------|--------------------------------------------------------------|---------------------------|--------|
 | CharacterManager  | Autoload — load/save characters, hold selected character     | `res://src/character/`    | ✅ done |
 | Player            | Input, movement, stat sheet, taking damage                   | `res://src/player/`       | ✅ done |
-| Weapon            | Auto-attack, targeting nearest enemy, firing on cooldown     | `res://src/weapon/`       | ✅ done |
+| Weapon            | Skill firing — targeting nearest enemy, cooldown management; manual activation (keys 1/2/3) and per-slot auto-activate toggle pending | `res://src/weapon/` | 🔄 in progress |
 | DungeonGenerator  | Single-room arena: floor GridMap, wall meshes, props, collision boundary, player spawn | `res://src/world/` | ✅ done |
 | EnemySpawner      | Time-based wave scaling, spawning on dungeon floor tiles      | `res://src/enemies/`      | ✅ done |
 | Enemy             | AI (chase), taking damage, death + XP Shard spawning           | `res://src/enemies/`      | ✅ done |
@@ -206,6 +207,7 @@ Main (Node)
 | AccountScreen     | Account hub: character roster, crafting tab; navigates to CharacterScreen on select | `res://src/ui/` | ✅ done |
 | CharacterCreate   | Dedicated create screen: name input + archetype choice       | `res://src/ui/`           | ✅ done |
 | CharacterScreen   | Per-character hub: inventory, gear slots, tabs, Start Run    | `res://src/ui/`           | ✅ done |
+| TooltipButton     | `Button` subclass — overrides `_MakeCustomTooltip()` to render a two-section tooltip: title line (gold `#D4A017`, bold Exo 2, 15px) and body (pale slate `#8AA0AE`, regular Exo 2, 13px). Used for all gear/skill/augment slot buttons and all dynamically created inventory buttons in CharacterScreen. | `res://src/ui/TooltipButton.cs` | ✅ done |
 | ItemPickerPanel          | Modal picker for equipping/unequipping gear by slot                    | `res://src/ui/`       | ✅ done |
 | SkillPickerPanel         | Modal picker for equipping skills into skill slots                     | `res://src/ui/`       | ✅ done |
 | ItemRegistry      | Static catalogue of all `ItemData` records                   | `res://src/items/`        | ✅ done |
@@ -316,5 +318,5 @@ Systems communicate via signals only — no direct cross-system method calls.
 | Tool           | Purpose                               |
 |----------------|---------------------------------------|
 | Godot MCP Pro  | AI-assisted editor control via Claude |
-| Themey         | Free open-source Godot 4 UI theme pack — Spacey theme in use (`res://addons/Themey/`) |
+| Themey         | Free open-source Godot 4 UI theme pack — installed at `res://addons/Themey/` but no longer the active theme. Superseded by the custom Iron & Slate theme. |
 | Ravenmore Fantasy Icon Pack | Item slot icons (`res://assets/icons/items/`) — CC-BY 3.0, credit: ravenmore.itch.io |

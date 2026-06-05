@@ -3,7 +3,7 @@
 
 ## Project Overview
 
-Top-down auto-attack horde survival game (Vampire Survivors / Diablo style). Godot 4.6, C#, Forward Plus renderer. 3D world with custom voxel-art style characters, perspective camera.
+Top-down action RPG with horde combat (Diablo / Path of Exile 2 style). Godot 4.6, C#, Forward Plus renderer. 3D world with custom voxel-art style characters, perspective camera. Skills are manually activated by the player; each skill slot has an optional auto-activate toggle.
 
 ## Docs
 

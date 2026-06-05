@@ -132,10 +132,17 @@ public partial class CharacterScreen : Control
         var c     = _manager.SelectedCharacter!;
         var stats = c.BuildStatBlock();
 
+        c.EquippedGear.TryGetValue(ItemSlot.Weapon.ToString(), out var weaponInst);
+        c.EquippedGear.TryGetValue(ItemSlot.Hat.ToString(),    out var hatInst);
+        c.EquippedGear.TryGetValue(ItemSlot.Body.ToString(),   out var bodyInst);
+        float effectiveRange = (weaponInst?.Definition?.WeaponRange ?? 1.5f)
+                             + (hatInst?.Definition?.RangeModifier  ?? 0f)
+                             + (bodyInst?.Definition?.RangeModifier  ?? 0f);
+
         _nameLabel.Text  = c.Name;
         _typeLabel.Text  = c.Type.ToString();
         _levelLabel.Text = $"Level {c.CurrentLevel}   XP: {c.CurrentXp}";
-        _statsLabel.Text = $"HP {(int)stats.Get(StatId.MaxHp)}   Speed {stats.Get(StatId.Speed):F0}   P.Dmg {stats.Get(StatId.PhysicalDamage):F0}   M.Dmg {stats.Get(StatId.MagicDamage):F0}\nRuns: {c.RunsCompleted}";
+        _statsLabel.Text = $"HP {(int)stats.Get(StatId.MaxHp)}   Speed {stats.Get(StatId.Speed):F0}   P.Dmg {stats.Get(StatId.PhysicalDamage):F0}   M.Dmg {stats.Get(StatId.MagicDamage):F0}\nRange {effectiveRange:0.#} tiles   Runs: {c.RunsCompleted}";
 
         RefreshSlotButton(_weaponBtn, c, ItemSlot.Weapon, "Weapon");
         RefreshSlotButton(_hatBtn,    c, ItemSlot.Hat,    "Hat");
@@ -210,7 +217,7 @@ public partial class CharacterScreen : Control
 
         for (int i = 0; i < Character.ProfileData.MaxInventory; i++)
         {
-            var btn = new Button { CustomMinimumSize = new Vector2(60, 60) };
+            var btn = new TooltipButton { CustomMinimumSize = new Vector2(60, 60) };
 
             if (i < profile.OwnedGearInstances.Count)
             {
@@ -255,7 +262,7 @@ public partial class CharacterScreen : Control
 
         for (int i = 0; i < Character.ProfileData.MaxInventory; i++)
         {
-            var btn = new Button { CustomMinimumSize = new Vector2(60, 60) };
+            var btn = new TooltipButton { CustomMinimumSize = new Vector2(60, 60) };
 
             if (i < ownedSkills.Count)
             {
@@ -301,7 +308,7 @@ public partial class CharacterScreen : Control
 
         for (int i = 0; i < total; i++)
         {
-            var btn = new Button { CustomMinimumSize = new Vector2(60, 60) };
+            var btn = new TooltipButton { CustomMinimumSize = new Vector2(60, 60) };
 
             if (i < skillAugs.Count)
             {
@@ -494,7 +501,7 @@ public partial class CharacterScreen : Control
             string socketedId = i < instance.SocketedEquipmentAugmentIds.Count
                 ? instance.SocketedEquipmentAugmentIds[i] : "";
             var    augInst    = _manager.FindEquipmentAugmentInstance(socketedId);
-            var    btn        = new Button { CustomMinimumSize = new Vector2(60, 60) };
+            var    btn        = new TooltipButton { CustomMinimumSize = new Vector2(60, 60) };
 
             if (augInst?.Definition != null)
             {
@@ -555,7 +562,7 @@ public partial class CharacterScreen : Control
             string  socketedId = i < instance.SocketedSkillAugmentIds.Count
                 ? instance.SocketedSkillAugmentIds[i] : "";
             var     augment    = _manager.FindSkillAugmentInstance(socketedId);
-            var     btn        = new Button { CustomMinimumSize = new Vector2(60, 60) };
+            var     btn        = new TooltipButton { CustomMinimumSize = new Vector2(60, 60) };
 
             if (augment?.Definition != null)
             {
@@ -650,10 +657,7 @@ public partial class CharacterScreen : Control
             ItemSlot.Body   => _bodyBtn,
             _               => _ringBtn,
         };
-        if (c.EquippedGear.ContainsKey(slot.ToString()))
-            ShowEquippedItemPopup(slot, anchor);
-        else
-            OpenPicker(slot);
+        OpenPicker(slot);
     }
 
     private void OnSkillSlotPressed(int slotIndex)
@@ -925,8 +929,8 @@ public partial class CharacterScreen : Control
         sb.Append($"{item.Name}  [{item.Slot}]  [{ItemTier.Label(tier)}]");
         if (item.BonusHp            != 0)  sb.Append($"\nHP {item.BonusHp:+#;-#;0}");
         if (item.BonusSpeed         != 0f) sb.Append($"\nSpeed {item.BonusSpeed:+#;-#;0}");
-        if (item.WeaponRange        != 0f) sb.Append($"\nWeapon Range {item.WeaponRange:0}");
-        if (item.RangeModifier      != 0f) sb.Append($"\nRange Modifier {item.RangeModifier:+#;-#;0}");
+        if (item.WeaponRange        != 0f) sb.Append($"\nWeapon Range {item.WeaponRange:0.#} tiles");
+        if (item.RangeModifier      != 0f) sb.Append($"\nRange Modifier {item.RangeModifier:+0.#;-0.#} tiles");
         if (item.DamageReduction    != 0f) sb.Append($"\nDamage Reduction {item.DamageReduction:P0}");
         if (item.PhysicalResistance != 0f) sb.Append($"\nPhys. Resist {item.PhysicalResistance:P0}");
         if (item.Tags.Length        > 0)   sb.Append($"\nTags: {string.Join(", ", item.Tags)}");

@@ -5,7 +5,7 @@
 
 ## Overview
 
-A top-down horde survival game (Vampire Survivors / Diablo style). The player takes a persistent character into timed runs against escalating enemy waves. Skills can fire automatically on cooldown or be activated manually — survival is about positioning and progression, not twitch reflexes.
+A top-down action RPG with horde combat (Diablo / Path of Exile 2 style). The player builds a persistent character, equips gear and skills, and takes them into timed combat runs against escalating enemy waves. Combat is skill-driven — each skill is manually activated by the player. Every skill **slot** has an **auto-activate toggle**: when enabled, that slot fires automatically on cooldown without input, allowing a more passive playstyle or hands-free filler slots while the player focuses on timing key abilities.
 
 Every run makes the character permanently stronger: level and XP carry over, stat bonuses stack, and coins and crafting materials earned go into a shared account pool. Between runs, players craft gear from materials — building both their character and their item collection over time. Coins accumulate but have no spend mechanic yet.
 
@@ -27,12 +27,12 @@ Skills drive all combat. Each skill has a **type**:
 
 | Skill type | Behaviour |
 |---|---|
-| Active | Fires automatically when its cooldown expires, or can be triggered manually by the player. |
+| Active | Fires when the player manually activates it (keys 1 / 2 / 3). Each **skill slot** has an **auto-activate toggle** — when on, that slot fires automatically on cooldown without manual input. Auto-activate is a convenience option, not a power reduction. |
 | Passive | On/off toggle. Effect is always-on while enabled. |
 
-The **skill bar** on the run HUD shows all slotted skills and their cooldown / toggle state.
+The **skill bar** on the run HUD shows all slotted skills, their cooldown state, and whether auto-activate is enabled per slot.
 
-**v1:** Three skill slots, each firing independently on its own cooldown. v1 has three skills (Strike, Arrow, Bolt). Starter characters have all 3 slots pre-filled with the same skill; players can mix freely. Cooldown: 0.8s per slot.
+**v1:** Three skill slots (keys 1 / 2 / 3), each with an independent cooldown. v1 has one starter skill: **Strike**. All 3 slots are pre-filled with Strike at run start; players replace slots with new skills as they acquire them. Cooldown: 0.8s per slot.
 
 Every skill has one or more **tags** — descriptors that other systems react to. Tags are not restrictions — any character can equip any skill. Tags serve two distinct roles:
 
@@ -40,11 +40,27 @@ Every skill has one or more **tags** — descriptors that other systems react to
 - `Melee` — skill fires as a melee contact attack using the equipped weapon
 - `Ranged` — skill fires as a projectile using the equipped weapon asset (sword throw, arrow, wand throw, etc.) at the weapon's range
 
-Skills with neither delivery tag play the weapon's default attack animation and activate exactly as their definition specifies — AoE lands at target, aura activates on self, etc.
+Skills with no delivery tag are **weapon-adaptive**: they inherit the weapon's `PreferredDelivery` at run start. The same skill feels like a sword swing on a Warrior and an arrow on a Rogue. See Gear Slots in `gdd-progression.md` for how each weapon defines its `PreferredDelivery`.
 
 **Descriptor tags** determine augment compatibility, damage type, and visual effects layered on top of the delivery. They do not affect animation or range: `Magic`, `Attack`, `Spell`.
 
 **v1 tags:** `Melee`, `Ranged`, `Magic`, `Attack`, `Spell` (expand as more skills and Skill Augments are added).
+
+### Skills
+
+#### Strike
+
+The universal starting skill. Hits the nearest enemy using whatever the character has equipped — a sword swing, an arrow, a wand bolt. As players acquire new skills, Strike slots get replaced. Strike can still be kept in any slot intentionally.
+
+| Property | Value |
+|---|---|
+| Delivery | Weapon-adaptive — no delivery tag; inherits weapon's `PreferredDelivery` |
+| Descriptor tags | `Attack` |
+| Cooldown | 0.8s |
+| Damage | 1× base physical damage |
+| EoTs | None |
+| Splash | No |
+| Acquire | Free — all 3 slots pre-filled at run start for every character |
 
 Character damage scales with character level (via level-up bonuses) and archetype base damage. Weapons do not contribute base damage — they set Weapon Range and determine the visual delivery of skills (see Gear Slots).
 
@@ -141,9 +157,12 @@ A run cannot start without a selected character.
 | Input   | Action                                      |
 |---------|---------------------------------------------|
 | WASD    | Move                                        |
-| —       | Attack (auto — fires on cooldown)           |
-| [TBD]   | Manual skill activation                     |
+| 1       | Activate skill slot 1                       |
+| 2       | Activate skill slot 2                       |
+| 3       | Activate skill slot 3                       |
 | ESC     | Pause                                       |
+
+Each skill slot has an **auto-activate toggle** (set in the character screen before the run). When auto-cast is on for a slot, it fires automatically on cooldown — the key still works as a manual override to fire early if the skill is ready.
 
 ---
 
@@ -247,4 +266,4 @@ The Mage tension: blasting at full rate depletes Focus quickly, leaving the shie
 
 The archetype multiplier system (see Characters) maps directly onto this: each archetype's designated defense type has a high multiplier, making cross-archetype defense investment possible but inefficient.
 
-*Not scheduled for v1. Design this when manual skill activation and Focus are on the roadmap.*
+*Not scheduled for v1. Design this when Focus is on the roadmap.*

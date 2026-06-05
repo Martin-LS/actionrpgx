@@ -8,7 +8,7 @@ public static class SkillRegistry
     {
         ["strike"] = new SkillData(
             "strike", "Strike", SkillType.Active,
-            Tags: new[] { "Melee", "Attack" },
+            Tags: new[] { "Attack" },
             Cooldown: 0.8f, Range: 200f,
             IconPath: "res://assets/icons/items/battle_axe.png"),
 

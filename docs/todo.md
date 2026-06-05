@@ -29,8 +29,10 @@ Update this as tasks are completed or new work is identified.
 - [ ] Stat balancing — archetype multipliers all marked TBD in GDD; needs a tuning pass
 - [x] Difficulty scaling — enemies currently kill a Level 10 character in ~20 seconds; too fast for testing. Tune spawn rate / HP / speed curves
 - [ ] Coins — drop and accumulate but have no spend mechanic yet
-- [ ] Manual skill activation — currently all skills auto-fire; GDD lists manual trigger as TBD
+- [x] Manual skill activation — keys 1/2/3 fire skill slots; each slot has `AutoActivate = true` by default so skills still fire automatically on cooldown
 - [ ] Map level attribute — XP scaling by map level exists in GDD but no map selection screen or map level setting yet
+- [x] Weapon-adaptive skill system — skills have no weapon gate; delivery (Melee/Ranged) is determined by skill delivery tag, falling back to weapon PreferredDelivery for untagged skills (e.g. Strike)
+- [x] Strike skill — universal starter skill; weapon-adaptive delivery, Attack tag, 0.8s cooldown, 1× physical damage; all 3 slots pre-filled at character creation
 
 ---
 
@@ -52,3 +54,7 @@ Update this as tasks are completed or new work is identified.
 - [ ] Dev overlay — only has a Speed slider; consider adding god mode / invincibility toggle for testing
 - [x] Delete orphaned `src/skills/AugmentData.cs` and `src/skills/AugmentRegistry.cs` — dead files superseded by the Support/SkillAugment system; nothing references them
 - [x] Rename `SupportData.cs` → `SkillAugmentData.cs`, `SupportItemInstance.cs` → `SkillAugmentInstance.cs`, `SupportRegistry.cs` → `SkillAugmentRegistry.cs` — classes were renamed but filenames were not (C# doesn't require a match, but it's confusing)
+- [x] UI theme — custom Iron & Slate theme at `res://assets/ui/game_theme.tres`; covers panels, buttons, labels, tooltips, line edits, popups. Default font: Exo 2. Set via `gui/theme/custom`. Replaces Themey Spacey theme.
+- [x] Fonts — 6 Google Fonts downloaded to `res://assets/fonts/` (Exo 2, Cinzel, Cinzel Decorative, EB Garamond, Almendra, Inter). Exo 2 active as UI default; others available for headings/lore text.
+- [x] Panel borders — gold `#D4A017` 1px border on all PanelContainer, TabContainer, and Panel nodes via project theme.
+- [x] Tooltip styling — `TooltipButton` (`src/ui/TooltipButton.cs`) renders a two-section custom tooltip: gold bold title on line 1, pale slate body on remaining lines. Applied to all gear/skill/augment buttons in CharacterScreen.

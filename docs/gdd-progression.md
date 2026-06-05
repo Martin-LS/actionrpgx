@@ -127,22 +127,25 @@ Equipment Augments are crafted from the **Equipment Crafting tab** and live in t
 
 #### Weapon
 
-Weapons do two things: set the **Weapon Range** for all your skills, and determine the **visual expression** of skill delivery. No weapon gates any skill — every skill fires regardless of what is equipped.
+Weapons do two things: set **Weapon Range** for all your skills, and define **PreferredDelivery** — the fallback delivery mode for weapon-adaptive skills (those with no delivery tag). No weapon gates any skill — every skill fires regardless of what is equipped.
 
-**Weapon Range** is a flat number stat visible on the weapon item. When a skill with the `Ranged` delivery tag fires, it uses the equipped weapon's Weapon Range value. Effective Range on the character sheet reflects this after armour modifiers are applied (see Hat & Body).
+**Weapon Range** is a flat number stat visible on the weapon item. It applies to all skills — delivery-tagged or adaptive. Effective Range on the character sheet reflects this after armour modifiers are applied (see Hat & Body).
 
-**Visual expression:** the equipped weapon determines what is thrown or swung when a skill fires:
-- `Ranged` skill + sword → sword throw
-- `Ranged` skill + bow → arrow
-- `Ranged` skill + wand → wand throw
-- `Melee` skill + any weapon → weapon swing / contact animation
-- No delivery tag → weapon's default attack animation; skill activates as defined (AoE at target, aura on self, etc.)
+Range values are expressed in **tiles** (the canonical internal distance unit). The arena is 24×24 tiles; the playable interior is roughly 22×22 tiles. One tile = 36 Godot world units — this conversion lives in `GameScale.TileSize` and is independent of map art. If the map pack changes, only `GameScale.TileSize` needs updating; all range values stay correct.
 
-| Weapon type | Equipment tag | Weapon Range |
-|-------------|---------------|--------------|
-| Sword       | `Melee`       | TBD (short)  |
-| Bow         | `Ranged`      | TBD (long)   |
-| Wand        | `Magic`       | TBD (medium) |
+**PreferredDelivery** is a formal property on each weapon. When a skill has no delivery tag it is weapon-adaptive and inherits the weapon's `PreferredDelivery` at run start. Skills that carry a delivery tag always use that tag — `PreferredDelivery` is ignored.
+
+How delivery resolves at fire time:
+- `Ranged` delivery + sword → sword throw
+- `Ranged` delivery + bow → arrow
+- `Ranged` delivery + wand → wand bolt
+- `Melee` delivery + any weapon → weapon swing / contact animation
+
+| Weapon type | Equipment tag | Weapon Range | PreferredDelivery |
+|-------------|---------------|--------------|-------------------|
+| Sword       | `Melee`       | 1.5 tiles    | `Melee`           |
+| Bow         | `Ranged`      | 11 tiles     | `Ranged`          |
+| Wand        | `Magic`       | 8 tiles      | `Ranged`          |
 
 Any character can equip any weapon. Weapons carry equipment tags for Equipment Augment compatibility.
 
@@ -154,15 +157,15 @@ Hat and Body are the two armour equipment slots. Each piece has a **category** t
 
 Any character can equip any category in any slot. Slots are independent — a character can mix freely (e.g. Heavy hat, Light body).
 
-| Category | Equipment tag | HP       | Speed   | Damage Reduction | Range Modifier |
-|----------|---------------|----------|---------|------------------|----------------|
-| Heavy    | `Heavy`       | High     | Penalty | Yes (%)          | Penalty (TBD)  |
-| Medium   | `Medium`      | Moderate | Neutral | —                | None           |
-| Light    | `Light`       | Low      | Bonus   | —                | Bonus (TBD)    |
+| Category | Equipment tag | HP       | Speed   | Damage Reduction | Range Modifier     |
+|----------|---------------|----------|---------|------------------|--------------------|
+| Heavy    | `Heavy`       | High     | Penalty | Yes (%)          | −1.5 tiles per piece |
+| Medium   | `Medium`      | Moderate | Neutral | —                | None               |
+| Light    | `Light`       | Low      | Bonus   | —                | +1.5 tiles per piece |
 
 Stats above apply per piece — each slot contributes its category's stats independently. Range Modifier from hat and body both apply to Effective Range.
 
-**Effective Range** (visible on the character sheet) = Weapon Range + hat Range Modifier + body Range Modifier.
+**Effective Range** (visible on the character sheet) = (Weapon Range + hat Range Modifier + body Range Modifier) in tiles. Displayed as tiles in the UI.
 
 **Visuals (in-run):** Hat, Body, and Weapon are rendered on the character model. Ring has no visual representation.
 

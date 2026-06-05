@@ -15,7 +15,7 @@
 | `StatId`            | C# enum     | MaxHp, Speed, PhysicalDamage, MagicDamage, PhysicalResistance, MagicResistance |
 | `StatModifier`      | Plain C#    | StatId, ModifierType (FlatAdd), Value (float), ModifierSource (Level, Item) |
 | `StatBlock`         | Plain C#    | Internal flat modifier list per `StatId`. `Get(StatId)` returns the sum of all flat modifiers for that stat — archetype multiplier is applied in `BuildStatBlock()` before the block is returned, so callers always get effective values. |
-| `ItemData`          | C# record   | Id, Name, Slot (enum), IconPath, Tags (string[] — equipment tags for augment compatibility; e.g. `["Melee"]` for Sword, `["Heavy"]` for heavy armour, `[]` for Accessory) — plus slot-specific fields: `WeaponRange (float)` for Weapon; `ArmorCategory`, `BonusHp`, `BonusSpeed`, `DamageReduction (float)`, `RangeModifier (float)` for Armor; `PhysicalResistance (float)` for Accessory. Unused fields default to zero. `Tier` removed — tier lives on `GearItemInstance`, not the definition. |
+| `ItemData`          | C# record   | Id, Name, Slot (enum), IconPath, Tags (string[] — equipment tags for augment compatibility; e.g. `["Melee"]` for Sword, `["Heavy"]` for heavy armour, `[]` for Accessory) — plus slot-specific fields: `WeaponRange (float, in tiles)` for Weapon; `ArmorCategory`, `BonusHp`, `BonusSpeed`, `DamageReduction (float)`, `RangeModifier (float, in tiles)` for Armor; `PhysicalResistance (float)` for Accessory. Unused fields default to zero. `Tier` removed — tier lives on `GearItemInstance`, not the definition. **Range fields are always in tiles** — multiply by `GameScale.TileSize` to get world units. |
 | `ItemSlot`          | C# enum     | Weapon, Hat, Body, Ring                                        |
 | `SkillData`         | C# record   | Id, Name, Type (SkillType enum), Tags (string[]) — e.g. `["Melee","Attack"]`, `["Ranged","Attack"]`, `["Ranged","Magic","Spell"]`. Cooldown (float, seconds; 0 for Passive), Range (float), IconPath (string, default ""). No Tier — tier lives on `SkillItemInstance`. |
 | `SkillType`         | C# enum     | Active, Passive                                                |
@@ -398,7 +398,7 @@ MagicDamage        = statBlock.Get(MagicDamage)
 PhysicalResistance = statBlock.Get(PhysicalResistance)
 MagicResistance    = statBlock.Get(MagicResistance)
 DamageReduction    = hat.DamageReduction + body.DamageReduction  // flat sum of hat + body, not multiplied
-EffectiveRange     = weapon.WeaponRange + hat.RangeModifier + body.RangeModifier  // standalone float, not part of StatId
+EffectiveRange     = (weapon.WeaponRange + hat.RangeModifier + body.RangeModifier) * GameScale.TileSize  // tile values × TileSize → world units; standalone float, not part of StatId
 
 WeaponController.SetDamage(PhysicalDamage, MagicDamage)
 

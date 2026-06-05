@@ -4,9 +4,10 @@ public record ItemData(
     string         Id,
     string         Name,
     ItemSlot       Slot,
-    string         IconPath           = "",
+    string         IconPath            = "",
     // Weapon fields
-    float          WeaponRange        = 0f,
+    float          WeaponRange         = 0f,
+    string         PreferredDelivery   = "",
     // Armor fields
     ArmorCategory  ArmorCategory      = ArmorCategory.None,
     int            BonusHp            = 0,

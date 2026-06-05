@@ -33,12 +33,15 @@ public partial class WeaponController : Node
         public List<string> EotIds;
         public bool         HasSplash;
         public bool         HasPierce;
+        public bool         AutoActivate;
     }
 
     private readonly SkillSlot[] _slots = new SkillSlot[3];
-    private float _range = 200f;
+    private float  _range             = 200f;
+    private string _preferredDelivery = "Melee";
 
-    public void SetRange(float effectiveRange) => _range = effectiveRange;
+    public void SetRange(float effectiveRange)             => _range             = effectiveRange;
+    public void SetPreferredDelivery(string delivery)      => _preferredDelivery = delivery;
 
     public void SetSlot(int slotIndex, SkillData skill,
         List<string>? eotIds = null, bool hasSplash = false, bool hasPierce = false)
@@ -49,6 +52,7 @@ public partial class WeaponController : Node
         _slots[slotIndex].EotIds        = eotIds ?? new List<string>();
         _slots[slotIndex].HasSplash     = hasSplash;
         _slots[slotIndex].HasPierce     = hasPierce;
+        _slots[slotIndex].AutoActivate      = true;
     }
 
     public void ReduceCooldowns(float amount)
@@ -63,7 +67,7 @@ public partial class WeaponController : Node
         {
             if (_slots[i].Skill == null) continue;
             _slots[i].CooldownTimer -= (float)delta;
-            if (_slots[i].CooldownTimer > 0f) continue;
+            if (!_slots[i].AutoActivate || _slots[i].CooldownTimer > 0f) continue;
 
             var target = FindNearestEnemy(_range);
             if (target == null) continue;
@@ -73,12 +77,26 @@ public partial class WeaponController : Node
         }
     }
 
+    public void TryFireSlot(int slotIndex)
+    {
+        if (slotIndex < 0 || slotIndex >= 3) return;
+        ref var slot = ref _slots[slotIndex];
+        if (slot.Skill == null || slot.CooldownTimer > 0f) return;
+        var target = FindNearestEnemy(_range);
+        if (target == null) return;
+        FireAt(slotIndex, target);
+        slot.CooldownTimer = slot.Skill.Cooldown;
+    }
+
     private void FireAt(int slotIndex, Enemies.EnemyController target)
     {
         var slot = _slots[slotIndex];
 
-        bool  isMagic = System.Array.Exists(slot.Skill!.Tags, t => t == "Magic");
-        bool  isMelee = System.Array.Exists(slot.Skill!.Tags, t => t == "Melee");
+        bool  isMagic  = System.Array.Exists(slot.Skill!.Tags, t => t == "Magic");
+        bool  hasMelee = System.Array.Exists(slot.Skill!.Tags, t => t == "Melee");
+        bool  hasRanged = System.Array.Exists(slot.Skill!.Tags, t => t == "Ranged");
+        // Weapon-adaptive: no delivery tag → inherit weapon's PreferredDelivery
+        bool  isMelee  = hasMelee || (!hasRanged && _preferredDelivery == "Melee");
         var   dmgType = isMagic ? Items.DamageType.Magic : Items.DamageType.Physical;
         float baseDmg = isMagic ? _magicDamage : _physicalDamage;
 
