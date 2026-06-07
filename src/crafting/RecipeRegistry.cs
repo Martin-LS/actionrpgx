@@ -22,13 +22,13 @@ public static class RecipeRegistry
 
         // Skill recipes
         ["recipe_strike"] = new("recipe_strike", "strike", RecipeType.Skill,   new() { ["crafting_common"] = 1 }),
-        ["recipe_arrow"]  = new("recipe_arrow",  "arrow",  RecipeType.Skill,   new() { ["crafting_common"] = 1 }),
-        ["recipe_bolt"]   = new("recipe_bolt",   "bolt",   RecipeType.Skill,   new() { ["crafting_common"] = 1 }),
 
         // Skill Augment recipes
-        ["recipe_splash"] = new("recipe_splash", "splash", RecipeType.SkillAugment, new() { ["crafting_common"] = 1 }),
-        ["recipe_pierce"] = new("recipe_pierce", "pierce", RecipeType.SkillAugment, new() { ["crafting_common"] = 1 }),
-        ["recipe_slow"]   = new("recipe_slow",   "slow",   RecipeType.SkillAugment, new() { ["crafting_common"] = 1 }),
+        ["recipe_splash"]          = new("recipe_splash",          "splash",          RecipeType.SkillAugment, new() { ["crafting_common"] = 1 }),
+        ["recipe_pierce"]          = new("recipe_pierce",          "pierce",          RecipeType.SkillAugment, new() { ["crafting_common"] = 1 }),
+        ["recipe_slow"]            = new("recipe_slow",            "slow",            RecipeType.SkillAugment, new() { ["crafting_common"] = 1 }),
+        ["recipe_critical_strike"] = new("recipe_critical_strike", "critical_strike", RecipeType.SkillAugment, new() { ["crafting_common"] = 1 }),
+        ["recipe_magic_damage"]    = new("recipe_magic_damage",    "magic_damage",    RecipeType.SkillAugment, new() { ["crafting_common"] = 1 }),
 
         // Equipment Augment recipes
         ["recipe_retaliation"] = new("recipe_retaliation", "retaliation", RecipeType.EquipmentAugment, new() { ["crafting_common"] = 1 }),

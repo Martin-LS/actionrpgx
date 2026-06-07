@@ -199,3 +199,80 @@ Alternatively delete the `.import` file and let Godot regenerate on next editor 
 | When to use | Equipment, always | Never (was a workaround) |
 
 **Use `BoneAttachment3D` for all equipment.** Position-only tracking was a dead-end workaround for a mesh-origin problem that should be fixed in Blender instead.
+
+---
+
+## Blender NLA workflow for game animations
+
+Each action must **start at frame 1**. Never offset keyframes to match the NLA strip position (e.g. run at 100, attack at 140) — that only works for cutscene timelines and makes Blender's preview a mess.
+
+Correct setup:
+- Each action: keyframes at frames 1–N
+- NLA strips: all placed at frame 1, each on its own track
+- To preview one animation: click the ★ (solo) icon on its NLA track
+- Strip extrapolation: set to `NOTHING` on all strips so they don't hold/bleed outside their range
+- `use_nla` must be `True` and `animation_data.action` must be `None` for NLA strips to evaluate cleanly
+
+---
+
+## Raising a character arm overhead (UpperArm_R Z rotation)
+
+For UpperArm_R (bone pointing down in rest, character facing -Y):
+
+| Z rotation | Elbow position |
+|---|---|
+| 0° | hanging at side (rest) |
+| −90° | horizontal, pointing right |
+| −120° | above shoulder height |
+| −135° | at ear/head height |
+| −150° | nearly vertical overhead |
+
+For an overhand throw wind-up with hand near the ear: **Z ≈ −135°** on UpperArm_R combined with X ≈ +20° (arm slightly back).
+
+UpperArm_L mirrors this: **+Z** extends the arm outward to the left.
+
+---
+
+## Shoulder twist for throw animations (Chest/Spine/Hips Y rotation)
+
+Y rotation on upward bones (Chest, Spine, Hips) is a **roll around the bone's own axis** — it twists the torso without moving the spine tip. This is the shoulder twist axis.
+
+Empirically verified for Chest:
+- **+Y** → right shoulder moves BACK (+Y world) = throw wind-up
+- **−Y** → right shoulder moves FORWARD (−Y world) = throw release
+
+Without shoulder twist, a throw animation looks like a forward poke from the front view. Always add Chest/Spine/Hips Y rotation to make a throw readable from any angle.
+
+Typical values: Chest ±20–25°, Spine ±12–15°, Hips ±6–8°.
+
+---
+
+## Mixamo FBX export — lessons learned
+
+### Hair causes stray neck geometry
+
+Hair meshes (`Hair_SideL`, `Hair_SideR`) have vertices that extend down to shoulder/neck height (Z ≈ 2.09) even though visually they sit on the head. After joining all meshes and exporting, these create a floating geometry cluster between the head and torso in the FBX. Mixamo and other tools flag this as an error.
+
+**Fix:** Delete all hair objects before merging for Mixamo export. Hair is not needed for auto-rigging and can be added back after retargeting.
+
+---
+
+### Surgical face deletion makes mesh integrity worse
+
+If you identify problem faces (non-manifold, interior, duplicate) and delete them selectively after the mesh has already been joined and posed, you will create new open boundary edges where those faces used to be. Trying to fix 8 non-manifold edges this way created 36.
+
+**Fix:** Restart from the source `.blend` with the offending objects removed before any merge or T-pose step. Clean source → merge → clean → T-pose, in that order. Never fix geometry after T-pose.
+
+---
+
+### Duplicate faces at mesh join points
+
+When separate box-geometry meshes are joined (`object.join()`), their touching cap faces become co-planar duplicates — e.g. the top face of Torso and the bottom face of Head both exist at the same Z. These show as non-manifold in FBX viewers and Mixamo.
+
+**Fix:** Always run `bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=0.001)` immediately after joining, followed by interior face deletion and `recalc_face_normals`. Do this before the T-pose step.
+
+---
+
+### T-pose rotation threshold for `player.blend`
+
+The arm/torso boundary is at X = ±0.51. Torso verts end at X = ±0.50; arm verts start at X = ±0.55. Using a threshold of `0.51` correctly isolates arm verts without touching torso geometry. If the character proportions change, recheck this gap by printing the X distribution at shoulder height (Z 1.5–2.5) before transforming.

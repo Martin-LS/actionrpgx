@@ -7,7 +7,7 @@ namespace Godot1.Weapon;
 
 public partial class WeaponController : Node
 {
-    [Signal] public delegate void SkillFiredEventHandler(int slotIndex, float cooldown, bool isMelee);
+    [Signal] public delegate void SkillFiredEventHandler(int slotIndex, float cooldown, string delivery);
 
     private static readonly PackedScene ProjectileScene =
         GD.Load<PackedScene>("res://src/weapon/projectile.tscn");
@@ -17,14 +17,21 @@ public partial class WeaponController : Node
 
     private const float SplashRadius = 60f;
 
-    private float _physicalDamage = 20f;
-    private float _magicDamage    = 0f;
+    private float      _physicalDamage  = 20f;
+    private float      _magicDamage     = 0f;
+    private Items.DamageType _baseDamageType  = Items.DamageType.Physical;
+    private float      _globalCritChance = 0f;
+    private float      _critMultiplier   = BalanceConfig.SkillAugments.CritMultiplier;
 
     public void SetDamage(float physicalDamage, float magicDamage)
     {
         _physicalDamage = physicalDamage;
         _magicDamage    = magicDamage;
     }
+
+    public void SetBaseDamageType(Items.DamageType damageType) => _baseDamageType   = damageType;
+    public void SetGlobalCritChance(float critChance)          => _globalCritChance = critChance;
+    public void SetCritMultiplier(float multiplier)            => _critMultiplier   = multiplier;
 
     private struct SkillSlot
     {
@@ -33,6 +40,8 @@ public partial class WeaponController : Node
         public List<string> EotIds;
         public bool         HasSplash;
         public bool         HasPierce;
+        public bool         HasMagicDamage;
+        public float        CritChanceBonus;
         public bool         AutoActivate;
     }
 
@@ -44,15 +53,18 @@ public partial class WeaponController : Node
     public void SetPreferredDelivery(string delivery)      => _preferredDelivery = delivery;
 
     public void SetSlot(int slotIndex, SkillData skill,
-        List<string>? eotIds = null, bool hasSplash = false, bool hasPierce = false)
+        List<string>? eotIds = null, bool hasSplash = false, bool hasPierce = false,
+        bool hasMagicDamage = false, float critChanceBonus = 0f)
     {
         if (slotIndex < 0 || slotIndex >= 3) return;
-        _slots[slotIndex].Skill         = skill;
-        _slots[slotIndex].CooldownTimer = 0f;
-        _slots[slotIndex].EotIds        = eotIds ?? new List<string>();
-        _slots[slotIndex].HasSplash     = hasSplash;
-        _slots[slotIndex].HasPierce     = hasPierce;
-        _slots[slotIndex].AutoActivate      = true;
+        _slots[slotIndex].Skill           = skill;
+        _slots[slotIndex].CooldownTimer   = 0f;
+        _slots[slotIndex].EotIds          = eotIds ?? new List<string>();
+        _slots[slotIndex].HasSplash       = hasSplash;
+        _slots[slotIndex].HasPierce       = hasPierce;
+        _slots[slotIndex].HasMagicDamage  = hasMagicDamage;
+        _slots[slotIndex].CritChanceBonus = critChanceBonus;
+        _slots[slotIndex].AutoActivate    = true;
     }
 
     public void ReduceCooldowns(float amount)
@@ -92,17 +104,25 @@ public partial class WeaponController : Node
     {
         var slot = _slots[slotIndex];
 
-        bool  isMagic  = System.Array.Exists(slot.Skill!.Tags, t => t == "Magic");
-        bool  hasMelee = System.Array.Exists(slot.Skill!.Tags, t => t == "Melee");
-        bool  hasRanged = System.Array.Exists(slot.Skill!.Tags, t => t == "Ranged");
+        bool  isMagic   = (_baseDamageType == Items.DamageType.Magic) || slot.HasMagicDamage;
+        bool  hasMelee  = System.Array.Exists(slot.Skill!.Tags, t => t == "Melee");
+        bool  hasRange  = System.Array.Exists(slot.Skill!.Tags, t => t == "Range");
         // Weapon-adaptive: no delivery tag → inherit weapon's PreferredDelivery
-        bool  isMelee  = hasMelee || (!hasRanged && _preferredDelivery == "Melee");
-        var   dmgType = isMagic ? Items.DamageType.Magic : Items.DamageType.Physical;
-        float baseDmg = isMagic ? _magicDamage : _physicalDamage;
+        bool  isMelee   = hasMelee || (!hasRange && _preferredDelivery == "Melee");
+        string delivery = isMelee ? "Melee"
+            : (_preferredDelivery == "RangeMagic" ? "RangeMagic" : "Range");
+        var   dmgType   = isMagic ? Items.DamageType.Magic : Items.DamageType.Physical;
+        float baseDmg   = isMagic ? _magicDamage : _physicalDamage;
+
+        float critChance      = _globalCritChance + slot.CritChanceBonus;
+        float critMultiplier  = 1.0f;
+        if (critChance > 0f && GD.Randf() < critChance)
+            critMultiplier = _critMultiplier;
+        baseDmg *= critMultiplier;
 
         if (isMelee)
         {
-            HitMelee(target, baseDmg, dmgType, slot.EotIds, slot.HasSplash);
+            HitMelee(target, baseDmg, dmgType, slot.EotIds, slot.HasSplash, critMultiplier);
         }
         else
         {
@@ -111,20 +131,20 @@ public partial class WeaponController : Node
             var direction = new Vector3(diff.X, 0f, diff.Z).Normalized();
 
             var projectile = ProjectileScene.Instantiate<Projectile>();
-            projectile.Initialize(direction, baseDmg, dmgType, slot.EotIds, slot.HasSplash, slot.HasPierce);
+            projectile.Initialize(direction, baseDmg, dmgType, slot.EotIds, slot.HasSplash, slot.HasPierce, critMultiplier);
             GetTree().Root.AddChild(projectile);
             projectile.GlobalPosition = origin;
         }
 
-        EmitSignal(SignalName.SkillFired, slotIndex, slot.Skill.Cooldown, isMelee);
+        EmitSignal(SignalName.SkillFired, slotIndex, slot.Skill.Cooldown, delivery);
     }
 
     private void HitMelee(Enemies.EnemyController target, float damage, Items.DamageType dmgType,
-        List<string> eotIds, bool hasSplash)
+        List<string> eotIds, bool hasSplash, float critMultiplier)
     {
         var hitPos = target.GlobalPosition;
         target.TakeDamage(damage, dmgType);
-        ApplyEots(target, eotIds);
+        ApplyEots(target, eotIds, critMultiplier);
         SpawnHitVfx(hitPos);
 
         if (hasSplash)
@@ -135,19 +155,19 @@ public partial class WeaponController : Node
                 if (splash.GlobalPosition.DistanceTo(hitPos) <= SplashRadius)
                 {
                     splash.TakeDamage(damage, dmgType);
-                    ApplyEots(splash, eotIds);
+                    ApplyEots(splash, eotIds, critMultiplier);
                 }
             }
         }
     }
 
-    private void ApplyEots(Enemies.EnemyController enemy, List<string> eotIds)
+    private void ApplyEots(Enemies.EnemyController enemy, List<string> eotIds, float critMultiplier)
     {
         foreach (var eotId in eotIds)
         {
             var eot = EotRegistry.Get(eotId);
             if (eot != null && GD.Randf() < eot.ApplyChance)
-                enemy.ApplyEot(eot);
+                enemy.ApplyEot(eot, critMultiplier);
         }
     }
 

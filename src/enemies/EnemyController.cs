@@ -83,7 +83,7 @@ public partial class EnemyController : CharacterBody3D
             _smPlayback?.Travel("walk");
 
         _damageCooldown -= (float)delta;
-        if (_damageCooldown <= 0f && GlobalPosition.DistanceTo(_player.GlobalPosition) < 32f)
+        if (_damageCooldown <= 0f && GlobalPosition.DistanceTo(_player.GlobalPosition) < BalanceConfig.Enemies.MeleeContactRange)
         {
             if (_player is Godot1.Player.PlayerController pc)
                 pc.TakeDamage(ContactDamage, Items.DamageType.Physical, this);
@@ -94,18 +94,20 @@ public partial class EnemyController : CharacterBody3D
         TickEots((float)delta);
     }
 
-    public void ApplyEot(EotData eot)
+    public void ApplyEot(EotData eot, float critMultiplier = 1.0f)
     {
         if (_activeEots.TryGetValue(eot.Id, out var existing))
         {
             existing.TimeRemaining = eot.Duration;
+            if (eot.IsDamageEot) existing.CritMultiplier = critMultiplier;
             return;
         }
         _activeEots[eot.Id] = new EotInstance
         {
-            DefinitionId  = eot.Id,
-            TimeRemaining = eot.Duration,
-            TickTimer     = eot.TickRate,
+            DefinitionId   = eot.Id,
+            TimeRemaining  = eot.Duration,
+            TickTimer      = eot.TickRate,
+            CritMultiplier = eot.IsDamageEot ? critMultiplier : 1.0f,
         };
         ApplyEotEffect(eot);
     }
@@ -127,7 +129,7 @@ public partial class EnemyController : CharacterBody3D
                 inst.TickTimer -= delta;
                 if (inst.TickTimer <= 0f)
                 {
-                    TakeDamage(eot.DamagePerTick, Items.DamageType.Magic);
+                    TakeDamage(eot.DamagePerTick * inst.CritMultiplier, Items.DamageType.Magic);
                     inst.TickTimer = eot.TickRate;
                 }
             }
@@ -193,21 +195,21 @@ public partial class EnemyController : CharacterBody3D
         GetParent().AddChild(shard);
         shard.GlobalPosition = GlobalPosition;
 
-        if (GD.Randf() < 0.25f)
+        if (GD.Randf() < BalanceConfig.Drops.CoinChance)
         {
             var coin = CoinScene.Instantiate<Meta.CoinPickup>();
             GetParent().AddChild(coin);
             coin.GlobalPosition = GlobalPosition;
         }
 
-        if (GD.Randf() < 0.10f)
+        if (GD.Randf() < BalanceConfig.Drops.HealthChance)
         {
             var hp = HealthScene.Instantiate<Health.HealthPickup>();
             GetParent().AddChild(hp);
             hp.GlobalPosition = GlobalPosition;
         }
 
-        if (GD.Randf() < 0.20f)
+        if (GD.Randf() < BalanceConfig.Drops.CraftingChance)
         {
             var session = GetParent().GetNodeOrNull<Run.RunSession>("RunSession");
             session?.AddCraftingCurrency1(1);

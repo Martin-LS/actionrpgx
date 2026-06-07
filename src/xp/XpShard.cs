@@ -4,7 +4,7 @@ namespace Godot1.Xp;
 
 public partial class XpShard : Area3D
 {
-    [Export] public int Value = 5;
+    [Export] public int Value = BalanceConfig.Pickups.XpShardValue;
 
     public override void _Ready()
     {

@@ -26,29 +26,23 @@ public class CharacterData
         var block = new StatBlock();
 
         // Archetype base stats — set directly, not subject to multiplier formula.
-        var (baseHp, baseSpd, basePhysDmg, baseMagDmg) = Type switch
+        var (baseHp, baseSpd) = Type switch
         {
-            CharacterType.Warrior => (150f, 170f, 20f,  0f),
-            CharacterType.Rogue   => (80f,  260f, 15f,  0f),
-            CharacterType.Mage    => (100f, 200f, 0f,   35f),
-            _                     => (100f, 200f, 20f,  0f),
+            CharacterType.Warrior => (BalanceConfig.Archetypes.Warrior.MaxHp, BalanceConfig.Archetypes.Warrior.Speed),
+            CharacterType.Rogue   => (BalanceConfig.Archetypes.Rogue.MaxHp,   BalanceConfig.Archetypes.Rogue.Speed),
+            CharacterType.Mage    => (BalanceConfig.Archetypes.Mage.MaxHp,    BalanceConfig.Archetypes.Mage.Speed),
+            _                     => (BalanceConfig.Archetypes.Warrior.MaxHp, BalanceConfig.Archetypes.Warrior.Speed),
         };
-        block.SetBase(StatId.MaxHp,          baseHp);
-        block.SetBase(StatId.Speed,           baseSpd);
-        block.SetBase(StatId.PhysicalDamage,  basePhysDmg);
-        block.SetBase(StatId.MagicDamage,     baseMagDmg);
+        block.SetBase(StatId.MaxHp,  baseHp);
+        block.SetBase(StatId.Speed,  baseSpd);
 
-        // Level-up flat bonuses — scaled by archetype multiplier × level.
-        // Formula: bonus × (CurrentLevel × multiplier).
-        // At level 1 there are no level-up bonuses (levelsAboveOne = 0), so no modifiers are added.
+        // Level-up HP bonus — scaled by archetype multiplier × level.
+        // Damage is no longer stored in StatBlock — it is computed from weapon data in PlayerController.
         int levelsAboveOne = CurrentLevel - 1;
         if (levelsAboveOne > 0)
         {
-            StatId dmgStat  = Type == CharacterType.Mage ? StatId.MagicDamage : StatId.PhysicalDamage;
-            float  hpBonus  = levelsAboveOne * 5f * CurrentLevel * ArchetypeMultiplierRegistry.Get(Type, StatId.MaxHp);
-            float  dmgBonus = levelsAboveOne * 1f * CurrentLevel * ArchetypeMultiplierRegistry.Get(Type, dmgStat);
-            block.AddModifier(new StatModifier(StatId.MaxHp, ModifierType.FlatAdd, hpBonus,  ModifierSource.Level));
-            block.AddModifier(new StatModifier(dmgStat,      ModifierType.FlatAdd, dmgBonus, ModifierSource.Level));
+            float hpBonus = levelsAboveOne * BalanceConfig.LevelUp.HpBonusPerLevel * CurrentLevel * ArchetypeMultiplierRegistry.Get(Type, StatId.MaxHp);
+            block.AddModifier(new StatModifier(StatId.MaxHp, ModifierType.FlatAdd, hpBonus, ModifierSource.Level));
         }
 
         // Item contributions — scaled by archetype multiplier × level.

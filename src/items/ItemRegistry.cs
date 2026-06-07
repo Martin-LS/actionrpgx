@@ -12,40 +12,46 @@ public static class ItemRegistry
             // WeaponRange and RangeModifier are in tiles (1 tile = GameScale.TileSize world units).
             ["sword_t1"] = new("sword_t1", "Sword", ItemSlot.Weapon,
                 IconPath: "res://assets/icons/items/iron_sword.png",
-                WeaponRange: 1.5f, PreferredDelivery: "Melee") { Tags = new[] { "Melee" } },
+                WeaponRange: BalanceConfig.Weapons.SwordRange, PreferredDelivery: "Melee",
+                BaseDamage: BalanceConfig.Weapons.SwordBaseDamage, BaseDamageType: DamageType.Physical,
+                DamageBonus: BalanceConfig.Weapons.SwordDamageBonus) { Tags = new[] { "Melee" } },
             ["bow_t1"]   = new("bow_t1",   "Bow",   ItemSlot.Weapon,
                 IconPath: "res://assets/icons/items/war_band.png",
-                WeaponRange: 11f, PreferredDelivery: "Ranged") { Tags = new[] { "Ranged" } },
+                WeaponRange: BalanceConfig.Weapons.BowRange, PreferredDelivery: "Range",
+                BaseDamage: BalanceConfig.Weapons.BowBaseDamage, BaseDamageType: DamageType.Physical,
+                CritChanceBonus: BalanceConfig.Weapons.BowCritBonus) { Tags = new[] { "Range" } },
             ["wand_t1"]  = new("wand_t1",  "Wand",  ItemSlot.Weapon,
                 IconPath: "res://assets/icons/items/enchanted_blade.png",
-                WeaponRange: 8f, PreferredDelivery: "Ranged") { Tags = new[] { "Magic" } },
+                WeaponRange: BalanceConfig.Weapons.WandRange, PreferredDelivery: "RangeMagic",
+                BaseDamage: BalanceConfig.Weapons.WandBaseDamage, BaseDamageType: DamageType.Magic,
+                DamageBonus: BalanceConfig.Weapons.WandDamageBonus) { Tags = new[] { "Magic" } },
 
             // Hats
             ["heavy_hat_t1"]  = new("heavy_hat_t1",  "Heavy Hat",  ItemSlot.Hat,
                 IconPath: "res://assets/icons/items/chain_mail.png",
-                ArmorCategory: ArmorCategory.Heavy,  BonusHp: 20, BonusSpeed: -20f, DamageReduction: 0.10f, RangeModifier: -1.5f) { Tags = new[] { "Heavy" } },
+                ArmorCategory: ArmorCategory.Heavy,  BonusHp: BalanceConfig.Armour.HeavyBonusHp,  BonusSpeed: BalanceConfig.Armour.HeavyBonusSpeed,  DamageReduction: BalanceConfig.Armour.HeavyDamageReduction,  RangeModifier: BalanceConfig.Armour.HeavyRangeModifier)  { Tags = new[] { "Heavy" } },
             ["medium_hat_t1"] = new("medium_hat_t1", "Medium Hat", ItemSlot.Hat,
                 IconPath: "res://assets/icons/items/mage_robe.png",
-                ArmorCategory: ArmorCategory.Medium, BonusHp: 10, BonusSpeed:   0f, DamageReduction: 0f,   RangeModifier:  0f) { Tags = new[] { "Medium" } },
+                ArmorCategory: ArmorCategory.Medium, BonusHp: BalanceConfig.Armour.MediumBonusHp, BonusSpeed: BalanceConfig.Armour.MediumBonusSpeed, DamageReduction: BalanceConfig.Armour.MediumDamageReduction, RangeModifier: BalanceConfig.Armour.MediumRangeModifier) { Tags = new[] { "Medium" } },
             ["light_hat_t1"]  = new("light_hat_t1",  "Light Hat",  ItemSlot.Hat,
                 IconPath: "res://assets/icons/items/leather_vest.png",
-                ArmorCategory: ArmorCategory.Light,  BonusHp:  0, BonusSpeed:  20f, DamageReduction: 0f,   RangeModifier:  1.5f) { Tags = new[] { "Light" } },
+                ArmorCategory: ArmorCategory.Light,  BonusHp: BalanceConfig.Armour.LightBonusHp,  BonusSpeed: BalanceConfig.Armour.LightBonusSpeed,  DamageReduction: BalanceConfig.Armour.LightDamageReduction,  RangeModifier: BalanceConfig.Armour.LightRangeModifier)  { Tags = new[] { "Light" } },
 
             // Body armour
             ["heavy_body_t1"]  = new("heavy_body_t1",  "Heavy Body",  ItemSlot.Body,
                 IconPath: "res://assets/icons/items/chain_mail.png",
-                ArmorCategory: ArmorCategory.Heavy,  BonusHp: 20, BonusSpeed: -20f, DamageReduction: 0.10f, RangeModifier: -1.5f) { Tags = new[] { "Heavy" } },
+                ArmorCategory: ArmorCategory.Heavy,  BonusHp: BalanceConfig.Armour.HeavyBonusHp,  BonusSpeed: BalanceConfig.Armour.HeavyBonusSpeed,  DamageReduction: BalanceConfig.Armour.HeavyDamageReduction,  RangeModifier: BalanceConfig.Armour.HeavyRangeModifier)  { Tags = new[] { "Heavy" } },
             ["medium_body_t1"] = new("medium_body_t1", "Medium Body", ItemSlot.Body,
                 IconPath: "res://assets/icons/items/mage_robe.png",
-                ArmorCategory: ArmorCategory.Medium, BonusHp: 10, BonusSpeed:   0f, DamageReduction: 0f,   RangeModifier:  0f) { Tags = new[] { "Medium" } },
+                ArmorCategory: ArmorCategory.Medium, BonusHp: BalanceConfig.Armour.MediumBonusHp, BonusSpeed: BalanceConfig.Armour.MediumBonusSpeed, DamageReduction: BalanceConfig.Armour.MediumDamageReduction, RangeModifier: BalanceConfig.Armour.MediumRangeModifier) { Tags = new[] { "Medium" } },
             ["light_body_t1"]  = new("light_body_t1",  "Light Body",  ItemSlot.Body,
                 IconPath: "res://assets/icons/items/leather_vest.png",
-                ArmorCategory: ArmorCategory.Light,  BonusHp:  0, BonusSpeed:  20f, DamageReduction: 0f,   RangeModifier:  1.5f) { Tags = new[] { "Light" } },
+                ArmorCategory: ArmorCategory.Light,  BonusHp: BalanceConfig.Armour.LightBonusHp,  BonusSpeed: BalanceConfig.Armour.LightBonusSpeed,  DamageReduction: BalanceConfig.Armour.LightDamageReduction,  RangeModifier: BalanceConfig.Armour.LightRangeModifier)  { Tags = new[] { "Light" } },
 
             // Rings (no tags — universal augments only)
             ["ring_t1"] = new("ring_t1", "Ring", ItemSlot.Ring,
                 IconPath: "res://assets/icons/items/swift_ring.png",
-                PhysicalResistance: 0.05f),
+                PhysicalResistance: BalanceConfig.Accessories.RingPhysicalResistance),
         };
 
     public static ItemData? Get(string id) => All.GetValueOrDefault(id);

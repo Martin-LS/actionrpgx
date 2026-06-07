@@ -51,8 +51,8 @@ public partial class EnemySpawner : Node
 
         ApplyType(enemy, minutes);
 
-        enemy.Speed     += 5f * minutes;
-        enemy.MaxHealth += 3 * (int)minutes;
+        enemy.Speed     += BalanceConfig.Enemies.SpeedPerMinute * minutes;
+        enemy.MaxHealth += BalanceConfig.Enemies.HealthPerMinute * (int)minutes;
         enemy.MapLevel   = _runSession?.MapLevel ?? 1;
 
         GetParent().AddChild(enemy);

@@ -81,64 +81,53 @@ Full management hub for the selected character. Always has a character in contex
 CharacterScreen (Control)
 └── VBox (VBoxContainer)
     ├── BackButton (Button) ← "← Change Character" → account_screen.tscn
-    └── HSplit (HSplitContainer)
-        ├── LeftPanel (PanelContainer, min width 280)
-        │   └── LeftVBox (VBoxContainer)
-        │       ├── InventoryTitle (Label)
-        │       ├── InventoryInfo (Label)  ← "Gear: N/50  Skills: M/50  Augments: P/50  Coins: X  Common: Y"
-        │       └── InventoryTabs (TabContainer, expand vertical)
-        │           ├── Equipment tab
-        │           │   └── InventoryScroll (ScrollContainer)
-        │           │       └── InventoryGrid (GridContainer, 5 cols) ← 50 Button slots, runtime-populated from OwnedGearInstances
-        │           ├── Skills tab
-        │           │   └── SkillsScroll (ScrollContainer)
-        │           │       └── SkillsGrid (GridContainer, 5 cols) ← 50 Button slots, runtime-populated from OwnedSkillInstances
-        │           └── Augments tab
-        │               └── AugmentsScroll (ScrollContainer)
-        │                   └── AugmentsGrid (GridContainer, 5 cols) ← 50 Button slots, runtime-populated from OwnedSkillAugmentInstances + OwnedEquipmentAugmentInstances (interleaved, Skill Augments first)
-        └── RightPanel (VBoxContainer)
-            └── TabContainer
-                ├── Loadout tab (VBoxContainer)
-                │   └── CharacterView (VBoxContainer)
-                │       ├── HSplit (HBoxContainer)
-                │       │   ├── InfoVBox (VBoxContainer, expand) ← name/type/level/stats labels
-                │       │   │   └── NameLabel, TypeLabel, LevelLabel, StatsLabel
-                │       │   └── GearPanel (VBoxContainer) ← right column, shrink width
-                │       │       ├── GearLabel ("— Equipment —")
-                │       │       ├── WeaponSlot (VBoxContainer)
-                │       │       │   ├── WeaponLabel ("Weapon")
-                │       │       │   └── WeaponSlotButton (60×60, size_flags_h=shrink) ← popup (Unequip/Delete) if equipped; ItemPickerPanel if empty
-                │       │       ├── HatSlot / HatLabel / HatSlotButton (same pattern)
-                │       │       ├── BodySlot / BodyLabel / BodySlotButton (same pattern)
-                │       │       └── RingSlot / RingLabel / RingSlotButton (same pattern)
-                │       ├── SkillBar (HBoxContainer, size_flags_h=SHRINK_CENTER) ← centered row, below HSplit
-                │       │   ├── SkillSlot1 (VBoxContainer) → SkillLabel1 ("Skill 1") + SkillSlotButton1 (60×60) ← popup (Unequip/Delete) if equipped; SkillPickerPanel if empty
-                │       │   ├── SkillSlot2 / SkillLabel2 / SkillSlotButton2 (same pattern)
-                │       │   └── SkillSlot3 / SkillLabel3 / SkillSlotButton3 (same pattern)
-                │       └── Buttons (HBoxContainer)
-                │           └── StartRunButton (Button, expand fill)
-                ├── Equipment Crafting tab (CraftingTabs TabContainer)
-                │   ├── Create sub-tab
-                │   │   └── VBox ← materials label + one Button per RecipeRegistry.ForType(Gear) entry; one Button per RecipeRegistry.ForType(EquipmentAugment) entry
-                │   └── Modify sub-tab (ModifyVBox)
-                │       ├── GearModifySlotBtn (Button 60×60) ← click → inline PopupMenu listing all gear instances (owned + equipped)
-                │       ├── GearUpgradeBtn (Button) ← costs 1 Common; disabled if no item loaded / max tier / insufficient materials
-                │       └── EquipmentAugmentSlotsRow (HBoxContainer) ← one slot button per augment slot (count = tier); each slot: empty → EquipmentAugmentPickerPanel filtered to compatible augments from OwnedEquipmentAugmentInstances; occupied → PopupMenu (Remove)
-                ├── Skill Crafting tab (SkillCraftingTabs TabContainer)
-                │   ├── Create sub-tab
-                │   │   └── VBox ← materials label + one Button per RecipeRegistry.ForType(Skill) entry; one Button per RecipeRegistry.ForType(SkillAugment) entry
-                │   └── Modify sub-tab (ModifyVBox)
-                │       ├── SkillModifySlotBtn (Button 60×60) ← click → inline PopupMenu listing OwnedSkillInstances
-                │       ├── SkillUpgradeBtn (Button) ← costs 1 Common; disabled if no skill loaded / max tier / insufficient materials
-                │       └── SkillAugmentSlotsRow (HBoxContainer) ← one slot button per augment slot (count = tier); each slot: empty → SkillAugmentPickerPanel filtered to compatible augments from OwnedSkillAugmentInstances; occupied → PopupMenu (Remove)
-                └── Sigils tab    ← empty; reserved for future sigil system
+    └── TabContainer (expand fill)
+        ├── Loadout tab (VBoxContainer, expand fill)
+        │   └── LoadoutSplit (HBoxContainer, expand fill)
+        │       ├── CharacterView (VBoxContainer, size_flags_h=ExpandFill) ← left column
+        │       │   ├── HSplit (HBoxContainer)
+        │       │   │   ├── InfoVBox (VBoxContainer, expand)
+        │       │   │   │   └── NameLabel, TypeLabel, LevelLabel, StatsLabel
+        │       │   │   └── GearPanel (VBoxContainer) ← shrink width
+        │       │   │       ├── GearLabel ("— Equipment —")
+        │       │   │       ├── WeaponSlot (VBoxContainer) → WeaponLabel + WeaponSlotButton (60×60)
+        │       │   │       ├── HatSlot / HatLabel / HatSlotButton (same pattern)
+        │       │   │       ├── BodySlot / BodyLabel / BodySlotButton (same pattern)
+        │       │   │       └── RingSlot / RingLabel / RingSlotButton (same pattern)
+        │       │   ├── SkillBar (HBoxContainer, size_flags_h=SHRINK_CENTER)
+        │       │   │   ├── SkillSlot1 (VBoxContainer) → SkillLabel1 + SkillSlotButton1 (60×60)
+        │       │   │   ├── SkillSlot2 / SkillLabel2 / SkillSlotButton2 (same pattern)
+        │       │   │   └── SkillSlot3 / SkillLabel3 / SkillSlotButton3 (same pattern)
+        │       │   └── Buttons (HBoxContainer)
+        │       │       └── StartRunButton (Button, expand fill)
+        │       └── InventoryPanel (PanelContainer, min width 280) ← right column
+        │           └── InventoryVBox (VBoxContainer)
+        │               ├── InventoryTitle (Label) ← "Account Inventory"
+        │               ├── InventoryInfo (Label) ← "Gear: N/50  Skills: M/50 ..."
+        │               └── InventoryTabs (TabContainer, expand fill)
+        │                   ├── Equipment tab
+        │                   │   └── InventoryScroll (ScrollContainer)
+        │                   │       └── InventoryGrid (GridContainer, 5 cols) ← 50 slots, OwnedGearInstances
+        │                   ├── Skills tab
+        │                   │   └── SkillsScroll (ScrollContainer)
+        │                   │       └── SkillsGrid (GridContainer, 5 cols) ← 50 slots, OwnedSkillInstances
+        │                   └── Augments tab
+        │                       └── AugmentsScroll (ScrollContainer)
+        │                           └── AugmentsGrid (GridContainer, 5 cols) ← OwnedSkillAugmentInstances + OwnedEquipmentAugmentInstances (Skill Augments first)
+        └── Sigils tab ← empty; reserved for future sigil system
 ```
-**Inventory grids:** Each tab has 50 slots (5 cols, scrollable), all always visible. Empty slots are dimmed. Clicking a filled slot opens a `PopupMenu` (Equip / Delete for gear/skills; Delete for Skill Augments and Equipment Augments — augments are not equipped directly, they are socketed into skill or gear items). Capacity: `ProfileData.MaxInventory = 50` per tab — counts only unequipped/unsocketed items; equipped gear lives in `CharacterData.EquippedGear`, slotted skill GUIDs in `SlottedSkillInstanceIds`, socketed Skill Augment GUIDs in `SkillItemInstance.SocketedSkillAugmentIds`, socketed Equipment Augment GUIDs in `GearItemInstance.SocketedEquipmentAugmentIds`. If `SelectedCharacter` is null on `_Ready`, redirects to `account_screen.tscn`.
+**Slot interaction model (CharacterScreen.cs):**
+- **Right-click** a filled inventory item → equip to first empty valid slot; if all slots occupied, swap with slot 1 (old item returns to inventory)
+- **Right-click** a filled equipped slot → unequip; item returns to inventory (blocked if inventory full)
+- **Left-click** a filled item (inventory or equipped) → `PopupMenu`: **Modify**, **Delete**
+- **Left-click** an empty gear slot → `ItemPickerPanel` (filtered to slot type)
+- **Left-click** an empty skill slot → `SkillPickerPanel`
+- **Modify** opens a dark modal overlay (`ColorRect` full-screen + centred `PanelContainer`) showing: item name/tier, Upgrade button (costs 1 Common; disabled at max tier or insufficient materials), and augment socket row. Socket buttons: empty → popup from `OwnedCompatibleAugmentInstances`; filled → click to remove augment (returns to inventory).
 
-**Skill slots:** Skill slot buttons open a `SkillPickerPanel` when empty. Occupied skill slots use a `PopupMenu` (Unequip / Delete).
+**Inventory grids:** 50 slots per tab (5 cols, scrollable), all always visible. Empty slots are dimmed. Augment buttons (Augments tab) open a Delete popup — augments are socketed into items via the Modify panel, not directly equipped. Capacity: `ProfileData.MaxInventory = 50` — counts only unequipped/unsocketed items. If `SelectedCharacter` is null on `_Ready`, redirects to `account_screen.tscn`.
 
 ### `src/ui/item_picker_panel.tscn`
-Modal overlay opened from gear slot buttons **when the slot is empty**. Occupied slots use a PopupMenu (Unequip / Delete) instead — ItemPickerPanel is never opened for an occupied slot.
+Modal overlay opened from gear slot buttons **when the slot is empty** (left-click). Occupied slots use a left-click PopupMenu (Modify / Delete) instead — ItemPickerPanel is never opened for an occupied slot.
 ```
 ItemPickerPanel (Control, full-screen)
 ├── Dim (ColorRect, semi-transparent black)
@@ -151,7 +140,7 @@ ItemPickerPanel (Control, full-screen)
 ```
 
 ### `src/ui/skill_picker_panel.tscn`
-Modal overlay opened from skill slot buttons **when the slot is empty**. Occupied skill slots use a PopupMenu (Unequip / Delete) instead.
+Modal overlay opened from skill slot buttons **when the slot is empty** (left-click). Occupied skill slots use a left-click PopupMenu (Modify / Delete) instead.
 ```
 SkillPickerPanel (Control, full-screen)
 ├── Dim (ColorRect, semi-transparent black)
@@ -210,6 +199,7 @@ Main (Node)
 | TooltipButton     | `Button` subclass — overrides `_MakeCustomTooltip()` to render a two-section tooltip: title line (gold `#D4A017`, bold Exo 2, 15px) and body (pale slate `#8AA0AE`, regular Exo 2, 13px). Used for all gear/skill/augment slot buttons and all dynamically created inventory buttons in CharacterScreen. | `res://src/ui/TooltipButton.cs` | ✅ done |
 | ItemPickerPanel          | Modal picker for equipping/unequipping gear by slot                    | `res://src/ui/`       | ✅ done |
 | SkillPickerPanel         | Modal picker for equipping skills into skill slots                     | `res://src/ui/`       | ✅ done |
+| BalanceConfig     | Static constants — all tunable numbers (weapons, armour, skills, EoTs, enemies, drops, pickups, archetypes, level-up). Single source of truth; registries/controllers read from here, never hardcode. | `res://src/balance/` | ✅ done |
 | ItemRegistry      | Static catalogue of all `ItemData` records                   | `res://src/items/`        | ✅ done |
 | SkillRegistry     | Static catalogue of all `SkillData` records                  | `res://src/skills/`       | ✅ done |
 | RecipeRegistry    | Static catalogue of all `RecipeData` records                 | `res://src/crafting/`     | ✅ done |

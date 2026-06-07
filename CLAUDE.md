@@ -37,7 +37,31 @@ At the start of every session: read `docs/todo.md`, note what's pending, and tic
 
 - **Always use Blender MCP** (`mcp__blender__execute_blender_code`) for any editing of Blender files — modifying animations, keyframes, meshes, or exporting GLBs. Never use headless Python scripts (`blender --background --python`) to edit or save blend files; this was the root cause of lost animations in the past.
 - Running a Python script solely to open a `.blend` file is fine as a loading step. The rule is about edits.
-- **If Blender MCP is not connected** (i.e. `get_scene_info` fails or returns a default scene), stop immediately and tell the user to get Blender MCP working before proceeding. Do not fall back to headless scripts.
+- **Before executing any Blender MCP code, call `get_scene_info` as the very first action to verify connection.** If it fails or returns a default scene, stop immediately and tell the user to get Blender MCP working before writing any code. Do not fall back to headless scripts.
+
+## Character Handedness
+
+The player character is **left-handed**.
+
+- **Main hand = LEFT** (Hand_L, UpperArm_L, LowerArm_L) — primary weapon always attaches here
+- **Off-hand = RIGHT** (Hand_R, UpperArm_R, LowerArm_R) — reserved for future off-hand slot
+
+All attack animations must use the **left arm** as the dominant/striking arm. The right arm is the counterbalance or off-hand support arm. Weapon attachment in Godot must use Hand_L, not Hand_R.
+
+Current animations melee_atack and range_atack were built with the right arm — marked for correction.
+
+## Blender Bone Rotation Direction (player.blend)
+
+The character faces **-Y** in Blender (standard convention). Bone local X rotation direction depends on which way the bone points at rest — **downward and upward bones are opposite**:
+
+| Bone group | Examples | Negative X | Positive X |
+|---|---|---|---|
+| Downward (-Z) | UpperLeg, LowerLeg, Foot, UpperArm, LowerArm, Hand | **Forward** (-Y world) | Backward |
+| Upward (+Z) | Hips, Spine, Chest, Neck, Head | Backward | **Forward** |
+
+**Before keying any new bone type, run the empirical tail-position test**: apply a +35° X test rotation in Blender, read `bone.tail` world Y, then undo. If Y went positive → positive X is backward → use negative X for forward motion. Never assume — always verify first.
+
+**Do not export to Godot until the user has reviewed and approved the animation in Blender.**
 
 ## Animation
 

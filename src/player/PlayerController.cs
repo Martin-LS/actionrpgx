@@ -64,13 +64,14 @@ public partial class PlayerController : CharacterBody3D
             var body   = GetEquippedItem(c, Items.ItemSlot.Body);
 
             DamageReduction = (hat?.DamageReduction ?? 0f) + (body?.DamageReduction ?? 0f);
-            // WeaponRange and RangeModifier are in tiles; multiply by TileSize to get world units.
-            EffectiveRange  = ((weapon?.WeaponRange ?? 1.5f) + (hat?.RangeModifier ?? 0f) + (body?.RangeModifier ?? 0f)) * GameScale.TileSize;
+            // Range Modifiers only apply to ranged weapons; melee range is unaffected by armour.
+            float weaponRange = weapon?.WeaponRange ?? 1.5f;
+            EffectiveRange = weapon?.PreferredDelivery != "Melee"
+                ? (weaponRange + (hat?.RangeModifier ?? 0f) + (body?.RangeModifier ?? 0f)) * GameScale.TileSize
+                : weaponRange * GameScale.TileSize;
 
             var weaponController = GetNodeOrNull<Weapon.WeaponController>("Weapon");
-            weaponController?.SetDamage(
-                _statBlock.Get(Stats.StatId.PhysicalDamage),
-                _statBlock.Get(Stats.StatId.MagicDamage));
+            ApplyWeaponDamage(weaponController, weapon);
             weaponController?.SetRange(EffectiveRange);
             weaponController?.SetPreferredDelivery(weapon?.PreferredDelivery ?? "Melee");
 
@@ -83,21 +84,23 @@ public partial class PlayerController : CharacterBody3D
                 if (skill == null) continue;
 
                 var eotIds   = new List<string>();
-                bool hasSplash = false, hasPierce = false;
+                bool  hasSplash = false, hasPierce = false, hasMagicDamage = false;
+                float critChanceBonus = 0f;
                 if (instance != null)
                 {
-                    foreach (var augInstId in instance.SocketedSkillAugmentIds)
+                    var activeAugments = Skills.AugmentResolver.Resolve(instance.SocketedSkillAugmentIds, manager.FindSkillAugmentInstance);
+                    foreach (var augInst in activeAugments)
                     {
-                        if (string.IsNullOrEmpty(augInstId)) continue;
-                        var augInst = manager.FindSkillAugmentInstance(augInstId);
-                        if (augInst?.DefinitionId == "splash") hasSplash = true;
-                        if (augInst?.DefinitionId == "pierce") hasPierce = true;
-                        var eotId = augInst?.Definition?.EotId;
+                        if (augInst.DefinitionId == "splash")          hasSplash      = true;
+                        if (augInst.DefinitionId == "pierce")          hasPierce      = true;
+                        if (augInst.DefinitionId == "magic_damage")    hasMagicDamage = true;
+                        if (augInst.DefinitionId == "critical_strike") critChanceBonus += BalanceConfig.SkillAugments.CritChance;
+                        var eotId = augInst.Definition?.EotId;
                         if (eotId != null) eotIds.Add(eotId);
                     }
                 }
 
-                weaponController?.SetSlot(i, skill, eotIds, hasSplash, hasPierce);
+                weaponController?.SetSlot(i, skill, eotIds, hasSplash, hasPierce, hasMagicDamage, critChanceBonus);
             }
 
             // Seed equipment augments from all equipped gear
@@ -122,6 +125,9 @@ public partial class PlayerController : CharacterBody3D
             XpToNextLevel = ComputeXpToNextLevel(Level);
             var wc = GetNodeOrNull<Weapon.WeaponController>("Weapon");
             wc?.SetDamage(20f, 0f);
+            wc?.SetBaseDamageType(Items.DamageType.Physical);
+            wc?.SetGlobalCritChance(0f);
+            wc?.SetCritMultiplier(BalanceConfig.SkillAugments.CritMultiplier);
             wc?.SetRange(1.5f * GameScale.TileSize);
             wc?.SetPreferredDelivery("Melee");
             var fallback = SkillRegistry.Get("strike");
@@ -139,13 +145,7 @@ public partial class PlayerController : CharacterBody3D
         AddChild(visuals);
         _model = visuals;
 
-        string modelPath = _charData?.Type switch
-        {
-            Character.CharacterType.Warrior => "res://assets/models/characters/kaykit_warrior.glb",
-            Character.CharacterType.Rogue   => "res://assets/models/characters/kaykit_rogue.glb",
-            Character.CharacterType.Mage    => "res://assets/models/characters/kaykit_mage.glb",
-            _                               => "res://assets/models/characters/kaykit_warrior.glb",
-        };
+        string modelPath = "res://assets/models/characters/player.glb";
         var playerModel = GD.Load<PackedScene>(modelPath).Instantiate<Node3D>();
         visuals.AddChild(playerModel);
 
@@ -156,9 +156,10 @@ public partial class PlayerController : CharacterBody3D
             playerModel.AddChild(animPlayer);
         }
 
-        LoadAnimClip(animPlayer, "res://assets/models/characters/kaykit_anim_general.glb",  "Idle_A",              "idle",   Animation.LoopModeEnum.Linear);
-        LoadAnimClip(animPlayer, "res://assets/models/characters/kaykit_anim_movement.glb", "Running_A",           "run",    Animation.LoopModeEnum.Linear);
-        LoadAnimClip(animPlayer, "res://assets/models/characters/kaykit_anim_melee.glb",    "Melee_1H_Attack_Chop", "attack", Animation.LoopModeEnum.None);
+        if (animPlayer.HasAnimation("idle"))
+            animPlayer.GetAnimation("idle").LoopMode = Animation.LoopModeEnum.Linear;
+        if (animPlayer.HasAnimation("run"))
+            animPlayer.GetAnimation("run").LoopMode  = Animation.LoopModeEnum.Linear;
 
         var animTree = GetNodeOrNull<AnimationTree>("AnimationTree");
         if (animTree != null)
@@ -167,9 +168,28 @@ public partial class PlayerController : CharacterBody3D
             animTree.Active = true;
         }
 
+        var skeleton = playerModel.FindChild("Skeleton3D", true, false) as Skeleton3D;
+        if (skeleton != null)
+        {
+            string? weaponDefId = _charData != null
+                ? GetEquippedItem(_charData, Items.ItemSlot.Weapon)?.Id
+                : "sword_t1";
+            string? weaponPath = GetWeaponModelPath(weaponDefId);
+            if (weaponPath != null)
+            {
+                var weaponScene = GD.Load<PackedScene>(weaponPath);
+                if (weaponScene != null)
+                {
+                    var weaponRoot = weaponScene.Instantiate<Node3D>();
+                    visuals.AddChild(weaponRoot);
+                    AttachWeaponToSkeleton(weaponRoot, skeleton);
+                }
+            }
+        }
+
         GetNodeOrNull<Weapon.WeaponController>("Weapon")?.Connect(
             Weapon.WeaponController.SignalName.SkillFired,
-            Callable.From<int, float, bool>(OnSkillFired));
+            Callable.From<int, float, string>(OnSkillFired));
     }
 
     public override void _PhysicsProcess(double delta)
@@ -210,7 +230,8 @@ public partial class PlayerController : CharacterBody3D
         if (_smPlayback != null)
         {
             var current = _smPlayback.GetCurrentNode();
-            if (current != "attack")
+            bool inAttack = current == "melee_atack" || current == "range_atack" || current == "range_magic_atack";
+            if (!inAttack)
             {
                 var want = moving ? "run" : "idle";
                 if (current != want)
@@ -309,9 +330,9 @@ public partial class PlayerController : CharacterBody3D
                 Speed              = _statBlock.Get(Stats.StatId.Speed);
                 PhysicalResistance = _statBlock.Get(Stats.StatId.PhysicalResistance);
                 MagicResistance    = _statBlock.Get(Stats.StatId.MagicResistance);
-                GetNodeOrNull<Weapon.WeaponController>("Weapon")?.SetDamage(
-                    _statBlock.Get(Stats.StatId.PhysicalDamage),
-                    _statBlock.Get(Stats.StatId.MagicDamage));
+                var wc     = GetNodeOrNull<Weapon.WeaponController>("Weapon");
+                var weapon = GetEquippedItem(_charData, Items.ItemSlot.Weapon);
+                ApplyWeaponDamage(wc, weapon);
             }
 
             MaxHealth     = (int)_statBlock.Get(Stats.StatId.MaxHp);
@@ -321,38 +342,29 @@ public partial class PlayerController : CharacterBody3D
         EmitSignal(SignalName.XpChanged, CurrentXp, XpToNextLevel);
     }
 
+    private static string? GetWeaponModelPath(string? weaponId) => weaponId switch
+    {
+        "sword_t1" => "res://assets/models/equipment/weapon_sword.glb",
+        "bow_t1"   => "res://assets/models/equipment/weapon_bow.glb",
+        "wand_t1"  => "res://assets/models/equipment/weapon_wand.glb",
+        _          => null
+    };
+
     private static Items.ItemData? GetEquippedItem(Character.CharacterData c, Items.ItemSlot slot)
     {
         c.EquippedGear.TryGetValue(slot.ToString(), out var instance);
         return instance?.Definition;
     }
 
-    private static readonly PackedScene SwingVfxScene =
-        GD.Load<PackedScene>("res://PolyBlocks/EffectBlocks/assets/impacts/impact_5.tscn");
-
-    private void OnSkillFired(int slotIndex, float cooldown, bool isMelee)
+    private void OnSkillFired(int slotIndex, float cooldown, string delivery)
     {
-        _smPlayback?.Travel("attack");
-        if (!isMelee) return;
-
-        try
+        var animState = delivery switch
         {
-            var fx  = SwingVfxScene.Instantiate<GpuParticles3D>();
-            var mat = (ParticleProcessMaterial)fx.ProcessMaterial.Duplicate();
-            mat.ScaleMin = 35f;
-            mat.ScaleMax = 55f;
-            fx.Amount    = 12;
-            fx.Lifetime  = 0.6f;
-            fx.ProcessMaterial = mat;
-            GetTree().Root.AddChild(fx);
-            fx.GlobalPosition = GlobalPosition + new Vector3(0f, 20f, 0f);
-            fx.Call("activate_effects");
-            GetTree().CreateTimer(2.0).Timeout += fx.QueueFree;
-        }
-        catch (System.Exception e)
-        {
-            GD.PrintErr($"SwingEffect failed: {e.Message}");
-        }
+            "Melee"      => "melee_atack",
+            "RangeMagic" => "range_magic_atack",
+            _            => "range_atack",
+        };
+        _smPlayback?.Travel(animState);
     }
 
     private static int FindBone(Skeleton3D skeleton, string name)
@@ -397,8 +409,8 @@ public partial class PlayerController : CharacterBody3D
 
     private static void AttachWeaponToSkeleton(Node3D weaponRoot, Skeleton3D skeleton)
     {
-        int handIdx = FindBone(skeleton, "Hand_R");
-        string handBoneName = handIdx >= 0 ? skeleton.GetBoneName(handIdx) : "Hand_R";
+        int handIdx = FindBone(skeleton, "Hand_L");
+        string handBoneName = handIdx >= 0 ? skeleton.GetBoneName(handIdx) : "Hand_L";
         var attach = new BoneAttachment3D { BoneName = handBoneName };
         skeleton.AddChild(attach);
 
@@ -460,5 +472,43 @@ public partial class PlayerController : CharacterBody3D
         for (int i = 1; i < level; i++)
             xtn = (int)(xtn * 1.4f);
         return xtn;
+    }
+
+    private void ApplyWeaponDamage(Weapon.WeaponController? wc, Items.ItemData? weapon)
+    {
+        if (wc == null || weapon == null) return;
+
+        var charType = _charData?.Type ?? Character.CharacterType.Warrior;
+        bool isMagicWeapon = weapon.BaseDamageType == Items.DamageType.Magic;
+
+        float archetypeMult = isMagicWeapon
+            ? charType switch
+            {
+                Character.CharacterType.Warrior => BalanceConfig.Archetypes.Warrior.MagicDamageMultiplier,
+                Character.CharacterType.Rogue   => BalanceConfig.Archetypes.Rogue.MagicDamageMultiplier,
+                Character.CharacterType.Mage    => BalanceConfig.Archetypes.Mage.MagicDamageMultiplier,
+                _                               => 1.0f,
+            }
+            : charType switch
+            {
+                Character.CharacterType.Warrior => BalanceConfig.Archetypes.Warrior.PhysicalDamageMultiplier,
+                Character.CharacterType.Rogue   => BalanceConfig.Archetypes.Rogue.PhysicalDamageMultiplier,
+                Character.CharacterType.Mage    => BalanceConfig.Archetypes.Mage.PhysicalDamageMultiplier,
+                _                               => 1.0f,
+            };
+
+        float levelBonus = 1f + (Level - 1) * BalanceConfig.LevelUp.DamageBonusPerLevel;
+        float weaponDmg  = weapon.BaseDamage * archetypeMult * levelBonus * (1f + weapon.DamageBonus);
+
+        float physDmg  = isMagicWeapon ? 0f : weaponDmg;
+        float magicDmg = isMagicWeapon ? weaponDmg : 0f;
+
+        _statBlock.SetBase(Stats.StatId.PhysicalDamage, physDmg);
+        _statBlock.SetBase(Stats.StatId.MagicDamage,    magicDmg);
+
+        wc.SetDamage(physDmg, magicDmg);
+        wc.SetBaseDamageType(weapon.BaseDamageType);
+        wc.SetGlobalCritChance(weapon.CritChanceBonus);
+        wc.SetCritMultiplier(BalanceConfig.SkillAugments.CritMultiplier);
     }
 }

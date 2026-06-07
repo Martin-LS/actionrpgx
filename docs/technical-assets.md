@@ -169,6 +169,96 @@ Armour category drives both chest and hat together — equipping Heavy armour sh
 
 ---
 
+## Mixamo Export Pipeline
+
+Use Mixamo to auto-rig a new character and download animation packs. Follow this checklist every time — deviating from it causes mesh errors on upload.
+
+### Step-by-step (via Blender MCP)
+
+1. **Open the source `.blend`** — use the version that still has the armature intact (before rig removal).
+
+2. **Delete hair objects** — `Hair_SideL`, `Hair_SideR`, `Hair_Back`, `Hair_Top` must be removed before merging. Hair geometry extends down to shoulder/neck height and creates stray faces in the FBX between head and torso. See tech-tips.md for details.
+
+3. **Remove rig and animations**
+   - Set armature pose position to `REST`
+   - Apply armature modifier on every mesh (bakes rest pose into geometry)
+   - Delete the Armature object
+   - Clear animation data from all objects + purge orphaned datablocks
+
+4. **Merge all remaining meshes into one** — `bpy.ops.object.join()`, rename result `PlayerCharacter` (or `<CharacterName>`). Mixamo works best with a single mesh.
+
+5. **Clean the mesh** (in this order — do not skip steps or reorder):
+   - `remove_doubles` (dist=0.001) — eliminates duplicate verts from the join
+   - Delete loose verts and edges
+   - Delete interior faces (faces where all edges are shared by >2 faces)
+   - `recalc_face_normals` — fix inverted normals
+
+6. **Apply T-pose** — rotate arm vertices to horizontal at shoulder pivots. For `player.blend`:
+   - Threshold: `|X| > 0.51` separates arm verts from torso (torso ends at X=±0.5, arms start at X=±0.55)
+   - Left shoulder pivot: `(0.620, 0.0, 2.100)`, rotation `Ry(-90°)`
+   - Right shoulder pivot: `(-0.620, 0.0, 2.100)`, rotation `Ry(+90°)`
+   - Run health check after: must show 0 non-manifold edges before proceeding
+
+7. **Apply all transforms** — `bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)`. Scale must be `(1,1,1)` in the exported file.
+
+8. **Export as FBX**:
+   ```python
+   bpy.ops.export_scene.fbx(
+       filepath=r"<project>/assets/models/characters/<name>_mixamo.fbx",
+       use_selection=False,
+       apply_unit_scale=True,
+       apply_scale_options='FBX_SCALE_NONE',
+       bake_space_transform=False,
+       object_types={'MESH'},
+       use_mesh_modifiers=True,
+       add_leaf_bones=False,
+       path_mode='COPY',
+       embed_textures=False,
+       axis_forward='-Z',
+       axis_up='Y',
+   )
+   ```
+
+9. **Verify** — import the FBX back into a fresh Blender scene and confirm: single mesh, T-pose visible from front orthographic, 0 non-manifold edges.
+
+### Output file naming
+
+`<name>_mixamo.fbx` alongside the source `.blend` — e.g. `player_mixamo.fbx`. Do not commit these FBX files to git; they are throwaway upload artefacts.
+
+### After Mixamo
+
+Mixamo returns a rigged FBX (with its own skeleton) plus any downloaded animation FBX files. Next step is retargeting those animations to the project's standard bone set.
+
+### Capoeira Pack
+
+Downloaded from Mixamo. Stored at `C:\work\my\assets\Capoeira Pack\`. **Not committed to git.** Contains the rigged player character and 39 animation clips.
+
+| File | Notes |
+|---|---|
+| `player_mixamo.fbx` | Rigged character — Mixamo skeleton, use as retarget source |
+
+**Ginga (footwork — movement base):**
+`ginga forward`, `ginga backward`, `ginga sideways 1/2`, `ginga sideways to au`, `ginga variation 1/2/3`
+
+**Esquiva (evasions/dodges):**
+`esquiva 1/2/3/4/5`
+
+**Kicks / attacks:**
+`armada`, `armada to esquiva`, `bencao`, `chapa 2`, `chapa giratoria 2`, `chapa-giratoria`, `chapaeu de couro`, `martelo 2/3`, `martelo do chau`, `martelo do chau sem mao`, `meia lua de compasso`, `meia lua de compasso back`, `meia lua de frente`, `pontera`, `queshada 1/2`
+
+**Acrobatics:**
+`au`, `au to role`, `macaco side`
+
+**Sweeps / ground:**
+`rasteira 1/2`, `troca 1`
+
+**General capoeira idles:**
+`capoeira`, `capoeira (2)`, `capoeira (3)`
+
+Copy individual FBX files into `assets/models/characters/animations/` when bringing a clip into the project.
+
+---
+
 ## Export Settings (Blender → GLB)
 
 Run via `execute_blender_code` with these exact flags:

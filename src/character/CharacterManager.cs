@@ -44,17 +44,24 @@ public partial class CharacterManager : Node
         c.EquippedGear[ItemSlot.Body.ToString()]   = new GearItemInstance { DefinitionId = body };
         c.EquippedGear[ItemSlot.Ring.ToString()]   = new GearItemInstance { DefinitionId = ring };
 
-        var skillDefId = c.Type switch
+        var skillInst = new SkillItemInstance { DefinitionId = "strike" };
+
+        string? starterAugId = c.Type switch
         {
-            CharacterType.Warrior => "strike",
-            CharacterType.Rogue   => "arrow",
-            CharacterType.Mage    => "bolt",
-            _                     => "strike",
+            CharacterType.Rogue => "critical_strike",
+            CharacterType.Mage  => "magic_damage",
+            _                   => null,
         };
 
-        var skillInst = new SkillItemInstance { DefinitionId = skillDefId };
+        if (starterAugId != null)
+        {
+            var augInst = new Skills.SkillAugmentInstance { DefinitionId = starterAugId };
+            Profile.OwnedSkillAugmentInstances.Add(augInst);
+            skillInst.SocketedSkillAugmentIds.Add(augInst.Id);
+        }
+
         Profile.OwnedSkillInstances.Add(skillInst);
-        c.SlottedSkillInstanceIds = new List<string> { skillInst.Id, skillInst.Id, skillInst.Id };
+        c.SlottedSkillInstanceIds = new List<string> { skillInst.Id, "", "" };
     }
 
     public void Delete(string id)
@@ -284,13 +291,6 @@ public partial class CharacterManager : Node
         var augment = FindSkillAugmentInstance(augmentInstanceId);
         if (skill == null || augment == null) return CraftResult.InsufficientMaterials;
         if (slotIndex >= skill.MaxSkillAugmentSlots) return CraftResult.InsufficientMaterials;
-
-        var augmentDef = SkillAugmentRegistry.Get(augment.DefinitionId);
-        if (augmentDef == null) return CraftResult.InsufficientMaterials;
-
-        var skillDef = skill.Definition;
-        if (skillDef == null || !skillDef.Tags.Any(t => augmentDef.RequiredTags.Contains(t)))
-            return CraftResult.InsufficientMaterials;
 
         while (skill.SocketedSkillAugmentIds.Count <= slotIndex)
             skill.SocketedSkillAugmentIds.Add("");
@@ -638,8 +638,10 @@ public partial class CharacterManager : Node
     private static string MigrateSkillId(string oldId) => oldId switch
     {
         "attack_melee"           => "strike",
-        "attack_ranged_physical" => "arrow",
-        "attack_ranged_magic"    => "bolt",
+        "attack_ranged_physical" => "strike",
+        "attack_ranged_magic"    => "strike",
+        "arrow"                  => "strike",
+        "bolt"                   => "strike",
         _                        => oldId,
     };
 

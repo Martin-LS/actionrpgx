@@ -6,11 +6,17 @@
 [sub_resource type="SphereShape3D" id="SphereShape3D_player"]
 radius = 16.0
 
-[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_rxibo"]
-animation = &"attack"
-
 [sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_mf2ua"]
 animation = &"idle"
+
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_rxibo"]
+animation = &"melee_atack"
+
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_5f2sf"]
+animation = &"range_atack"
+
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_jiejy"]
+animation = &"range_magic_atack"
 
 [sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_244u8"]
 animation = &"run"
@@ -35,14 +41,40 @@ xfade_time = 0.2
 switch_mode = 2
 advance_mode = 2
 
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_ylhto"]
+xfade_time = 0.1
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_cwolq"]
+xfade_time = 0.1
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_2smqc"]
+xfade_time = 0.2
+switch_mode = 2
+advance_mode = 2
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_rl62b"]
+xfade_time = 0.1
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_wlj80"]
+xfade_time = 0.1
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_6bm8s"]
+xfade_time = 0.2
+switch_mode = 2
+advance_mode = 2
+
 [sub_resource type="AnimationNodeStateMachine" id="AnimationNodeStateMachine_ylhto"]
-states/attack/node = SubResource("AnimationNodeAnimation_rxibo")
-states/attack/position = Vector2(350, 300)
 states/idle/node = SubResource("AnimationNodeAnimation_mf2ua")
 states/idle/position = Vector2(200, 100)
+states/melee_atack/node = SubResource("AnimationNodeAnimation_rxibo")
+states/melee_atack/position = Vector2(350, 250)
+states/range_atack/node = SubResource("AnimationNodeAnimation_5f2sf")
+states/range_atack/position = Vector2(550, 250)
+states/range_magic_atack/node = SubResource("AnimationNodeAnimation_jiejy")
+states/range_magic_atack/position = Vector2(750, 250)
 states/run/node = SubResource("AnimationNodeAnimation_244u8")
 states/run/position = Vector2(500, 100)
-transitions = ["Start", "idle", SubResource("AnimationNodeStateMachineTransition_5f2sf"), "idle", "run", SubResource("AnimationNodeStateMachineTransition_jiejy"), "run", "idle", SubResource("AnimationNodeStateMachineTransition_o822w"), "idle", "attack", SubResource("AnimationNodeStateMachineTransition_x42xx"), "run", "attack", SubResource("AnimationNodeStateMachineTransition_l271a"), "attack", "idle", SubResource("AnimationNodeStateMachineTransition_8ydov")]
+transitions = ["Start", "idle", SubResource("AnimationNodeStateMachineTransition_5f2sf"), "idle", "run", SubResource("AnimationNodeStateMachineTransition_jiejy"), "run", "idle", SubResource("AnimationNodeStateMachineTransition_o822w"), "idle", "melee_atack", SubResource("AnimationNodeStateMachineTransition_x42xx"), "run", "melee_atack", SubResource("AnimationNodeStateMachineTransition_l271a"), "melee_atack", "idle", SubResource("AnimationNodeStateMachineTransition_8ydov"), "idle", "range_atack", SubResource("AnimationNodeStateMachineTransition_ylhto"), "run", "range_atack", SubResource("AnimationNodeStateMachineTransition_cwolq"), "range_atack", "idle", SubResource("AnimationNodeStateMachineTransition_2smqc"), "idle", "range_magic_atack", SubResource("AnimationNodeStateMachineTransition_rl62b"), "run", "range_magic_atack", SubResource("AnimationNodeStateMachineTransition_wlj80"), "range_magic_atack", "idle", SubResource("AnimationNodeStateMachineTransition_6bm8s")]
 
 [node name="Player" type="CharacterBody3D" unique_id=1376160702]
 script = ExtResource("1_4anbu")

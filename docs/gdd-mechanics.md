@@ -32,7 +32,9 @@ Skills drive all combat. Each skill has a **type**:
 
 The **skill bar** on the run HUD shows all slotted skills, their cooldown state, and whether auto-activate is enabled per slot.
 
-**v1:** Three skill slots (keys 1 / 2 / 3), each with an independent cooldown. v1 has one starter skill: **Strike**. All 3 slots are pre-filled with Strike at run start; players replace slots with new skills as they acquire them. Cooldown: 0.8s per slot.
+**v1:** Three skill slots (keys 1 / 2 / 3), each with an independent cooldown. Slots can be empty — an empty slot does nothing. New characters start with **1 skill slotted** (slot 1); slots 2 and 3 are empty. Players fill them by crafting additional skill items. This makes the first craft feel meaningful — it literally opens a new slot. Cooldown: 0.8s per slot (tier 1).
+
+**Attack / cast speed is a skill attribute, not a character stat.** There is no global attack speed multiplier on the character or on gear. A skill's cooldown belongs to the skill item — it is tuned per skill, reduced by tier upgrades, and can be modified by future Skill Augments (e.g. a Haste support). This keeps the PoE2 philosophy intact: skills are self-contained items with their own tempo, not extensions of a character stat. A Warrior's Strike and a Mage's Bolt have independent rhythms that do not interact.
 
 Every skill has one or more **tags** — descriptors that other systems react to. Tags are not restrictions — any character can equip any skill. Tags serve two distinct roles:
 
@@ -44,25 +46,33 @@ Skills with no delivery tag are **weapon-adaptive**: they inherit the weapon's `
 
 **Descriptor tags** determine augment compatibility, damage type, and visual effects layered on top of the delivery. They do not affect animation or range: `Magic`, `Attack`, `Spell`.
 
-**v1 tags:** `Melee`, `Ranged`, `Magic`, `Attack`, `Spell` (expand as more skills and Skill Augments are added).
+**v1 tags:** `Melee`, `Attack` (expand as more skills and Skill Augments are added).
 
 ### Skills
 
+**v1 has one skill: Strike.** Arrow and Bolt are not separate skills — they are Strike pre-socketed with augments, used as the Rogue and Mage starter loadouts respectively. This keeps the skill list minimal while demonstrating the augment system from the first run.
+
 #### Strike
 
-The universal starting skill. Hits the nearest enemy using whatever the character has equipped — a sword swing, an arrow, a wand bolt. As players acquire new skills, Strike slots get replaced. Strike can still be kept in any slot intentionally.
+The universal skill. Hits the nearest enemy using whatever the character has equipped — a sword swing, an arrow, a wand bolt. Rogue and Mage starters are Strike with an augment pre-socketed (see Starter Gear). As players acquire new skills, Strike slots get replaced. Strike can still be kept in any slot intentionally.
 
 | Property | Value |
 |---|---|
 | Delivery | Weapon-adaptive — no delivery tag; inherits weapon's `PreferredDelivery` |
 | Descriptor tags | `Attack` |
-| Cooldown | 0.8s |
-| Damage | 1× base physical damage |
+| Cooldown | 0.8s (tier 1) — lower at higher tiers |
+| Damage | 1× weapon base damage |
 | EoTs | None |
 | Splash | No |
-| Acquire | Free — all 3 slots pre-filled at run start for every character |
+| Acquire | Free — slot 1 pre-filled at character creation; slots 2 and 3 start empty |
 
-Character damage scales with character level (via level-up bonuses) and archetype base damage. Weapons do not contribute base damage — they set Weapon Range and determine the visual delivery of skills (see Gear Slots).
+**Weapon is the root of all damage.** Each weapon has a base damage value that increases with tier. Skill damage is calculated as:
+
+`Skill damage = Weapon base damage × Archetype damage multiplier × (1 + level damage bonus%)`
+
+Archetype damage multipliers define how effectively each archetype converts weapon damage into output — a Warrior extracts more physical damage from a Sword than a Mage would. Level-up grants a small cumulative % damage bonus that amplifies the whole formula.
+
+**Level damage bonus: +2% per level (cumulative).** At level 10 = +20% total. All values below are placeholder — owned by the Balancer.
 
 ### Damage Types
 
@@ -72,9 +82,40 @@ Every damage source has a **damage type**. Every entity that can take damage has
 
 **v1 damage types:** Physical, Magic
 
-**Future expansion:** Elemental types (Fire, Lightning, Frost, etc.) will be added as the system grows — the formula and resistance model extend naturally.
+**Future expansion:** Elemental types (Fire, Lightning, Frost, etc.) will be added as the system grows — the formula and resistance model extend naturally. Getting Magic right in v1 is the template: a new damage type means adding a resistance value per enemy, a DamageType enum entry, and a weapon or augment that produces it. Nothing else changes.
 
 Resistances are always soft (never total immunity). Exact values are TBD.
+
+### Critical Hits
+
+Critical hits are **damage-type agnostic** — a crit multiplies the final damage output regardless of whether the hit is Physical, Magic, or any future damage type. This is consistent with the ARPG genre standard and means new damage types require no changes to the crit system.
+
+**Two distinct stats govern crits:**
+
+| Stat | Internal name | Player-facing name | What it does |
+|---|---|---|---|
+| Crit Chance | Crit Chance | Crit Chance | % probability that a hit is a critical hit |
+| Crit Multiplier | Crit Multiplier | Crit Damage | Total multiplier applied to damage on a crit (e.g. 1.5× = +50% Crit Damage) |
+
+> **Naming convention:** "Crit Multiplier" is used in the GDD and in code — it is unambiguous (1.5 means 1.5×). "Crit Damage" is the player-facing UI label, expressed as a bonus (+50% Crit Damage). Both refer to the same stat.
+
+These are independent investment axes. High Crit Chance with low Crit Multiplier = consistent small bonus. Low Crit Chance with high Crit Multiplier = rare but large spikes. Committing to both is what makes a dedicated crit build.
+
+**Crit is a More multiplier** in the augment math — applied after all other calculations (weapon base × archetype mult × level bonus × augment buckets), and does not interact with the Increased% bucket.
+
+`Final damage (on crit) = Skill damage × Crit Multiplier`
+
+**Crit Chance and Crit Multiplier are universal stats — no source gate.**
+Any item type can contribute to either pool: weapon identity, skill augment, equipment augment, ring, or any future gear stat. All contributions stack additively into their respective totals before the damage roll. There are no restrictions on which slot type may provide crit.
+
+**v1 scope:**
+- **Crit Chance:** investable — base is 0; raised by Bow identity (+8% flat) and/or Critical Strike Skill Augment; both stack additively into the same pool
+- **Crit Multiplier:** fixed at 1.5× (= +50% Crit Damage); not investable in v1
+
+**Future:** Crit Multiplier as an investable stat — e.g. a "Brutal Strike" augment that raises the multiplier — is a deliberate post-v1 hook. At that point players have both axes to work with and can feel the tension between stacking Chance vs. Multiplier.
+
+**EoT crit stamping:**
+When a hit that applies a damage EoT is a critical hit, the **entire EoT instance is stamped with the Crit Multiplier** — it deals crit-multiplied damage per tick for its full duration. Re-applying the EoT with a non-crit hit resets it to base damage; re-applying with a crit refreshes it at crit-multiplied damage. Non-damage EoTs (Slow, Vulnerability) are unaffected by crit — only EoTs with a damage-per-tick value can be stamped.
 
 ### Effects over Time (EoT)
 
@@ -92,16 +133,17 @@ Every EoT has the same four properties. All EoTs follow the same application rul
 **Application rules (all EoTs):**
 - No stacking — only one instance of each EoT type per enemy at a time
 - Reapplying refreshes the duration rather than stacking or being ignored
+- **Damage EoTs only:** if the applying hit was a critical hit, the EoT instance is stamped with the crit multiplier for its full duration (see Critical Hits)
 
 The EoT type defines *what it does* when active:
 
-| EoT | Damage per tick? | What it does |
-|---|---|---|
-| Slow | No | Reduces enemy movement speed |
-| Burn | Yes (Magic) | Deals damage per tick |
-| Vulnerability | No | Increases damage taken by the enemy |
+| EoT | Damage per tick? | Crit-stampable? | What it does |
+|---|---|---|---|
+| Slow | No | No | Reduces enemy movement speed |
+| Burn | Yes (Magic) | Yes | Deals Magic damage per tick; stamped if applied by a crit |
+| Vulnerability | No | No | Increases damage taken by the enemy |
 
-When designing new EoTs: if it deals damage per tick, set tick rate and damage per tick. If not, leave those blank. That is the only distinction.
+When designing new EoTs: if it deals damage per tick, set tick rate, damage per tick, and mark it crit-stampable. If not, leave those blank. That is the only distinction.
 
 v1 Skill Augments only use Slow. All future effects follow this same framework.
 
@@ -117,13 +159,13 @@ Every run requires a character. Characters are created by the player, persist be
 
 ### Character Archetypes
 
-| Archetype | Max HP | Speed | Physical Damage | Magic Damage | Default build               |
-|-----------|--------|-------|----------------|--------------|------------------------------|
-| Warrior   | 150    | 170   | 20             | 0            | Sword + Heavy armour — close-range brawler |
-| Rogue     | 80     | 260   | 15             | 0            | Bow + Light armour — fast, fragile kiter   |
-| Mage      | 100    | 200   | 0              | 35           | Wand + Medium armour — glass cannon        |
+| Archetype | Max HP | Speed | Phys Damage Multiplier | Magic Damage Multiplier | Default build               |
+|-----------|--------|-------|------------------------|-------------------------|------------------------------|
+| Warrior   | 150    | 170   | 1.5×                   | 0.5×                    | Sword + Heavy armour — close-range brawler |
+| Rogue     | 80     | 260   | 1.0×                   | 0.5×                    | Bow + Light armour — fast, fragile kiter   |
+| Mage      | 100    | 200   | 0.5×                   | 1.5×                    | Wand + Medium armour — glass cannon        |
 
-Stat values are TBD. Default build reflects starter gear — players are free to deviate.
+Damage multipliers apply to weapon base damage (see Damage formula under Skills). Mismatched builds (e.g. Warrior + Wand) produce ~half output — viable but suboptimal. All values are placeholder — owned by the Balancer.
 
 #### Archetype Stat Multipliers
 
@@ -172,7 +214,7 @@ Each skill slot has an **auto-activate toggle** (set in the character screen bef
 - Killing an enemy grants **`1 XP × map level`** instantly (kill reward, no pickup required)
 - Killing enemies also drops **XP Shards** — collecting them adds further XP
 - Both sources fill the same XP bar
-- On level up: permanent HP and damage bonuses are applied automatically, scaled by archetype and level
+- On level up: permanent HP bonus (flat) and a small cumulative % damage bonus are applied automatically; the damage bonus amplifies weapon base damage through the archetype multiplier formula
 - Level and XP within the current level persist when the run ends; the character picks up exactly where they left off
 - No popup or pause — levelling up is seamless
 

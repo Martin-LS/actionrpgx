@@ -8,6 +8,7 @@
 | Class               | Kind        | Fields                                                         |
 |---------------------|-------------|----------------------------------------------------------------|
 | `GearItemInstance`  | Plain C#    | Id (string, GUID), DefinitionId (string → `ItemRegistry`), Tier (int, 1–3), SocketedEquipmentAugmentIds (List\<string\> — instance GUIDs, one entry per augment slot; "" = empty; max length = augment slots for tier: 1/2/3). Authoritative tier for runtime stat scaling. |
+| `EotInstance`       | Plain C#    | DefinitionId (string), TimeRemaining (float), TickTimer (float — damage EoTs only), **CritMultiplier (float, default 1.0f)** — set to the firing hit's crit multiplier when the applying hit was a critical hit; damage ticks use `DamagePerTick × CritMultiplier`. Non-damage EoTs ignore this field. |
 | `SkillItemInstance` | Plain C#    | Id (string, GUID), DefinitionId (string → `SkillRegistry`), Tier (int, 1–3), SocketedSkillAugmentIds (List\<string\> — instance GUIDs, one entry per augment slot; "" = empty slot; max length = augment slots for tier: 1/2/3). |
 | `ProfileData`       | Plain C#    | CoinBank, Materials (Dictionary\<string, int\>), OwnedGearInstances (List\<GearItemInstance\>), OwnedSkillInstances (List\<SkillItemInstance\>), OwnedSkillAugmentInstances (List\<SkillAugmentInstance\>), OwnedEquipmentAugmentInstances (List\<EquipmentAugmentInstance\>), MaxInventory (const = 50) — applies separately to each list. Account-shared. Migration: old `ownedItemIds`/`ownedSkillIds` string lists are wrapped into instances (new GUID, Tier = 1) on load. Old `augment`/`chainInstanceId` fields on skill instances are dropped on load. |
 | `CharacterData`     | Plain C#    | Id, Name, Type (enum), RunsCompleted, CurrentLevel, CurrentXp, EquippedGear (Dictionary\<string, GearItemInstance\> — slot → full instance), SlottedSkillInstanceIds (List\<string\> — instance GUIDs; skill instances stay in `OwnedSkillInstances`). Archetype base stats computed inline in `BuildStatBlock()` — applies archetype multiplier formula before returning. |
@@ -15,15 +16,16 @@
 | `StatId`            | C# enum     | MaxHp, Speed, PhysicalDamage, MagicDamage, PhysicalResistance, MagicResistance |
 | `StatModifier`      | Plain C#    | StatId, ModifierType (FlatAdd), Value (float), ModifierSource (Level, Item) |
 | `StatBlock`         | Plain C#    | Internal flat modifier list per `StatId`. `Get(StatId)` returns the sum of all flat modifiers for that stat — archetype multiplier is applied in `BuildStatBlock()` before the block is returned, so callers always get effective values. |
-| `ItemData`          | C# record   | Id, Name, Slot (enum), IconPath, Tags (string[] — equipment tags for augment compatibility; e.g. `["Melee"]` for Sword, `["Heavy"]` for heavy armour, `[]` for Accessory) — plus slot-specific fields: `WeaponRange (float, in tiles)` for Weapon; `ArmorCategory`, `BonusHp`, `BonusSpeed`, `DamageReduction (float)`, `RangeModifier (float, in tiles)` for Armor; `PhysicalResistance (float)` for Accessory. Unused fields default to zero. `Tier` removed — tier lives on `GearItemInstance`, not the definition. **Range fields are always in tiles** — multiply by `GameScale.TileSize` to get world units. |
+| `ItemData`          | C# record   | Id, Name, Slot (enum), IconPath, Tags (string[] — equipment tags for augment compatibility; e.g. `["Melee"]` for Sword, `["Heavy"]` for heavy armour, `[]` for Accessory) — plus slot-specific fields: `WeaponRange (float, in tiles)`, `PreferredDelivery (string — "Melee" or "Ranged")` for Weapon; `ArmorCategory`, `BonusHp`, `BonusSpeed`, `DamageReduction (float)`, `RangeModifier (float, in tiles)` for Armor; `PhysicalResistance (float)` for Accessory. Unused fields default to zero. `Tier` removed — tier lives on `GearItemInstance`, not the definition. **Range fields are always in tiles** — multiply by `GameScale.TileSize` to get world units. |
 | `ItemSlot`          | C# enum     | Weapon, Hat, Body, Ring                                        |
 | `SkillData`         | C# record   | Id, Name, Type (SkillType enum), Tags (string[]) — e.g. `["Melee","Attack"]`, `["Ranged","Attack"]`, `["Ranged","Magic","Spell"]`. Cooldown (float, seconds; 0 for Passive), Range (float), IconPath (string, default ""). No Tier — tier lives on `SkillItemInstance`. |
 | `SkillType`         | C# enum     | Active, Passive                                                |
 | `ArmorCategory`     | C# enum     | None, Heavy, Medium, Light                                     |
 | `DamageType`        | C# enum     | Physical, Magic                                                |
-| `ItemTier`          | C# static class (const ints) | Common = 1, Uncommon = 2, Rare = 3, Max = 3. `Label(int)` → display name. `BackgroundColor(int)` → Godot `Color`. Used for tier background colour in UI. |
+| `ItemTier`          | C# static class (const ints) | Common = 1, Uncommon = 2, Rare = 3, Max = 3. `Label(int)` → display name. `BorderColor(int)` → Godot `Color`. Used for the rarity border colour on item slot buttons. |
+| `BalanceConfig`     | Static class (nested) | Sections: `Weapons` (SwordRange/BowRange/WandRange), `Armour` (Heavy/Medium/Light — BonusHp, BonusSpeed, DamageReduction, RangeModifier per tier), `Accessories` (RingPhysicalResistance), `Skills` (cooldown + range per skill), `Eots` (ApplyChance, Duration, per-effect fields), `Enemies.Skeleton` + scaling consts + MeleeContactRange, `Drops` (coin/health/crafting chances), `Pickups` (XpShardValue, HealthHealAmount), `Archetypes` (DefaultMultiplier + MaxHp/Speed/PhysicalDamage/MagicDamage per archetype), `LevelUp` (HpBonusPerLevel, DamageBonusPerLevel). All values are `const` — compile-time resolvable. |
 | `ItemRegistry`      | Static class| `All` dict, `Get(id)`, `ForSlot(slot)` — 7 starter gear definitions. Definitions carry no tier — all instances start at Tier = 1 when crafted. |
-| `SkillRegistry`     | Static class| `All` dict, `Get(id)` — v1: 3 entries: `strike` (Tags: `["Melee","Attack"]`), `arrow` (Tags: `["Ranged","Attack"]`), `bolt` (Tags: `["Ranged","Magic","Spell"]`). |
+| `SkillRegistry`     | Static class| `All` dict, `Get(id)` — v1: 1 entry: `strike` (Tags: `["Attack"]`). Arrow and Bolt are informal names for Rogue/Mage starter configurations (Strike + augment); they are not separate skill items. |
 | `RecipeData`        | C# record   | Id, OutputItemId (string — definition ID), RecipeType (enum), MaterialCosts (Dictionary\<string, int\>). Crafting always produces a new instance at Tier = 1. |
 | `SkillAugmentData`  | C# record   | Id (string), Name (string), RequiredTags (string[]) — skill must share at least one tag. EotId (string?, nullable) — links augment to an EoT definition; null for augments with no timed effect (e.g. Splash, Pierce). No Effect field — behaviour dispatched by Id in code. v1: Splash (`["Melee"]`, EotId: null), Pierce (`["Ranged"]`, EotId: null), Slow (`["Attack"]`, EotId: `"slow"`). |
 | `SkillAugmentInstance` | Plain C# | Id (string, GUID), DefinitionId (string → `SkillAugmentRegistry`). No tier — augments are flat items in v1. |
@@ -106,17 +108,49 @@ If multi-user slots or cloud saves are ever needed, evaluate wrapping save data 
 
 Single weapon per character (v1). `WeaponController` manages:
 
-- `PhysicalBaseDamage (float)` and `MagicBaseDamage (float)` — both set at run start from `CharacterData.BuildStatBlock()` after the archetype multiplier formula is applied. The equipped weapon item does **not** contribute to base damage. At fire time, the slot uses `PhysicalBaseDamage` or `MagicBaseDamage` based on whether the skill has the `Magic` tag.
-- `_slots[3]` — internal array of 3 slot states, each holding `{ SkillData Skill, float CooldownTimer }`. Each slot fires independently when its timer reaches 0. Empty slots (null Skill) are skipped.
-- Per slot: `DamageType`: skill has `Magic` tag → `Magic`, else `Physical`. `CooldownTimer` counts down independently from each slot's `Skill.Cooldown`. Delivery mode (`Melee` or `Ranged`) is read from `Skill.Tags` at fire time to select the appropriate projectile visual.
+**Damage model — weapon is the root of all damage.** `PlayerController` computes damage at run start (and on level-up) via `ApplyWeaponDamage()` and pushes the results into `WeaponController`. The formula:
 
-Exposes: `SetDamage(float physicalDamage, float magicDamage)`, `SetSlot(int slotIndex, SkillData)`.
+```
+weaponDmg = weapon.BaseDamage
+          × archetypeMultiplier          // PhysicalDamageMultiplier or MagicDamageMultiplier per weapon type
+          × (1 + (level - 1) × 0.02)    // cumulative level bonus (DamageBonusPerLevel)
+          × (1 + weapon.DamageBonus)     // weapon identity bonus (e.g. Sword +10% phys)
+physDmg  = weaponDmg  (if weapon.BaseDamageType == Physical, else 0)
+magicDmg = weaponDmg  (if weapon.BaseDamageType == Magic,    else 0)
+```
 
-`SetSlot` is called once per slot at run start. Stores `SkillData` and seeds `CooldownTimer` to 0 so each slot fires immediately on the first frame.
+`WeaponController` receives three calls from `PlayerController.ApplyWeaponDamage()`:
+- `SetDamage(physDmg, magicDmg)` — sets `_physicalDamage` and `_magicDamage`
+- `SetBaseDamageType(DamageType)` — sets `_baseDamageType`; determines which damage pool is used at fire time
+- `SetGlobalCritChance(float)` — aggregated flat crit chance from all non-skill sources (weapon identity + future equipment augments, rings). Replaces the old `SetWeaponCritBonus()`.
 
-Effective damage per shot: `BaseDamage`.
+**Crit stat architecture — two pools, globally aggregated:**
 
-Emits: `SkillFired(int slotIndex, float cooldown, bool isMelee)` when a slot fires — consumed by the HUD skill bar and by `PlayerController` to trigger the melee swing VFX.
+Crit Chance and Crit Multiplier are universal stats. `PlayerController` is responsible for aggregating all contributions before passing them into `WeaponController`:
+
+| Pool | Sources | How passed |
+|---|---|---|
+| Global Crit Chance | Weapon identity bonus + equipment augments + ring stats | `SetGlobalCritChance(float)` — once per run start / level-up |
+| Per-slot Crit Chance | Skill augments on that skill (e.g. Critical Strike) | `SetSlot()` `critChanceBonus` float parameter |
+| Global Crit Multiplier | Fixed 1.5× in v1; future: investable via augments | `SetCritMultiplier(float)` — once per run start (v1: always 1.5) |
+
+At fire time: `critChance = _globalCritChance + slot.CritChanceBonus`. If `critChance > 0` and roll succeeds: `baseDmg *= _critMultiplier`.
+
+`SkillSlot.HasCriticalStrike (bool)` is replaced by `SkillSlot.CritChanceBonus (float)` — the aggregated float from that skill's augments. This removes the bool flag and makes adding future crit-granting skill augments a parameter change, not a new flag.
+
+**Slot state:** `_slots[3]` — internal array of 3 slot states:
+```
+{ SkillData Skill, float CooldownTimer, List<string> EotIds,
+  bool HasSplash, bool HasPierce, bool HasMagicDamage,
+  float CritChanceBonus }
+```
+Each slot fires independently. Empty slots (null Skill) are skipped.
+
+Exposes: `SetDamage(float, float)`, `SetBaseDamageType(DamageType)`, `SetGlobalCritChance(float)`, `SetCritMultiplier(float)`, `SetSlot(int, SkillData, ...)`.
+
+`SetSlot` is called once per slot at run start. `SetGlobalCritChance` and `SetCritMultiplier` are called once at run start and again on level-up (same cadence as `SetDamage`).
+
+Emits: `SkillFired(int slotIndex, float cooldown, bool isMelee)` — consumed by HUD skill bar and `PlayerController` (attack animation + melee VFX).
 
 [TBD] Weapon upgrade path (stages, piercing, AoE) — deferred.
 
@@ -224,28 +258,21 @@ Save(); return Success
 
 Sets `gear.SocketedEquipmentAugmentIds[slotIndex] = ""`. Free. Save().
 
-### Equipment Crafting tab — Create sub-tab (CharacterScreen)
+### Modify panel (CharacterScreen)
 
-Recipe list from `RecipeRegistry.ForType(RecipeType.Gear)`. Each row: button disabled when materials insufficient or inventory full. On press: `CraftGearItem(recipeId)`, then `Refresh()`.
+Opened via left-click → **Modify** on any item (inventory or equipped slot). Implemented as a dynamically-built modal overlay — no pre-authored scene.
 
-### Equipment Crafting tab — Modify sub-tab (CharacterScreen)
+Structure (built in `ShowGearModifyPanel` / `ShowSkillModifyPanel`):
+- `ColorRect` (full-screen, semi-transparent, `MouseFilter=Stop`) as the overlay
+- `PanelContainer` (Iron & Slate styled, centered via `Anchor 0.5/GrowBoth`, min width 380px)
+  - Title: item name + tier label; **✕** button closes the overlay
+  - `HSeparator`
+  - **Upgrade** button — disabled when `Tier >= ItemTier.Max` or `crafting_common < 1`. On press: `UpgradeGearItem(instanceId)` / `UpgradeSkillItem(instanceId)`, close overlay, `Refresh()`
+  - (if `MaxEquipmentAugSlots > 0` or `MaxSkillAugmentSlots > 0`): separator + sub-label + `HBoxContainer` of slot buttons
+    - **Filled slot** → click removes augment (`RemoveEquipmentAugment` / `RemoveSkillAugment`), rebuilds row in-place
+    - **Empty slot** → click opens `NewStyledPopup()` listing compatible owned augments; on pick: `SocketEquipmentAugment` / `SocketSkillAugment`, rebuilds row in-place
 
-Contains a single loaded-item slot (Button, 60×60), an **Upgrade** button, and an **Equipment Augment Slots** row.
-- Slot is empty until player clicks it → opens inline `PopupMenu` listing all gear instances (owned + equipped across all characters)
-- Once loaded: shows instance icon + tier background colour
-- **Upgrade** button: disabled when no instance loaded, tier already 3, or insufficient materials. On press: `UpgradeGearItem(instanceId)`, then `Refresh()`
-- **Equipment Augment Slots** row: shows one slot button per augment slot (count derived from loaded item's tier). Empty slot → opens `EquipmentAugmentPickerPanel` filtered to `OwnedEquipmentAugmentInstances` whose `EquipmentAugmentData.RequiredTags` intersect with the item's tags (or are empty). Occupied slot → `PopupMenu` (Remove — free, augment returns to inventory).
-
-### Skill Crafting tab — Create sub-tab (CharacterScreen)
-
-Parallel to gear Create tab. Recipe list from `RecipeRegistry.ForType(RecipeType.Skill)`. On press: `CraftSkillItem(recipeId)`.
-
-### Skill Crafting tab — Modify sub-tab (CharacterScreen)
-
-Contains a loaded-skill slot (Button, 60×60), an **Upgrade** button, and a **Skill Augment Slots** row.
-- Slot is empty until player clicks it → opens inline `PopupMenu` listing all `OwnedSkillInstances`
-- **Upgrade** button: same disabled conditions as gear upgrade
-- **Skill Augment Slots** row: shows one slot button per augment slot (count derived from loaded skill's tier). Empty slot → opens `SkillAugmentPickerPanel` filtered to `OwnedSkillAugmentInstances` whose `SkillAugmentData.RequiredTags` intersect with the skill's tags. Occupied slot → `PopupMenu` (Remove — free, augment returns to inventory).
+Augment compatibility filter (gear): `EquipmentAugmentData.RequiredTags` empty OR intersects `ItemData.Tags`. No tag gate for skill augments (any augment can socket into any skill in v1).
 
 ### Material IDs
 
@@ -278,21 +305,30 @@ Projectile hits EnemyController
     eot = EotRegistry.Get(augment.EotId)   // null if augment has no EoT
     if eot == null: skip
     if Random() < eot.ApplyChance:
-        enemy.ApplyEot(eot)
+        enemy.ApplyEot(eot, critMultiplier)   // critMultiplier = hit's crit mult (1.0 if not a crit)
 ```
 
-`Projectile` carries a `List<string> SkillAugmentEotIds` resolved by `WeaponController` at fire time from the skill slot's socketed Skill Augments. No registry lookups on the hot path — just a list of IDs the projectile received at instantiation.
+`Projectile` carries a `List<string> SkillAugmentEotIds` and a `float CritMultiplier` (1.0f if the firing hit was not a crit; crit multiplier value if it was). Both are resolved by `WeaponController` at fire time. No registry lookups on the hot path.
 
-### `EnemyController.ApplyEot(EotData eot)`
+### `EnemyController.ApplyEot(EotData eot, float critMultiplier = 1.0f)`
 
 ```
 if _activeEots.ContainsKey(eot.Id):
-    _activeEots[eot.Id].TimeRemaining = eot.Duration   // refresh
+    _activeEots[eot.Id].TimeRemaining = eot.Duration   // refresh duration
+    if eot.IsDamageEot:
+        _activeEots[eot.Id].CritMultiplier = critMultiplier  // re-stamp with new hit's crit status
     return
 // first application:
-_activeEots[eot.Id] = new EotInstance { DefinitionId = eot.Id, TimeRemaining = eot.Duration, TickTimer = eot.TickRate }
+_activeEots[eot.Id] = new EotInstance {
+    DefinitionId   = eot.Id,
+    TimeRemaining  = eot.Duration,
+    TickTimer      = eot.TickRate,
+    CritMultiplier = eot.IsDamageEot ? critMultiplier : 1.0f
+}
 ApplyEotEffect(eot)   // e.g. reduce speed for Slow
 ```
+
+**Crit stamping rule:** when the applying hit was a critical hit, the EoT instance is stamped with the crit multiplier for its full duration. Re-applying with a non-crit resets `CritMultiplier` to 1.0; re-applying with a crit refreshes it at the new crit multiplier. Non-damage EoTs always store 1.0 and the field has no effect.
 
 ### `EnemyController._Process(delta)` — EoT tick
 
@@ -306,7 +342,7 @@ foreach (id, inst) in _activeEots:
     if eot.IsDamageEot:
         inst.TickTimer -= delta
         if inst.TickTimer <= 0:
-            TakeDamage(eot.DamagePerTick, DamageType.Magic)
+            TakeDamage(eot.DamagePerTick * inst.CritMultiplier, DamageType.Magic)
             inst.TickTimer = eot.TickRate
 ```
 
@@ -393,21 +429,45 @@ statBlock          = character.BuildStatBlock()   // applies multiplier formula 
 
 MaxHealth          = statBlock.Get(MaxHp)
 Speed              = statBlock.Get(Speed)
-PhysicalDamage     = statBlock.Get(PhysicalDamage)
-MagicDamage        = statBlock.Get(MagicDamage)
 PhysicalResistance = statBlock.Get(PhysicalResistance)
 MagicResistance    = statBlock.Get(MagicResistance)
-DamageReduction    = hat.DamageReduction + body.DamageReduction  // flat sum of hat + body, not multiplied
-EffectiveRange     = (weapon.WeaponRange + hat.RangeModifier + body.RangeModifier) * GameScale.TileSize  // tile values × TileSize → world units; standalone float, not part of StatId
+DamageReduction    = hat.DamageReduction + body.DamageReduction  // flat sum, not multiplied
+EffectiveRange     = weapon.PreferredDelivery == "Ranged"
+                       ? (weapon.WeaponRange + hat.RangeModifier + body.RangeModifier) * GameScale.TileSize
+                       : weapon.WeaponRange * GameScale.TileSize
+                     // Range Modifiers only apply to ranged weapons — see GDD § Hat & Body
+                     // tile values × TileSize → world units; standalone float, not part of StatId
 
-WeaponController.SetDamage(PhysicalDamage, MagicDamage)
+// Weapon-rooted damage — computed in PlayerController.ApplyWeaponDamage():
+archetypeMult      = weapon.BaseDamageType == Magic
+                       ? archetype.MagicDamageMultiplier
+                       : archetype.PhysicalDamageMultiplier
+levelBonus         = 1 + (level - 1) × BalanceConfig.LevelUp.DamageBonusPerLevel
+weaponDmg          = weapon.BaseDamage × archetypeMult × levelBonus × (1 + weapon.DamageBonus)
+physDmg            = weapon.BaseDamageType == Physical ? weaponDmg : 0
+magicDmg           = weapon.BaseDamageType == Magic    ? weaponDmg : 0
 
+WeaponController.SetDamage(physDmg, magicDmg)
+WeaponController.SetBaseDamageType(weapon.BaseDamageType)
+WeaponController.SetCritMultiplier(BalanceConfig.SkillAugments.CritMultiplier)  // fixed 1.5× in v1
+
+// Global crit chance — weapon identity + future equipment augment / ring contributions
+globalCritChance   = weapon.CritChanceBonus   // + future sources aggregated here
+WeaponController.SetGlobalCritChance(globalCritChance)
+
+// Per-slot setup — skill augments resolved via AugmentResolver
 for i in 0..2:
     instanceId = character.SlottedSkillInstanceIds[i]   // "" = skip
     if instanceId is non-empty:
-        skill = CharacterManager.FindSkillInstance(instanceId).Definition
-        WeaponController.SetSlot(i, skill)
+        skill            = CharacterManager.FindSkillInstance(instanceId).Definition
+        activeAugments   = AugmentResolver.Resolve(instance.SocketedSkillAugmentIds, lookup)
+        slotCritChance   = sum of CritChance from any Critical Strike augments in activeAugments
+        hasMagicDamage   = activeAugments contains magic_damage
+        hasSplash / hasPierce / eotIds  = resolved from activeAugments
+        WeaponController.SetSlot(i, skill, eotIds, hasSplash, hasPierce, hasMagicDamage, slotCritChance)
 ```
+
+**`ApplyWeaponDamage` is called at run start and again on every level-up** — same cadence as `BuildStatBlock()`. `SetGlobalCritChance` and `SetCritMultiplier` follow the same cadence.
 
 ### Archetype Multiplier System
 

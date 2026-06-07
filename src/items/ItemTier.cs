@@ -17,11 +17,11 @@ public static class ItemTier
         _        => "Unknown",
     };
 
-    public static Color BackgroundColor(int tier) => tier switch
+    public static Color BorderColor(int tier) => tier switch
     {
-        Common   => new Color(0.25f, 0.25f, 0.25f),
-        Uncommon => new Color(0.10f, 0.45f, 0.10f),
-        Rare     => new Color(0.10f, 0.20f, 0.70f),
-        _        => new Color(0.25f, 0.25f, 0.25f),
+        Common   => new Color("#4A5560"),
+        Uncommon => new Color("#6B8090"),
+        Rare     => new Color("#A07810"),
+        _        => new Color("#4A5560"),
     };
 }

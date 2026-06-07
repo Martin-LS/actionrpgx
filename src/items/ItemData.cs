@@ -8,6 +8,10 @@ public record ItemData(
     // Weapon fields
     float          WeaponRange         = 0f,
     string         PreferredDelivery   = "",
+    float          BaseDamage          = 0f,
+    DamageType     BaseDamageType      = DamageType.Physical,
+    float          DamageBonus         = 0f,  // % bonus to damage of this weapon's type (e.g. 0.10 = +10%)
+    float          CritChanceBonus     = 0f,  // flat crit chance added by weapon identity
     // Armor fields
     ArmorCategory  ArmorCategory      = ArmorCategory.None,
     int            BonusHp            = 0,

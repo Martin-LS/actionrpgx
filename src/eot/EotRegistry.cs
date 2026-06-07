@@ -9,19 +9,19 @@ public static class EotRegistry
         ["slow"] = new EotData(
             Id:           "slow",
             Name:         "Slow",
-            ApplyChance:  0.3f,
-            Duration:     3f,
+            ApplyChance:  BalanceConfig.Eots.SlowApplyChance,
+            Duration:     BalanceConfig.Eots.SlowDuration,
             IsDamageEot:  false,
-            SlowFraction: 0.4f
+            SlowFraction: BalanceConfig.Eots.SlowFraction
         ),
         ["burn"] = new EotData(
             Id:           "burn",
             Name:         "Burn",
-            ApplyChance:  0.25f,
-            Duration:     4f,
+            ApplyChance:  BalanceConfig.Eots.BurnApplyChance,
+            Duration:     BalanceConfig.Eots.BurnDuration,
             IsDamageEot:  true,
-            TickRate:     0.5f,
-            DamagePerTick: 5f
+            TickRate:     BalanceConfig.Eots.BurnTickRate,
+            DamagePerTick: BalanceConfig.Eots.BurnDamagePerTick
         ),
     };
 

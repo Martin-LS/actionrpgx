@@ -4,7 +4,7 @@ namespace Godot1.Health;
 
 public partial class HealthPickup : Area3D
 {
-    [Export] public int HealAmount = 15;
+    [Export] public int HealAmount = BalanceConfig.Pickups.HealthHealAmount;
 
     public override void _Ready()
     {

@@ -5,7 +5,7 @@ namespace Godot1.Character;
 
 public static class ArchetypeMultiplierRegistry
 {
-    private const float Default = 0.1f;
+    private const float Default = BalanceConfig.Archetypes.DefaultMultiplier;
 
     private static readonly Dictionary<(CharacterType, StatId), float> _overrides = new()
     {

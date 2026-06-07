@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://dcharscr001"]
 
 [ext_resource type="Script" uid="uid://c1kkns8opx4wp" path="res://src/ui/CharacterScreen.cs" id="1_chr01"]
-[ext_resource type="Script" path="res://src/ui/TooltipButton.cs" id="2_rp7wk"]
+[ext_resource type="Script" uid="uid://dh1jxw57veqkw" path="res://src/ui/TooltipButton.cs" id="2_rp7wk"]
 
 [node name="CharacterScreen" type="Control" unique_id=1706032705]
 layout_mode = 3
@@ -31,384 +31,277 @@ layout_mode = 2
 size_flags_horizontal = 0
 text = "← Change Character"
 
-[node name="HSplit" type="HSplitContainer" parent="VBox" unique_id=1706032708]
-layout_mode = 2
-size_flags_vertical = 3
-split_offsets = PackedInt32Array(80)
-split_offset = 80
-
-[node name="LeftPanel" type="PanelContainer" parent="VBox/HSplit" unique_id=1706032709]
-custom_minimum_size = Vector2(280, 0)
-layout_mode = 2
-
-[node name="LeftVBox" type="VBoxContainer" parent="VBox/HSplit/LeftPanel" unique_id=1706032755]
-layout_mode = 2
-size_flags_vertical = 3
-theme_override_constants/separation = 8
-
-[node name="InventoryTitle" type="Label" parent="VBox/HSplit/LeftPanel/LeftVBox" unique_id=1706032710]
-layout_mode = 2
-theme_override_font_sizes/font_size = 18
-text = "Account Inventory"
-
-[node name="InventoryInfo" type="Label" parent="VBox/HSplit/LeftPanel/LeftVBox" unique_id=1706032711]
-layout_mode = 2
-theme_override_font_sizes/font_size = 13
-text = "0 / 50"
-
-[node name="InventoryTabs" type="TabContainer" parent="VBox/HSplit/LeftPanel/LeftVBox" unique_id=1706032805]
+[node name="TabContainer" type="TabContainer" parent="VBox" unique_id=1706032715]
 layout_mode = 2
 size_flags_vertical = 3
 current_tab = 0
 
-[node name="Equipment" type="VBoxContainer" parent="VBox/HSplit/LeftPanel/LeftVBox/InventoryTabs" unique_id=1706032806]
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 3
-metadata/_tab_index = 0
-
-[node name="InventoryScroll" type="ScrollContainer" parent="VBox/HSplit/LeftPanel/LeftVBox/InventoryTabs/Equipment" unique_id=1706032712]
-layout_mode = 2
-size_flags_vertical = 3
-horizontal_scroll_mode = 0
-
-[node name="InventoryGrid" type="GridContainer" parent="VBox/HSplit/LeftPanel/LeftVBox/InventoryTabs/Equipment/InventoryScroll" unique_id=1706032713]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_constants/h_separation = 4
-theme_override_constants/v_separation = 4
-columns = 5
-
-[node name="Skills" type="VBoxContainer" parent="VBox/HSplit/LeftPanel/LeftVBox/InventoryTabs" unique_id=1706032807]
-visible = false
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 3
-metadata/_tab_index = 1
-
-[node name="SkillsScroll" type="ScrollContainer" parent="VBox/HSplit/LeftPanel/LeftVBox/InventoryTabs/Skills" unique_id=1706032808]
-layout_mode = 2
-size_flags_vertical = 3
-horizontal_scroll_mode = 0
-
-[node name="SkillsGrid" type="GridContainer" parent="VBox/HSplit/LeftPanel/LeftVBox/InventoryTabs/Skills/SkillsScroll" unique_id=1706032809]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_constants/h_separation = 4
-theme_override_constants/v_separation = 4
-columns = 5
-
-[node name="Augments" type="VBoxContainer" parent="VBox/HSplit/LeftPanel/LeftVBox/InventoryTabs" unique_id=1706032810]
-visible = false
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 3
-metadata/_tab_index = 2
-
-[node name="AugmentsScroll" type="ScrollContainer" parent="VBox/HSplit/LeftPanel/LeftVBox/InventoryTabs/Augments" unique_id=1706032811]
-layout_mode = 2
-size_flags_vertical = 3
-horizontal_scroll_mode = 0
-
-[node name="AugmentsGrid" type="GridContainer" parent="VBox/HSplit/LeftPanel/LeftVBox/InventoryTabs/Augments/AugmentsScroll" unique_id=1706032812]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_constants/h_separation = 4
-theme_override_constants/v_separation = 4
-columns = 5
-
-[node name="RightPanel" type="VBoxContainer" parent="VBox/HSplit" unique_id=1706032714]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="TabContainer" type="TabContainer" parent="VBox/HSplit/RightPanel" unique_id=1706032715]
-layout_mode = 2
-size_flags_vertical = 3
-current_tab = 0
-
-[node name="Loadout" type="VBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer" unique_id=1706032716]
+[node name="Loadout" type="VBoxContainer" parent="VBox/TabContainer" unique_id=1706032716]
 layout_mode = 2
 metadata/_tab_index = 0
 
-[node name="CharacterView" type="VBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer/Loadout" unique_id=1706032730]
-layout_mode = 2
-size_flags_vertical = 3
-theme_override_constants/separation = 14
-
-[node name="HSplit" type="HBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer/Loadout/CharacterView" unique_id=1706032731]
-layout_mode = 2
-size_flags_vertical = 3
-theme_override_constants/separation = 16
-
-[node name="InfoVBox" type="VBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer/Loadout/CharacterView/HSplit" unique_id=1706032764]
+[node name="LoadoutSplit" type="HBoxContainer" parent="VBox/TabContainer/Loadout" unique_id=1257241490]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 theme_override_constants/separation = 12
 
-[node name="NameLabel" type="Label" parent="VBox/HSplit/RightPanel/TabContainer/Loadout/CharacterView/HSplit/InfoVBox" unique_id=1706032732]
+[node name="CharacterView" type="VBoxContainer" parent="VBox/TabContainer/Loadout/LoadoutSplit" unique_id=1706032730]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 14
+
+[node name="HSplit" type="HBoxContainer" parent="VBox/TabContainer/Loadout/LoadoutSplit/CharacterView" unique_id=1706032731]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 16
+
+[node name="InfoVBox" type="VBoxContainer" parent="VBox/TabContainer/Loadout/LoadoutSplit/CharacterView/HSplit" unique_id=1706032764]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 12
+
+[node name="NameLabel" type="Label" parent="VBox/TabContainer/Loadout/LoadoutSplit/CharacterView/HSplit/InfoVBox" unique_id=1706032732]
 layout_mode = 2
 theme_override_font_sizes/font_size = 28
 text = "Character Name"
 
-[node name="TypeLabel" type="Label" parent="VBox/HSplit/RightPanel/TabContainer/Loadout/CharacterView/HSplit/InfoVBox" unique_id=1706032733]
+[node name="TypeLabel" type="Label" parent="VBox/TabContainer/Loadout/LoadoutSplit/CharacterView/HSplit/InfoVBox" unique_id=1706032733]
 layout_mode = 2
 theme_override_font_sizes/font_size = 16
 text = "Archetype"
 
-[node name="LevelLabel" type="Label" parent="VBox/HSplit/RightPanel/TabContainer/Loadout/CharacterView/HSplit/InfoVBox" unique_id=1706032734]
+[node name="LevelLabel" type="Label" parent="VBox/TabContainer/Loadout/LoadoutSplit/CharacterView/HSplit/InfoVBox" unique_id=1706032734]
 layout_mode = 2
 theme_override_font_sizes/font_size = 16
 text = "Level 1   XP: 0"
 
-[node name="StatsLabel" type="Label" parent="VBox/HSplit/RightPanel/TabContainer/Loadout/CharacterView/HSplit/InfoVBox" unique_id=1706032735]
+[node name="StatsLabel" type="Label" parent="VBox/TabContainer/Loadout/LoadoutSplit/CharacterView/HSplit/InfoVBox" unique_id=1706032735]
 layout_mode = 2
 theme_override_font_sizes/font_size = 16
 text = "Stats"
 
-[node name="GearPanel" type="VBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer/Loadout/CharacterView/HSplit" unique_id=1706032736]
+[node name="GearPanel" type="VBoxContainer" parent="VBox/TabContainer/Loadout/LoadoutSplit/CharacterView/HSplit" unique_id=1706032736]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="GearLabel" type="Label" parent="VBox/HSplit/RightPanel/TabContainer/Loadout/CharacterView/HSplit/GearPanel" unique_id=1706032737]
+[node name="GearLabel" type="Label" parent="VBox/TabContainer/Loadout/LoadoutSplit/CharacterView/HSplit/GearPanel" unique_id=1706032737]
 layout_mode = 2
 theme_override_font_sizes/font_size = 16
 text = "— Equipment —"
 
-[node name="WeaponSlot" type="VBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer/Loadout/CharacterView/HSplit/GearPanel" unique_id=1706032765]
+[node name="WeaponSlot" type="VBoxContainer" parent="VBox/TabContainer/Loadout/LoadoutSplit/CharacterView/HSplit/GearPanel" unique_id=1706032765]
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="WeaponLabel" type="Label" parent="VBox/HSplit/RightPanel/TabContainer/Loadout/CharacterView/HSplit/GearPanel/WeaponSlot" unique_id=1706032766]
+[node name="WeaponLabel" type="Label" parent="VBox/TabContainer/Loadout/LoadoutSplit/CharacterView/HSplit/GearPanel/WeaponSlot" unique_id=1706032766]
 layout_mode = 2
 theme_override_font_sizes/font_size = 13
 text = "Weapon"
 
-[node name="WeaponSlotButton" type="Button" parent="VBox/HSplit/RightPanel/TabContainer/Loadout/CharacterView/HSplit/GearPanel/WeaponSlot" unique_id=1706032738]
+[node name="WeaponSlotButton" type="Button" parent="VBox/TabContainer/Loadout/LoadoutSplit/CharacterView/HSplit/GearPanel/WeaponSlot" unique_id=1706032738]
 custom_minimum_size = Vector2(60, 60)
 layout_mode = 2
 size_flags_horizontal = 0
 text = "—"
 script = ExtResource("2_rp7wk")
 
-[node name="HatSlot" type="VBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer/Loadout/CharacterView/HSplit/GearPanel" unique_id=1706032771]
+[node name="HatSlot" type="VBoxContainer" parent="VBox/TabContainer/Loadout/LoadoutSplit/CharacterView/HSplit/GearPanel" unique_id=1706032771]
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="HatLabel" type="Label" parent="VBox/HSplit/RightPanel/TabContainer/Loadout/CharacterView/HSplit/GearPanel/HatSlot" unique_id=1706032772]
+[node name="HatLabel" type="Label" parent="VBox/TabContainer/Loadout/LoadoutSplit/CharacterView/HSplit/GearPanel/HatSlot" unique_id=1706032772]
 layout_mode = 2
 theme_override_font_sizes/font_size = 13
 text = "Hat"
 
-[node name="HatSlotButton" type="Button" parent="VBox/HSplit/RightPanel/TabContainer/Loadout/CharacterView/HSplit/GearPanel/HatSlot" unique_id=1706032773]
+[node name="HatSlotButton" type="Button" parent="VBox/TabContainer/Loadout/LoadoutSplit/CharacterView/HSplit/GearPanel/HatSlot" unique_id=1706032773]
 custom_minimum_size = Vector2(60, 60)
 layout_mode = 2
 size_flags_horizontal = 0
 text = "—"
 script = ExtResource("2_rp7wk")
 
-[node name="BodySlot" type="VBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer/Loadout/CharacterView/HSplit/GearPanel" unique_id=1706032767]
+[node name="BodySlot" type="VBoxContainer" parent="VBox/TabContainer/Loadout/LoadoutSplit/CharacterView/HSplit/GearPanel" unique_id=1706032767]
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="BodyLabel" type="Label" parent="VBox/HSplit/RightPanel/TabContainer/Loadout/CharacterView/HSplit/GearPanel/BodySlot" unique_id=1706032768]
+[node name="BodyLabel" type="Label" parent="VBox/TabContainer/Loadout/LoadoutSplit/CharacterView/HSplit/GearPanel/BodySlot" unique_id=1706032768]
 layout_mode = 2
 theme_override_font_sizes/font_size = 13
 text = "Body"
 
-[node name="BodySlotButton" type="Button" parent="VBox/HSplit/RightPanel/TabContainer/Loadout/CharacterView/HSplit/GearPanel/BodySlot" unique_id=1706032739]
+[node name="BodySlotButton" type="Button" parent="VBox/TabContainer/Loadout/LoadoutSplit/CharacterView/HSplit/GearPanel/BodySlot" unique_id=1706032739]
 custom_minimum_size = Vector2(60, 60)
 layout_mode = 2
 size_flags_horizontal = 0
 text = "—"
 script = ExtResource("2_rp7wk")
 
-[node name="RingSlot" type="VBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer/Loadout/CharacterView/HSplit/GearPanel" unique_id=1706032769]
+[node name="RingSlot" type="VBoxContainer" parent="VBox/TabContainer/Loadout/LoadoutSplit/CharacterView/HSplit/GearPanel" unique_id=1706032769]
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="RingLabel" type="Label" parent="VBox/HSplit/RightPanel/TabContainer/Loadout/CharacterView/HSplit/GearPanel/RingSlot" unique_id=1706032770]
+[node name="RingLabel" type="Label" parent="VBox/TabContainer/Loadout/LoadoutSplit/CharacterView/HSplit/GearPanel/RingSlot" unique_id=1706032770]
 layout_mode = 2
 theme_override_font_sizes/font_size = 13
 text = "Ring"
 
-[node name="RingSlotButton" type="Button" parent="VBox/HSplit/RightPanel/TabContainer/Loadout/CharacterView/HSplit/GearPanel/RingSlot" unique_id=1706032740]
+[node name="RingSlotButton" type="Button" parent="VBox/TabContainer/Loadout/LoadoutSplit/CharacterView/HSplit/GearPanel/RingSlot" unique_id=1706032740]
 custom_minimum_size = Vector2(60, 60)
 layout_mode = 2
 size_flags_horizontal = 0
 text = "—"
 script = ExtResource("2_rp7wk")
 
-[node name="SkillBar" type="HBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer/Loadout/CharacterView" unique_id=1706032834]
+[node name="SkillBar" type="HBoxContainer" parent="VBox/TabContainer/Loadout/LoadoutSplit/CharacterView" unique_id=1706032834]
 layout_mode = 2
 size_flags_horizontal = 4
 theme_override_constants/separation = 8
 
-[node name="SkillSlot1" type="VBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer/Loadout/CharacterView/SkillBar" unique_id=1706032815]
+[node name="SkillSlot1" type="VBoxContainer" parent="VBox/TabContainer/Loadout/LoadoutSplit/CharacterView/SkillBar" unique_id=1706032815]
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="SkillLabel1" type="Label" parent="VBox/HSplit/RightPanel/TabContainer/Loadout/CharacterView/SkillBar/SkillSlot1" unique_id=1706032816]
+[node name="SkillLabel1" type="Label" parent="VBox/TabContainer/Loadout/LoadoutSplit/CharacterView/SkillBar/SkillSlot1" unique_id=1706032816]
 layout_mode = 2
 theme_override_font_sizes/font_size = 13
 text = "Skill 1"
 horizontal_alignment = 1
 
-[node name="SkillSlotButton1" type="Button" parent="VBox/HSplit/RightPanel/TabContainer/Loadout/CharacterView/SkillBar/SkillSlot1" unique_id=1706032817]
+[node name="SkillSlotButton1" type="Button" parent="VBox/TabContainer/Loadout/LoadoutSplit/CharacterView/SkillBar/SkillSlot1" unique_id=1706032817]
 custom_minimum_size = Vector2(60, 60)
 layout_mode = 2
 text = "—"
 script = ExtResource("2_rp7wk")
 
-[node name="SkillSlot2" type="VBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer/Loadout/CharacterView/SkillBar" unique_id=1706032818]
+[node name="SkillSlot2" type="VBoxContainer" parent="VBox/TabContainer/Loadout/LoadoutSplit/CharacterView/SkillBar" unique_id=1706032818]
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="SkillLabel2" type="Label" parent="VBox/HSplit/RightPanel/TabContainer/Loadout/CharacterView/SkillBar/SkillSlot2" unique_id=1706032819]
+[node name="SkillLabel2" type="Label" parent="VBox/TabContainer/Loadout/LoadoutSplit/CharacterView/SkillBar/SkillSlot2" unique_id=1706032819]
 layout_mode = 2
 theme_override_font_sizes/font_size = 13
 text = "Skill 2"
 horizontal_alignment = 1
 
-[node name="SkillSlotButton2" type="Button" parent="VBox/HSplit/RightPanel/TabContainer/Loadout/CharacterView/SkillBar/SkillSlot2" unique_id=1706032820]
+[node name="SkillSlotButton2" type="Button" parent="VBox/TabContainer/Loadout/LoadoutSplit/CharacterView/SkillBar/SkillSlot2" unique_id=1706032820]
 custom_minimum_size = Vector2(60, 60)
 layout_mode = 2
 text = "—"
 script = ExtResource("2_rp7wk")
 
-[node name="SkillSlot3" type="VBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer/Loadout/CharacterView/SkillBar" unique_id=1706032821]
+[node name="SkillSlot3" type="VBoxContainer" parent="VBox/TabContainer/Loadout/LoadoutSplit/CharacterView/SkillBar" unique_id=1706032821]
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="SkillLabel3" type="Label" parent="VBox/HSplit/RightPanel/TabContainer/Loadout/CharacterView/SkillBar/SkillSlot3" unique_id=1706032822]
+[node name="SkillLabel3" type="Label" parent="VBox/TabContainer/Loadout/LoadoutSplit/CharacterView/SkillBar/SkillSlot3" unique_id=1706032822]
 layout_mode = 2
 theme_override_font_sizes/font_size = 13
 text = "Skill 3"
 horizontal_alignment = 1
 
-[node name="SkillSlotButton3" type="Button" parent="VBox/HSplit/RightPanel/TabContainer/Loadout/CharacterView/SkillBar/SkillSlot3" unique_id=1706032823]
+[node name="SkillSlotButton3" type="Button" parent="VBox/TabContainer/Loadout/LoadoutSplit/CharacterView/SkillBar/SkillSlot3" unique_id=1706032823]
 custom_minimum_size = Vector2(60, 60)
 layout_mode = 2
 text = "—"
 script = ExtResource("2_rp7wk")
 
-[node name="Buttons" type="HBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer/Loadout/CharacterView" unique_id=1706032742]
+[node name="Buttons" type="HBoxContainer" parent="VBox/TabContainer/Loadout/LoadoutSplit/CharacterView" unique_id=1706032742]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="StartRunButton" type="Button" parent="VBox/HSplit/RightPanel/TabContainer/Loadout/CharacterView/Buttons" unique_id=1706032744]
+[node name="StartRunButton" type="Button" parent="VBox/TabContainer/Loadout/LoadoutSplit/CharacterView/Buttons" unique_id=1706032744]
 custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Start Run"
 
-[node name="GearCrafting" type="VBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer" unique_id=1706032745]
-visible = false
+[node name="InventoryPanel" type="PanelContainer" parent="VBox/TabContainer/Loadout/LoadoutSplit" unique_id=974419054]
+custom_minimum_size = Vector2(280, 0)
 layout_mode = 2
-metadata/_tab_index = 1
+size_flags_horizontal = 3
+size_flags_vertical = 3
 
-[node name="CraftingTabs" type="TabContainer" parent="VBox/HSplit/RightPanel/TabContainer/GearCrafting" unique_id=1706032904]
+[node name="InventoryVBox" type="VBoxContainer" parent="VBox/TabContainer/Loadout/LoadoutSplit/InventoryPanel" unique_id=99682683]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 8
+
+[node name="InventoryTitle" type="Label" parent="VBox/TabContainer/Loadout/LoadoutSplit/InventoryPanel/InventoryVBox" unique_id=1706032710]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Account Inventory"
+
+[node name="InventoryInfo" type="Label" parent="VBox/TabContainer/Loadout/LoadoutSplit/InventoryPanel/InventoryVBox" unique_id=1706032711]
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+text = "0 / 50"
+
+[node name="InventoryTabs" type="TabContainer" parent="VBox/TabContainer/Loadout/LoadoutSplit/InventoryPanel/InventoryVBox" unique_id=1706032805]
 layout_mode = 2
 size_flags_vertical = 3
 current_tab = 0
 
-[node name="Create" type="VBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer/GearCrafting/CraftingTabs" unique_id=1706032905]
+[node name="Equipment" type="VBoxContainer" parent="VBox/TabContainer/Loadout/LoadoutSplit/InventoryPanel/InventoryVBox/InventoryTabs" unique_id=1706032806]
 layout_mode = 2
+size_flags_horizontal = 3
 size_flags_vertical = 3
 metadata/_tab_index = 0
 
-[node name="CraftScroll" type="ScrollContainer" parent="VBox/HSplit/RightPanel/TabContainer/GearCrafting/CraftingTabs/Create" unique_id=1706032924]
+[node name="InventoryScroll" type="ScrollContainer" parent="VBox/TabContainer/Loadout/LoadoutSplit/InventoryPanel/InventoryVBox/InventoryTabs/Equipment" unique_id=1706032712]
 layout_mode = 2
-size_flags_horizontal = 3
 size_flags_vertical = 3
 horizontal_scroll_mode = 0
 
-[node name="VBox" type="VBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer/GearCrafting/CraftingTabs/Create/CraftScroll" unique_id=1706032746]
+[node name="InventoryGrid" type="GridContainer" parent="VBox/TabContainer/Loadout/LoadoutSplit/InventoryPanel/InventoryVBox/InventoryTabs/Equipment/InventoryScroll" unique_id=1706032713]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/separation = 8
+theme_override_constants/h_separation = 4
+theme_override_constants/v_separation = 4
+columns = 5
 
-[node name="Modify" type="VBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer/GearCrafting/CraftingTabs" unique_id=1706032906]
+[node name="Skills" type="VBoxContainer" parent="VBox/TabContainer/Loadout/LoadoutSplit/InventoryPanel/InventoryVBox/InventoryTabs" unique_id=1706032807]
 visible = false
 layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
 metadata/_tab_index = 1
 
-[node name="ModifyVBox" type="VBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer/GearCrafting/CraftingTabs/Modify" unique_id=1706032907]
+[node name="SkillsScroll" type="ScrollContainer" parent="VBox/TabContainer/Loadout/LoadoutSplit/InventoryPanel/InventoryVBox/InventoryTabs/Skills" unique_id=1706032808]
 layout_mode = 2
-theme_override_constants/separation = 12
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
 
-[node name="SlotLabel" type="Label" parent="VBox/HSplit/RightPanel/TabContainer/GearCrafting/CraftingTabs/Modify/ModifyVBox" unique_id=1706032908]
+[node name="SkillsGrid" type="GridContainer" parent="VBox/TabContainer/Loadout/LoadoutSplit/InventoryPanel/InventoryVBox/InventoryTabs/Skills/SkillsScroll" unique_id=1706032809]
 layout_mode = 2
-text = "Select gear to modify:"
+size_flags_horizontal = 3
+theme_override_constants/h_separation = 4
+theme_override_constants/v_separation = 4
+columns = 5
 
-[node name="GearModifySlotBtn" type="Button" parent="VBox/HSplit/RightPanel/TabContainer/GearCrafting/CraftingTabs/Modify/ModifyVBox" unique_id=1706032909]
-custom_minimum_size = Vector2(60, 60)
-layout_mode = 2
-size_flags_horizontal = 0
-text = "Select"
-script = ExtResource("2_rp7wk")
-
-[node name="GearUpgradeBtn" type="Button" parent="VBox/HSplit/RightPanel/TabContainer/GearCrafting/CraftingTabs/Modify/ModifyVBox" unique_id=1706032910]
-layout_mode = 2
-disabled = true
-text = "Upgrade"
-
-[node name="SkillCrafting" type="VBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer" unique_id=1706032824]
+[node name="Augments" type="VBoxContainer" parent="VBox/TabContainer/Loadout/LoadoutSplit/InventoryPanel/InventoryVBox/InventoryTabs" unique_id=1706032810]
 visible = false
 layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
 metadata/_tab_index = 2
 
-[node name="SkillCraftingTabs" type="TabContainer" parent="VBox/HSplit/RightPanel/TabContainer/SkillCrafting" unique_id=1706032914]
+[node name="AugmentsScroll" type="ScrollContainer" parent="VBox/TabContainer/Loadout/LoadoutSplit/InventoryPanel/InventoryVBox/InventoryTabs/Augments" unique_id=1706032811]
 layout_mode = 2
-size_flags_vertical = 3
-current_tab = 0
-
-[node name="Create" type="VBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer/SkillCrafting/SkillCraftingTabs" unique_id=1706032915]
-layout_mode = 2
-size_flags_vertical = 3
-metadata/_tab_index = 0
-
-[node name="SkillCraftScroll" type="ScrollContainer" parent="VBox/HSplit/RightPanel/TabContainer/SkillCrafting/SkillCraftingTabs/Create" unique_id=1706032925]
-layout_mode = 2
-size_flags_horizontal = 3
 size_flags_vertical = 3
 horizontal_scroll_mode = 0
 
-[node name="VBox" type="VBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer/SkillCrafting/SkillCraftingTabs/Create/SkillCraftScroll" unique_id=1706032825]
+[node name="AugmentsGrid" type="GridContainer" parent="VBox/TabContainer/Loadout/LoadoutSplit/InventoryPanel/InventoryVBox/InventoryTabs/Augments/AugmentsScroll" unique_id=1706032812]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/separation = 8
+theme_override_constants/h_separation = 4
+theme_override_constants/v_separation = 4
+columns = 5
 
-[node name="Modify" type="VBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer/SkillCrafting/SkillCraftingTabs" unique_id=1706032916]
+[node name="Sigils" type="VBoxContainer" parent="VBox/TabContainer" unique_id=1706032826]
 visible = false
 layout_mode = 2
 metadata/_tab_index = 1
-
-[node name="ModifyVBox" type="VBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer/SkillCrafting/SkillCraftingTabs/Modify" unique_id=1706032917]
-layout_mode = 2
-theme_override_constants/separation = 12
-
-[node name="SlotLabel" type="Label" parent="VBox/HSplit/RightPanel/TabContainer/SkillCrafting/SkillCraftingTabs/Modify/ModifyVBox" unique_id=1706032918]
-layout_mode = 2
-text = "Select skill to modify:"
-
-[node name="SkillModifySlotBtn" type="Button" parent="VBox/HSplit/RightPanel/TabContainer/SkillCrafting/SkillCraftingTabs/Modify/ModifyVBox" unique_id=1706032919]
-custom_minimum_size = Vector2(60, 60)
-layout_mode = 2
-size_flags_horizontal = 0
-text = "Select"
-script = ExtResource("2_rp7wk")
-
-[node name="SkillUpgradeBtn" type="Button" parent="VBox/HSplit/RightPanel/TabContainer/SkillCrafting/SkillCraftingTabs/Modify/ModifyVBox" unique_id=1706032920]
-layout_mode = 2
-disabled = true
-text = "Upgrade"
-
-[node name="SupportSlotsRow" type="HBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer/SkillCrafting/SkillCraftingTabs/Modify/ModifyVBox" unique_id=1706032921]
-layout_mode = 2
-theme_override_constants/separation = 8
-
-[node name="Sigils" type="VBoxContainer" parent="VBox/HSplit/RightPanel/TabContainer" unique_id=1706032826]
-visible = false
-layout_mode = 2
-metadata/_tab_index = 3
