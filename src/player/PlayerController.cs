@@ -24,6 +24,8 @@ public partial class PlayerController : CharacterBody3D
     private Character.CharacterData? _charData;
     private Node3D _model = null!;
     private AnimationNodeStateMachinePlayback? _smPlayback;
+    private AnimationTree? _animTree;
+    private AnimationPlayer? _animPlayer;
 
     public float CurrentHealth { get; private set; }
     public int Level { get; private set; } = 1;
@@ -32,6 +34,8 @@ public partial class PlayerController : CharacterBody3D
 
     private float _yaw;
     private const float RotationSpeed = 20f;
+
+    private MeshInstance3D? _rangeIndicator;
 
     // Equipment augment state
     private readonly HashSet<string> _activeAugments = new();
@@ -161,11 +165,14 @@ public partial class PlayerController : CharacterBody3D
         if (animPlayer.HasAnimation("run"))
             animPlayer.GetAnimation("run").LoopMode  = Animation.LoopModeEnum.Linear;
 
+        _animPlayer = animPlayer;
+
         var animTree = GetNodeOrNull<AnimationTree>("AnimationTree");
         if (animTree != null)
         {
             animTree.AnimPlayer = animTree.GetPathTo(animPlayer);
             animTree.Active = true;
+            _animTree = animTree;
         }
 
         var skeleton = playerModel.FindChild("Skeleton3D", true, false) as Skeleton3D;
@@ -190,6 +197,37 @@ public partial class PlayerController : CharacterBody3D
         GetNodeOrNull<Weapon.WeaponController>("Weapon")?.Connect(
             Weapon.WeaponController.SignalName.SkillFired,
             Callable.From<int, float, string>(OnSkillFired));
+
+        if (_animTree != null)
+        {
+            _animTree.Set("parameters/melee_atack/TimeScale/scale",       10.0f);
+            _animTree.Set("parameters/range_atack/TimeScale/scale",       10.0f);
+            _animTree.Set("parameters/range_magic_atack/TimeScale/scale", 10.0f);
+        }
+
+        float indicatorRadius = EffectiveRange > 0f ? EffectiveRange : 1.5f * GameScale.TileSize;
+        _rangeIndicator = CreateRangeIndicator(indicatorRadius);
+        AddChild(_rangeIndicator);
+        _rangeIndicator.Visible = OS.HasFeature("editor");
+    }
+
+    public void SetRangeIndicatorVisible(bool visible)
+    {
+        if (_rangeIndicator != null)
+            _rangeIndicator.Visible = visible;
+    }
+
+    private static MeshInstance3D CreateRangeIndicator(float radius)
+    {
+        var torus = new TorusMesh { OuterRadius = radius, InnerRadius = 1.5f, Rings = 64, RingSegments = 8 };
+        var mat = new StandardMaterial3D
+        {
+            ShadingMode  = BaseMaterial3D.ShadingModeEnum.Unshaded,
+            Transparency = BaseMaterial3D.TransparencyEnum.Alpha,
+            AlbedoColor  = new Color(0f, 0.8f, 1f, 0.5f),
+            NoDepthTest  = true,
+        };
+        return new MeshInstance3D { Mesh = torus, MaterialOverride = mat, Position = new Vector3(0f, 0.5f, 0f) };
     }
 
     public override void _PhysicsProcess(double delta)
@@ -411,17 +449,24 @@ public partial class PlayerController : CharacterBody3D
     {
         int handIdx = FindBone(skeleton, "Hand_L");
         string handBoneName = handIdx >= 0 ? skeleton.GetBoneName(handIdx) : "Hand_L";
-        var attach = new BoneAttachment3D { BoneName = handBoneName };
+        var attach = new BoneAttachment3D();
         skeleton.AddChild(attach);
+        attach.BoneName = handBoneName;
 
         var pieces = new List<(Node3D n, Vector3 pos)>();
         foreach (var child in weaponRoot.GetChildren())
             if (child is Node3D n) pieces.Add((n, n.Position));
 
-        // Anchor: use the Handle piece, or fall back to the first piece
+        // Anchor: use the Handle mesh AABB centre so models with offset geometry align correctly
         Vector3 anchorPos = pieces.Count > 0 ? pieces[0].pos : Vector3.Zero;
         foreach (var (n, p) in pieces)
-            if (n.Name.ToString().Contains("Handle")) { anchorPos = p; break; }
+        {
+            if (n.Name.ToString().Contains("Handle"))
+            {
+                anchorPos = n is MeshInstance3D mi ? p + mi.GetAabb().GetCenter() : p;
+                break;
+            }
+        }
 
         foreach (var (piece, origPos) in pieces)
         {

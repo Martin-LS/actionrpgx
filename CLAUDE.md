@@ -41,14 +41,14 @@ At the start of every session: read `docs/todo.md`, note what's pending, and tic
 
 ## Character Handedness
 
-The player character is **left-handed**.
+The player character is **right-handed** — weapons attach to **`Hand_L`** in code.
 
-- **Main hand = LEFT** (Hand_L, UpperArm_L, LowerArm_L) — primary weapon always attaches here
-- **Off-hand = RIGHT** (Hand_R, UpperArm_R, LowerArm_R) — reserved for future off-hand slot
+**Why:** Blender bone names are from the character's own perspective. `Hand_R` = character's anatomical right = screen-LEFT when the character faces the viewer (standard in a top-down game). `Hand_L` = character's anatomical left = screen-RIGHT. The user-visible "right hand" (screen-right side) is `Hand_L` in skeleton terms. `technical-assets.md` lists `Hand_R` but that doc predates this confirmed runtime observation.
 
-All attack animations must use the **left arm** as the dominant/striking arm. The right arm is the counterbalance or off-hand support arm. Weapon attachment in Godot must use Hand_L, not Hand_R.
+**The rule for this project: weapon attachment bone = `Hand_L`.**
 
-Current animations melee_atack and range_atack were built with the right arm — marked for correction.
+- **Weapon attachment bone in code: `Hand_L`**
+- **Animation dominant arm: `Hand_L` channels**
 
 ## Blender Bone Rotation Direction (player.blend)
 
