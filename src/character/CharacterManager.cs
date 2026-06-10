@@ -359,6 +359,16 @@ public partial class CharacterManager : Node
         Save();
     }
 
+    public void SetSlotAutoActivate(string charId, int slotIndex, bool value)
+    {
+        var c = _characters.FirstOrDefault(x => x.Id == charId);
+        if (c == null) return;
+        while (c.SlotAutoActivate.Count <= slotIndex)
+            c.SlotAutoActivate.Add(true);
+        c.SlotAutoActivate[slotIndex] = value;
+        Save();
+    }
+
     // ── Persistence ───────────────────────────────────────────────────────────
 
     private static Godot.Collections.Dictionary GearInstToDict(GearItemInstance g)
@@ -479,6 +489,9 @@ public partial class CharacterManager : Node
             var slottedArr = new Godot.Collections.Array();
             foreach (var sid in c.SlottedSkillInstanceIds) slottedArr.Add(sid);
 
+            var autoActivateArr = new Godot.Collections.Array();
+            foreach (var b in c.SlotAutoActivate) autoActivateArr.Add(b);
+
             charList.Add(new Godot.Collections.Dictionary
             {
                 ["id"]                      = c.Id,
@@ -489,6 +502,7 @@ public partial class CharacterManager : Node
                 ["currentXp"]              = c.CurrentXp,
                 ["equippedGear"]            = equippedGearDict,
                 ["slottedSkillInstanceIds"] = slottedArr,
+                ["slotAutoActivate"]        = autoActivateArr,
             });
         }
 
@@ -623,6 +637,11 @@ public partial class CharacterManager : Node
 
             while (c.SlottedSkillInstanceIds.Count < 3)
                 c.SlottedSkillInstanceIds.Add("");
+
+            if (gd.ContainsKey("slotAutoActivate") && gd["slotAutoActivate"].Obj is Godot.Collections.Array aaArr)
+                c.SlotAutoActivate = aaArr.Select(v => System.Convert.ToBoolean(v.Obj)).ToList();
+            while (c.SlotAutoActivate.Count < 3)
+                c.SlotAutoActivate.Add(true);
 
             _characters.Add(c);
         }

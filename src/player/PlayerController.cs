@@ -9,8 +9,11 @@ public partial class PlayerController : CharacterBody3D
 {
     [Signal] public delegate void HealthChangedEventHandler(float newHealth);
     [Signal] public delegate void PlayerDiedEventHandler();
+    [Signal] public delegate void PlayerHitEventHandler();
     [Signal] public delegate void XpChangedEventHandler(int currentXp, int xpToNextLevel);
     [Signal] public delegate void LeveledUpEventHandler(int newLevel);
+    [Signal] public delegate void FocusChangedEventHandler(float current, float max);
+    [Signal] public delegate void ShieldChangedEventHandler(float current, float max);
 
     [Export] public float Speed = 200f;
     [Export] public int MaxHealth = 100;
@@ -23,14 +26,22 @@ public partial class PlayerController : CharacterBody3D
     private Stats.StatBlock _statBlock = new();
     private Character.CharacterData? _charData;
     private Node3D _model = null!;
-    private AnimationNodeStateMachinePlayback? _smPlayback;
+    private AnimationNodeStateMachinePlayback? _moveSm;
     private AnimationTree? _animTree;
     private AnimationPlayer? _animPlayer;
 
+    public bool  GodMode       { get; set; }
     public float CurrentHealth { get; private set; }
+    public float CurrentFocus  { get; private set; }
+    public float MaxFocus      { get; private set; }
     public int Level { get; private set; } = 1;
     public int CurrentXp { get; private set; }
     public int XpToNextLevel { get; private set; } = 20;
+
+    private float _focusRegen;
+    private float _totalReserved;
+    private float _currentFocusShield;
+    private float _maxFocusShield;
 
     private float _yaw;
     private const float RotationSpeed = 20f;
@@ -58,6 +69,13 @@ public partial class PlayerController : CharacterBody3D
             Speed              = _statBlock.Get(Stats.StatId.Speed);
             PhysicalResistance = _statBlock.Get(Stats.StatId.PhysicalResistance);
             MagicResistance    = _statBlock.Get(Stats.StatId.MagicResistance);
+            MaxFocus           = _statBlock.Get(Stats.StatId.MaxFocus);
+            _focusRegen        = _statBlock.Get(Stats.StatId.FocusRegen);
+            CurrentFocus       = MaxFocus;
+            _totalReserved     = 0f;
+
+            _maxFocusShield     = MaxFocus * BalanceConfig.Focus.ShieldFraction;
+            _currentFocusShield = _maxFocusShield;
 
             Level         = c.CurrentLevel;
             CurrentXp     = c.CurrentXp;
@@ -105,6 +123,8 @@ public partial class PlayerController : CharacterBody3D
                 }
 
                 weaponController?.SetSlot(i, skill, eotIds, hasSplash, hasPierce, hasMagicDamage, critChanceBonus);
+                bool autoActivate = i < c.SlotAutoActivate.Count ? c.SlotAutoActivate[i] : true;
+                weaponController?.SetSlotAutoActivate(i, autoActivate);
             }
 
             // Seed equipment augments from all equipped gear
@@ -136,6 +156,12 @@ public partial class PlayerController : CharacterBody3D
             wc?.SetPreferredDelivery("Melee");
             var fallback = SkillRegistry.Get("strike");
             if (fallback != null) wc?.SetSlot(0, fallback);
+
+            MaxFocus            = BalanceConfig.Focus.WarriorMaxFocus;
+            _focusRegen         = BalanceConfig.Focus.WarriorRegenPerSec;
+            CurrentFocus        = MaxFocus;
+            _maxFocusShield     = MaxFocus * BalanceConfig.Focus.ShieldFraction;
+            _currentFocusShield = _maxFocusShield;
         }
 
         _mendingTimer = 3.0f;
@@ -160,10 +186,26 @@ public partial class PlayerController : CharacterBody3D
             playerModel.AddChild(animPlayer);
         }
 
-        if (animPlayer.HasAnimation("idle"))
-            animPlayer.GetAnimation("idle").LoopMode = Animation.LoopModeEnum.Linear;
+        if (animPlayer.HasAnimation("breathing_idle"))
+            animPlayer.GetAnimation("breathing_idle").LoopMode = Animation.LoopModeEnum.Linear;
         if (animPlayer.HasAnimation("run"))
-            animPlayer.GetAnimation("run").LoopMode  = Animation.LoopModeEnum.Linear;
+        {
+            var runAnim = animPlayer.GetAnimation("run");
+            runAnim.LoopMode = Animation.LoopModeEnum.Linear;
+            // Strip root motion: zero X/Z on Hips position track so the animation plays in place
+            for (int i = 0; i < runAnim.GetTrackCount(); i++)
+            {
+                if (runAnim.TrackGetPath(i).ToString().Contains("Hips") &&
+                    runAnim.TrackGetType(i) == Animation.TrackType.Position3D)
+                {
+                    for (int k = 0; k < runAnim.TrackGetKeyCount(i); k++)
+                    {
+                        var pos = (Vector3)runAnim.TrackGetKeyValue(i, k);
+                        runAnim.TrackSetKeyValue(i, k, new Vector3(0f, pos.Y, 0f));
+                    }
+                }
+            }
+        }
 
         _animPlayer = animPlayer;
 
@@ -189,7 +231,8 @@ public partial class PlayerController : CharacterBody3D
                 {
                     var weaponRoot = weaponScene.Instantiate<Node3D>();
                     visuals.AddChild(weaponRoot);
-                    AttachWeaponToSkeleton(weaponRoot, skeleton);
+                    string attachBone = weaponDefId == "bow_t1" ? "Hand_L" : "Hand_R";
+                    AttachWeaponToSkeleton(weaponRoot, skeleton, attachBone);
                 }
             }
         }
@@ -198,12 +241,6 @@ public partial class PlayerController : CharacterBody3D
             Weapon.WeaponController.SignalName.SkillFired,
             Callable.From<int, float, string>(OnSkillFired));
 
-        if (_animTree != null)
-        {
-            _animTree.Set("parameters/melee_atack/TimeScale/scale",       10.0f);
-            _animTree.Set("parameters/range_atack/TimeScale/scale",       10.0f);
-            _animTree.Set("parameters/range_magic_atack/TimeScale/scale", 10.0f);
-        }
 
         float indicatorRadius = EffectiveRange > 0f ? EffectiveRange : 1.5f * GameScale.TileSize;
         _rangeIndicator = CreateRangeIndicator(indicatorRadius);
@@ -232,11 +269,11 @@ public partial class PlayerController : CharacterBody3D
 
     public override void _PhysicsProcess(double delta)
     {
-        if (_smPlayback == null)
+        if (_moveSm == null)
         {
             var at = GetNodeOrNull<AnimationTree>("AnimationTree");
             if (at != null)
-                _smPlayback = at.Get("parameters/playback").As<AnimationNodeStateMachinePlayback>();
+                _moveSm = at.Get("parameters/movement/playback").As<AnimationNodeStateMachinePlayback>();
         }
 
         var input     = Input.GetVector("move_left", "move_right", "move_up", "move_down");
@@ -247,7 +284,11 @@ public partial class PlayerController : CharacterBody3D
         MoveAndSlide();
 
         bool moving = direction.LengthSquared() > 0.01f;
-        if (moving)
+        bool inAttack = _animTree != null &&
+            (((bool)_animTree.Get("parameters/shot_right/active")) ||
+             ((bool)_animTree.Get("parameters/shot_left/active")));
+
+        if (moving && !inAttack)
         {
             float targetYaw = Mathf.Atan2(direction.X, direction.Z);
             _yaw = Mathf.LerpAngle(_yaw, targetYaw, Mathf.Min(1f, RotationSpeed * (float)delta));
@@ -265,19 +306,22 @@ public partial class PlayerController : CharacterBody3D
             }
         }
 
-        if (_smPlayback != null)
+        if (_moveSm != null)
         {
-            var current = _smPlayback.GetCurrentNode();
-            bool inAttack = current == "melee_atack" || current == "range_atack" || current == "range_magic_atack";
-            if (!inAttack)
-            {
-                var want = moving ? "run" : "idle";
-                if (current != want)
-                    _smPlayback.Travel(want);
-            }
+            var want = moving ? "run" : "idle";
+            if (_moveSm.GetCurrentNode() != want)
+                _moveSm.Travel(want);
         }
 
         float dt = (float)delta;
+
+        CurrentFocus = Mathf.Min(CurrentFocus + _focusRegen * dt, MaxFocus);
+        EmitSignal(SignalName.FocusChanged, GetAvailableFocus(), MaxFocus);
+
+        if (_currentFocusShield < _maxFocusShield)
+            _currentFocusShield = Mathf.Min(_currentFocusShield + BalanceConfig.Focus.ShieldRegenPerSec * dt, _maxFocusShield);
+        EmitSignal(SignalName.ShieldChanged, _currentFocusShield, _maxFocusShield);
+
         if (_dashReflexTimer > 0f) _dashReflexTimer -= dt;
         if (_ghostStepTimer  > 0f) _ghostStepTimer  -= dt;
 
@@ -294,15 +338,25 @@ public partial class PlayerController : CharacterBody3D
 
     public override void _UnhandledInput(InputEvent @event)
     {
-        if (@event is not InputEventKey key || !key.Pressed || key.Echo) return;
+        if (@event is not InputEventKey key || key.Echo) return;
         var wc = GetNodeOrNull<Weapon.WeaponController>("Weapon");
-        if      (key.Keycode == Key.Key1) wc?.TryFireSlot(0);
-        else if (key.Keycode == Key.Key2) wc?.TryFireSlot(1);
-        else if (key.Keycode == Key.Key3) wc?.TryFireSlot(2);
+        if (key.Pressed)
+        {
+            if      (key.Keycode == Key.Key1) wc?.TryFireSlot(0);
+            else if (key.Keycode == Key.Key2) wc?.TryFireSlot(1);
+            else if (key.Keycode == Key.Key3) wc?.TryFireSlot(2);
+        }
+        else
+        {
+            if      (key.Keycode == Key.Key1) wc?.ReleaseSlot(0);
+            else if (key.Keycode == Key.Key2) wc?.ReleaseSlot(1);
+            else if (key.Keycode == Key.Key3) wc?.ReleaseSlot(2);
+        }
     }
 
     public void TakeDamage(float rawAmount, Items.DamageType type, Node3D? attacker = null)
     {
+        if (GodMode) return;
         float effective = rawAmount * (1f - DamageReduction);
         if (type == Items.DamageType.Physical)
             effective *= (1f - PhysicalResistance);
@@ -316,8 +370,24 @@ public partial class PlayerController : CharacterBody3D
             _fortifyActive = true;
         }
 
+        // Focus Shield absorbs damage before HP
+        if (_currentFocusShield > 0f)
+        {
+            float absorbed = Mathf.Min(_currentFocusShield, effective);
+            _currentFocusShield -= absorbed;
+            effective           -= absorbed;
+            EmitSignal(SignalName.ShieldChanged, _currentFocusShield, _maxFocusShield);
+        }
+
         CurrentHealth = Mathf.Max(0f, CurrentHealth - effective);
         EmitSignal(SignalName.HealthChanged, CurrentHealth);
+
+        if (effective > 0f)
+        {
+            EmitSignal(SignalName.PlayerHit);
+            Engine.TimeScale = 0f;
+            GetTree().CreateTimer(0.05f, true, false, true).Timeout += () => Engine.TimeScale = 1f;
+        }
 
         // Retaliation: deal damage back to attacker
         if (_activeAugments.Contains("retaliation") && attacker is Enemies.EnemyController ec)
@@ -396,13 +466,19 @@ public partial class PlayerController : CharacterBody3D
 
     private void OnSkillFired(int slotIndex, float cooldown, string delivery)
     {
-        var animState = delivery switch
+        if (_animTree == null) return;
+        var param = delivery switch
         {
-            "Melee"      => "melee_atack",
-            "RangeMagic" => "range_magic_atack",
-            _            => "range_atack",
+            "Ranged" => "parameters/shot_left/request",
+            _        => "parameters/shot_right/request",
         };
-        _smPlayback?.Travel(animState);
+        if ((bool)_animTree.Get(param.Replace("/request", "/active"))) return;
+        if (delivery != "Ranged")
+        {
+            const float MeleeAnimLength = 2.3f; // melee_right_atack duration in seconds
+            _animTree.Set("parameters/right_ts/scale", MeleeAnimLength / cooldown);
+        }
+        _animTree.Set(param, (int)AnimationNodeOneShot.OneShotRequest.Fire);
     }
 
     private static int FindBone(Skeleton3D skeleton, string name)
@@ -445,10 +521,10 @@ public partial class PlayerController : CharacterBody3D
         armourRoot.QueueFree();
     }
 
-    private static void AttachWeaponToSkeleton(Node3D weaponRoot, Skeleton3D skeleton)
+    private static void AttachWeaponToSkeleton(Node3D weaponRoot, Skeleton3D skeleton, string boneName = "Hand_R")
     {
-        int handIdx = FindBone(skeleton, "Hand_L");
-        string handBoneName = handIdx >= 0 ? skeleton.GetBoneName(handIdx) : "Hand_L";
+        int handIdx = FindBone(skeleton, boneName);
+        string handBoneName = handIdx >= 0 ? skeleton.GetBoneName(handIdx) : boneName;
         var attach = new BoneAttachment3D();
         skeleton.AddChild(attach);
         attach.BoneName = handBoneName;
@@ -517,6 +593,28 @@ public partial class PlayerController : CharacterBody3D
         for (int i = 1; i < level; i++)
             xtn = (int)(xtn * 1.4f);
         return xtn;
+    }
+
+    public float GetAvailableFocus() => Mathf.Max(0f, CurrentFocus - _totalReserved);
+
+    public bool TrySpendFocus(float amount)
+    {
+        if (GetAvailableFocus() < amount) return false;
+        CurrentFocus -= amount;
+        EmitSignal(SignalName.FocusChanged, GetAvailableFocus(), MaxFocus);
+        return true;
+    }
+
+    public void ReserveFocus(float absoluteAmount)
+    {
+        _totalReserved += absoluteAmount;
+        EmitSignal(SignalName.FocusChanged, GetAvailableFocus(), MaxFocus);
+    }
+
+    public void UnreserveFocus(float absoluteAmount)
+    {
+        _totalReserved = Mathf.Max(0f, _totalReserved - absoluteAmount);
+        EmitSignal(SignalName.FocusChanged, GetAvailableFocus(), MaxFocus);
     }
 
     private void ApplyWeaponDamage(Weapon.WeaponController? wc, Items.ItemData? weapon)

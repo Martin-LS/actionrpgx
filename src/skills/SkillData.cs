@@ -7,5 +7,6 @@ public record SkillData(
     string[]  Tags,
     float     Cooldown,
     float     Range,
-    string    IconPath = ""
+    float     FocusCost = 0f,
+    string    IconPath  = ""
 );

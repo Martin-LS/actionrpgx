@@ -21,7 +21,10 @@ public static class RecipeRegistry
         ["recipe_ring_t1"]         = new("recipe_ring_t1",         "ring_t1",         RecipeType.Gear,    new() { ["crafting_common"] = 1 }),
 
         // Skill recipes
-        ["recipe_strike"] = new("recipe_strike", "strike", RecipeType.Skill,   new() { ["crafting_common"] = 1 }),
+        ["recipe_strike"]      = new("recipe_strike",      "strike",      RecipeType.Skill, new() { ["crafting_common"] = 1 }),
+        ["recipe_cyclone"]     = new("recipe_cyclone",     "cyclone",     RecipeType.Skill, new() { ["crafting_common"] = 1 }),
+        ["recipe_nova"]        = new("recipe_nova",        "nova",        RecipeType.Skill, new() { ["crafting_common"] = 1 }),
+        ["recipe_damage_aura"] = new("recipe_damage_aura", "damage_aura", RecipeType.Skill, new() { ["crafting_common"] = 1 }),
 
         // Skill Augment recipes
         ["recipe_splash"]          = new("recipe_splash",          "splash",          RecipeType.SkillAugment, new() { ["crafting_common"] = 1 }),

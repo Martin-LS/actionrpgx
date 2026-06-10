@@ -34,5 +34,12 @@ public partial class DevOverlay : CanvasLayer
             player.Speed  = (float)val;
             speedLabel.Text = $"Speed: {(int)val}";
         };
+
+        var rangeToggle = GetNode<CheckBox>("DevPanel/VBox/RangeToggle");
+        rangeToggle.ButtonPressed = OS.HasFeature("editor");
+        rangeToggle.Toggled += on => player.SetRangeIndicatorVisible(on);
+
+        var godToggle = GetNode<CheckBox>("DevPanel/VBox/GodModeToggle");
+        godToggle.Toggled += on => player.GodMode = on;
     }
 }

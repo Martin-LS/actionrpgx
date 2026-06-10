@@ -18,6 +18,8 @@ The game has two intertwined goals: grow your character through runs, and build 
 ### Movement
 - Top-down, 8-directional
 - [TBD] Speed, acceleration values
+- **v1:** WASD only — no movement skills, no dash
+- **v2:** Every character gets a dedicated non-slottable dash. Not in a skill slot — all characters have it by default. Ensures players always have one escape option without sacrificing a skill slot. Enables more aggressive encounter and skill design knowing the movement floor is guaranteed.
 
 ### Combat
 
@@ -25,14 +27,20 @@ The game has two intertwined goals: grow your character through runs, and build 
 
 Skills drive all combat. Each skill has a **type**:
 
-| Skill type | Behaviour |
-|---|---|
-| Active | Fires when the player manually activates it (keys 1 / 2 / 3). Each **skill slot** has an **auto-activate toggle** — when on, that slot fires automatically on cooldown without manual input. Auto-activate is a convenience option, not a power reduction. |
-| Passive | On/off toggle. Effect is always-on while enabled. |
+| Skill type | Behaviour | Focus cost |
+|---|---|---|
+| Active | Fires on manual activation or auto-activate on cooldown. | Flat cost per activation |
+| Channeled | Hold button to run, release to stop. Drains Focus continuously while held. Stops automatically at 0 Focus. Auto-cast holds the button indefinitely — will empty the Focus bar if left unchecked. Player responsibility. | Per-second drain while held |
+| Aura | Toggle on/off. Effect is always-on while enabled. Permanently reserves a % of Max Focus — shrinks the available pool while active. | Reserves % of Max Focus |
+| Passive | Toggle on/off. Stat or effect always-on while enabled. | None |
 
 The **skill bar** on the run HUD shows all slotted skills, their cooldown state, and whether auto-activate is enabled per slot.
 
-**v1:** Three skill slots (keys 1 / 2 / 3), each with an independent cooldown. Slots can be empty — an empty slot does nothing. New characters start with **1 skill slotted** (slot 1); slots 2 and 3 are empty. Players fill them by crafting additional skill items. This makes the first craft feel meaningful — it literally opens a new slot. Cooldown: 0.8s per slot (tier 1).
+**Auto-activate design philosophy.** Some builds naturally devolve into holding all buttons simultaneously — if that is the optimal play, the game should respect the player enough to automate it and redirect their attention to something more interesting. Auto-activate is the honest version of "hold all buttons." It is not easy mode; it is the logical endpoint of certain build types. Movement is where the player's active attention lives when skills are automated — positioning, dodging, kiting, managing distance. Player errors (e.g. auto-casting a Channeled skill that drains the entire Focus bar) are lessons, not design problems to prevent.
+
+**Auto-activate must be DPS-equivalent to manual.** A player manually pressing all skill keys on cooldown should get the same damage output as the same skills on auto-activate. Auto-activate trades attention (you stop managing the keys) for nothing else — it is pure convenience, not a power reduction. Any system that introduces artificial delays between auto-fires (e.g. a round-robin cycling delay) violates this and should not be implemented.
+
+**v1:** Three skill slots (keys 1 / 2 / 3). Slots can be empty — an empty slot does nothing. New characters start with **1 skill slotted** (slot 1); slots 2 and 3 are empty. Players fill them by crafting additional skill items. This makes the first craft feel meaningful — it literally opens a new slot. Each skill has its own cooldown or drain rate — there is no shared slot cooldown.
 
 **Attack / cast speed is a skill attribute, not a character stat.** There is no global attack speed multiplier on the character or on gear. A skill's cooldown belongs to the skill item — it is tuned per skill, reduced by tier upgrades, and can be modified by future Skill Augments (e.g. a Haste support). This keeps the PoE2 philosophy intact: skills are self-contained items with their own tempo, not extensions of a character stat. A Warrior's Strike and a Mage's Bolt have independent rhythms that do not interact.
 
@@ -46,15 +54,44 @@ Skills with no delivery tag are **weapon-adaptive**: they inherit the weapon's `
 
 **Descriptor tags** determine augment compatibility, damage type, and visual effects layered on top of the delivery. They do not affect animation or range: `Magic`, `Attack`, `Spell`.
 
-**v1 tags:** `Melee`, `Attack` (expand as more skills and Skill Augments are added).
+**v1 tags:** `Melee`, `Attack`, `Aura` (expand as more skills and Skill Augments are added).
+
+### Combat Facing
+
+While **not attacking**, the character faces their movement direction. While **attacking** (OneShot animation active), the character always rotates to face the nearest enemy — even if the player is moving in the opposite direction. This ensures attacks always connect visually and lets players kite while staying engaged with targets behind them.
+
+### Weapon Animations & Handedness
+
+Weapons are held in different hands depending on type, which drives which animation plays for melee attacks.
+
+| Weapon type | Hold hand (visual) | Skeleton bone | Melee animation |
+|---|---|---|---|
+| Sword, Axe, Club, Dagger | Right hand | `Hand_L` | `melee_right_atack` |
+| Bow | Left hand | `Hand_R` | `melee_left_atack` |
+| Wand | Right hand | `Hand_L` | `melee_right_atack` |
+
+- **`melee_right_atack`** — right-arm swing/slash; used by all right-hand weapons
+- **`melee_left_atack`** — left-arm horizontal sweep or butt-strike; used when a bow is equipped and a melee skill fires
+
+The weapon's `AttachBone` property (future field on `WeaponData`) drives which bone the mesh attaches to at runtime. The `OnSkillFired` handler selects the animation based on the equipped weapon's hold hand, not the skill's delivery tag alone.
+
+Idle and run animations are shared across all weapon types in v1.
+
+**Attack animation speed syncs to cooldown.** The animation playback speed is set dynamically at fire time so the clip completes in exactly one cooldown window (`scale = animLength / cooldown`). Damage lands at 35% through the cooldown (the wind-up frame) rather than instantly. As attack speed increases (shorter cooldown), the animation visibly speeds up — the same feel as Diablo's attack speed scaling.
+
+### Hit Feedback
+
+**Design reference: Diablo 4.** No character animation or action interrupt on hit — the player stays in full control through all damage. There is no stagger system, no hit-recovery stat, no flinch animation. Defensive build variance comes entirely from Equipment Augments (see `gdd-progression.md`).
+
+Danger is communicated through health/shield depletion, not through action interruption. This keeps horde combat fluid regardless of difficulty.
 
 ### Skills
 
-**v1 has one skill: Strike.** All archetypes start with plain Strike in slot 1, no augments pre-socketed. Damage type and delivery are determined by the equipped weapon — a Mage's Strike fires as a Magic wand bolt; a Rogue's fires as a Physical arrow with crit (from the bow's identity bonus). This keeps the skill list minimal while letting the weapon communicate archetype identity.
+**v1 skills: Strike, Cyclone, Damage Aura, Nova.** Four skills covering the full test matrix — Active single-target (Strike), Channeled multi-target (Cyclone), Aura persistent (Damage Aura), Active multi-target (Nova). All archetypes start with plain Strike in slot 1, no augments pre-socketed. Damage type is determined by the equipped weapon across all skills.
 
 #### Strike
 
-The universal skill. Hits the nearest enemy using whatever the character has equipped — a sword swing, an arrow, a wand bolt. Rogue and Mage starters are Strike with an augment pre-socketed (see Starter Gear). As players acquire new skills, Strike slots get replaced. Strike can still be kept in any slot intentionally.
+The universal skill. Hits the nearest enemy using whatever the character has equipped — a sword swing, an arrow, a wand bolt. All archetypes start with plain Strike, no augments pre-socketed. As players acquire new skills, Strike slots get replaced. Strike can still be kept in any slot intentionally.
 
 | Property | Value |
 |---|---|
@@ -66,6 +103,52 @@ The universal skill. Hits the nearest enemy using whatever the character has equ
 | Splash | No |
 | Acquire | Free — slot 1 pre-filled at character creation; slots 2 and 3 start empty |
 
+#### Cyclone
+
+Spin continuously in place, hitting all enemies within melee range on each tick. A Channeled skill — hold to spin, release to stop. Drains Focus while held, stops automatically at 0 Focus. Lower damage per hit than Strike; the value is continuous multi-target coverage.
+
+| Property | Value |
+|---|---|
+| Type | Channeled |
+| Delivery | Melee |
+| Descriptor tags | `Attack` |
+| Focus cost | 12 Focus/sec drain |
+| Damage per hit | 0.4× weapon base damage (placeholder) |
+| Tick rate | 4 hits/sec |
+| Acquire | Craft |
+
+#### Damage Aura
+
+Pulses damage to all nearby enemies once per second while active. An Aura skill — reserves a portion of Max Focus permanently while toggled on, shrinking the pool available for other skills. Simple and testable: verifies the Aura type, Focus reservation, and area damage pulse.
+
+| Property | Value |
+|---|---|
+| Type | Aura |
+| Delivery | None — ambient area pulse, not weapon-based |
+| Descriptor tags | `Aura` |
+| Focus reservation | 25% of Max Focus |
+| Damage per pulse | 0.2× weapon base damage (placeholder) |
+| Pulse rate | 1/sec |
+| Range | Short radius around player |
+| Acquire | Craft |
+
+#### Nova
+
+An instant explosion centered on the player — hits all enemies within a medium radius simultaneously, then enters cooldown. The Active multi-target skill. Panic button feel — surrounded, pop it, create space.
+
+| Property | Value |
+|---|---|
+| Type | Active |
+| Delivery | None — centered radius burst, not weapon-based delivery |
+| Descriptor tags | `Attack` |
+| Focus cost | 20 Focus (flat) |
+| Damage | 0.8× weapon base damage |
+| Cooldown | 1.5s |
+| Radius | Medium (larger than melee range) |
+| Acquire | Craft |
+
+---
+
 **Weapon is the root of all damage.** Each weapon has a base damage value that increases with tier. Skill damage is calculated as:
 
 `Skill damage = Weapon base damage × Archetype damage multiplier × (1 + level damage bonus%)`
@@ -73,6 +156,47 @@ The universal skill. Hits the nearest enemy using whatever the character has equ
 Archetype damage multipliers define how effectively each archetype converts weapon damage into output — a Warrior extracts more physical damage from a Sword than a Mage would. Level-up grants a small cumulative % damage bonus that amplifies the whole formula.
 
 **Level damage bonus: +2% per level (cumulative).** At level 10 = +20% total. All values below are placeholder — owned by the Balancer.
+
+### Focus
+
+Focus is the universal skill resource. All archetypes spend Focus to fire skills; skills cannot activate when Focus is empty.
+
+**Regeneration:** Passive regen over time at a steady rate. Always recovering — no kill-based acceleration.
+
+**At 0 Focus:** Skills cannot fire. Cooldowns still count down; auto-activate waits until enough Focus regens to cover the cost. Channeled skills stop automatically when Focus hits 0.
+
+**Channeled skill tag:** Skills tagged `Channeled` drain Focus continuously while the button is held. Releasing the button stops the skill immediately. If Focus hits 0 the skill stops automatically regardless of input. Auto-cast holds the button indefinitely — player responsibility to not auto-cast a skill that drains their entire Focus bar.
+
+**Skill costs (placeholder — owned by Balancer):**
+
+| Skill | Cost |
+|---|---|
+| Strike | 5 Focus (flat) — effectively free; regens faster than you spend |
+| Nova | 20 Focus (flat) — meaningful burst cost |
+| Cyclone | 12 Focus/sec (drain while held) — expensive over time, requires management |
+| Damage Aura | Reserves 25% of Max Focus — shrinks available pool while active |
+
+**Starting values (placeholder — owned by Balancer):**
+
+| Archetype | Max Focus | Regen/sec |
+|---|---|---|
+| Warrior | 80 | 12 |
+| Rogue | 100 | 15 |
+| Mage | 150 | 10 |
+
+**Focus Shield**
+Every archetype has a Focus Shield — a damage buffer that absorbs hits before HP. Once depleted, damage hits HP directly.
+
+- Shield size = 30% of current Max Focus (all archetypes)
+- Casting does not drain the shield — Focus pool and shield are managed independently
+- Shield regens passively (slow baseline, investable through augments)
+- Investable augment paths: shield regen rate (time-based recovery; rewards brief retreats) and shield on attack (hit-based recovery; rewards aggressive combat)
+- If Max Focus increases (buff): shield ceiling rises, current shield stays — regen up to the new cap
+- If Max Focus decreases (debuff): shield ceiling drops, current shield is immediately clamped to the new maximum
+
+Investing in Max Focus through gear grows both the casting pool and the shield simultaneously. Natural shield sizes at base: Warrior 24, Rogue 30, Mage 45. The Mage has the largest Focus pool — and therefore the largest shield — by default.
+
+---
 
 ### Damage Types
 
@@ -159,11 +283,11 @@ Every run requires a character. Characters are created by the player, persist be
 
 ### Character Archetypes
 
-| Archetype | Max HP | Speed | Phys Damage Multiplier | Magic Damage Multiplier | Default build               |
-|-----------|--------|-------|------------------------|-------------------------|------------------------------|
-| Warrior   | 150    | 170   | 1.5×                   | 0.5×                    | Sword + Heavy armour — close-range brawler |
-| Rogue     | 80     | 260   | 1.0×                   | 0.5×                    | Bow + Light armour — fast, fragile kiter   |
-| Mage      | 100    | 200   | 0.5×                   | 1.5×                    | Wand + Medium armour — glass cannon        |
+| Archetype | Max HP | Speed | Phys Damage Multiplier | Magic Damage Multiplier | Max Focus | Focus Regen/sec | Default build |
+|-----------|--------|-------|------------------------|-------------------------|-----------|-----------------|---------------|
+| Warrior   | 150    | 170   | 1.5×                   | 0.5×                    | 80        | 12              | Sword + Heavy armour — close-range brawler |
+| Rogue     | 80     | 260   | 1.0×                   | 0.5×                    | 100       | 15              | Bow + Light armour — fast, fragile kiter   |
+| Mage      | 100    | 200   | 0.5×                   | 1.5×                    | 150       | 10              | Wand + Medium armour — glass cannon; largest Focus Shield by default |
 
 Damage multipliers apply to weapon base damage (see Damage formula under Skills). Mismatched builds (e.g. Warrior + Wand) produce ~half output — viable but suboptimal. All values are placeholder — owned by the Balancer.
 
@@ -286,26 +410,16 @@ In both cases the player is returned to the character screen. There is no death 
 
 ### Archetype Defense System
 
-Each archetype should have a fundamentally different defensive philosophy — not just different numbers on the same stat, but a different *approach* to surviving:
+All archetypes share Focus Shield as a universal defensive layer — damage hits the shield before HP. Natural shield size varies by archetype because it scales with Max Focus. Beyond the universal shield, each archetype has a primary defensive identity:
 
-| Archetype | Defense type | Philosophy |
-|-----------|-------------|------------|
-| Warrior | Physical Resistance | Mitigation — get hit, absorb it. Rewards staying in melee range. |
-| Rogue | Dodge | Avoidance — don't get hit at all. Rewards speed investment and positioning. |
-| Mage | Focus Shield | Resource management — Focus absorbs damage before HP. Depleted by casting. Rewards Focus discipline. |
+| Archetype | Primary defense | Focus Shield at base | Philosophy |
+|-----------|----------------|----------------------|------------|
+| Warrior | Physical Resistance | 24 (80 × 30%) | Mitigation — physical resistance reduces raw damage; shield buys extra time. Rewards staying in melee range. |
+| Rogue | Dodge | 30 (100 × 30%) | Avoidance — speed investment increases evasion; shield is a fallback when avoidance fails. |
+| Mage | Focus Shield | 45 (150 × 30%) | Resource management — Focus Shield is the primary defense. Investing in Max Focus grows both the casting pool and the shield simultaneously. |
 
-**Focus** is the universal skill resource — all archetypes spend it to fire skills, but each archetype interacts with it differently:
+Focus Shield is investable by any archetype through Equipment Augments (shield regen rate, shield on attack). This enables cross-archetype builds — a Warrior who invests in Max Focus and shield augments plays as a melee fighter with a magical damage buffer (Paladin-style), constrained naturally by their weapon (short range, physical damage primary).
 
-| Archetype | Focus interaction |
-|-----------|-----------------|
-| Warrior | Spends Focus on skills; non-magic skills cost relatively little |
-| Rogue | Spends Focus on skills; agile skills moderately refill it on use |
-| Mage | Spends Focus on high-cost magic skills; Focus also acts as a damage buffer (Focus Shield) before HP is hit |
+**Physical Resistance (Warrior) and Dodge (Rogue) as investable stats are post-v1.** Design when the archetype multiplier system is being expanded.
 
-The Mage tension: blasting at full rate depletes Focus quickly, leaving the shield empty. Pacing preserves the buffer. This is the Mage's core risk/reward loop.
-
-**Dodge** for the Rogue pairs naturally with their speed archetype multiplier — speed investment increases evasion, reinforcing the kiting playstyle without adding a separate stat.
-
-The archetype multiplier system (see Characters) maps directly onto this: each archetype's designated defense type has a high multiplier, making cross-archetype defense investment possible but inefficient.
-
-*Not scheduled for v1. Design this when Focus is on the roadmap.*
+**Focus Shield is v1 for all archetypes** — see Focus section under Core Mechanics.

@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://dcoinpick01"]
 
-[ext_resource type="Script" uid="uid://dcoinpksc01" path="res://src/meta/CoinPickup.cs" id="1_coin"]
+[ext_resource type="Script" uid="uid://bjhrsiq4ih5ce" path="res://src/meta/CoinPickup.cs" id="1_coin"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_coin"]
 radius = 6.0

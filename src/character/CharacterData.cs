@@ -21,6 +21,8 @@ public class CharacterData
     // Skills are not moved out of inventory when slotted — same instance can fill multiple slots.
     public List<string> SlottedSkillInstanceIds { get; set; } = new();
 
+    public List<bool> SlotAutoActivate { get; set; } = new() { true, true, true };
+
     public StatBlock BuildStatBlock()
     {
         var block = new StatBlock();
@@ -35,6 +37,16 @@ public class CharacterData
         };
         block.SetBase(StatId.MaxHp,  baseHp);
         block.SetBase(StatId.Speed,  baseSpd);
+
+        var (baseFocus, baseFocusRegen) = Type switch
+        {
+            CharacterType.Warrior => (BalanceConfig.Focus.WarriorMaxFocus, BalanceConfig.Focus.WarriorRegenPerSec),
+            CharacterType.Rogue   => (BalanceConfig.Focus.RogueMaxFocus,   BalanceConfig.Focus.RogueRegenPerSec),
+            CharacterType.Mage    => (BalanceConfig.Focus.MageMaxFocus,    BalanceConfig.Focus.MageRegenPerSec),
+            _                     => (BalanceConfig.Focus.WarriorMaxFocus, BalanceConfig.Focus.WarriorRegenPerSec),
+        };
+        block.SetBase(StatId.MaxFocus,   baseFocus);
+        block.SetBase(StatId.FocusRegen, baseFocusRegen);
 
         // Level-up HP bonus — scaled by archetype multiplier × level.
         // Damage is no longer stored in StatBlock — it is computed from weapon data in PlayerController.

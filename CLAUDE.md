@@ -41,14 +41,17 @@ At the start of every session: read `docs/todo.md`, note what's pending, and tic
 
 ## Character Handedness
 
-The player character is **right-handed** — weapons attach to **`Hand_L`** in code.
+The player character is **right-handed** — weapons attach to **`Hand_R`** in code.
 
-**Why:** Blender bone names are from the character's own perspective. `Hand_R` = character's anatomical right = screen-LEFT when the character faces the viewer (standard in a top-down game). `Hand_L` = character's anatomical left = screen-RIGHT. The user-visible "right hand" (screen-right side) is `Hand_L` in skeleton terms. `technical-assets.md` lists `Hand_R` but that doc predates this confirmed runtime observation.
+**Why:** `stickman.glb` uses standard Mixamo bone naming from the character's own perspective. `Hand_R` = character's anatomical right = visual right hand (screen-right from top-down camera). `Hand_L` = character's anatomical left = visual left. Confirmed at runtime: `Hand_L` produced a weapon on the left side of screen; `Hand_R` is correct.
 
-**The rule for this project: weapon attachment bone = `Hand_L`.**
+Note: the old `player_character.glb` model had the opposite convention (`Hand_L` = visual right) due to an unusual Blender orientation. That model is retired — `stickman.glb` is now the player model.
 
-- **Weapon attachment bone in code: `Hand_L`**
-- **Animation dominant arm: `Hand_L` channels**
+**Weapon attachment is per-weapon-type:**
+- Sword, wand → `Hand_R` (right hand; right-arm swing animation `melee_right_atack`)
+- Bow → `Hand_L` (left hand holds the bow; left-arm sweep animation `melee_left_atack`)
+
+- **Animation dominant arm: `Hand_R` channels (melee swing)**
 
 ## Blender Bone Rotation Direction (player.blend)
 

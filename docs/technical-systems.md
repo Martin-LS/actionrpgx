@@ -13,19 +13,19 @@
 | `ProfileData`       | Plain C#    | CoinBank, Materials (Dictionary\<string, int\>), OwnedGearInstances (List\<GearItemInstance\>), OwnedSkillInstances (List\<SkillItemInstance\>), OwnedSkillAugmentInstances (List\<SkillAugmentInstance\>), OwnedEquipmentAugmentInstances (List\<EquipmentAugmentInstance\>), MaxInventory (const = 50) — applies separately to each list. Account-shared. Migration: old `ownedItemIds`/`ownedSkillIds` string lists are wrapped into instances (new GUID, Tier = 1) on load. Old `augment`/`chainInstanceId` fields on skill instances are dropped on load. |
 | `CharacterData`     | Plain C#    | Id, Name, Type (enum), RunsCompleted, CurrentLevel, CurrentXp, EquippedGear (Dictionary\<string, GearItemInstance\> — slot → full instance), SlottedSkillInstanceIds (List\<string\> — instance GUIDs; skill instances stay in `OwnedSkillInstances`). Archetype base stats computed inline in `BuildStatBlock()` — applies archetype multiplier formula before returning. |
 | `CharacterType`     | C# enum     | Warrior, Rogue, Mage                                           |
-| `StatId`            | C# enum     | MaxHp, Speed, PhysicalDamage, MagicDamage, PhysicalResistance, MagicResistance |
+| `StatId`            | C# enum     | MaxHp, Speed, PhysicalDamage, MagicDamage, PhysicalResistance, MagicResistance, MaxFocus, FocusRegen |
 | `StatModifier`      | Plain C#    | StatId, ModifierType (FlatAdd), Value (float), ModifierSource (Level, Item) |
 | `StatBlock`         | Plain C#    | Internal flat modifier list per `StatId`. `Get(StatId)` returns the sum of all flat modifiers for that stat — archetype multiplier is applied in `BuildStatBlock()` before the block is returned, so callers always get effective values. |
 | `ItemData`          | C# record   | Id, Name, Slot (enum), IconPath, Tags (string[] — equipment tags for augment compatibility; e.g. `["Melee"]` for Sword, `["Heavy"]` for heavy armour, `[]` for Accessory) — plus slot-specific fields: `WeaponRange (float, in tiles)`, `PreferredDelivery (string — "Melee" or "Ranged")` for Weapon; `ArmorCategory`, `BonusHp`, `BonusSpeed`, `DamageReduction (float)`, `RangeModifier (float, in tiles)` for Armor; `PhysicalResistance (float)` for Accessory. Unused fields default to zero. `Tier` removed — tier lives on `GearItemInstance`, not the definition. **Range fields are always in tiles** — multiply by `GameScale.TileSize` to get world units. |
 | `ItemSlot`          | C# enum     | Weapon, Hat, Body, Ring                                        |
-| `SkillData`         | C# record   | Id, Name, Type (SkillType enum), Tags (string[]) — e.g. `["Melee","Attack"]`, `["Ranged","Attack"]`, `["Ranged","Magic","Spell"]`. Cooldown (float, seconds; 0 for Passive), Range (float), IconPath (string, default ""). No Tier — tier lives on `SkillItemInstance`. |
-| `SkillType`         | C# enum     | Active, Passive                                                |
+| `SkillData`         | C# record   | Id, Name, Type (SkillType enum), Tags (string[]) — e.g. `["Melee","Attack"]`, `["Ranged","Attack"]`, `["Ranged","Magic","Spell"]`. Cooldown (float, seconds — for Active: time between casts; for Channeled/Aura: damage tick interval; 0 for Passive), FocusCost (float — Active: flat spend per cast; Channeled: drain per second; Aura: fraction of MaxFocus to reserve (0.0–1.0); Passive: 0/ignored), Range (float), IconPath (string, default ""). No Tier — tier lives on `SkillItemInstance`. |
+| `SkillType`         | C# enum     | Active, Channeled, Aura, Passive                               |
 | `ArmorCategory`     | C# enum     | None, Heavy, Medium, Light                                     |
 | `DamageType`        | C# enum     | Physical, Magic                                                |
 | `ItemTier`          | C# static class (const ints) | Common = 1, Uncommon = 2, Rare = 3, Max = 3. `Label(int)` → display name. `BorderColor(int)` → Godot `Color`. Used for the rarity border colour on item slot buttons. |
-| `BalanceConfig`     | Static class (nested) | Sections: `Weapons` (SwordRange/BowRange/WandRange), `Armour` (Heavy/Medium/Light — BonusHp, BonusSpeed, DamageReduction, RangeModifier per tier), `Accessories` (RingPhysicalResistance), `Skills` (cooldown + range per skill), `Eots` (ApplyChance, Duration, per-effect fields), `Enemies.Skeleton` + scaling consts + MeleeContactRange, `Drops` (coin/health/crafting chances), `Pickups` (XpShardValue, HealthHealAmount), `Archetypes` (DefaultMultiplier + MaxHp/Speed/PhysicalDamage/MagicDamage per archetype), `LevelUp` (HpBonusPerLevel, DamageBonusPerLevel). All values are `const` — compile-time resolvable. |
+| `BalanceConfig`     | Static class (nested) | Sections: `Weapons` (SwordRange/BowRange/WandRange), `Armour` (Heavy/Medium/Light — BonusHp, BonusSpeed, DamageReduction, RangeModifier per tier), `Accessories` (RingPhysicalResistance), `Skills` (cooldown + range per skill), `Eots` (ApplyChance, Duration, per-effect fields), `Enemies.Skeleton` + scaling consts + MeleeContactRange, `Drops` (coin/health/crafting chances), `Pickups` (XpShardValue, HealthHealAmount), `Archetypes` (DefaultMultiplier + MaxHp/Speed/PhysicalDamage/MagicDamage per archetype), `LevelUp` (HpBonusPerLevel, DamageBonusPerLevel), `Focus` (per-archetype MaxFocus/RegenPerSec base values, ShieldFraction, ShieldRegenPerSec; per-skill FocusCost constants). All values are `const` — compile-time resolvable. |
 | `ItemRegistry`      | Static class| `All` dict, `Get(id)`, `ForSlot(slot)` — 7 starter gear definitions. Definitions carry no tier — all instances start at Tier = 1 when crafted. |
-| `SkillRegistry`     | Static class| `All` dict, `Get(id)` — v1: 1 entry: `strike` (Tags: `["Attack"]`). Arrow and Bolt are informal names for Rogue/Mage starter configurations (Strike + augment); they are not separate skill items. |
+| `SkillRegistry`     | Static class| `All` dict, `Get(id)` — v1: 4 entries: `strike` (Active, Tags: `["Attack"]`, FocusCost: 5), `cyclone` (Channeled, Tags: `["Melee","Attack"]`, FocusCost: 12/sec, Cooldown: 0.25s), `nova` (Active, Tags: `["Attack"]`, FocusCost: 20, Cooldown: 1.5s), `damage_aura` (Aura, Tags: `["Aura"]`, FocusCost: 0.25 fraction, Cooldown: 1.0s). Arrow and Bolt are informal names for Rogue/Mage starter configurations (Strike + augment); they are not separate skill items. |
 | `RecipeData`        | C# record   | Id, OutputItemId (string — definition ID), RecipeType (enum), MaterialCosts (Dictionary\<string, int\>). Crafting always produces a new instance at Tier = 1. |
 | `SkillAugmentData`  | C# record   | Id (string), Name (string), RequiredTags (string[]) — skill must share at least one tag. EotId (string?, nullable) — links augment to an EoT definition; null for augments with no timed effect (e.g. Splash, Pierce). No Effect field — behaviour dispatched by Id in code. v1: Splash (`["Melee"]`, EotId: null), Pierce (`["Ranged"]`, EotId: null), Slow (`["Attack"]`, EotId: `"slow"`). |
 | `SkillAugmentInstance` | Plain C# | Id (string, GUID), DefinitionId (string → `SkillAugmentRegistry`). No tier — augments are flat items in v1. |
@@ -150,9 +150,111 @@ Exposes: `SetDamage(float, float)`, `SetBaseDamageType(DamageType)`, `SetGlobalC
 
 `SetSlot` is called once per slot at run start. `SetGlobalCritChance` and `SetCritMultiplier` are called once at run start and again on level-up (same cadence as `SetDamage`).
 
-Emits: `SkillFired(int slotIndex, float cooldown, bool isMelee)` — consumed by HUD skill bar and `PlayerController` (attack animation + melee VFX).
+Emits: `SkillFired(int slotIndex, float cooldown, string delivery)` — consumed by HUD skill bar (cooldown overlay) and `PlayerController` (`OnSkillFired` selects animation: `"Ranged"` → `shot_left` OneShot, anything else → `shot_right` OneShot + TimeScale).
 
 [TBD] Weapon upgrade path (stages, piercing, AoE) — deferred.
+
+---
+
+## Focus (Skill Resource)
+
+All archetypes spend Focus to fire skills. `PlayerController` owns the pool; `WeaponController` deducts or reserves on fire.
+
+### Runtime state (PlayerController)
+
+```
+float CurrentFocus      // initialized to MaxFocus at run start
+float _maxFocus         // seeded from StatId.MaxFocus via statBlock
+float _focusRegen       // seeded from StatId.FocusRegen via statBlock
+float _totalReserved    // sum of all active Aura reservation amounts; starts at 0
+```
+
+Regen in `_PhysicsProcess`: `CurrentFocus = Min(CurrentFocus + _focusRegen × delta, _maxFocus)`. Emits `FocusChanged(CurrentFocus, _maxFocus)` each tick.
+
+Available Focus (amount skills may spend or draw against): `Max(0, CurrentFocus - _totalReserved)`.
+
+### Methods (called by WeaponController)
+
+```
+float GetAvailableFocus()  →  Max(0, CurrentFocus - _totalReserved)
+
+bool TrySpendFocus(float amount):
+    if GetAvailableFocus() >= amount → CurrentFocus -= amount; emit FocusChanged; return true
+    return false
+
+void ReserveFocus(float absoluteAmount)   → _totalReserved += amount; emit FocusChanged
+void UnreserveFocus(float absoluteAmount) → _totalReserved = Max(0, _totalReserved - amount); emit FocusChanged
+```
+
+### Firing guards by SkillType (WeaponController)
+
+| SkillType | Guard | On fire |
+|---|---|---|
+| Active | `GetAvailableFocus() >= FocusCost` | `TrySpendFocus(FocusCost)` |
+| Channeled | `IsChanneling == true` + `GetAvailableFocus() >= FocusCost × Cooldown` | `TrySpendFocus(FocusCost × Cooldown)` per tick |
+| Aura (toggle on) | `GetAvailableFocus() >= FocusCost × _maxFocus` | `ReserveFocus(reserveAmount)` — no per-tick spend |
+| Aura (toggle off) | — | `UnreserveFocus(slot.AuraReserved)` |
+| Passive | — | — |
+
+Channeled `FocusCost` is drain/sec; `Cooldown` is tick interval — so `FocusCost × Cooldown` is drain per tick. Aura `FocusCost` is a fraction (0.0–1.0); multiply by `_maxFocus` to get the absolute reservation amount.
+
+Auras do **not** auto-deactivate at 0 Focus — the reservation is committed at toggle time. Active and Channeled skip the tick when insufficient Focus is available.
+
+**Channeled `IsChanneling` state:**
+- Manual: `TryFireSlot` sets `IsChanneling = true`; `ReleaseSlot` (key-up) sets it false.
+- AutoActivate: `_PhysicsProcess` auto-sets `IsChanneling = FindNearestEnemy(_range) != null` each frame — starts channeling when an enemy enters range, stops when none remain.
+
+**Channeled exclusivity:** while any slot has `IsChanneling = true`, `ProcessActiveSlot` returns immediately. Active skills (Strike, Nova) deal no damage and fire no animations. Auras are unaffected.
+
+**Aura slot state additions (WeaponController `_slots` array):**
+
+```
+bool  AuraActive    // is the toggle currently on?
+float AuraReserved  // absolute Focus units reserved while active
+```
+
+### Focus Shield
+
+All archetypes. A separate damage-absorbing pool seeded at run start.
+
+```
+_maxFocusShield     = _maxFocus × BalanceConfig.Focus.ShieldFraction   // 30%
+_currentFocusShield = _maxFocusShield
+```
+
+**Damage intercept** in `PlayerController.TakeDamage()` — after resistance calculation, before HP deduction:
+
+```
+absorbed = Min(_currentFocusShield, effectiveDamage)
+_currentFocusShield -= absorbed
+effectiveDamage -= absorbed
+emit ShieldChanged(_currentFocusShield, _maxFocusShield)
+```
+
+**Shield regen** in `_PhysicsProcess`:
+
+```
+if _currentFocusShield < _maxFocusShield:
+    _currentFocusShield = Min(_currentFocusShield + ShieldRegenPerSec × delta, _maxFocusShield)
+emit ShieldChanged(_currentFocusShield, _maxFocusShield)
+```
+
+`ShieldRegenPerSec` is a `BalanceConfig.Focus` constant. No `StatId` entry yet — added when augments invest into shield regen.
+
+**MaxFocus changes mid-run** (future — not v1): ceiling = `_maxFocus × ShieldFraction`, recalculated instantly. Current shield clamped to new ceiling on decrease; increases do not auto-fill.
+
+### Archetype starting values (BalanceConfig.Focus)
+
+| Archetype | MaxFocus base | RegenPerSec base | Shield base |
+|---|---|---|---|
+| Warrior | 80 | 12 | 24 (30% of 80) |
+| Rogue | 100 | 15 | 30 (30% of 100) |
+| Mage | 150 | 10 | 45 (30% of 150) |
+
+### HUD
+
+`FocusChanged(float, float)` → Focus bar, blue, below the health bar.  
+`ShieldChanged(float, float)` → Focus Shield bar, light blue, below the Focus bar. Visible for all archetypes.
 
 ---
 
@@ -402,9 +504,28 @@ if type == Physical:
     effectiveDamage ×= (1 − PhysicalResistance)
 else if type == Magic:
     effectiveDamage ×= (1 − MagicResistance)
+
+// Focus Shield intercept — all archetypes
+if _currentFocusShield > 0:
+    absorbed = Min(_currentFocusShield, effectiveDamage)
+    _currentFocusShield -= absorbed
+    effectiveDamage -= absorbed
+    emit ShieldChanged(_currentFocusShield, _maxFocusShield)
+
 CurrentHealth -= effectiveDamage
 emit HealthChanged(CurrentHealth)
+
+// Hit feedback (D4 style — no interrupt, screen-only)
+Engine.TimeScale = 0.0                                  // hit stop: ~2 frames
+CreateTimer(0.05s, ignoreTimeScale: true).Timeout       // restore TimeScale to 1.0
+emit PlayerHit()                                        // HUD shows screen flash
 ```
+
+**Hit stop** (`Engine.TimeScale = 0`) pauses the entire game world for ~0.05s — enemies, projectiles, animations all freeze. The HUD timer uses a real-time timer (`ignoreTimeScale: true`) to restore it. No guard needed against stacking since the restore always fires.
+
+**Screen flash** is a full-screen `ColorRect` in the HUD (red, alpha ~0.3), tweened to alpha 0 over ~0.15s. Triggered by the `PlayerHit` signal. No gameplay effect — purely visual feedback.
+
+**Melee windup delay** — `WeaponController` delays `HitMelee` by `cooldown × MeleeWindupFraction (0.35)` via `CreateTimer`. Damage lands mid-animation at the strike frame rather than on button press. Timer captures target by reference and skips the hit if target is already dead (`IsQueuedForDeletion()`).
 
 `DamageReduction` and `PhysicalResistance` are runtime stats on `PlayerController`, seeded at run start from the equipped armor and accessory respectively. All current chase enemies pass `DamageType.Physical`. Future ranged/magic enemies pass `DamageType.Magic`.
 

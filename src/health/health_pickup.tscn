@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://dhealthpick01"]
 
-[ext_resource type="Script" uid="uid://chealthpickcs" path="res://src/health/HealthPickup.cs" id="1_hlth1"]
+[ext_resource type="Script" uid="uid://bd03d1wwhj0xu" path="res://src/health/HealthPickup.cs" id="1_hlth1"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_health"]
 radius = 8.0

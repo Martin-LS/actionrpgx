@@ -122,6 +122,8 @@ Weapon tags intentionally reuse the skill tag names — players already know `Me
 
 Equipment Augments are craftable items that socket into an equipment item to add a **behaviour** — not just a stat bonus, but something that changes how that piece of equipment *feels* to use. They are the gear-layer equivalent of Skill Augments.
 
+**Design intent — Equipment Augments are the defensive build layer.** Skill Augments handle offensive variance (splash, crit, pierce, damage conversion). Equipment Augments handle defensive variance — how the character survives, recovers, and punishes attackers. There is no stagger or hit-recovery system; the hit feedback is D4-style (always in control, no interrupts). All defensive investment flows through Equipment Augments. Future equipment augments should continue in this direction: barriers, dodge, resistance boosts, shield-on-hit, recovery mechanics. Offensive Equipment Augments (weapon/ring slot) are TBD and secondary to this defensive purpose.
+
 **Equipment Augment slots per tier** — mirrors the Skill Augment slot system:
 
 | Equipment tier | Equipment Augment slots |
@@ -303,11 +305,13 @@ Crafting is not a separate tab — it is accessed contextually through item inte
 - Right-click an **empty slot or empty socket** → no action.
 
 **Left-click = context-sensitive menu:**
-- Left-click an **inventory item** → menu: **Modify**, **Delete**
-- Left-click an **equipped slot (filled)** → menu: **Modify**, **Delete**
+- Left-click an **inventory item** → menu: **Equip**, **Modify**, **Delete**
+- Left-click an **equipped slot (filled)** → menu: **Unequip**, **Modify**, **Delete**
 - Left-click an **equipped slot (empty)** → menu: **Craft New** (opens create list for that slot type), **Equip from inventory** (item picker filtered to slot type)
 - Left-click an **open augment socket** → augment picker (compatible augments from inventory)
 - Left-click a **filled augment socket** → menu: **Remove** (returns augment to inventory)
+
+Equip/Unequip in the left-click menu mirrors the right-click shortcut — right-click is the fast path, left-click menu is the discoverable path for new players. Both apply the same logic (equip to first empty valid slot / swap with slot 1; unequip blocked if inventory full).
 
 **Drag and drop:**
 - Drag an inventory item onto a valid slot → equip to that specific slot (swap if occupied)

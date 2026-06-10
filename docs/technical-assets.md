@@ -175,37 +175,48 @@ Use Mixamo to auto-rig a new character and download animation packs. Follow this
 
 ### Step-by-step (via Blender MCP)
 
-1. **Open the source `.blend`** — use the version that still has the armature intact (before rig removal).
+1. **Set Blender scene units to Metric / Meters** — Mixamo silently mis-scales characters exported from scenes with any other unit setting. Check `Scene Properties → Units → Unit System = Metric, Length = Meters` before any other step.
 
-2. **Delete hair objects** — `Hair_SideL`, `Hair_SideR`, `Hair_Back`, `Hair_Top` must be removed before merging. Hair geometry extends down to shoulder/neck height and creates stray faces in the FBX between head and torso. See tech-tips.md for details.
+2. **Open the source `.blend`** — use the version that still has the armature intact (before rig removal).
 
-3. **Remove rig and animations**
+3. **Delete hair objects** — `Hair_SideL`, `Hair_SideR`, `Hair_Back`, `Hair_Top` must be removed before merging. Hair geometry extends down to shoulder/neck height and creates stray faces in the FBX between head and torso.
+
+4. **Remove rig and animations**
    - Set armature pose position to `REST`
    - Apply armature modifier on every mesh (bakes rest pose into geometry)
    - Delete the Armature object
    - Clear animation data from all objects + purge orphaned datablocks
 
-4. **Merge all remaining meshes into one** — `bpy.ops.object.join()`, rename result `PlayerCharacter` (or `<CharacterName>`). Mixamo works best with a single mesh.
+5. **Merge all remaining meshes into one** — Mixamo's auto-rigger **requires** a single mesh object. Multiple separate objects cause the rigging phase to fail with no useful error message.
 
-5. **Clean the mesh** (in this order — do not skip steps or reorder):
+   - **Destructive workflow** (when the source `.blend` is a throwaway or a copy): select all mesh objects, `bpy.ops.object.join()`, rename result `PlayerCharacter`.
+   - **Stickman / modular-mesh workflow** (source `.blend` keeps separate pieces): duplicate all mesh objects (`bpy.ops.object.duplicate()`), join the duplicates, remove their armature modifiers, export with `use_selection=True`, then delete the duplicates. The source `.blend` is untouched.
+
+   After joining, also remove any remaining armature modifiers from the joined mesh — they are not needed for the Mixamo upload and can interfere.
+
+   **Every body region must be connected.** If the Head box has a gap to the Torso (no Neck piece), the voxel remesh produces a disconnected head island. Mixamo cannot place the Chin marker and fails with "please place all markers." Add a Neck mesh piece that overlaps slightly into both the Head and Torso so the remesh merges them into one solid.
+
+6. **Clean the mesh** (in this order — do not skip steps or reorder):
    - `remove_doubles` (dist=0.001) — eliminates duplicate verts from the join
    - Delete loose verts and edges
    - Delete interior faces (faces where all edges are shared by >2 faces)
    - `recalc_face_normals` — fix inverted normals
 
-6. **Apply T-pose** — rotate arm vertices to horizontal at shoulder pivots. For `player.blend`:
+7. **Apply T-pose** — rotate arm vertices to horizontal at shoulder pivots. For `player.blend`:
    - Threshold: `|X| > 0.51` separates arm verts from torso (torso ends at X=±0.5, arms start at X=±0.55)
    - Left shoulder pivot: `(0.620, 0.0, 2.100)`, rotation `Ry(-90°)`
    - Right shoulder pivot: `(-0.620, 0.0, 2.100)`, rotation `Ry(+90°)`
    - Run health check after: must show 0 non-manifold edges before proceeding
 
-7. **Apply all transforms** — `bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)`. Scale must be `(1,1,1)` in the exported file.
+8. **Set origin to base of mesh** — `Object → Set Origin → Origin to Geometry` then manually move the origin to foot level (Z=0). Mixamo places the character on the floor using the origin; a mid-body origin pushes the rig markers off and produces a worse auto-rig result.
 
-8. **Export as FBX**:
+9. **Apply all transforms** — `bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)`. Scale must be `(1,1,1)` in the exported file.
+
+10. **Export as FBX**:
    ```python
    bpy.ops.export_scene.fbx(
        filepath=r"<project>/assets/models/characters/<name>_mixamo.fbx",
-       use_selection=False,
+       use_selection=True,   # export only the joined mesh, not the whole scene
        apply_unit_scale=True,
        apply_scale_options='FBX_SCALE_NONE',
        bake_space_transform=False,
@@ -216,10 +227,11 @@ Use Mixamo to auto-rig a new character and download animation packs. Follow this
        embed_textures=False,
        axis_forward='-Z',
        axis_up='Y',
+       mesh_smooth_type='FACE',
    )
    ```
 
-9. **Verify** — import the FBX back into a fresh Blender scene and confirm: single mesh, T-pose visible from front orthographic, 0 non-manifold edges.
+11. **Verify** — import the FBX back into a fresh Blender scene (enable **Automatic Bone Orientation** in the FBX importer) and confirm: single mesh, T-pose visible from front orthographic, 0 non-manifold edges.
 
 ### Output file naming
 
@@ -227,7 +239,62 @@ Use Mixamo to auto-rig a new character and download animation packs. Follow this
 
 ### After Mixamo
 
-Mixamo returns a rigged FBX (with its own skeleton) plus any downloaded animation FBX files. Next step is retargeting those animations to the project's standard bone set.
+Mixamo returns a rigged FBX (with its own skeleton) plus downloaded animation FBX files. Retarget those animations to the project's standard bone set using the constraint-based bake method below.
+
+#### Bone name mapping
+
+| Mixamo bone | Our bone |
+|---|---|
+| `Hips` | `Hips` |
+| `Spine` | `Spine` |
+| `Spine1` | `Chest` |
+| `Neck` | `Neck` |
+| `Head` | `Head` |
+| `LeftArm` | `UpperArm_L` |
+| `LeftForeArm` | `LowerArm_L` |
+| `LeftHand` | `Hand_L` |
+| `RightArm` | `UpperArm_R` |
+| `RightForeArm` | `LowerArm_R` |
+| `RightHand` | `Hand_R` |
+| `LeftUpLeg` | `UpperLeg_L` |
+| `LeftLeg` | `LowerLeg_L` |
+| `LeftFoot` | `Foot_L` |
+| `RightUpLeg` | `UpperLeg_R` |
+| `RightLeg` | `LowerLeg_R` |
+| `RightFoot` | `Foot_R` |
+
+**Discarded Mixamo bones:**
+- `Spine2` — map `Spine1` → `Chest`, discard `Spine2` F-curves
+- `LeftShoulder` / `RightShoulder` — clavicle bones, discard
+- `LeftToeBase` / `RightToeBase` — toe bones, discard
+
+**`mixamorig:` prefix:** Mixamo FBX downloads often prefix all bone names with `mixamorig:` (e.g. `mixamorig:Hips`). Strip this prefix before mapping.
+
+**`Root` bone:** Our skeleton has a `Root` bone above `Hips`. Mixamo has no `Root`. `Root` will have no animation data — this is expected, not a bug.
+
+#### Retargeting method (constraint-based bake)
+
+For each animation FBX:
+
+1. Import animation FBX into Blender (enable **Automatic Bone Orientation** in the FBX importer) — creates a Mixamo armature
+2. On our stickman armature, add `Copy Rotation` constraints on each bone targeting the corresponding Mixamo bone; add `Copy Location` on `Hips` only
+3. `Object → Animation → Bake Action` (Visual Keying ON, Clear Constraints ON, frame range = animation range)
+4. Name the baked action (e.g. `run`, `attack`)
+5. Push action to NLA, delete the Mixamo armature
+
+For batch imports (e.g. the Capoeira pack's 39 clips), script this loop via Blender MCP.
+
+#### Upper/lower body blending
+
+Animations support Godot `AnimationTree` bone-mask blending (e.g. `run` lower body + `attack` upper body). When authoring clips ensure:
+- `run` has upper body keyframes (hold idle pose)
+- `attack` has lower body keyframes (hold run pose)
+
+Missing channels on either half snap to T-pose during blending.
+
+#### Output
+
+One GLB per character — mesh + armature + all clips as NLA strips. Use the standard GLB export settings below.
 
 ### Capoeira Pack
 

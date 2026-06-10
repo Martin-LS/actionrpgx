@@ -1,3 +1,3 @@
 namespace Godot1.Stats;
 
-public enum StatId { MaxHp, Speed, PhysicalDamage, MagicDamage, PhysicalResistance, MagicResistance }
+public enum StatId { MaxHp, Speed, PhysicalDamage, MagicDamage, PhysicalResistance, MagicResistance, MaxFocus, FocusRegen }

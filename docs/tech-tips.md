@@ -247,32 +247,10 @@ Typical values: Chest ±20–25°, Spine ±12–15°, Hips ±6–8°.
 
 ---
 
-## Mixamo FBX export — lessons learned
+## Mixamo retargeting — lessons learned
 
-### Hair causes stray neck geometry
+### Rest pose mismatch causes constant rotation drift
 
-Hair meshes (`Hair_SideL`, `Hair_SideR`) have vertices that extend down to shoulder/neck height (Z ≈ 2.09) even though visually they sit on the head. After joining all meshes and exporting, these create a floating geometry cluster between the head and torso in the FBX. Mixamo and other tools flag this as an error.
+If the stickman's rest pose doesn't exactly match Mixamo's rest pose (even slightly different arm or leg angles), the constraint-based bake will produce a subtle but constant offset across every frame of every retargeted clip. The shoulders and upper arms are the most common culprit.
 
-**Fix:** Delete all hair objects before merging for Mixamo export. Hair is not needed for auto-rigging and can be added back after retargeting.
-
----
-
-### Surgical face deletion makes mesh integrity worse
-
-If you identify problem faces (non-manifold, interior, duplicate) and delete them selectively after the mesh has already been joined and posed, you will create new open boundary edges where those faces used to be. Trying to fix 8 non-manifold edges this way created 36.
-
-**Fix:** Restart from the source `.blend` with the offending objects removed before any merge or T-pose step. Clean source → merge → clean → T-pose, in that order. Never fix geometry after T-pose.
-
----
-
-### Duplicate faces at mesh join points
-
-When separate box-geometry meshes are joined (`object.join()`), their touching cap faces become co-planar duplicates — e.g. the top face of Torso and the bottom face of Head both exist at the same Z. These show as non-manifold in FBX viewers and Mixamo.
-
-**Fix:** Always run `bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=0.001)` immediately after joining, followed by interior face deletion and `recalc_face_normals`. Do this before the T-pose step.
-
----
-
-### T-pose rotation threshold for `player.blend`
-
-The arm/torso boundary is at X = ±0.51. Torso verts end at X = ±0.50; arm verts start at X = ±0.55. Using a threshold of `0.51` correctly isolates arm verts without touching torso geometry. If the character proportions change, recheck this gap by printing the X distribution at shoulder height (Z 1.5–2.5) before transforming.
+**Fix:** After setting up the constraints but before baking, scrub to frame 1 and visually inspect each bone. If a bone is visibly off from the source pose, add a rotation offset directly on the `Copy Rotation` constraint (`Offset` checkbox + manual rotation) until the live preview matches. Bake with the offset in place — it gets absorbed into the keyframes and disappears after `Clear Constraints`.

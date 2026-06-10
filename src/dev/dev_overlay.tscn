@@ -1,17 +1,15 @@
-[gd_scene format=3 uid="uid://dev_overlay_v1"]
+[gd_scene format=3 uid="uid://ctkdn3mjk72f"]
 
-[ext_resource type="Script" path="res://src/dev/DevOverlay.cs" id="1_devov"]
+[ext_resource type="Script" uid="uid://dv7ox1yhjtova" path="res://src/dev/DevOverlay.cs" id="1_devov"]
 
-[node name="DevOverlay" type="CanvasLayer"]
+[node name="DevOverlay" type="CanvasLayer" unique_id=713671818]
 layer = 10
 script = ExtResource("1_devov")
 
-[node name="ToggleButton" type="Button" parent="."]
-layout_mode = 1
+[node name="ToggleButton" type="Button" parent="." unique_id=160316599]
+anchors_preset = 5
 anchor_left = 0.5
 anchor_right = 0.5
-anchor_top = 0.0
-anchor_bottom = 0.0
 offset_left = -50.0
 offset_top = 5.0
 offset_right = 50.0
@@ -19,13 +17,11 @@ offset_bottom = 33.0
 grow_horizontal = 2
 text = "[ Dev ]"
 
-[node name="DevPanel" type="PanelContainer" parent="."]
+[node name="DevPanel" type="PanelContainer" parent="." unique_id=1305970860]
 visible = false
-layout_mode = 1
+anchors_preset = 5
 anchor_left = 0.5
 anchor_right = 0.5
-anchor_top = 0.0
-anchor_bottom = 0.0
 offset_left = -175.0
 offset_top = 38.0
 offset_right = 175.0
@@ -33,20 +29,20 @@ offset_bottom = 88.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="VBox" type="VBoxContainer" parent="DevPanel"]
+[node name="VBox" type="VBoxContainer" parent="DevPanel" unique_id=1955350479]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="SpeedRow" type="HBoxContainer" parent="DevPanel/VBox"]
+[node name="SpeedRow" type="HBoxContainer" parent="DevPanel/VBox" unique_id=87377584]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="SpeedLabel" type="Label" parent="DevPanel/VBox/SpeedRow"]
+[node name="SpeedLabel" type="Label" parent="DevPanel/VBox/SpeedRow" unique_id=1411352554]
 custom_minimum_size = Vector2(110, 0)
 layout_mode = 2
 vertical_alignment = 1
 
-[node name="SpeedSlider" type="HSlider" parent="DevPanel/VBox/SpeedRow"]
+[node name="SpeedSlider" type="HSlider" parent="DevPanel/VBox/SpeedRow" unique_id=224866539]
 custom_minimum_size = Vector2(220, 0)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -54,3 +50,11 @@ min_value = 50.0
 max_value = 500.0
 step = 10.0
 value = 200.0
+
+[node name="RangeToggle" type="CheckBox" parent="DevPanel/VBox" unique_id=85467075]
+layout_mode = 2
+text = "Attack Range"
+
+[node name="GodModeToggle" type="CheckBox" parent="DevPanel/VBox" unique_id=672313677]
+layout_mode = 2
+text = "God Mode"

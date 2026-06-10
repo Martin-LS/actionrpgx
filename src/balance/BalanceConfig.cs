@@ -47,8 +47,44 @@ public static class BalanceConfig
 
     public static class Skills
     {
-        public const float StrikeCooldown = 0.8f;
-        public const float StrikeRange    = 200f; // world units
+        public const float StrikeCooldown     = 0.8f;
+        public const float StrikeRange        = 200f; // world units
+        public const float MeleeWindupFraction = 0.35f; // fraction of cooldown before damage lands
+
+        public const float CycloneCooldown = 0.25f; // tick interval (4 hits/sec)
+        public const float CycloneRange    = 150f;
+
+        public const float NovaCooldown = 1.5f;
+        public const float NovaRange    = 300f;
+
+        public const float DamageAuraCooldown = 1.0f; // damage tick interval
+        public const float DamageAuraRange    = 250f;
+    }
+
+    public static class Focus
+    {
+        // Per-archetype base pool sizes and regen rates — placeholder, owned by Balancer
+        public const float WarriorMaxFocus    = 80f;
+        public const float WarriorRegenPerSec = 12f;
+        public const float RogueMaxFocus      = 100f;
+        public const float RogueRegenPerSec   = 15f;
+        public const float MageMaxFocus       = 150f;
+        public const float MageRegenPerSec    = 10f;
+
+        // Focus Shield (all archetypes) — placeholder, owned by Balancer
+        public const float ShieldFraction    = 0.30f;
+        public const float ShieldRegenPerSec = 5f;
+
+        // Per-skill focus costs — placeholder, owned by Balancer
+        public const float StrikeFocusCost        = 5f;
+        public const float CycloneFocusCostPerSec = 12f;  // drain per second while channeled
+        public const float NovaFocusCost          = 20f;
+        public const float DamageAuraReservation  = 0.25f; // fraction of MaxFocus
+
+        // Per-skill type damage multipliers — placeholder, owned by Balancer
+        public const float CycloneDamageMultiplier = 0.4f;
+        public const float AuraDamageMultiplier    = 0.2f;
+        public const float NovaDamageMultiplier    = 0.8f;
     }
 
     public static class Eots

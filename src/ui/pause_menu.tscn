@@ -1,40 +1,70 @@
 [gd_scene format=3 uid="uid://dpausemenu01"]
 
-[ext_resource type="Script" path="res://src/ui/PauseMenu.cs" id="1_pause"]
+[ext_resource type="Script" uid="uid://ckh5p6wkccmwt" path="res://src/ui/PauseMenu.cs" id="1_pause"]
 
-[node name="PauseMenu" type="CanvasLayer"]
+[node name="PauseMenu" type="CanvasLayer" unique_id=1149344807]
 process_mode = 3
 script = ExtResource("1_pause")
 
-[node name="Panel" type="PanelContainer" parent="."]
-layout_mode = 1
+[node name="Panel" type="PanelContainer" parent="." unique_id=355105790]
+anchors_preset = 8
 anchor_left = 0.5
-anchor_right = 0.5
 anchor_top = 0.5
+anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -200.0
-offset_right = 200.0
 offset_top = -80.0
+offset_right = 200.0
 offset_bottom = 80.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="VBox" type="VBoxContainer" parent="Panel"]
+[node name="VBox" type="VBoxContainer" parent="Panel" unique_id=1418151494]
 layout_mode = 2
 theme_override_constants/separation = 16
 
-[node name="ResumeButton" type="Button" parent="Panel/VBox"]
+[node name="ResumeButton" type="Button" parent="Panel/VBox" unique_id=1672943319]
 layout_mode = 2
 text = "Resume"
 
-[node name="HBox" type="HBoxContainer" parent="Panel/VBox"]
+[node name="HBox" type="HBoxContainer" parent="Panel/VBox" unique_id=1759757994]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="EndRunButton" type="Button" parent="Panel/VBox/HBox"]
+[node name="EndRunButton" type="Button" parent="Panel/VBox/HBox" unique_id=144628637]
 layout_mode = 2
 text = "End Run"
 
-[node name="WarningLabel" type="Label" parent="Panel/VBox/HBox"]
+[node name="WarningLabel" type="Label" parent="Panel/VBox/HBox" unique_id=1767933917]
 layout_mode = 2
 text = "All progress from this run will be lost."
+
+[node name="DebugSeparator" type="HSeparator" parent="Panel/VBox" unique_id=725145105]
+layout_mode = 2
+
+[node name="DebugSection" type="VBoxContainer" parent="Panel/VBox" unique_id=1839824772]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="SpeedRow" type="HBoxContainer" parent="Panel/VBox/DebugSection" unique_id=2084309944]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="SpeedLabel" type="Label" parent="Panel/VBox/DebugSection/SpeedRow" unique_id=729940274]
+custom_minimum_size = Vector2(110, 0)
+layout_mode = 2
+text = "Speed: 200"
+vertical_alignment = 1
+
+[node name="SpeedSlider" type="HSlider" parent="Panel/VBox/DebugSection/SpeedRow" unique_id=1209354731]
+custom_minimum_size = Vector2(220, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+min_value = 50.0
+max_value = 500.0
+step = 10.0
+value = 200.0
+
+[node name="RangeToggle" type="CheckBox" parent="Panel/VBox/DebugSection" unique_id=660866268]
+layout_mode = 2
+text = "Attack Range"

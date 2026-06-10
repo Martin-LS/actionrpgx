@@ -2,34 +2,29 @@
 
 [ext_resource type="PackedScene" uid="uid://b2jv4d1ynue3q" path="res://src/player/player.tscn" id="1_0xm2m"]
 [ext_resource type="Script" uid="uid://bpey7ysst6hsh" path="res://src/enemies/EnemySpawner.cs" id="6_7mycd"]
-[ext_resource type="Script" path="res://src/world/DungeonGenerator.cs" id="14_dungeon"]
 [ext_resource type="PackedScene" uid="uid://c000f6ave0x4q" path="res://src/hud/hud.tscn" id="6_272bh"]
 [ext_resource type="Script" uid="uid://drs7mknbpx3t" path="res://src/run/RunSession.cs" id="9_rsess"]
-[ext_resource type="PackedScene" path="res://src/ui/run_end_overlay.tscn" id="10_rend"]
-[ext_resource type="PackedScene" path="res://src/ui/pause_menu.tscn" id="12_pause"]
-[ext_resource type="PackedScene" path="res://src/dev/dev_overlay.tscn" id="13_devov"]
-[ext_resource type="Script" path="res://src/CameraFollow.cs" id="11_camf"]
+[ext_resource type="PackedScene" uid="uid://drend0vrlay1" path="res://src/ui/run_end_overlay.tscn" id="10_rend"]
+[ext_resource type="Script" uid="uid://jmt4n4cl5jb1" path="res://src/CameraFollow.cs" id="11_camf"]
+[ext_resource type="PackedScene" uid="uid://dpausemenu01" path="res://src/ui/pause_menu.tscn" id="12_pause"]
+[ext_resource type="Script" uid="uid://bkbuyt8udd24v" path="res://src/world/DungeonGenerator.cs" id="14_dungeon"]
 
 [sub_resource type="Environment" id="Environment_main"]
-background_mode = 0
-ambient_light/source = 1
-ambient_light/color = Color(0.8, 0.8, 0.8, 1)
-ambient_light/energy = 1.0
 
 [node name="Main" type="Node" unique_id=1499980909]
 
 [node name="Player" parent="." unique_id=1376160702 instance=ExtResource("1_0xm2m")]
 
-[node name="DungeonMap" type="Node3D" parent="."]
-script = ExtResource("14_dungeon")
-
-[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
-environment = SubResource("Environment_main")
-
-[node name="Camera3D" type="Camera3D" parent="Player"]
+[node name="Camera3D" type="Camera3D" parent="Player" unique_id=406762683]
 script = ExtResource("11_camf")
 
-[node name="DirectionalLight3D" type="DirectionalLight3D" parent="Player/Camera3D"]
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="Player/Camera3D" unique_id=284223955]
+
+[node name="DungeonMap" type="Node3D" parent="." unique_id=166871925]
+script = ExtResource("14_dungeon")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=2021677322]
+environment = SubResource("Environment_main")
 
 [node name="Hud" parent="." unique_id=420008163 instance=ExtResource("6_272bh")]
 
@@ -38,10 +33,7 @@ script = ExtResource("6_7mycd")
 
 [node name="RunSession" type="Node" parent="." unique_id=1263619530]
 script = ExtResource("9_rsess")
-RunDuration = 300.0
 
 [node name="RunEndOverlay" parent="." unique_id=1662657642 instance=ExtResource("10_rend")]
 
-[node name="PauseMenu" parent="." instance=ExtResource("12_pause")]
-
-[node name="DevOverlay" parent="." instance=ExtResource("13_devov")]
+[node name="PauseMenu" parent="." unique_id=1059022373 instance=ExtResource("12_pause")]

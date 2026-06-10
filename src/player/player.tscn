@@ -6,17 +6,11 @@
 [sub_resource type="SphereShape3D" id="SphereShape3D_player"]
 radius = 16.0
 
-[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_mf2ua"]
-animation = &"idle"
-
 [sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_rxibo"]
-animation = &"melee_atack"
+animation = &"melee_left_atack"
 
-[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_5f2sf"]
-animation = &"range_atack"
-
-[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_jiejy"]
-animation = &"range_magic_atack"
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_mf2ua"]
+animation = &"breathing_idle"
 
 [sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_244u8"]
 animation = &"run"
@@ -30,51 +24,44 @@ xfade_time = 0.2
 [sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_o822w"]
 xfade_time = 0.2
 
-[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_x42xx"]
-xfade_time = 0.1
-
-[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_l271a"]
-xfade_time = 0.1
-
-[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_8ydov"]
-xfade_time = 0.2
-switch_mode = 2
-advance_mode = 2
-
-[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_ylhto"]
-xfade_time = 0.1
-
-[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_cwolq"]
-xfade_time = 0.1
-
-[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_2smqc"]
-xfade_time = 0.2
-switch_mode = 2
-advance_mode = 2
-
-[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_rl62b"]
-xfade_time = 0.1
-
-[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_wlj80"]
-xfade_time = 0.1
-
-[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_6bm8s"]
-xfade_time = 0.2
-switch_mode = 2
-advance_mode = 2
-
-[sub_resource type="AnimationNodeStateMachine" id="AnimationNodeStateMachine_ylhto"]
+[sub_resource type="AnimationNodeStateMachine" id="AnimationNodeStateMachine_x42xx"]
 states/idle/node = SubResource("AnimationNodeAnimation_mf2ua")
-states/idle/position = Vector2(200, 100)
-states/melee_atack/node = SubResource("AnimationNodeAnimation_rxibo")
-states/melee_atack/position = Vector2(350, 250)
-states/range_atack/node = SubResource("AnimationNodeAnimation_5f2sf")
-states/range_atack/position = Vector2(550, 250)
-states/range_magic_atack/node = SubResource("AnimationNodeAnimation_jiejy")
-states/range_magic_atack/position = Vector2(750, 250)
+states/idle/position = Vector2(-200, 0)
 states/run/node = SubResource("AnimationNodeAnimation_244u8")
-states/run/position = Vector2(500, 100)
-transitions = ["Start", "idle", SubResource("AnimationNodeStateMachineTransition_5f2sf"), "idle", "run", SubResource("AnimationNodeStateMachineTransition_jiejy"), "run", "idle", SubResource("AnimationNodeStateMachineTransition_o822w"), "idle", "melee_atack", SubResource("AnimationNodeStateMachineTransition_x42xx"), "run", "melee_atack", SubResource("AnimationNodeStateMachineTransition_l271a"), "melee_atack", "idle", SubResource("AnimationNodeStateMachineTransition_8ydov"), "idle", "range_atack", SubResource("AnimationNodeStateMachineTransition_ylhto"), "run", "range_atack", SubResource("AnimationNodeStateMachineTransition_cwolq"), "range_atack", "idle", SubResource("AnimationNodeStateMachineTransition_2smqc"), "idle", "range_magic_atack", SubResource("AnimationNodeStateMachineTransition_rl62b"), "run", "range_magic_atack", SubResource("AnimationNodeStateMachineTransition_wlj80"), "range_magic_atack", "idle", SubResource("AnimationNodeStateMachineTransition_6bm8s")]
+states/run/position = Vector2(200, 0)
+transitions = ["Start", "idle", SubResource("AnimationNodeStateMachineTransition_5f2sf"), "idle", "run", SubResource("AnimationNodeStateMachineTransition_jiejy"), "run", "idle", SubResource("AnimationNodeStateMachineTransition_o822w")]
+
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_l271a"]
+animation = &"melee_right_atack"
+
+[sub_resource type="AnimationNodeTimeScale" id="AnimationNodeTimeScale_atk"]
+
+[sub_resource type="AnimationNodeOneShot" id="AnimationNodeOneShot_8ydov"]
+filter_enabled = true
+filters = ["Armature/Skeleton3D:Foot_L_2", "Armature/Skeleton3D:Foot_R_2", "Armature/Skeleton3D:Hips_2", "Armature/Skeleton3D:LowerLeg_L_2", "Armature/Skeleton3D:LowerLeg_R_2", "Armature/Skeleton3D:UpperLeg_L_2", "Armature/Skeleton3D:UpperLeg_R_2"]
+fadein_time = 0.1
+fadeout_time = 0.2
+
+[sub_resource type="AnimationNodeOneShot" id="AnimationNodeOneShot_ylhto"]
+filter_enabled = true
+filters = ["Armature/Skeleton3D:Foot_L_2", "Armature/Skeleton3D:Foot_R_2", "Armature/Skeleton3D:Hips_2", "Armature/Skeleton3D:LowerLeg_L_2", "Armature/Skeleton3D:LowerLeg_R_2", "Armature/Skeleton3D:UpperLeg_L_2", "Armature/Skeleton3D:UpperLeg_R_2"]
+fadein_time = 0.1
+fadeout_time = 0.2
+
+[sub_resource type="AnimationNodeBlendTree" id="AnimationNodeBlendTree_cwolq"]
+nodes/movement/node = SubResource("AnimationNodeStateMachine_x42xx")
+nodes/movement/position = Vector2(-400, 0)
+nodes/right_clip/node = SubResource("AnimationNodeAnimation_l271a")
+nodes/right_clip/position = Vector2(-200, 200)
+nodes/right_ts/node = SubResource("AnimationNodeTimeScale_atk")
+nodes/right_ts/position = Vector2(-50, 200)
+nodes/shot_right/node = SubResource("AnimationNodeOneShot_ylhto")
+nodes/shot_right/position = Vector2(-100, 0)
+nodes/left_clip/node = SubResource("AnimationNodeAnimation_rxibo")
+nodes/left_clip/position = Vector2(100, 200)
+nodes/shot_left/node = SubResource("AnimationNodeOneShot_8ydov")
+nodes/shot_left/position = Vector2(200, 0)
+node_connections = [&"output", 0, &"shot_left", &"shot_right", 0, &"movement", &"shot_right", 1, &"right_ts", &"right_ts", 0, &"right_clip", &"shot_left", 0, &"shot_right", &"shot_left", 1, &"left_clip"]
 
 [node name="Player" type="CharacterBody3D" unique_id=1376160702]
 script = ExtResource("1_4anbu")
@@ -86,4 +73,11 @@ shape = SubResource("SphereShape3D_player")
 script = ExtResource("2_rxibo")
 
 [node name="AnimationTree" type="AnimationTree" parent="." unique_id=2125396885]
-tree_root = SubResource("AnimationNodeStateMachine_ylhto")
+tree_root = SubResource("AnimationNodeBlendTree_cwolq")
+parameters/right_ts/scale = 1.5
+parameters/shot_right/active = false
+parameters/shot_right/internal_active = false
+parameters/shot_right/request = 0
+parameters/shot_left/active = false
+parameters/shot_left/internal_active = false
+parameters/shot_left/request = 0

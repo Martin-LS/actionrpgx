@@ -1,5 +1,6 @@
 using Godot;
 using System.Linq;
+using Godot1.Crafting;
 using Godot1.Items;
 using Godot1.Skills;
 using Godot1.Stats;
@@ -63,6 +64,9 @@ public partial class CharacterScreen : Control
             _skillBtns[i] = GetNode<Button>($"{CharViewBase}/SkillBar/SkillSlot{i + 1}/SkillSlotButton{i + 1}");
             _skillBtns[i].GuiInput += (e) => OnSkillSlotInput(e, captured);
         }
+
+        GetNode<Button>($"{CharViewBase}/CraftButtons/CraftEquipmentButton").Pressed += ShowCraftEquipmentPopup;
+        GetNode<Button>($"{CharViewBase}/CraftButtons/CraftSkillButton").Pressed    += ShowCraftSkillPopup;
 
         GetNode<Button>($"{CharViewBase}/Buttons/StartRunButton").Pressed += () =>
             GetTree().ChangeSceneToFile("res://main.tscn");
@@ -327,7 +331,7 @@ public partial class CharacterScreen : Control
             if (occupied)
                 ShowEquippedItemPopup(slot, btn);
             else
-                OpenPicker(slot);
+                ShowEmptyGearSlotMenu(slot, btn);
         }
     }
 
@@ -349,7 +353,7 @@ public partial class CharacterScreen : Control
             if (occupied)
                 ShowEquippedSkillPopup(slotIndex, instanceId!, _skillBtns[slotIndex]);
             else
-                OpenSkillPicker(slotIndex);
+                ShowEmptySkillSlotMenu(slotIndex, _skillBtns[slotIndex]);
         }
     }
 
@@ -392,12 +396,15 @@ public partial class CharacterScreen : Control
     private void ShowInventoryItemPopup(GearItemInstance instance, ItemData item, Button anchor)
     {
         var popup = NewStyledPopup();
-        popup.AddItem("Modify", 0);
-        popup.AddItem("Delete", 1);
+        popup.AddItem("Equip",  0);
+        popup.AddItem("Modify", 1);
+        popup.AddItem("Delete", 2);
         popup.IdPressed += (long id) =>
         {
-            if (id == 0) ShowGearModifyPanel(instance);
-            else if (id == 1) { _manager.DeleteGearItem(instance.Id); Refresh(); }
+            var c = _manager.SelectedCharacter;
+            if (id == 0 && c != null) { _manager.EquipItem(c.Id, item.Slot, instance.Id); Refresh(); }
+            else if (id == 1) ShowGearModifyPanel(instance);
+            else if (id == 2) { _manager.DeleteGearItem(instance.Id); Refresh(); }
         };
         ShowPopupAt(popup, anchor);
     }
@@ -405,12 +412,21 @@ public partial class CharacterScreen : Control
     private void ShowSkillInventoryPopup(SkillItemInstance instance, Button anchor)
     {
         var popup = NewStyledPopup();
-        popup.AddItem("Modify", 0);
-        popup.AddItem("Delete", 1);
+        popup.AddItem("Equip",  0);
+        popup.AddItem("Modify", 1);
+        popup.AddItem("Delete", 2);
         popup.IdPressed += (long id) =>
         {
-            if (id == 0) ShowSkillModifyPanel(instance);
-            else if (id == 1) { _manager.DeleteSkillItem(instance.Id); Refresh(); }
+            var c = _manager.SelectedCharacter;
+            if (id == 0 && c != null)
+            {
+                int emptySlot = c.SlottedSkillInstanceIds.IndexOf("");
+                if (emptySlot < 0) emptySlot = 0;
+                _manager.EquipSkill(c.Id, emptySlot, instance.Id);
+                Refresh();
+            }
+            else if (id == 1) ShowSkillModifyPanel(instance);
+            else if (id == 2) { _manager.DeleteSkillItem(instance.Id); Refresh(); }
         };
         ShowPopupAt(popup, anchor);
     }
@@ -447,12 +463,16 @@ public partial class CharacterScreen : Control
         if (!c.EquippedGear.TryGetValue(slot.ToString(), out var instance)) return;
 
         var popup = NewStyledPopup();
-        popup.AddItem("Modify", 0);
-        popup.AddItem("Delete", 1);
+        popup.AddItem("Unequip", 0);
+        popup.AddItem("Modify",  1);
+        popup.AddItem("Delete",  2);
+        bool inventoryFull = _manager.Profile.OwnedGearInstances.Count >= Character.ProfileData.MaxInventory;
+        popup.SetItemDisabled(0, inventoryFull);
         popup.IdPressed += (long id) =>
         {
-            if (id == 0) ShowGearModifyPanel(instance);
-            else if (id == 1) { _manager.DeleteGearItem(instance.Id); Refresh(); }
+            if (id == 0) { _manager.UnequipItem(c.Id, slot); Refresh(); }
+            else if (id == 1) ShowGearModifyPanel(instance);
+            else if (id == 2) { _manager.DeleteGearItem(instance.Id); Refresh(); }
         };
         ShowPopupAt(popup, anchor);
     }
@@ -462,14 +482,166 @@ public partial class CharacterScreen : Control
         var c        = _manager.SelectedCharacter!;
         var instance = _manager.FindSkillInstance(instanceId);
         var popup    = NewStyledPopup();
-        popup.AddItem("Modify", 0);
-        popup.AddItem("Delete", 1);
+        popup.AddItem("Unequip", 0);
+        popup.AddItem("Modify",  1);
+        popup.AddItem("Delete",  2);
+        popup.AddCheckItem("Auto-activate", 3);
+        bool autoOn = slotIndex < c.SlotAutoActivate.Count ? c.SlotAutoActivate[slotIndex] : true;
+        popup.SetItemChecked(3, autoOn);
         popup.IdPressed += (long id) =>
         {
-            if (id == 0 && instance != null) ShowSkillModifyPanel(instance);
-            else if (id == 1) { _manager.DeleteSkillPermanently(c.Id, slotIndex); Refresh(); }
+            if (id == 0) { _manager.UnequipSkillSlot(c.Id, slotIndex); Refresh(); }
+            else if (id == 1 && instance != null) ShowSkillModifyPanel(instance);
+            else if (id == 2) { _manager.DeleteSkillPermanently(c.Id, slotIndex); Refresh(); }
+            else if (id == 3) { _manager.SetSlotAutoActivate(c.Id, slotIndex, !popup.IsItemChecked(3)); }
         };
         ShowPopupAt(popup, anchor);
+    }
+
+    private void ShowEmptyGearSlotMenu(ItemSlot slot, Button anchor)
+    {
+        var popup = NewStyledPopup();
+        popup.AddItem("Craft New",            0);
+        popup.AddItem("Equip from Inventory", 1);
+        popup.IdPressed += (long id) =>
+        {
+            if      (id == 0) ShowCraftGearForSlotPanel(slot);
+            else if (id == 1) OpenPicker(slot);
+        };
+        ShowPopupAt(popup, anchor);
+    }
+
+    private void ShowEmptySkillSlotMenu(int slotIndex, Button anchor)
+    {
+        var popup = NewStyledPopup();
+        popup.AddItem("Craft New",            0);
+        popup.AddItem("Equip from Inventory", 1);
+        popup.IdPressed += (long id) =>
+        {
+            if      (id == 0) ShowCraftSkillPopup();
+            else if (id == 1) OpenSkillPicker(slotIndex);
+        };
+        ShowPopupAt(popup, anchor);
+    }
+
+    private void ShowCraftGearForSlotPanel(ItemSlot slot)
+    {
+        var overlay = MakeModalOverlay();
+        var panel   = MakeModifyPanel();
+        var vbox    = new VBoxContainer();
+        vbox.AddThemeConstantOverride("separation", 8);
+        panel.AddChild(vbox);
+        overlay.AddChild(panel);
+        AddChild(overlay);
+
+        vbox.AddChild(MakeModifyHeader($"Craft {slot}", () => overlay.QueueFree()));
+        vbox.AddChild(new HSeparator());
+
+        int  common  = _manager.Profile.GetMaterial("crafting_common");
+        bool invFull = _manager.Profile.OwnedGearInstances.Count >= Character.ProfileData.MaxInventory;
+
+        var statusLbl = new Label { Text = invFull ? "Inventory full" : $"Common material: {common}" };
+        statusLbl.AddThemeColorOverride("font_color", new Color("#8AA0AE"));
+        vbox.AddChild(statusLbl);
+
+        bool any = false;
+        foreach (var recipe in RecipeRegistry.ForType(RecipeType.Gear))
+        {
+            var itemDef = ItemRegistry.Get(recipe.OutputItemId);
+            if (itemDef == null || itemDef.Slot != slot) continue;
+            any = true;
+            int  cost     = recipe.MaterialCosts.TryGetValue("crafting_common", out var mc) ? mc : 1;
+            bool canCraft = !invFull && common >= cost;
+            var  btn      = MakeModifyButton($"{itemDef.Name}  —  {cost} Common", !canCraft);
+            string rid    = recipe.Id;
+            btn.Pressed  += () => { _manager.CraftGearItem(rid); overlay.QueueFree(); Refresh(); };
+            vbox.AddChild(btn);
+        }
+
+        if (!any)
+        {
+            var lbl = new Label { Text = "No recipes available for this slot" };
+            lbl.AddThemeColorOverride("font_color", new Color("#4A5560"));
+            vbox.AddChild(lbl);
+        }
+    }
+
+    private void ShowCraftEquipmentPopup()
+    {
+        var overlay = MakeModalOverlay();
+        var panel   = MakeModifyPanel();
+        var vbox    = new VBoxContainer();
+        vbox.AddThemeConstantOverride("separation", 8);
+        panel.AddChild(vbox);
+        overlay.AddChild(panel);
+        AddChild(overlay);
+
+        vbox.AddChild(MakeModifyHeader("Craft Equipment", () => overlay.QueueFree()));
+        vbox.AddChild(new HSeparator());
+
+        int common    = _manager.Profile.GetMaterial("crafting_common");
+        bool invFull  = _manager.Profile.OwnedGearInstances.Count >= Character.ProfileData.MaxInventory;
+
+        var statusLbl = new Label { Text = invFull ? "Inventory full" : $"Common material: {common}" };
+        statusLbl.AddThemeColorOverride("font_color", new Color("#8AA0AE"));
+        vbox.AddChild(statusLbl);
+
+        foreach (var recipe in RecipeRegistry.ForType(RecipeType.Gear))
+        {
+            var itemDef  = ItemRegistry.Get(recipe.OutputItemId);
+            if (itemDef == null) continue;
+            int cost     = (recipe.MaterialCosts.TryGetValue("crafting_common", out var matCost) ? matCost : 1);
+            bool canCraft = !invFull && common >= cost;
+            string label  = $"{itemDef.Name}  [{itemDef.Slot}]  —  {cost} Common";
+            var btn       = MakeModifyButton(label, !canCraft);
+            string recipeId = recipe.Id;
+            btn.Pressed += () =>
+            {
+                _manager.CraftGearItem(recipeId);
+                overlay.QueueFree();
+                Refresh();
+            };
+            vbox.AddChild(btn);
+        }
+    }
+
+    private void ShowCraftSkillPopup()
+    {
+        var overlay = MakeModalOverlay();
+        var panel   = MakeModifyPanel();
+        var vbox    = new VBoxContainer();
+        vbox.AddThemeConstantOverride("separation", 8);
+        panel.AddChild(vbox);
+        overlay.AddChild(panel);
+        AddChild(overlay);
+
+        vbox.AddChild(MakeModifyHeader("Craft Skill", () => overlay.QueueFree()));
+        vbox.AddChild(new HSeparator());
+
+        int common   = _manager.Profile.GetMaterial("crafting_common");
+        bool invFull = _manager.Profile.OwnedSkillInstances.Count >= Character.ProfileData.MaxInventory;
+
+        var statusLbl = new Label { Text = invFull ? "Inventory full" : $"Common material: {common}" };
+        statusLbl.AddThemeColorOverride("font_color", new Color("#8AA0AE"));
+        vbox.AddChild(statusLbl);
+
+        foreach (var recipe in RecipeRegistry.ForType(RecipeType.Skill))
+        {
+            var skillDef = Skills.SkillRegistry.Get(recipe.OutputItemId);
+            if (skillDef == null) continue;
+            int cost     = (recipe.MaterialCosts.TryGetValue("crafting_common", out var matCost) ? matCost : 1);
+            bool canCraft = !invFull && common >= cost;
+            string label  = $"{skillDef.Name}  —  {cost} Common";
+            var btn       = MakeModifyButton(label, !canCraft);
+            string recipeId = recipe.Id;
+            btn.Pressed += () =>
+            {
+                _manager.CraftSkillItem(recipeId);
+                overlay.QueueFree();
+                Refresh();
+            };
+            vbox.AddChild(btn);
+        }
     }
 
     private void ShowPopupAt(PopupMenu popup, Control anchor)

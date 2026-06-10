@@ -156,6 +156,22 @@ size_flags_horizontal = 0
 text = "—"
 script = ExtResource("2_rp7wk")
 
+[node name="CraftButtons" type="HBoxContainer" parent="VBox/TabContainer/Loadout/LoadoutSplit/CharacterView" unique_id=1441968499]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="CraftEquipmentButton" type="Button" parent="VBox/TabContainer/Loadout/LoadoutSplit/CharacterView/CraftButtons" unique_id=1809648971]
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Craft Equipment"
+
+[node name="CraftSkillButton" type="Button" parent="VBox/TabContainer/Loadout/LoadoutSplit/CharacterView/CraftButtons" unique_id=322537999]
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Craft Skill"
+
 [node name="SkillBar" type="HBoxContainer" parent="VBox/TabContainer/Loadout/LoadoutSplit/CharacterView" unique_id=1706032834]
 layout_mode = 2
 size_flags_horizontal = 4

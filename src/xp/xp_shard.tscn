@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://bodp3acwu4m88"]
 
-[ext_resource type="Script" uid="uid://des87mkw6kmxn" path="res://src/xp/XpShard.cs" id="1_je6xg"]
+[ext_resource type="Script" uid="uid://kbssqo4jpwfc" path="res://src/xp/XpShard.cs" id="1_je6xg"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_shard"]
 radius = 8.0
