@@ -246,7 +246,7 @@ public partial class PlayerController : CharacterBody3D
         float indicatorRadius = EffectiveRange > 0f ? EffectiveRange : 1.5f * GameScale.TileSize;
         _rangeIndicator = CreateRangeIndicator(indicatorRadius);
         AddChild(_rangeIndicator);
-        _rangeIndicator.Visible = OS.HasFeature("editor");
+        _rangeIndicator.Visible = false;
     }
 
     public void SetRangeIndicatorVisible(bool visible)

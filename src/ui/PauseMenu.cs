@@ -36,7 +36,7 @@ public partial class PauseMenu : CanvasLayer
                 speedLabel.Text = $"Speed: {(int)val}";
             };
 
-            rangeToggle.ButtonPressed = OS.HasFeature("editor");
+            rangeToggle.ButtonPressed = false;
             rangeToggle.Toggled += on => player.SetRangeIndicatorVisible(on);
         }
     }

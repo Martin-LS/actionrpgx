@@ -16,9 +16,14 @@ public partial class WeaponController : Node
     private static readonly PackedScene ImpactHitScene =
         GD.Load<PackedScene>("res://PolyBlocks/EffectBlocks/assets/impacts/impact_5.tscn");
 
+    private static readonly PackedScene CycloneVfxScene =
+        GD.Load<PackedScene>("res://src/vfx/cyclone_vfx.tscn");
+
     private const float SplashRadius = 60f;
 
     private Player.PlayerController? _player;
+    private GpuParticles3D? _cycloneVfx;
+    private bool _wasChanneling;
 
     private float      _physicalDamage  = 20f;
     private float      _magicDamage     = 0f;
@@ -26,7 +31,18 @@ public partial class WeaponController : Node
     private float      _globalCritChance = 0f;
     private float      _critMultiplier   = BalanceConfig.SkillAugments.CritMultiplier;
 
-    public override void _Ready() => _player = GetParent<Player.PlayerController>();
+    public override void _Ready()
+    {
+        _player = GetParent<Player.PlayerController>();
+
+        if (CycloneVfxScene != null)
+        {
+            var vfxRoot = CycloneVfxScene.Instantiate<Node3D>();
+            _cycloneVfx = vfxRoot.GetNodeOrNull<GpuParticles3D>("Whirl");
+            if (_cycloneVfx != null) _cycloneVfx.Emitting = false;
+            _player?.CallDeferred(Node.MethodName.AddChild, vfxRoot);
+        }
+    }
 
     public void SetDamage(float physicalDamage, float magicDamage)
     {
@@ -107,9 +123,6 @@ public partial class WeaponController : Node
             if (_slots[i].CooldownTimer > 0f)
                 _slots[i].CooldownTimer -= dt;
 
-            if (_slots[i].Skill!.Type == SkillType.Channeled && _slots[i].AutoActivate)
-                _slots[i].IsChanneling = FindNearestEnemy(_range) != null;
-
             bool active = (_slots[i].AutoActivate && _slots[i].Skill!.Type != SkillType.Channeled) ||
                           (_slots[i].Skill!.Type == SkillType.Channeled && _slots[i].IsChanneling) ||
                           (_slots[i].Skill!.Type == SkillType.Aura      && _slots[i].AuraActive);
@@ -127,6 +140,26 @@ public partial class WeaponController : Node
                     ProcessActiveSlot(i, dt);
                     break;
             }
+        }
+
+        if (_cycloneVfx != null)
+        {
+            bool channeling = IsAnySlotChanneling();
+            if (channeling != _wasChanneling)
+            {
+                if (!channeling)
+                {
+                    _cycloneVfx.Restart();
+                    _cycloneVfx.Emitting = false;
+                }
+                else
+                {
+                    _cycloneVfx.Emitting = true;
+                }
+                _wasChanneling = channeling;
+            }
+            if (channeling)
+                _cycloneVfx.GetParent<Node3D>().RotateY(Mathf.Tau * 1.0f * dt);
         }
     }
 
@@ -164,12 +197,40 @@ public partial class WeaponController : Node
     private void ProcessChanneledSlot(int i, float dt)
     {
         if (_slots[i].CooldownTimer > 0f) return;
-        var target = FindNearestEnemy(_range);
-        if (target == null) return;
+        if (FindNearestEnemy(_slots[i].Skill!.Range) == null) return;
         float drain = _slots[i].Skill!.FocusCost * _slots[i].Skill!.Cooldown;
         if (_player != null && !_player.TrySpendFocus(drain)) return;
-        FireAt(i, target);
+        FireCyclone(i);
         _slots[i].CooldownTimer = _slots[i].Skill!.Cooldown;
+    }
+
+    private void FireCyclone(int slotIndex)
+    {
+        ref var slot   = ref _slots[slotIndex];
+        var     origin = GetParent<Node3D>().GlobalPosition;
+
+        bool  isMagic = (_baseDamageType == Items.DamageType.Magic) || slot.HasMagicDamage;
+        var   dmgType = isMagic ? Items.DamageType.Magic : Items.DamageType.Physical;
+        float baseDmg = (isMagic ? _magicDamage : _physicalDamage) * slot.DamageMultiplier;
+
+        float critChance = _globalCritChance + slot.CritChanceBonus;
+        float critMult   = 1.0f;
+        if (critChance > 0f && GD.Randf() < critChance)
+            critMult = _critMultiplier;
+        baseDmg *= critMult;
+
+        bool hit = false;
+        foreach (var node in GetTree().GetNodesInGroup("enemies"))
+        {
+            if (node is not Enemies.EnemyController enemy || enemy.IsQueuedForDeletion()) continue;
+            if (origin.DistanceTo(enemy.GlobalPosition) > slot.Skill!.Range) continue;
+            enemy.TakeDamage(baseDmg, dmgType, critMult > 1f);
+            ApplyEots(enemy, slot.EotIds, critMult);
+            hit = true;
+        }
+
+        if (hit)
+            EmitSignal(SignalName.SkillFired, slotIndex, slot.Skill!.Cooldown, "Melee");
     }
 
     private void ProcessAuraSlot(int i, float dt)

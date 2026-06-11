@@ -36,7 +36,7 @@ public partial class DevOverlay : CanvasLayer
         };
 
         var rangeToggle = GetNode<CheckBox>("DevPanel/VBox/RangeToggle");
-        rangeToggle.ButtonPressed = OS.HasFeature("editor");
+        rangeToggle.ButtonPressed = false;
         rangeToggle.Toggled += on => player.SetRangeIndicatorVisible(on);
 
         var godToggle = GetNode<CheckBox>("DevPanel/VBox/GodModeToggle");

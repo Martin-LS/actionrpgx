@@ -219,6 +219,9 @@ public partial class CharacterManager : Node
         while (c.SlottedSkillInstanceIds.Count <= slotIndex)
             c.SlottedSkillInstanceIds.Add("");
         c.SlottedSkillInstanceIds[slotIndex] = instanceId;
+        while (c.SlotAutoActivate.Count <= slotIndex)
+            c.SlotAutoActivate.Add(true);
+        c.SlotAutoActivate[slotIndex] = true;
         Save();
     }
 
