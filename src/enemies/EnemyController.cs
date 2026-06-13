@@ -49,9 +49,34 @@ public partial class EnemyController : CharacterBody3D
             animPlayer = new AnimationPlayer();
             enemyModel.AddChild(animPlayer);
         }
-        LoadAnimClip(animPlayer, "res://assets/models/characters/kaykit_anim_general.glb",  "Idle_A",               "idle",   Animation.LoopModeEnum.Linear);
-        LoadAnimClip(animPlayer, "res://assets/models/characters/kaykit_anim_movement.glb", "Running_A",            "walk",   Animation.LoopModeEnum.Linear);
-        LoadAnimClip(animPlayer, "res://assets/models/characters/kaykit_anim_melee.glb",    "Melee_1H_Attack_Chop", "attack", Animation.LoopModeEnum.None);
+        if (animPlayer.HasAnimation("walk"))
+        {
+            // Skeleton faces +Z in Godot (Blender -Y after Y-up export); LookAt uses -Z forward, so flip 180°
+            enemyModel.RotationDegrees = new Vector3(0f, 180f, 0f);
+
+            // Model has its own walk — alias idle and attack from it so the AnimationTree states resolve
+            var walkAnim = animPlayer.GetAnimation("walk");
+            walkAnim.LoopMode = Animation.LoopModeEnum.Linear;
+            var lib = animPlayer.GetAnimationLibrary("");
+            if (!lib.HasAnimation("idle"))
+            {
+                var idle = (Animation)walkAnim.Duplicate();
+                idle.LoopMode = Animation.LoopModeEnum.Linear;
+                lib.AddAnimation("idle", idle);
+            }
+            if (!lib.HasAnimation("attack"))
+            {
+                var atk = (Animation)walkAnim.Duplicate();
+                atk.LoopMode = Animation.LoopModeEnum.None;
+                lib.AddAnimation("attack", atk);
+            }
+        }
+        else
+        {
+            LoadAnimClip(animPlayer, "res://assets/models/characters/kaykit_anim_general.glb",  "Idle_A",               "idle",   Animation.LoopModeEnum.Linear);
+            LoadAnimClip(animPlayer, "res://assets/models/characters/kaykit_anim_movement.glb", "Running_A",            "walk",   Animation.LoopModeEnum.Linear);
+            LoadAnimClip(animPlayer, "res://assets/models/characters/kaykit_anim_melee.glb",    "Melee_1H_Attack_Chop", "attack", Animation.LoopModeEnum.None);
+        }
 
         var animTree = GetNodeOrNull<AnimationTree>("AnimationTree");
         if (animTree != null)

@@ -19,5 +19,5 @@ public static class EnemyRegistry
         BalanceConfig.Enemies.Skeleton.ContactDamage,
         PhysicalResistance: BalanceConfig.Enemies.Skeleton.PhysicalResistance,
         MagicResistance: 0f,
-        ModelPath: "res://assets/models/characters/kaykit_enemy_skeleton.glb");
+        ModelPath: "res://assets/models/characters/enemy_skeleton.glb");
 }

@@ -263,6 +263,24 @@ Typical values: Chest ±20–25°, Spine ±12–15°, Hips ±6–8°.
 
 ## Mixamo retargeting — lessons learned
 
+### Always apply transforms on the Mixamo armature before retargeting
+
+When Mixamo FBX is imported into Blender, the armature object carries a **90° X rotation** at the object level (Z-up to Y-up conversion). This rotation is NOT baked into the bone data — it sits on the object transform.
+
+If you add `Copy Rotation` constraints in WORLD space without applying this transform first, every bone rotation is read in the wrong coordinate frame. The result is the retargeted animation playing backwards, sideways, or completely broken.
+
+**Fix — always do this immediately after import, before adding any constraints:**
+
+```python
+bpy.context.view_layer.objects.active = mixamo_arm
+mixamo_arm.select_set(True)
+bpy.ops.object.transform_apply(rotation=True, scale=True, location=False)
+```
+
+Verify with `print(mixamo_arm.rotation_euler)` — all three values must be `0.000` before proceeding.
+
+---
+
 ### Rest pose mismatch causes constant rotation drift
 
 If the stickman's rest pose doesn't exactly match Mixamo's rest pose (even slightly different arm or leg angles), the constraint-based bake will produce a subtle but constant offset across every frame of every retargeted clip. The shoulders and upper arms are the most common culprit.

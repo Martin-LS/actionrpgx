@@ -7,15 +7,77 @@
 
 ## Visual Style
 
-**Reference:** Crossy Road / voxel-art character style. Blocky, readable, deliberately low-detail. No organic curves — everything is built from rectangular primitives arranged to suggest form. The style reads well at small screen sizes and from the game's elevated camera angle.
+**Reference:** Between Minecraft (pure boxes) and a more shaped blocky style. Deliberately low-detail, readable at small screen sizes and from the game's elevated camera angle. The key difference from pure voxel art: every hard edge gets a stepped chamfer — small boxy geometry steps at corners that catch light and give depth without introducing any curves or organic shapes.
 
 | Property | Rule |
 |---|---|
 | Construction | Box/rectangular primitives only — no cylinders, spheres, or smooth surfaces |
+| Edge treatment | Stepped chamfer on all hard edges (see **Edge Chamfer Standard** below) |
 | Shading | Flat-shaded (`shade_smooth` off). No normal maps. |
 | Textures | None. Solid flat-colour materials only, one material per body region |
 | Lighting response | Flat materials respond to scene lighting (not emission) — directional light gives depth |
 | Scale reference | Player character imports with visuals node scale 9 in Godot (`visuals.Scale = Vector3(9,9,9)` in `PlayerController`). Author new characters to the same Blender scale as `player.blend` for consistent proportions. |
+
+### Edge Chamfer Standard
+
+All hard-edged assets (characters, enemies, props, environment pieces) use a **stepped bevel** at every sharp corner. This is the visual signature of the game's style — it must be consistent across all assets.
+
+**Blender modifier settings:**
+
+```python
+bevel = obj.modifiers.new(name="Bevel", type='BEVEL')
+bevel.width = 0.3         # locked-in standard — see width table below
+bevel.segments = 3        # 3 steps = boxy staircase profile, not smooth curve
+bevel.limit_method = 'ANGLE'
+bevel.angle_limit = 0.5236  # 30° — only sharp corners, not soft joins
+bevel.profile = 1.0       # convex/boxy step profile (0.5 = straight chamfer, 1.0 = stepped)
+bevel.use_clamp_overlap = True
+```
+
+**Workflow: block out first, bevel last.** Build the entire asset from plain boxes with no bevel. Once the shapes are right, add the Bevel modifier to every mesh object. Never model with bevel on — it obscures the underlying geometry and makes editing harder.
+
+**Width scaling by asset size:**
+
+| Asset category | Bevel width |
+|---|---|
+| Player / humanoid characters | **0.3** (locked in — matches `player.blend`) |
+| Large enemies / bosses | 0.4–0.5 (scale to match visual weight) |
+| Small props (weapons, items) | 0.08–0.12 |
+| Environment / architecture | 0.3–0.5 |
+
+**Performance rule:** The bevel modifier is applied at export (`export_apply=True` in the GLB export call). It is baked geometry in Godot — not a runtime effect. For high-frequency filler assets (distant trees, ground debris) a lighter bevel or no bevel is acceptable; reserve the full chamfer for hero and foreground assets.
+
+**Player `.blend` is the visual reference.** When in doubt, open `player.blend` and match what you see.
+
+### Style Philosophy
+
+**Simple is the goal — not a compromise.** Resist the urge to add extra detail, surface variation, or complexity. If a shape can be made from fewer boxes, use fewer. The style works because it is consistent and readable, not because any single asset is impressive up close.
+
+When in doubt: fewer pieces, flatter, blockier.
+
+### Building a New Asset — Checklist
+
+Follow this for every new asset regardless of type (character, enemy, prop, tree, rock, building).
+
+1. **Block out with box primitives only** — add a cube, scale/position it. No other primitive types. Each distinct body region / material zone is its own object.
+2. **Assign one flat-colour material per region** — pick from `docs/color-scheme.md`. No textures, no gradients, no vertex colours.
+3. **Shade flat** — select all objects, right-click → Shade Flat. Confirm `shade_smooth` is off.
+4. **Add the Bevel modifier** to every mesh object using the Edge Chamfer Standard settings above. Scale `width` proportionally if the asset is much larger or smaller than the player.
+5. **Check silhouette from top-down** — the game camera is elevated and angled. Rotate the viewport to match (~45° pitch, top-down) and confirm the asset reads clearly as a silhouette. Most detail on top faces (head top, shoulder tops, roof) — that is what the player sees most.
+6. **Keep poly count low** — no subdivision, no loops added for curvature. The bevel modifier adds enough geometry at export.
+7. **Export** — `export_apply=True` bakes the bevel into the GLB. Follow the Export Settings section below.
+
+### Asset Types — Style Notes
+
+| Asset type | Key rules |
+|---|---|
+| Humanoid character | Follow Proportions table. Separate mesh per body region. Rig to standard bone set. |
+| Non-humanoid enemy | Same box construction. Exaggerate one feature for readability (big head, wide body, long arms). |
+| Tree / plant | Trunk = tall thin box. Canopy = 1–3 stacked/offset cubes, slightly rotated for irregularity. No leaves mesh. |
+| Rock / boulder | 1–3 overlapping boxes at slightly different rotations. Bevel gives enough shape. |
+| Barrel / crate / chest | Single box with inset face for lid/panel detail. One or two accent colour strips. |
+| Building / wall | Modular box sections. Windows = inset darker box. No arches or curves. |
+| Weapon / item | Keep very simple — these are tiny on screen. 2–4 boxes max. |
 
 ---
 

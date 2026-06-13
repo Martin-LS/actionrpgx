@@ -162,7 +162,7 @@ public static class BalanceConfig
     {
         public static class Skeleton
         {
-            public const float BaseSpeed          = 65f;
+            public const float BaseSpeed          = 42f;
             public const int   BaseHealth         = 2;
             public const int   ContactDamage      = 5;
             public const float PhysicalResistance = 0.10f;
@@ -193,7 +193,7 @@ public static class BalanceConfig
         public static class Warrior
         {
             public const float MaxHp                    = 150f;
-            public const float Speed                    = 170f;
+            public const float Speed                    = 110f;
             public const float PhysicalDamageMultiplier = 1.5f;
             public const float MagicDamageMultiplier    = 0.5f;
         }
