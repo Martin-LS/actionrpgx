@@ -1,9 +1,9 @@
-# CLAUDE.md — godot1
+# CLAUDE.md — godot2
 
 
 ## Project Overview
 
-Top-down action RPG with horde combat (Diablo / Path of Exile 2 style). Godot 4.6, C#, Forward Plus renderer. 3D world with custom voxel-art style characters, perspective camera. Skills are manually activated by the player; each skill slot has an optional auto-activate toggle.
+Top-down horde survival game with action RPG depth — closer to Vampire Survivors in moment-to-moment feel, with meaningful skill and item systems layered on top. Godot 4.6, C#, Forward Plus renderer. 3D world with custom voxel-art style characters, perspective camera. Core mechanics are being redesigned as part of a pivot away from the previous deliberate action RPG direction.
 
 ## Docs
 
@@ -16,11 +16,12 @@ Top-down action RPG with horde combat (Diablo / Path of Exile 2 style). Godot 4.
 - `docs/technical-assets.md` — 3D asset pipeline: visual style, proportions, rig standard, animation clip names, Blender export settings, Godot import settings, KayKit library reference
 - `docs/tech-tips.md` — Hard-won lessons: Blender↔Godot axes, mesh origins, BoneAttachment3D, AnimationPlayer quirks, bone naming, log file location
 - `docs/color-scheme.md` — Iron & Slate color reference: full hex palette for world surfaces, UI, loot rarity, VFX, lighting, enemy coding, and biomes. Use this for all visual work.
-- `docs/todo.md` — Pending work: visuals, animation, gameplay, systems, tech. Check and update each session.
+- `docs/todo-tech.md` — Pending tech work: code, systems, UI, art. Check and update each session.
+- `docs/game-design-direction.md` — Open and parked design decisions. Check when doing design work.
 
 **Read the relevant doc before making design or architectural decisions.**
 
-At the start of every session: read `docs/todo.md`, note what's pending, and tick off anything completed during the session. Read `docs/tech-tips.md` before any 3D asset, animation, or bone work. Read `docs/color-scheme.md` before any visual, UI, VFX, or material work.
+At the start of every session: read `docs/todo-tech.md`, note what's pending, and tick off anything completed during the session. Read `docs/tech-tips.md` before any 3D asset, animation, or bone work. Read `docs/color-scheme.md` before any visual, UI, VFX, or material work.
 
 ## Scope Rules
 
