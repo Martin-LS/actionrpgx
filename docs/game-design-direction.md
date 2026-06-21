@@ -6,25 +6,23 @@ Items to discuss, in no particular order. Cross off when resolved.
 
 ## Open for Discussion
 
-- [ ] **Run structure.** The current 5-minute horde timer doesn't fit a Diablo/PoE action RPG feel. How does a run actually play out? Dungeon crawling? Area clearing? Boss at the end? This is foundational — many other systems depend on the answer.
+- [x] **Dodge mechanic.** Space bar. Free (no Focus cost). Grants i-frames during roll. Any direction — independent of movement direction. Short cooldown. Exact cooldown value TBD (owned by Balancer).
 
-- [ ] **How stats are gained.** Do players allocate stat points on level up (PoE-style free allocation), or are stats fixed per archetype and grow only through gear? Drives character build depth and identity.
+- [x] **Equipment augments revisited.** Same model as skill augments — separate socketable items, one type per equipment piece at a time, re-rollable trigger %. Player-based triggers (on_player_hit_%) follow the same pattern as on_enemy_hit_% on skill augments.
 
-- [ ] **Passive skill tree.** PoE's defining feature alongside skills. Do we have one? Even a small one? How deep does it go and how does it interact with the base stat system?
+- [x] **Focus system revisited.** Focus stays as the skill resource. Manual casting doesn't change the model — skills cost Focus, Focus regens passively. Detailed tuning TBD by Balancer.
 
-- [ ] **Dodge mechanic.** Space is mapped to dodge in the PoE2 keybinding layout but the mechanic is undesigned. Does it cost Focus? Has a cooldown? Grants i-frames? Direction-based?
+- [x] **Map crafting properties.** Out of scope for v1. Existing map system is retained as-is — it was already designed with crafting extensibility in mind. Map crafting properties (difficulty modifiers, enemy pool, biome, size) to be designed post-v1.
 
-- [ ] **Equipment augments revisited.** Skill augments were overhauled this session — equipment augments were not. Do they follow the same model (socketable items, on_enemy_hit_% or player-based triggers, re-rollable %)? What is their design role now passives live on them?
+- [x] **Stash and shared inventory.** Everything is account-shared. Runs only yield crafting materials, which go directly into the shared pool. No character-bound items, no per-character stash. All crafted gear, skills, and augments are shared across all characters.
 
-- [ ] **Focus system revisited.** Focus is still the skill resource but was designed around auto-cast. Does manual casting change how Focus feels to manage? Is it still the right resource model for a deliberate action RPG?
+- [x] **Named skills in v1.** V1 ships with prototypes only. Named skills with unique mechanics and identities are post-v1. The prototype review will determine whether the building blocks are sufficient.
 
-- [ ] **Map crafting properties.** Maps are craft-driven (resolved) but what properties can a crafted map have? Difficulty modifiers? Enemy pool composition? Biome? Size?
+- [x] **Skill tiers.** Same model as gear — Common/Uncommon/Rare, each tier unlocking one more augment slot (1/2/3). Tier is the progression axis for skills.
 
-- [ ] **Stash and shared inventory.** Between characters and between runs — how does storage work at scale? Shared stash size, character-bound vs account-shared items.
+- [x] **Skill tags.** No skill tags in v1. Tags may be added post-v1 but not for gear-gating reasons — the no-gate philosophy holds. Tags are additive and easy to introduce later (just a property on skill data); nothing in the current architecture prevents it.
 
-- [ ] **Skill prototype review.** All existing prototypes are back on the table with the action RPG pivot — including those previously flagged as engine-proof only (Fixed-Zone-Tick, Tracked-Tick, Triggered-Zone-Burst, etc.). Go through each prototype and redefine: is it player-facing, what is it good for, what builds does it suit, and what needs to change for a manual-cast 5-slot design. This is a separate design pass — do not redesign the skill system here, just re-evaluate each prototype against the new direction.
-
-- [ ] **Skill system design.** High-level design of the full skill system for the action RPG pivot — skill identity and uniqueness. Augment model and passive/active rules resolved separately. To be fleshed out as design discussion progresses.
+- [x] **Skill prototype review + v1 skill system design.** All 11 prototypes reviewed and confirmed as-is. All are now ``Prototype`` kind — nothing is ``EngineProof`` (enum value retained in code for future use). The building blocks cover all three targeting shapes (Entity, Self, Position), all damage patterns (Burst, Tick, None), and key modifiers (Channeled, Windup, Stackable, Triggered). No gaps identified. V1 ships all 11 as player-facing prototypes; named skills with unique identities are post-v1.
 
 ---
 
