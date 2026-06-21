@@ -6,17 +6,39 @@ Items to discuss, in no particular order. Cross off when resolved.
 
 ## Open for Discussion
 
-- [ ] **Skill slots — count and cast model.** Moving from 1 auto-cast skill slot to up to 5 skill slots, all manual cast. Questions to resolve:
-  - Exact slot count (up to 5, but do all 5 unlock at once or progressively?
-  - Keybindings — what keys map to slots 1–5?
-  - Auto-cast removal: is the toggle gone entirely, or retained as an option per slot?
-  - How does the HUD skill bar change to show 5 slots?
-  - Does each slot have its own cooldown displayed independently?
-  - Any restrictions on what can go in each slot (e.g. one movement skill, one primary, etc.) or fully freeform like PoE?
+- [ ] **Skill prototype review.** All existing prototypes are back on the table with the action RPG pivot — including those previously flagged as engine-proof only (Fixed-Zone-Tick, Tracked-Tick, Triggered-Zone-Burst, etc.). Go through each prototype and redefine: is it player-facing, what is it good for, what builds does it suit, and what needs to change for a manual-cast 5-slot design. This is a separate design pass — do not redesign the skill system here, just re-evaluate each prototype against the new direction.
+
+- [ ] **Skill system design.** High-level design of the full skill system for the action RPG pivot — skill identity and uniqueness. Augment model and passive/active rules resolved separately. To be fleshed out as design discussion progresses.
 
 ---
 
 ## Resolved
+
+- [x] **Crafting resource cost — v1 everything costs 1 crafting resource.** There is one crafting resource in v1, called "crafting resource." All craftable items — skills, augments, gear — cost 1 crafting resource. Resource cost balancing and material tiers are out of scope for v1. The crafting resource name and tiered cost system will be designed post-v1.
+
+- [x] **Passive skills — removed from skill slots, live on armour augments instead.**
+  - The dividing line: **skill slot = things you actively trigger** (requires a button press — Active, Channeled, toggled auras, War Cries). **Armour augment = things that happen automatically** (no button press, gear-driven).
+  - There is no Passive skill type on the skill bar. Everything in a skill slot requires player input to fire.
+  - Persistent stat buffs and background effects belong on armour augments (Mending, Retaliation, etc.), not skill slots.
+  - Skills like War Cry stay on the skill bar — they are intentional activations with cooldowns, not background passives.
+
+- [x] **Skill augment model — separate socketable items, one type per skill at a time.**
+  - Augments are separate craftable items that live in inventory and socket into skill slots.
+  - Augments can be freely removed and re-socketed into a different skill at any time.
+  - **One of each augment type per skill at a time** — you cannot have two Burn augments on the same skill. This is the uniqueness rule.
+  - Two different skill instances can each have their own Burn socketed independently — valid, each skill has its own sockets.
+  - **All augments use a single trigger type: `on_enemy_hit_%`.** No `always` trigger. Even mechanical augments (Splash, Pierce) have a % chance — higher base % than effect augments, but never guaranteed. Keeps the system uniform and balanced.
+  - The trigger % is a property of the augment item itself, rolled at craft time and re-rollable via crafting — pushing the % higher is a meaningful crafting goal.
+  - **Possibly bound-on-socket in future** as a crafting resource sink — not current design, noted as a direction to consider.
+  - **Crit is not an augment.** CritChance comes entirely from Dex, CritDamage from Str. Crits roll automatically on every hit — no augment needed to enable or boost them. The Critical Strike augment is removed.
+
+- [x] **Skill slots — 5 slots, freeform, PoE2 keybinding layout.**
+  - 5 skill slots available from the start — no unlock progression.
+  - Fully freeform (PoE-style) — any skill in any slot, no typed slot restrictions.
+  - Auto-cast retained in the codebase for dev convenience only (see cast/targeting model decision above) — not a player-facing design concern for skill slots.
+  - Default keybinding layout follows PoE2: `Q E R F` + one mouse button for the 5 slots. WASD for movement, `Space` for dodge.
+  - Players can rebind `Q E R F` to `1 2 3 4` for D4-style preference — Godot's input action system handles this natively.
+  - HUD skill bar and per-slot cooldown display are implementation details — TBD when HUD is redesigned for 5 slots.
 
 - [x] **Base stats — Strength, Dexterity, Intelligence.** Three primary stats drive character power and archetype identity. Each stat is the primary driver for one archetype: Strength → Warrior, Dexterity → Rogue, Intelligence → Mage.
 
