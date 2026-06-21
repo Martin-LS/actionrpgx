@@ -142,7 +142,6 @@ public static class BalanceConfig
 
         // Per-skill type damage multipliers — placeholder, owned by Balancer
         public const float CycloneDamageMultiplier = 0.4f;
-        public const float AuraDamageMultiplier    = 0.2f;
         public const float NovaDamageMultiplier    = 0.8f;
     }
 

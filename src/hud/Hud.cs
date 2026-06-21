@@ -64,8 +64,6 @@ public partial class Hud : CanvasLayer
             var weaponController = player.GetNodeOrNull<Weapon.WeaponController>("Weapon");
             weaponController?.Connect(Weapon.WeaponController.SignalName.SkillFired,
                 Callable.From<int, float, string>(OnSkillFired));
-            weaponController?.Connect(Weapon.WeaponController.SignalName.SkillToggled,
-                Callable.From<int, bool>(OnSkillToggled));
         }
 
         BuildSkillBar();
@@ -172,23 +170,6 @@ public partial class Hud : CanvasLayer
     private void OnLeveledUp(int newLevel) => _levelLabel.Text = $"Level {newLevel}";
 
     private void OnCoinChanged(int total) => _coinLabel.Text = $"Coins: {total}";
-
-    private void OnSkillToggled(int slotIndex, bool isOn)
-    {
-        if (slotIndex < 0 || slotIndex >= 3) return;
-        StyleSkillPanel(_skillCells[slotIndex].Panel, isOn);
-    }
-
-    private static void StyleSkillPanel(PanelContainer panel, bool active)
-    {
-        var style = new StyleBoxFlat { BgColor = new Color(0.15f, 0.15f, 0.15f) };
-        if (active)
-        {
-            style.BorderColor = Color.FromHtml("#60A870");
-            style.SetBorderWidthAll(3);
-        }
-        panel.AddThemeStyleboxOverride("panel", style);
-    }
 
     private static void StyleBar(ProgressBar bar, Color fillColor)
     {

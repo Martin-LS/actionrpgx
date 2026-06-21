@@ -10,7 +10,7 @@ public record SkillData(
     float                FocusCost          = 0f,
     string               IconPath           = "",
     string               Description        = "",
-    bool                 IsPrototype        = false,
+    SkillKind            Kind               = SkillKind.Normal,
     SkillTargetingShape  TargetingShape     = SkillTargetingShape.Self,
     float                WindUp             = 0f,
     SkillDamagePattern   DamagePattern      = SkillDamagePattern.Burst,

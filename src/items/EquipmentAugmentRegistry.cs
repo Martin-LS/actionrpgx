@@ -11,7 +11,6 @@ public static class EquipmentAugmentRegistry
         ["dash_reflex"] = new("dash_reflex", "Dash Reflex", new[] { "Light" }),
         ["ghost_step"]  = new("ghost_step",  "Ghost Step",  new[] { "Light" }),
         ["mending"]     = new("mending",     "Mending",     new[] { "Medium" }),
-        ["adaptation"]  = new("adaptation",  "Adaptation",  new[] { "Medium" }),
     };
 
     public static EquipmentAugmentData?             Get(string id) => _all.TryGetValue(id, out var a) ? a : null;

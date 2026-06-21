@@ -8,7 +8,6 @@ namespace Godot2.Weapon;
 public partial class WeaponController : Node
 {
     [Signal] public delegate void SkillFiredEventHandler(int slotIndex, float cooldown, string delivery);
-    [Signal] public delegate void SkillToggledEventHandler(int slotIndex, bool isOn);
 
     private static readonly PackedScene ProjectileScene =
         GD.Load<PackedScene>("res://src/weapon/projectile.tscn");
@@ -70,8 +69,6 @@ public partial class WeaponController : Node
         public bool         HasMagicDamage;
         public float        CritChanceBonus;
         public bool         AutoActivate;
-        public bool         AuraActive;
-        public float        AuraReserved;
         public float        DamageMultiplier;
         public bool         IsChanneling;
         public List<Node3D> ActiveZones;
@@ -100,16 +97,11 @@ public partial class WeaponController : Node
         _slots[slotIndex].HasMagicDamage   = hasMagicDamage;
         _slots[slotIndex].CritChanceBonus  = critChanceBonus;
         _slots[slotIndex].AutoActivate  = true;
-        _slots[slotIndex].AuraActive    = false;
-        _slots[slotIndex].AuraReserved  = 0f;
         _slots[slotIndex].IsChanneling  = false;
         _slots[slotIndex].ActiveZones   = new List<Node3D>();
-        _slots[slotIndex].DamageMultiplier = skill.Type switch
-        {
-            SkillType.Channeled => BalanceConfig.Focus.CycloneDamageMultiplier,
-            SkillType.Aura      => BalanceConfig.Focus.AuraDamageMultiplier,
-            _                   => 1.0f,
-        };
+        _slots[slotIndex].DamageMultiplier = skill.Type == SkillType.Channeled
+            ? BalanceConfig.Focus.CycloneDamageMultiplier
+            : 1.0f;
     }
 
     public void SetSlotAutoActivate(int slotIndex, bool autoActivate)
@@ -142,22 +134,13 @@ public partial class WeaponController : Node
                 _slots[i].CooldownTimer -= dt;
 
             bool active = (_slots[i].AutoActivate && _slots[i].Skill!.Type != SkillType.Channeled) ||
-                          (_slots[i].Skill!.Type == SkillType.Channeled && _slots[i].IsChanneling) ||
-                          (_slots[i].Skill!.Type == SkillType.Aura      && _slots[i].AuraActive);
+                          (_slots[i].Skill!.Type == SkillType.Channeled && _slots[i].IsChanneling);
             if (!active) continue;
 
-            switch (_slots[i].Skill!.Type)
-            {
-                case SkillType.Aura:
-                    ProcessAuraSlot(i, dt);
-                    break;
-                case SkillType.Channeled:
-                    ProcessChanneledSlot(i, dt);
-                    break;
-                default:
-                    ProcessActiveSlot(i, dt);
-                    break;
-            }
+            if (_slots[i].Skill!.Type == SkillType.Channeled)
+                ProcessChanneledSlot(i, dt);
+            else
+                ProcessActiveSlot(i, dt);
         }
 
         if (_cycloneVfx != null)
@@ -264,15 +247,6 @@ public partial class WeaponController : Node
             EmitSignal(SignalName.SkillFired, slotIndex, slot.Skill!.Cooldown, "Melee");
     }
 
-    private void ProcessAuraSlot(int i, float dt)
-    {
-        if (!_slots[i].AuraActive) return;
-
-        if (_slots[i].CooldownTimer > 0f) return;
-        FireAura(i);
-        _slots[i].CooldownTimer = _slots[i].Skill!.Cooldown;
-    }
-
     public void ReleaseSlot(int slotIndex)
     {
         if (slotIndex < 0 || slotIndex >= 3) return;
@@ -285,29 +259,6 @@ public partial class WeaponController : Node
         if (slotIndex < 0 || slotIndex >= 3) return;
         ref var slot = ref _slots[slotIndex];
         if (slot.Skill == null) return;
-
-        if (slot.Skill.Type == SkillType.Aura)
-        {
-            if (slot.AuraActive)
-            {
-                _player?.UnreserveFocus(slot.AuraReserved);
-                slot.AuraActive   = false;
-                slot.AuraReserved = 0f;
-                EmitSignal(SignalName.SkillToggled, slotIndex, false);
-            }
-            else if (_player != null)
-            {
-                float reserve = slot.Skill.FocusCost * _player.MaxFocus;
-                if (_player.GetAvailableFocus() >= reserve)
-                {
-                    _player.ReserveFocus(reserve);
-                    slot.AuraActive   = true;
-                    slot.AuraReserved = reserve;
-                    EmitSignal(SignalName.SkillToggled, slotIndex, true);
-                }
-            }
-            return;
-        }
 
         if (slot.CooldownTimer > 0f) return;
 
@@ -432,35 +383,6 @@ public partial class WeaponController : Node
         }
 
         EmitSignal(SignalName.SkillFired, slotIndex, slot.Skill.Cooldown, delivery);
-    }
-
-    private void FireAura(int slotIndex)
-    {
-        ref var slot   = ref _slots[slotIndex];
-        var     origin = GetParent<Node3D>().GlobalPosition;
-
-        bool  isMagic  = (_baseDamageType == Items.DamageType.Magic) || slot.HasMagicDamage;
-        var   dmgType  = isMagic ? Items.DamageType.Magic : Items.DamageType.Physical;
-        float baseDmg  = (isMagic ? _magicDamage : _physicalDamage) * slot.DamageMultiplier;
-
-        float critChance = _globalCritChance + slot.CritChanceBonus;
-        float critMult   = 1.0f;
-        if (critChance > 0f && GD.Randf() < critChance)
-            critMult = _critMultiplier;
-        baseDmg *= critMult;
-
-        bool hit = false;
-        foreach (var node in GetTree().GetNodesInGroup("enemies"))
-        {
-            if (node is not Enemies.EnemyController enemy || enemy.IsQueuedForDeletion()) continue;
-            if (origin.DistanceTo(enemy.GlobalPosition) > slot.Skill!.Range) continue;
-            enemy.TakeDamage(baseDmg, dmgType, critMult > 1f);
-            ApplyEots(enemy, slot.EotIds, critMult);
-            hit = true;
-        }
-
-        if (hit)
-            EmitSignal(SignalName.SkillFired, slotIndex, slot.Skill!.Cooldown, "Aura");
     }
 
     private void FireNova(int slotIndex)

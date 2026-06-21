@@ -671,7 +671,6 @@ public partial class CharacterManager : Node
         "strike"                 => "entity_burst",
         "cyclone"                => "self_channeled_tick",
         "nova"                   => "self_burst",
-        "damage_aura"            => "self_aura_tick",
         _                        => oldId,
     };
 

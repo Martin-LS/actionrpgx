@@ -52,7 +52,6 @@ public partial class PlayerController : CharacterBody3D
     public Vector3          TargetPosition { get; private set; }
 
     private float _focusRegen;
-    private float _totalReserved;
     private float _currentFocusShield;
     private float _maxFocusShield;
 
@@ -85,7 +84,6 @@ public partial class PlayerController : CharacterBody3D
             MaxFocus           = _statBlock.Get(Stats.StatId.MaxFocus);
             _focusRegen        = _statBlock.Get(Stats.StatId.FocusRegen);
             CurrentFocus       = MaxFocus;
-            _totalReserved     = 0f;
 
             _maxFocusShield     = MaxFocus * BalanceConfig.Focus.ShieldFraction;
             _currentFocusShield = _maxFocusShield;
@@ -506,10 +504,6 @@ public partial class PlayerController : CharacterBody3D
         // Ghost Step: heal if killed within 2s of being hit
         if (_activeAugments.Contains("ghost_step") && _ghostStepTimer > 0f)
             Heal(10);
-
-        // Adaptation: reduce active skill cooldowns on kill
-        if (_activeAugments.Contains("adaptation"))
-            GetNodeOrNull<Weapon.WeaponController>("Weapon")?.ReduceCooldowns(0.3f);
     }
 
     public void Heal(int amount)
@@ -705,7 +699,7 @@ public partial class PlayerController : CharacterBody3D
         return xtn;
     }
 
-    public float GetAvailableFocus() => Mathf.Max(0f, CurrentFocus - _totalReserved);
+    public float GetAvailableFocus() => CurrentFocus;
 
     public bool TrySpendFocus(float amount)
     {
@@ -713,18 +707,6 @@ public partial class PlayerController : CharacterBody3D
         CurrentFocus -= amount;
         EmitSignal(SignalName.FocusChanged, GetAvailableFocus(), MaxFocus);
         return true;
-    }
-
-    public void ReserveFocus(float absoluteAmount)
-    {
-        _totalReserved += absoluteAmount;
-        EmitSignal(SignalName.FocusChanged, GetAvailableFocus(), MaxFocus);
-    }
-
-    public void UnreserveFocus(float absoluteAmount)
-    {
-        _totalReserved = Mathf.Max(0f, _totalReserved - absoluteAmount);
-        EmitSignal(SignalName.FocusChanged, GetAvailableFocus(), MaxFocus);
     }
 
     private void ApplyWeaponDamage(Weapon.WeaponController? wc, Items.ItemData? weapon)

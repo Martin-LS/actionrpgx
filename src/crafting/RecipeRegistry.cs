@@ -42,7 +42,6 @@ public static class RecipeRegistry
         ["recipe_dash_reflex"] = new("recipe_dash_reflex", "dash_reflex", RecipeType.EquipmentAugment, new() { ["crafting_common"] = 1 }),
         ["recipe_ghost_step"]  = new("recipe_ghost_step",  "ghost_step",  RecipeType.EquipmentAugment, new() { ["crafting_common"] = 1 }),
         ["recipe_mending"]     = new("recipe_mending",     "mending",     RecipeType.EquipmentAugment, new() { ["crafting_common"] = 1 }),
-        ["recipe_adaptation"]  = new("recipe_adaptation",  "adaptation",  RecipeType.EquipmentAugment, new() { ["crafting_common"] = 1 }),
     };
 
     public static RecipeData? Get(string id) => All.TryGetValue(id, out var r) ? r : null;
