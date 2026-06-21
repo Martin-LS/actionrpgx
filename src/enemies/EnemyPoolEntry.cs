@@ -1,4 +1,4 @@
-namespace Godot1.Enemies;
+namespace Godot2.Enemies;
 
 public class EnemyPoolEntry
 {

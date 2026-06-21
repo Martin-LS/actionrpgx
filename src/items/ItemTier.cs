@@ -1,6 +1,6 @@
 using Godot;
 
-namespace Godot1.Items;
+namespace Godot2.Items;
 
 public static class ItemTier
 {

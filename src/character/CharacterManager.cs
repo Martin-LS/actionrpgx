@@ -1,11 +1,11 @@
 using Godot;
 using System.Collections.Generic;
 using System.Linq;
-using Godot1.Crafting;
-using Godot1.Items;
-using Godot1.Skills;
+using Godot2.Crafting;
+using Godot2.Items;
+using Godot2.Skills;
 
-namespace Godot1.Character;
+namespace Godot2.Character;
 
 public partial class CharacterManager : Node
 {

@@ -1,6 +1,6 @@
 using Godot;
 
-namespace Godot1.Xp;
+namespace Godot2.Xp;
 
 public partial class XpShard : Area3D
 {

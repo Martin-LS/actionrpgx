@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace Godot1.Crafting;
+namespace Godot2.Crafting;
 
 public record RecipeData(
     string                  Id,

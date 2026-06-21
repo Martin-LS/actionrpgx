@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace Godot1.Eot;
+namespace Godot2.Eot;
 
 public static class EotRegistry
 {

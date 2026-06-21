@@ -1,4 +1,4 @@
-namespace Godot1.Character;
+namespace Godot2.Character;
 
 public enum CharacterType
 {

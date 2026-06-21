@@ -1,3 +1,3 @@
-namespace Godot1.Crafting;
+namespace Godot2.Crafting;
 
 public enum RecipeType { Gear, Skill, SkillAugment, EquipmentAugment }

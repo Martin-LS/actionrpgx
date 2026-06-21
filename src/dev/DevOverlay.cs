@@ -1,6 +1,6 @@
 using Godot;
 
-namespace Godot1.Dev;
+namespace Godot2.Dev;
 
 public partial class DevOverlay : CanvasLayer
 {

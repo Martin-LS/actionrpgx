@@ -1,6 +1,6 @@
 using Godot;
 
-namespace Godot1.Ui;
+namespace Godot2.Ui;
 
 public partial class RunEndOverlay : CanvasLayer
 {

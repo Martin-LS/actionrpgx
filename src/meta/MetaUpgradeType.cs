@@ -1,3 +1,3 @@
-namespace Godot1.Meta;
+namespace Godot2.Meta;
 
 public enum MetaUpgradeType { MaxHealth, Speed, Damage }

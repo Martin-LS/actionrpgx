@@ -1,4 +1,4 @@
-namespace Godot1.Eot;
+namespace Godot2.Eot;
 
 public record EotData(
     string Id,

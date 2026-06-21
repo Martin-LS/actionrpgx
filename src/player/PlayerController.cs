@@ -1,10 +1,10 @@
 using Godot;
 using System.Collections.Generic;
-using Godot1.Skills;
-using Godot1;
-using Godot1.Enemies;
+using Godot2.Skills;
+using Godot2;
+using Godot2.Enemies;
 
-namespace Godot1.Player;
+namespace Godot2.Player;
 
 public partial class PlayerController : CharacterBody3D
 {

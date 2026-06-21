@@ -1,4 +1,4 @@
-namespace Godot1.Skills;
+namespace Godot2.Skills;
 
 public record SkillData(
     string               Id,

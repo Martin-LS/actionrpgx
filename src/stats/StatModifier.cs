@@ -1,4 +1,4 @@
-namespace Godot1.Stats;
+namespace Godot2.Stats;
 
 public readonly struct StatModifier
 {

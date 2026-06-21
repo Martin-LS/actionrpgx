@@ -1,4 +1,4 @@
-namespace Godot1.Ui;
+namespace Godot2.Ui;
 
 public enum UpgradeEffect { MaxHealth, Speed, Damage, FireRate }
 

@@ -1,6 +1,6 @@
 using Godot;
 
-namespace Godot1.Health;
+namespace Godot2.Health;
 
 public partial class HealthPickup : Area3D
 {

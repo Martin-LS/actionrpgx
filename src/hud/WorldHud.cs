@@ -1,9 +1,9 @@
 using Godot;
 using System.Collections.Generic;
-using Godot1.Enemies;
-using Godot1.Player;
+using Godot2.Enemies;
+using Godot2.Player;
 
-namespace Godot1.Hud;
+namespace Godot2.Hud;
 
 public partial class WorldHud : Node2D
 {

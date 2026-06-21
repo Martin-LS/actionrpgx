@@ -1,7 +1,7 @@
 using Godot;
-using Godot1.Character;
+using Godot2.Character;
 
-namespace Godot1.Ui;
+namespace Godot2.Ui;
 
 // Coin-funded upgrades removed from design — this panel is a stub pending redesign.
 public partial class MetaUpgradesPanel : Panel

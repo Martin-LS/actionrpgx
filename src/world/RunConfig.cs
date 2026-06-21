@@ -1,4 +1,4 @@
-namespace Godot1.World;
+namespace Godot2.World;
 
 public static class RunConfig
 {

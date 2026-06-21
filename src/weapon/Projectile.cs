@@ -1,8 +1,8 @@
 using Godot;
 using System.Collections.Generic;
-using Godot1.Eot;
+using Godot2.Eot;
 
-namespace Godot1.Weapon;
+namespace Godot2.Weapon;
 
 public partial class Projectile : Area3D
 {

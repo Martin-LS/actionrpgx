@@ -1,8 +1,8 @@
 using System.Collections.Generic;
-using Godot1.Items;
-using Godot1.Stats;
+using Godot2.Items;
+using Godot2.Stats;
 
-namespace Godot1.Character;
+namespace Godot2.Character;
 
 public class CharacterData
 {

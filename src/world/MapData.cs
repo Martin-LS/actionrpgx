@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
-using Godot1.Enemies;
+using Godot2.Enemies;
 
-namespace Godot1.World;
+namespace Godot2.World;
 
 public class MapData
 {

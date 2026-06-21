@@ -1,11 +1,11 @@
 using Godot;
 using System.Linq;
-using Godot1.Crafting;
-using Godot1.Items;
-using Godot1.Skills;
-using Godot1.Stats;
+using Godot2.Crafting;
+using Godot2.Items;
+using Godot2.Skills;
+using Godot2.Stats;
 
-namespace Godot1.Ui;
+namespace Godot2.Ui;
 
 public partial class CharacterScreen : Control
 {

@@ -1,7 +1,7 @@
 using Godot;
 using System.Collections.Generic;
 
-namespace Godot1.Enemies;
+namespace Godot2.Enemies;
 
 public partial class EnemySpawner : Node
 {

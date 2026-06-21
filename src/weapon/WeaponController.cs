@@ -1,9 +1,9 @@
 using Godot;
 using System.Collections.Generic;
-using Godot1.Eot;
-using Godot1.Skills;
+using Godot2.Eot;
+using Godot2.Skills;
 
-namespace Godot1.Weapon;
+namespace Godot2.Weapon;
 
 public partial class WeaponController : Node
 {

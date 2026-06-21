@@ -1,10 +1,10 @@
 using Godot;
 using System;
 using System.Linq;
-using Godot1.Items;
-using Godot1.Skills;
+using Godot2.Items;
+using Godot2.Skills;
 
-namespace Godot1.Ui;
+namespace Godot2.Ui;
 
 public partial class SkillPickerPanel : Control
 {

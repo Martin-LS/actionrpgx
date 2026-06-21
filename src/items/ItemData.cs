@@ -1,4 +1,4 @@
-namespace Godot1.Items;
+namespace Godot2.Items;
 
 public record ItemData(
     string         Id,

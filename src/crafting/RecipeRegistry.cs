@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 using System.Linq;
-using Godot1.Items;
+using Godot2.Items;
 
-namespace Godot1.Crafting;
+namespace Godot2.Crafting;
 
 public static class RecipeRegistry
 {

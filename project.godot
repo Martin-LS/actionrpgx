@@ -14,13 +14,16 @@ compatibility/default_parent_skeleton_in_mesh_instance_3d=true
 
 [application]
 
-config/name="godot1"
+config/name="godot2"
 run/main_scene="res://src/ui/main_menu.tscn"
 config/features=PackedStringArray("4.6", "C#", "Forward Plus")
 
 [autoload]
 
 CharacterManager="*res://src/character/CharacterManager.cs"
+MCPScreenshot="*res://addons/godot_mcp/mcp_screenshot_service.gd"
+MCPInputService="*res://addons/godot_mcp/mcp_input_service.gd"
+MCPGameInspector="*res://addons/godot_mcp/mcp_game_inspector_service.gd"
 
 [debug]
 
@@ -34,7 +37,7 @@ window/stretch/mode="canvas_items"
 
 [dotnet]
 
-project/assembly_name="godot1"
+project/assembly_name="godot2"
 
 [editor_plugins]
 

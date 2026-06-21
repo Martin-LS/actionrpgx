@@ -1,7 +1,7 @@
 using System.Collections.Generic;
-using Godot1.Stats;
+using Godot2.Stats;
 
-namespace Godot1.Character;
+namespace Godot2.Character;
 
 public static class ArchetypeMultiplierRegistry
 {

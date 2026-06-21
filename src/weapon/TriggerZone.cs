@@ -1,9 +1,9 @@
 using Godot;
 using System.Collections.Generic;
-using Godot1.Eot;
-using Godot1.Enemies;
+using Godot2.Eot;
+using Godot2.Enemies;
 
-namespace Godot1.Weapon;
+namespace Godot2.Weapon;
 
 public partial class TriggerZone : Node3D
 {

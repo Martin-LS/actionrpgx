@@ -1,9 +1,9 @@
 using Godot;
 using System.Linq;
 using System.Text.RegularExpressions;
-using Godot1.Character;
+using Godot2.Character;
 
-namespace Godot1.Ui;
+namespace Godot2.Ui;
 
 public partial class CharacterCreate : Control
 {

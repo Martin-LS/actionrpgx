@@ -1,8 +1,8 @@
 using Godot;
 using System.Collections.Generic;
-using Godot1.Eot;
+using Godot2.Eot;
 
-namespace Godot1.Enemies;
+namespace Godot2.Enemies;
 
 
 public partial class EnemyController : CharacterBody3D
@@ -174,7 +174,7 @@ public partial class EnemyController : CharacterBody3D
         _damageCooldown -= delta;
         if (_damageCooldown <= 0f && distToPlayer < BalanceConfig.Enemies.MeleeContactRange)
         {
-            if (_player is Godot1.Player.PlayerController pc)
+            if (_player is Godot2.Player.PlayerController pc)
                 pc.TakeDamage(ContactDamage, Items.DamageType.Physical, this);
             _damageCooldown = DamageInterval;
             _smPlayback?.Travel("attack");

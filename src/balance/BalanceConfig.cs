@@ -1,4 +1,4 @@
-namespace Godot1;
+namespace Godot2;
 
 public static class BalanceConfig
 {

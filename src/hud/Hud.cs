@@ -1,6 +1,6 @@
 using Godot;
 
-namespace Godot1.Hud;
+namespace Godot2.Hud;
 
 public partial class Hud : CanvasLayer
 {

@@ -1,8 +1,8 @@
 using Godot;
 using System;
-using Godot1.Items;
+using Godot2.Items;
 
-namespace Godot1.Ui;
+namespace Godot2.Ui;
 
 public partial class ItemPickerPanel : Control
 {

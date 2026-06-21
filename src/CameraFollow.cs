@@ -1,6 +1,6 @@
 using Godot;
 
-namespace Godot1;
+namespace Godot2;
 
 public partial class CameraFollow : Camera3D
 {

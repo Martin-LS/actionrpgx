@@ -1,8 +1,8 @@
 using System.Collections.Generic;
-using Godot1.Items;
-using Godot1.Skills;
+using Godot2.Items;
+using Godot2.Skills;
 
-namespace Godot1.Character;
+namespace Godot2.Character;
 
 public class ProfileData
 {

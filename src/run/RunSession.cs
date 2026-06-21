@@ -1,7 +1,7 @@
 using Godot;
-using Godot1.Player;
+using Godot2.Player;
 
-namespace Godot1.Run;
+namespace Godot2.Run;
 
 public partial class RunSession : Node
 {
