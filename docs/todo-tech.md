@@ -8,7 +8,7 @@ Code, systems, UI, and art tasks only. Design decisions live in `docs/game-desig
 
 - [x] Remove Adaptation Equipment Augment from implementation (cut from v1 design)
 - [x] Skill slot count: HUD shows 1 slot (v1 design); `_skillCells` array stays at 3 for future expansion
-- [ ] Rename BalanceConfig constants and WeaponController methods to match design names: Strike → EntityBurst, Cyclone → SelfChanneledTick, DamageAura → SelfDurationTick, Nova → SelfBurst. (Skill IDs in SkillRegistry already renamed; `DamageAuraReservation` in `BalanceConfig.Focus` is dead — remove it.)
+- [x] Rename BalanceConfig constants and WeaponController methods to match design names: Strike → EntityBurst, Cyclone → SelfChanneledTick, DamageAura → SelfDurationTick, Nova → SelfBurst. (`DamageAuraReservation` removed; replaced with `SelfDurationTickFocusCost = 15f`.)
 - [ ] Add duplicate augment-type check to `SocketSkillAugment` and `SocketEquipmentAugment` in CharacterManager
 
 ## UI

@@ -15,7 +15,7 @@ public partial class WeaponController : Node
     private static readonly PackedScene ImpactHitScene =
         GD.Load<PackedScene>("res://PolyBlocks/EffectBlocks/assets/impacts/impact_5.tscn");
 
-    private static readonly PackedScene CycloneVfxScene =
+    private static readonly PackedScene SelfChanneledTickVfxScene =
         GD.Load<PackedScene>("res://src/vfx/cyclone_vfx.tscn");
 
     private static readonly PackedScene FixedZoneBurstVfxScene =
@@ -27,7 +27,7 @@ public partial class WeaponController : Node
     private const float SplashRadius = 60f;
 
     private Player.PlayerController? _player;
-    private GpuParticles3D? _cycloneVfx;
+    private GpuParticles3D? _selfChanneledTickVfx;
     private bool _wasChanneling;
 
     private float      _physicalDamage  = 20f;
@@ -40,11 +40,11 @@ public partial class WeaponController : Node
     {
         _player = GetParent<Player.PlayerController>();
 
-        if (CycloneVfxScene != null)
+        if (SelfChanneledTickVfxScene != null)
         {
-            var vfxRoot = CycloneVfxScene.Instantiate<Node3D>();
-            _cycloneVfx = vfxRoot.GetNodeOrNull<GpuParticles3D>("Whirl");
-            if (_cycloneVfx != null) _cycloneVfx.Emitting = false;
+            var vfxRoot = SelfChanneledTickVfxScene.Instantiate<Node3D>();
+            _selfChanneledTickVfx = vfxRoot.GetNodeOrNull<GpuParticles3D>("Whirl");
+            if (_selfChanneledTickVfx != null) _selfChanneledTickVfx.Emitting = false;
             _player?.CallDeferred(Node.MethodName.AddChild, vfxRoot);
         }
     }
@@ -100,7 +100,7 @@ public partial class WeaponController : Node
         _slots[slotIndex].IsChanneling  = false;
         _slots[slotIndex].ActiveZones   = new List<Node3D>();
         _slots[slotIndex].DamageMultiplier = skill.Type == SkillType.Channeled
-            ? BalanceConfig.Focus.CycloneDamageMultiplier
+            ? BalanceConfig.Focus.SelfChanneledTickDamageMultiplier
             : 1.0f;
     }
 
@@ -143,24 +143,24 @@ public partial class WeaponController : Node
                 ProcessActiveSlot(i, dt);
         }
 
-        if (_cycloneVfx != null)
+        if (_selfChanneledTickVfx != null)
         {
             bool channeling = IsAnySlotChanneling();
             if (channeling != _wasChanneling)
             {
                 if (!channeling)
                 {
-                    _cycloneVfx.Restart();
-                    _cycloneVfx.Emitting = false;
+                    _selfChanneledTickVfx.Restart();
+                    _selfChanneledTickVfx.Emitting = false;
                 }
                 else
                 {
-                    _cycloneVfx.Emitting = true;
+                    _selfChanneledTickVfx.Emitting = true;
                 }
                 _wasChanneling = channeling;
             }
             if (channeling)
-                _cycloneVfx.GetParent<Node3D>().RotateY(Mathf.Tau * 1.0f * dt);
+                _selfChanneledTickVfx.GetParent<Node3D>().RotateY(Mathf.Tau * 1.0f * dt);
         }
     }
 
@@ -183,7 +183,7 @@ public partial class WeaponController : Node
         {
             if (FindNearestEnemy(_slots[i].Skill!.Range) == null) return;
             if (_player != null && !_player.TrySpendFocus(_slots[i].Skill!.FocusCost)) return;
-            FireNova(i);
+            FireSelfBurst(i);
             _slots[i].CooldownTimer = _slots[i].Skill!.Cooldown;
         }
         else if (shape == SkillTargetingShape.Entity)
@@ -214,11 +214,11 @@ public partial class WeaponController : Node
         if (FindNearestEnemy(_slots[i].Skill!.Range) == null) return;
         float drain = _slots[i].Skill!.FocusCost * _slots[i].Skill!.Cooldown;
         if (_player != null && !_player.TrySpendFocus(drain)) { _slots[i].IsChanneling = false; return; }
-        FireCyclone(i);
+        FireSelfChanneledTick(i);
         _slots[i].CooldownTimer = _slots[i].Skill!.Cooldown;
     }
 
-    private void FireCyclone(int slotIndex)
+    private void FireSelfChanneledTick(int slotIndex)
     {
         ref var slot   = ref _slots[slotIndex];
         var     origin = GetParent<Node3D>().GlobalPosition;
@@ -274,7 +274,7 @@ public partial class WeaponController : Node
         {
             if (FindNearestEnemy(slot.Skill.Range) == null) return;
             if (_player != null && !_player.TrySpendFocus(slot.Skill.FocusCost)) return;
-            FireNova(slotIndex);
+            FireSelfBurst(slotIndex);
             slot.CooldownTimer = slot.Skill.Cooldown;
             return;
         }
@@ -385,14 +385,14 @@ public partial class WeaponController : Node
         EmitSignal(SignalName.SkillFired, slotIndex, slot.Skill.Cooldown, delivery);
     }
 
-    private void FireNova(int slotIndex)
+    private void FireSelfBurst(int slotIndex)
     {
         ref var slot   = ref _slots[slotIndex];
         var     origin = GetParent<Node3D>().GlobalPosition;
 
         bool  isMagic = (_baseDamageType == Items.DamageType.Magic) || slot.HasMagicDamage;
         var   dmgType = isMagic ? Items.DamageType.Magic : Items.DamageType.Physical;
-        float baseDmg = (isMagic ? _magicDamage : _physicalDamage) * BalanceConfig.Focus.NovaDamageMultiplier;
+        float baseDmg = (isMagic ? _magicDamage : _physicalDamage) * BalanceConfig.Focus.SelfBurstDamageMultiplier;
 
         float critChance = _globalCritChance + slot.CritChanceBonus;
         float critMult   = 1.0f;
@@ -408,7 +408,7 @@ public partial class WeaponController : Node
             ApplyEots(enemy, slot.EotIds, critMult);
         }
 
-        EmitSignal(SignalName.SkillFired, slotIndex, slot.Skill!.Cooldown, "Nova");
+        EmitSignal(SignalName.SkillFired, slotIndex, slot.Skill!.Cooldown, "SelfBurst");
     }
 
     private void FireAtPosition(int slotIndex, Vector3 worldPos)
@@ -567,7 +567,7 @@ public partial class WeaponController : Node
             }
         }
 
-        EmitSignal(SignalName.SkillFired, slotIndex, slot.Skill!.Cooldown, "Nova");
+        EmitSignal(SignalName.SkillFired, slotIndex, slot.Skill!.Cooldown, "SelfBurst");
     }
 
     private void HitMelee(Enemies.EnemyController target, float damage, Items.DamageType dmgType,

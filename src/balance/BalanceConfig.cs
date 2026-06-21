@@ -47,18 +47,18 @@ public static class BalanceConfig
 
     public static class Skills
     {
-        public const float StrikeCooldown     = 0.8f;
-        public const float StrikeRange        = 200f; // world units
-        public const float MeleeWindupFraction = 0.35f; // fraction of cooldown before damage lands
+        public const float EntityBurstCooldown    = 0.8f;
+        public const float EntityBurstRange       = 200f; // world units
+        public const float MeleeWindupFraction    = 0.35f; // fraction of cooldown before damage lands
 
-        public const float CycloneCooldown = 0.25f; // tick interval (4 hits/sec)
-        public const float CycloneRange    = 150f;
+        public const float SelfChanneledTickCooldown = 0.25f; // tick interval (4 hits/sec)
+        public const float SelfChanneledTickRange    = 150f;
 
-        public const float NovaCooldown = 1.5f;
-        public const float NovaRange    = 300f;
+        public const float SelfBurstCooldown = 1.5f;
+        public const float SelfBurstRange    = 300f;
 
-        public const float DamageAuraCooldown = 1.0f; // damage tick interval
-        public const float DamageAuraRange    = 250f;
+        public const float SelfDurationTickCooldown = 1.0f; // damage tick interval
+        public const float SelfDurationTickRange    = 250f;
 
         // Prototype: Fixed-Zone-Burst — test values, owned by Balancer
         public const float FixedZoneBurstCooldown    = 1.0f;
@@ -126,10 +126,10 @@ public static class BalanceConfig
         public const float ShieldRegenPerSec = 5f;
 
         // Per-skill focus costs — placeholder, owned by Balancer
-        public const float StrikeFocusCost        = 5f;
-        public const float CycloneFocusCostPerSec = 12f;  // drain per second while channeled
-        public const float NovaFocusCost          = 20f;
-        public const float DamageAuraReservation  = 0.25f; // fraction of MaxFocus
+        public const float EntityBurstFocusCost             = 5f;
+        public const float SelfChanneledTickFocusCostPerSec = 12f;  // drain per second while channeled
+        public const float SelfBurstFocusCost               = 20f;
+        public const float SelfDurationTickFocusCost        = 15f;  // flat cost on activation
 
         // Prototype skill focus costs — test values, owned by Balancer
         public const float TrackedTickFocusCost     = 15f;
@@ -141,8 +141,8 @@ public static class BalanceConfig
         public const float FixedZoneTickFocusCost  = 20f;
 
         // Per-skill type damage multipliers — placeholder, owned by Balancer
-        public const float CycloneDamageMultiplier = 0.4f;
-        public const float NovaDamageMultiplier    = 0.8f;
+        public const float SelfChanneledTickDamageMultiplier = 0.4f;
+        public const float SelfBurstDamageMultiplier         = 0.8f;
     }
 
     public static class Eots
