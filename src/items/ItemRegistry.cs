@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Godot2.Items;
+namespace ActionRpgX.Items;
 
 public static class ItemRegistry
 {

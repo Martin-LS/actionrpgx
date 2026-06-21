@@ -1,6 +1,6 @@
 using Godot;
 
-namespace Godot2.Items;
+namespace ActionRpgX.Items;
 
 public static class ItemTier
 {

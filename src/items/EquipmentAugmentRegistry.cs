@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace Godot2.Items;
+namespace ActionRpgX.Items;
 
 public static class EquipmentAugmentRegistry
 {

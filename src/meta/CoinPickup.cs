@@ -1,6 +1,6 @@
 using Godot;
 
-namespace Godot2.Meta;
+namespace ActionRpgX.Meta;
 
 public partial class CoinPickup : Area3D
 {

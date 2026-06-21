@@ -1,3 +1,3 @@
-namespace Godot2.Skills;
+namespace ActionRpgX.Skills;
 
 public enum SkillTargetingShape { Self, Position, Entity }

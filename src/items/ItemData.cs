@@ -1,4 +1,4 @@
-namespace Godot2.Items;
+namespace ActionRpgX.Items;
 
 public record ItemData(
     string         Id,

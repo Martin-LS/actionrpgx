@@ -1,4 +1,4 @@
-namespace Godot2;
+namespace ActionRpgX;
 
 public static class BalanceConfig
 {

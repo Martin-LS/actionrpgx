@@ -1,7 +1,7 @@
 using Godot;
-using Godot2.Player;
+using ActionRpgX.Player;
 
-namespace Godot2.Run;
+namespace ActionRpgX.Run;
 
 public partial class RunSession : Node
 {

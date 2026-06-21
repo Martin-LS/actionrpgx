@@ -1,4 +1,4 @@
-namespace Godot2.Eot;
+namespace ActionRpgX.Eot;
 
 public record EotData(
     string Id,

@@ -1,4 +1,4 @@
-namespace Godot2.Stats;
+namespace ActionRpgX.Stats;
 
 public readonly struct StatModifier
 {

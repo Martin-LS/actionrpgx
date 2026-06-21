@@ -1,4 +1,4 @@
-# CLAUDE.md — godot2
+# CLAUDE.md — actionrpgx
 
 
 ## Project Overview

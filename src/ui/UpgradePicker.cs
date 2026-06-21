@@ -1,10 +1,10 @@
 using Godot;
 using System;
 using System.Linq;
-using Godot2.Player;
-using Godot2.Weapon;
+using ActionRpgX.Player;
+using ActionRpgX.Weapon;
 
-namespace Godot2.Ui;
+namespace ActionRpgX.Ui;
 
 public partial class UpgradePicker : CanvasLayer
 {

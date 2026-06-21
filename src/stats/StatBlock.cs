@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Godot2.Stats;
+namespace ActionRpgX.Stats;
 
 public class StatBlock
 {

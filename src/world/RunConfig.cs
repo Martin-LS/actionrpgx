@@ -1,4 +1,4 @@
-namespace Godot2.World;
+namespace ActionRpgX.World;
 
 public static class RunConfig
 {

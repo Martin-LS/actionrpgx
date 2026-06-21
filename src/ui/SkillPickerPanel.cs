@@ -1,10 +1,10 @@
 using Godot;
 using System;
 using System.Linq;
-using Godot2.Items;
-using Godot2.Skills;
+using ActionRpgX.Items;
+using ActionRpgX.Skills;
 
-namespace Godot2.Ui;
+namespace ActionRpgX.Ui;
 
 public partial class SkillPickerPanel : Control
 {

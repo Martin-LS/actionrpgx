@@ -1,9 +1,9 @@
 using Godot;
 using System.Linq;
 using System.Text.RegularExpressions;
-using Godot2.Character;
+using ActionRpgX.Character;
 
-namespace Godot2.Ui;
+namespace ActionRpgX.Ui;
 
 public partial class CharacterCreate : Control
 {

@@ -1,4 +1,4 @@
-namespace Godot2.Character;
+namespace ActionRpgX.Character;
 
 public enum CharacterType
 {

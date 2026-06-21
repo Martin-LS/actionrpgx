@@ -1,8 +1,8 @@
 using System.Collections.Generic;
-using Godot2.Items;
-using Godot2.Stats;
+using ActionRpgX.Items;
+using ActionRpgX.Stats;
 
-namespace Godot2.Character;
+namespace ActionRpgX.Character;
 
 public class CharacterData
 {

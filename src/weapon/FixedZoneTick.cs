@@ -1,8 +1,8 @@
 using Godot;
 using System.Collections.Generic;
-using Godot2.Eot;
+using ActionRpgX.Eot;
 
-namespace Godot2.Weapon;
+namespace ActionRpgX.Weapon;
 
 public partial class FixedZoneTick : Node3D
 {

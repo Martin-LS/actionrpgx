@@ -1,6 +1,6 @@
 using Godot;
 
-namespace Godot2.Dev;
+namespace ActionRpgX.Dev;
 
 public partial class DevOverlay : CanvasLayer
 {

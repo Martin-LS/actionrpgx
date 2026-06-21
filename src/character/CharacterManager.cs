@@ -1,11 +1,11 @@
 using Godot;
 using System.Collections.Generic;
 using System.Linq;
-using Godot2.Crafting;
-using Godot2.Items;
-using Godot2.Skills;
+using ActionRpgX.Crafting;
+using ActionRpgX.Items;
+using ActionRpgX.Skills;
 
-namespace Godot2.Character;
+namespace ActionRpgX.Character;
 
 public partial class CharacterManager : Node
 {

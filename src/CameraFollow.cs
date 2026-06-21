@@ -1,6 +1,6 @@
 using Godot;
 
-namespace Godot2;
+namespace ActionRpgX;
 
 public partial class CameraFollow : Camera3D
 {

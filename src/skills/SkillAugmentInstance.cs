@@ -1,4 +1,4 @@
-namespace Godot2.Skills;
+namespace ActionRpgX.Skills;
 
 public class SkillAugmentInstance
 {

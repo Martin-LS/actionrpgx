@@ -2,7 +2,7 @@ using Godot;
 using System;
 using System.Collections.Generic;
 
-namespace Godot2.World;
+namespace ActionRpgX.World;
 
 public partial class DungeonGenerator : Node3D
 {

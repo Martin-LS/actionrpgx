@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Godot2.Skills;
+namespace ActionRpgX.Skills;
 
 public static class AugmentResolver
 {

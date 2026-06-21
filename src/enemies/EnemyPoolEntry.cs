@@ -1,4 +1,4 @@
-namespace Godot2.Enemies;
+namespace ActionRpgX.Enemies;
 
 public class EnemyPoolEntry
 {

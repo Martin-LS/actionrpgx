@@ -1,3 +1,3 @@
-namespace Godot2.Stats;
+namespace ActionRpgX.Stats;
 
 public enum ModifierType { FlatAdd, PercentAdd, Multiply }

@@ -1,7 +1,7 @@
 using Godot;
-using Godot2.Character;
+using ActionRpgX.Character;
 
-namespace Godot2.Ui;
+namespace ActionRpgX.Ui;
 
 // Coin-funded upgrades removed from design — this panel is a stub pending redesign.
 public partial class MetaUpgradesPanel : Panel

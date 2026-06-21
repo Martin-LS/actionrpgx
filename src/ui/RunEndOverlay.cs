@@ -1,6 +1,6 @@
 using Godot;
 
-namespace Godot2.Ui;
+namespace ActionRpgX.Ui;
 
 public partial class RunEndOverlay : CanvasLayer
 {

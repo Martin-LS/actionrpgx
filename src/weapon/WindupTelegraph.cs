@@ -1,6 +1,6 @@
 using Godot;
 
-namespace Godot2.Weapon;
+namespace ActionRpgX.Weapon;
 
 public partial class WindupTelegraph : Node3D
 {

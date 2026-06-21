@@ -14,7 +14,7 @@ compatibility/default_parent_skeleton_in_mesh_instance_3d=true
 
 [application]
 
-config/name="godot2"
+config/name="actionrpgx"
 run/main_scene="res://src/ui/main_menu.tscn"
 config/features=PackedStringArray("4.6", "C#", "Forward Plus")
 
@@ -37,7 +37,7 @@ window/stretch/mode="canvas_items"
 
 [dotnet]
 
-project/assembly_name="godot2"
+project/assembly_name="actionrpgx"
 
 [editor_plugins]
 

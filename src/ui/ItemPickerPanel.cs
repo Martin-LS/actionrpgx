@@ -1,8 +1,8 @@
 using Godot;
 using System;
-using Godot2.Items;
+using ActionRpgX.Items;
 
-namespace Godot2.Ui;
+namespace ActionRpgX.Ui;
 
 public partial class ItemPickerPanel : Control
 {

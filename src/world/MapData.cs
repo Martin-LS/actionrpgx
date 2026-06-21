@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
-using Godot2.Enemies;
+using ActionRpgX.Enemies;
 
-namespace Godot2.World;
+namespace ActionRpgX.World;
 
 public class MapData
 {

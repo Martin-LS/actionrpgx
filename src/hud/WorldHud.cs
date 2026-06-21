@@ -1,9 +1,9 @@
 using Godot;
 using System.Collections.Generic;
-using Godot2.Enemies;
-using Godot2.Player;
+using ActionRpgX.Enemies;
+using ActionRpgX.Player;
 
-namespace Godot2.Hud;
+namespace ActionRpgX.Hud;
 
 public partial class WorldHud : Node2D
 {

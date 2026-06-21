@@ -1,3 +1,3 @@
-namespace Godot2.Meta;
+namespace ActionRpgX.Meta;
 
 public enum MetaUpgradeType { MaxHealth, Speed, Damage }

@@ -1,4 +1,4 @@
-namespace Godot2.Ui;
+namespace ActionRpgX.Ui;
 
 public enum UpgradeEffect { MaxHealth, Speed, Damage, FireRate }
 

@@ -1,8 +1,8 @@
 using System.Collections.Generic;
-using Godot2.Items;
-using Godot2.Skills;
+using ActionRpgX.Items;
+using ActionRpgX.Skills;
 
-namespace Godot2.Character;
+namespace ActionRpgX.Character;
 
 public class ProfileData
 {

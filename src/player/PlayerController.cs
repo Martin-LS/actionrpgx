@@ -1,10 +1,10 @@
 using Godot;
 using System.Collections.Generic;
-using Godot2.Skills;
-using Godot2;
-using Godot2.Enemies;
+using ActionRpgX.Skills;
+using ActionRpgX;
+using ActionRpgX.Enemies;
 
-namespace Godot2.Player;
+namespace ActionRpgX.Player;
 
 public partial class PlayerController : CharacterBody3D
 {
