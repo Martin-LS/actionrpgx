@@ -6,6 +6,22 @@ Items to discuss, in no particular order. Cross off when resolved.
 
 ## Open for Discussion
 
+- [ ] **Run structure.** The current 5-minute horde timer doesn't fit a Diablo/PoE action RPG feel. How does a run actually play out? Dungeon crawling? Area clearing? Boss at the end? This is foundational — many other systems depend on the answer.
+
+- [ ] **How stats are gained.** Do players allocate stat points on level up (PoE-style free allocation), or are stats fixed per archetype and grow only through gear? Drives character build depth and identity.
+
+- [ ] **Passive skill tree.** PoE's defining feature alongside skills. Do we have one? Even a small one? How deep does it go and how does it interact with the base stat system?
+
+- [ ] **Dodge mechanic.** Space is mapped to dodge in the PoE2 keybinding layout but the mechanic is undesigned. Does it cost Focus? Has a cooldown? Grants i-frames? Direction-based?
+
+- [ ] **Equipment augments revisited.** Skill augments were overhauled this session — equipment augments were not. Do they follow the same model (socketable items, on_enemy_hit_% or player-based triggers, re-rollable %)? What is their design role now passives live on them?
+
+- [ ] **Focus system revisited.** Focus is still the skill resource but was designed around auto-cast. Does manual casting change how Focus feels to manage? Is it still the right resource model for a deliberate action RPG?
+
+- [ ] **Map crafting properties.** Maps are craft-driven (resolved) but what properties can a crafted map have? Difficulty modifiers? Enemy pool composition? Biome? Size?
+
+- [ ] **Stash and shared inventory.** Between characters and between runs — how does storage work at scale? Shared stash size, character-bound vs account-shared items.
+
 - [ ] **Skill prototype review.** All existing prototypes are back on the table with the action RPG pivot — including those previously flagged as engine-proof only (Fixed-Zone-Tick, Tracked-Tick, Triggered-Zone-Burst, etc.). Go through each prototype and redefine: is it player-facing, what is it good for, what builds does it suit, and what needs to change for a manual-cast 5-slot design. This is a separate design pass — do not redesign the skill system here, just re-evaluate each prototype against the new direction.
 
 - [ ] **Skill system design.** High-level design of the full skill system for the action RPG pivot — skill identity and uniqueness. Augment model and passive/active rules resolved separately. To be fleshed out as design discussion progresses.
