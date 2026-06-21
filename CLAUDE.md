@@ -3,7 +3,7 @@
 
 ## Project Overview
 
-Top-down horde survival game with action RPG depth — closer to Vampire Survivors in moment-to-moment feel, with meaningful skill and item systems layered on top. Godot 4.6, C#, Forward Plus renderer. 3D world with custom voxel-art style characters, perspective camera. Core mechanics are being redesigned as part of a pivot away from the previous deliberate action RPG direction.
+Top-down action RPG in the vein of Diablo and Path of Exile — deliberate, build-driven combat with deep skill and item systems. **Fully craft-driven:** items, skills, and maps are all obtained through crafting. Enemies drop only crafting materials; there are no direct item drops. The crafting system is the progression engine. Godot 4.6, C#, Forward Plus renderer. 3D world with custom voxel-art style characters, perspective camera.
 
 ## Docs
 

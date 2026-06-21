@@ -5,13 +5,14 @@
 
 ## Overview
 
-> **Design pivot in progress.** The game is shifting away from a deliberate action RPG direction (Diablo / PoE2 style) toward a horde survival game with action RPG depth — closer to Vampire Survivors in moment-to-moment feel, with meaningful skill and item systems layered on top. Specific mechanics below are being reviewed and revised. Sections that have not yet been updated may still reflect the old direction.
+A top-down action RPG in the vein of Diablo and Path of Exile. The player builds a persistent character, equips crafted gear and skills, and takes them into combat runs against escalating enemies.
 
-A top-down horde survival game with action RPG elements. The player builds a persistent character, equips gear and a skill, and takes them into timed combat runs against escalating enemy waves. The core loop is fast, automatic, and horde-focused — the ARPG layer adds depth through the skill and item systems.
+**Core design goal — fully craft-driven progression:**
+- Items, skills, and maps are all obtained through crafting. Nothing meaningful is dropped by enemies directly.
+- Enemies drop only **crafting materials**. Materials are the currency of all progression.
+- The crafting system is the progression engine: players farm materials in runs, then craft and upgrade their gear, skills, and maps between runs.
 
-Every run makes the character permanently stronger: level and XP carry over, stat bonuses stack, and coins and crafting materials earned go into a shared account pool. Between runs, players craft gear from materials — building both their character and their item collection over time. Coins accumulate but have no spend mechanic yet.
-
-The game has two intertwined goals: grow your character through runs, and build your gear through crafting.
+Every run makes the character permanently stronger: level and XP carry over, stat bonuses stack, and all crafting materials earned go into a shared account pool. The game has two intertwined goals: **grow your character through runs**, and **build your power through crafting**.
 
 ---
 
