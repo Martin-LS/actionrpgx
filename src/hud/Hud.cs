@@ -90,7 +90,7 @@ public partial class Hud : CanvasLayer
         skillBar.OffsetBottom    = -20f;
         skillBar.OffsetTop       = -90f;
 
-        for (int i = 0; i < 3; i++)
+        for (int i = 0; i < 1; i++) // v1: 1 slot; array holds 3 for future expansion
         {
             var bar = new ProgressBar
             {
@@ -122,10 +122,10 @@ public partial class Hud : CanvasLayer
             _timerLabel.Text = $"{secs / 60}:{secs % 60:D2}";
         }
 
-        for (int i = 0; i < 3; i++)
+        for (int i = 0; i < _skillCells.Length; i++)
         {
             var cell = _skillCells[i];
-            if (cell.Cooldown <= 0f || cell.Elapsed >= cell.Cooldown) continue;
+            if (cell == null || cell.Cooldown <= 0f || cell.Elapsed >= cell.Cooldown) continue;
             cell.Elapsed = Mathf.Min(cell.Cooldown, cell.Elapsed + (float)delta);
             cell.Bar.Value = cell.Elapsed / cell.Cooldown;
         }
@@ -154,8 +154,9 @@ public partial class Hud : CanvasLayer
 
     private void OnSkillFired(int slotIndex, float cooldown, string _delivery)
     {
-        if (slotIndex < 0 || slotIndex >= 3) return;
+        if (slotIndex < 0 || slotIndex >= _skillCells.Length) return;
         var cell = _skillCells[slotIndex];
+        if (cell == null) return;
         cell.Cooldown  = cooldown;
         cell.Elapsed   = 0f;
         cell.Bar.Value = 0.0;
