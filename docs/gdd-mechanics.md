@@ -21,8 +21,7 @@ Every run makes the character permanently stronger: level and XP carry over, sta
 ### Movement
 - Top-down, 8-directional
 - [TBD] Speed, acceleration values
-- **v1:** WASD only — no movement skills, no dash
-- **v2:** Every character gets a dedicated non-slottable dash. Not in a skill slot — all characters have it by default. Ensures players always have one escape option without sacrificing a skill slot. Enables more aggressive encounter and skill design knowing the movement floor is guaranteed.
+- **v1:** WASD movement + Space dodge roll. No movement skills.
 
 ### Combat
 
@@ -32,13 +31,12 @@ Skills drive all combat. Each skill has a **type**:
 |---|---|---|
 | Active | Fires on manual activation or auto-activate on cooldown. | Flat cost per activation |
 | Channeled | Hold button to run, release to stop. Drains Focus continuously while held. Stops automatically at 0 Focus. Auto-cast holds the button indefinitely — will empty the Focus bar if left unchecked. Player responsibility. | Per-second drain while held |
-| Passive | Toggle on/off. Stat or effect always-on while enabled. | None |
 
 The **skill bar** on the run HUD shows the slotted skill, its cooldown state, and whether auto-activate is enabled.
 
-**Auto-activate.** The player can toggle their skill to fire automatically on cooldown. When enabled, movement is where the player's active attention lives — positioning, dodging, kiting. Auto-activate must be DPS-equivalent to manual: a player pressing the skill key manually on cooldown gets the same output as auto-activate. It is pure convenience, not a power reduction.
+**Auto-activate.** The player can toggle their skill to fire automatically on cooldown. When enabled, movement is where the player's active attention lives — positioning, dodging, kiting. Auto-activate must be DPS-equivalent to manual: a player pressing the skill key manually on cooldown gets the same output as auto-activate. It is pure convenience, not a power reduction. Auto-activate is retained in the codebase for development convenience only — it is not a player-facing design feature and all skill design assumes manual casting.
 
-**v1:** 1 skill slot. The slot can be empty — an empty slot does nothing. Code supports multiple slots for future expansion but the HUD and design show 1. Each skill has its own cooldown or drain rate.
+**v1:** 5 skill slots. Slots can be empty — an empty slot does nothing. All slots are available from the start, no unlock progression. Each skill has its own cooldown or drain rate.
 
 **Attack / cast speed is a skill attribute, not a character stat.** There is no global attack speed multiplier on the character or on gear. A skill's cooldown belongs to the skill item — it is tuned per skill and reduced by tier upgrades.
 
@@ -74,11 +72,11 @@ Every skill declares one of three targeting shapes. The targeting system resolve
 |---|---|---|---|---|
 | **Self** | Effect originates from or is centered on the player | Player position | Player position | ✓ Yes |
 | **Entity** | Effect is applied to a specific enemy; blocked if no valid target | Nearest enemy to cursor | Locked target | ✓ Yes |
-| **Position** | Effect lands at a ground location; no enemy required | Cursor world position | Locked target's world position | Engine proof only |
+| **Position** | Effect lands at a ground location; no enemy required | Cursor world position | Locked target's world position | ✓ Yes |
 
-- **Self:** no targeting input needed — always fires from the player. Compatible with auto-activate.
-- **Entity:** must land on an enemy. On PC snaps to the nearest enemy to the cursor. On controller/keyboard fires at the locked target. Skill is blocked if no valid target exists. Compatible with auto-activate.
-- **Position:** requires manual ground placement — does not work cleanly with auto-target. Position skills are engine proofs only and are not player-facing.
+- **Self:** no targeting input needed — always fires from the player.
+- **Entity:** must land on an enemy. On PC snaps to the nearest enemy to the cursor. On controller/keyboard fires at the locked target. Skill is blocked if no valid target exists.
+- **Position:** requires manual ground placement. Best suited to manual-cast builds.
 
 #### Range resolution per targeting shape
 
@@ -161,44 +159,36 @@ Both player-received and enemy-received hits produce damage numbers. There is no
 - **All player-facing skills must deal direct damage.** Skills are damage delivery mechanisms — they always deal at least one hit of direct damage on activation. Debuffs, EoTs, and secondary effects (mines, traps) are added by augments, not baked into skills.
 - **Player-facing skills use Entity or Self targeting only.** Position skills require manual ground placement, which does not fit the auto-target horde survival model. Position skills exist as engine proofs only and are not templates for future player-facing skill design. Self (non-enemy target) is always valid.
 
-#### Player-Facing Prototypes
+#### Skill Prototypes
 
-These are craftable and appear in player-facing systems. v2 will create real named skills derived from these.
+All skills in v1 are prototypes. Prototypes are the building blocks — they prove mechanics and cover the full design space. Named skills with unique identities are post-v1 and will be derived from these prototypes.
 
-All player-facing skills are **Entity** (one clean hit on locked target) or **Self** (hits everything around the player). This is a firm design principle — skills that require manual target switching or ground placement to be meaningful are not player-facing.
+All 11 prototypes are player-facing and craftable. The `EngineProof` kind is retained in code for future use but nothing is marked as such currently.
 
-| Prototype | Targeting | Damage pattern | Skill type | Good for |
-|---|---|---|---|---|
-| Entity-Burst | Entity | Burst | Active | Basic attack — sword slash, arrow shot, wand bolt |
-| Self-Channeled-Tick | Self | Tick | Channeled | Whirlwind, spinning blade, sustained spin-to-win |
-| Self-Duration-Tick | Self | Tick | Active | Short AoE pulse burst — activate, ticks around you, cooldown |
-| Self-Burst | Self | Burst | Active | Panic nova — surrounded, pop it, instant AoE clear |
+| Prototype | Targeting | Damage pattern | Skill type |
+|---|---|---|---|
+| Entity-Burst | Entity | Burst | Active |
+| Self-Channeled-Tick | Self | Tick | Channeled |
+| Self-Duration-Tick | Self | Tick | Active |
+| Self-Burst | Self | Burst | Active |
+| Fixed-Zone-Tick | Position | Tick | Active |
+| Fixed-Zone-Burst | Position | Burst | Active |
+| Windup-Burst | Position | Burst | Active |
+| Tracked-Tick | Entity | Tick | Active |
+| Entity-Debuff | Entity | None | Active |
+| Stackable-Zone | Position | Tick | Active |
+| Triggered-Zone-Burst | Position | Burst | Active |
 
 > **Tech note — renames, not new skills:** Entity-Burst, Self-Channeled-Tick, Self-Duration-Tick, and Self-Burst are renames of the existing Strike, Cyclone, Damage Aura, and Nova implementations. Rename in code and data — do not create new skill objects. v2 will create the real named versions (Strike, Cyclone, etc.) derived from these prototypes.
 
 All archetypes start with plain Entity-Burst in slot 1, no augments pre-socketed.
-
-#### Engine Proof Prototypes
-
-Retained to validate engine mechanics only. Not craftable, not player-facing. Not templates for future skill design.
-
-| Prototype | Targeting | Damage pattern | Skill type | Proves |
-|---|---|---|---|---|
-| Fixed-Zone-Tick | Position | Tick | Active | Persistent ticking damage field at a ground position |
-| Fixed-Zone-Burst | Position | Burst | Active | Instant remote explosion at a ground position |
-| Windup-Burst | Position | Burst | Active | Telegraphed delay before detonation |
-| Stackable-Zone | Position | Tick | Active | Multiple independent instances active simultaneously |
-| Triggered-Zone-Burst | Position | Burst | Active | Proximity trigger — fires when enemy enters radius |
-| Tracked-Tick | Entity | Tick | Active | Zone follows a specific target — requires manual target switching to spread; incompatible with auto-target. Can return as an augment effect. |
-| Entity-Debuff | Entity | None | Active | Entity targeting with no damage output |
-| Self-Aura-Tick | Self | Tick | Active | Old Aura mechanic — persistent passive pulse (replaced by Self-Duration-Tick) |
 
 **Universal skill properties** — every skill in the game has these fields:
 
 | Property | Description |
 |---|---|
 | Description | What this skill is designed to prove or do (v1: mechanic proof; future: player-facing flavour) |
-| Kind | `Normal` = real named skill (v2+). `Prototype` = player-facing in v1, hidden in v2 when real named versions replace it. `EngineProof` = never player-facing or craftable — exists solely to validate engine mechanics. |
+| Kind | `Normal` = real named skill (post-v1). `Prototype` = all v1 skills are this kind — player-facing, craftable. `EngineProof` = reserved for future use, nothing currently marked as such. |
 | Targeting shape | Self / Position / Entity — how the skill resolves its target (see Targeting) |
 | Wind-up | Seconds of delay before effect lands; 0 = instant |
 | Damage pattern | Burst (single hit) / Tick (over duration) / None (debuff or utility only) |
@@ -312,7 +302,7 @@ All values (damage, cooldown, radius, tick rate, duration) are TBD — owned by 
 |---|---|
 | Description | Proves Position targeting with a fixed ticking zone. Zone stays where cast; enemies walk through it. |
 | Good for | Skills that place a persistent damage field at a location — enemies walk into it and take repeated hits. Traps, pools, hazard zones. |
-| Kind | EngineProof |
+| Kind | Prototype |
 | Targeting shape | Position |
 | Wind-up | 0 (instant) |
 | Damage pattern | Tick |
@@ -329,7 +319,7 @@ All values (damage, cooldown, radius, tick rate, duration) are TBD — owned by 
 |---|---|
 | Description | Proves Position targeting with a single burst hit. A remote instant explosion — Self-Burst placed at a chosen location. |
 | Good for | Skills that detonate a single explosion at a chosen spot — remote instant damage with no lingering effect. |
-| Kind | EngineProof |
+| Kind | Prototype |
 | Targeting shape | Position |
 | Wind-up | 0 (instant) |
 | Damage pattern | Burst |
@@ -345,7 +335,7 @@ All values (damage, cooldown, radius, tick rate, duration) are TBD — owned by 
 |---|---|
 | Description | Proves wind-up mechanic. Telegraphed 1.5s delay before a high-damage burst lands at target position. Wind-up is the balancing cost. |
 | Good for | Skills with a visible telegraph before a powerful hit lands — high damage that enemies can theoretically walk out of. |
-| Kind | EngineProof |
+| Kind | Prototype |
 | Targeting shape | Position |
 | Wind-up | 1.5s |
 | Damage pattern | Burst |
@@ -361,7 +351,7 @@ All values (damage, cooldown, radius, tick rate, duration) are TBD — owned by 
 |---|---|
 | Description | Proves Entity targeting with a zone that follows the target. Ticks damage to the tracked enemy and all enemies within radius around them. Zone moves with the entity. |
 | Good for | Skills that attach a persistent effect to an enemy — follows the target and damages it (and nearby enemies) continuously. Curses, brands, haunts. |
-| Kind | EngineProof |
+| Kind | Prototype |
 | Targeting shape | Entity |
 | Wind-up | 0 (instant) |
 | Damage pattern | Tick |
@@ -378,8 +368,8 @@ All values (damage, cooldown, radius, tick rate, duration) are TBD — owned by 
 | Property | Value |
 |---|---|
 | Description | Proves Entity targeting with no damage output. Applies a debuff directly to the locked target; effect follows the target for its duration. Retained as a mechanic proof only — not a template for future skill design (all player-facing skills must deal direct damage). |
-| Good for | Engine proof of Entity targeting + debuff application. Not intended for player use. |
-| Kind | EngineProof |
+| Good for | Engine proof of Entity targeting + debuff application. |
+| Kind | Prototype |
 | Targeting shape | Entity |
 | Wind-up | 0 (instant) |
 | Damage pattern | None |
@@ -396,7 +386,7 @@ All values (damage, cooldown, radius, tick rate, duration) are TBD — owned by 
 |---|---|
 | Description | Proves configurable stack limit. Each cast places an independent ticking zone; up to the stack cap active simultaneously. |
 | Good for | Skills where you want multiple independent instances active simultaneously — turrets, totems, summons, overlapping zones. |
-| Kind | EngineProof |
+| Kind | Prototype |
 | Targeting shape | Position |
 | Wind-up | 0 (instant) |
 | Damage pattern | Tick |
@@ -416,7 +406,7 @@ All values (damage, cooldown, radius, tick rate, duration) are TBD — owned by 
 |---|---|
 | Description | Proves trigger-on-proximity mechanic. Placed at a position, dormant until an enemy enters the trigger radius, then fires once and despawns. |
 | Good for | Traps, proximity mines, tripwires — placed hazards that punish enemies for moving through an area. |
-| Kind | EngineProof |
+| Kind | Prototype |
 | Targeting shape | Position |
 | Wind-up | 0 (instant) |
 | Damage pattern | Burst |
@@ -473,6 +463,18 @@ Every archetype has a Focus Shield — a damage buffer that absorbs hits before 
 - If Max Focus decreases (debuff): shield ceiling drops, current shield is immediately clamped to the new maximum
 
 Investing in Max Focus through gear grows both the casting pool and the shield simultaneously. Natural shield sizes at base: Warrior 24, Rogue 30, Mage 45. The Mage has the largest Focus pool — and therefore the largest shield — by default.
+
+---
+
+### Dodge
+
+Every character has a dodge roll available at all times.
+
+- **Input:** Space bar
+- **Cost:** Free — no Focus cost
+- **Direction:** Any direction, independent of movement direction
+- **I-frames:** Grants invincibility frames for the duration of the roll
+- **Cooldown:** Short — exact value TBD (owned by Balancer)
 
 ---
 
@@ -574,13 +576,12 @@ Where `modifier_total` is the sum of all modifier sources for that stat: level-u
 A run cannot start without a selected character.
 
 ### Controls
-| Input   | Action                                      |
+| Input | Action |
 |---------|---------------------------------------------|
-| WASD    | Move                                        |
-| 1       | Activate skill slot 1                       |
-| ESC     | Pause                                       |
-
-The skill slot has an **auto-activate toggle** (set in the character screen before the run). When enabled, the skill fires automatically on cooldown — the key still works as a manual override.
+| WASD | Move |
+| Q / E / R / F / Mouse button | Activate skill slots 1–5 |
+| Space | Dodge roll |
+| ESC | Pause |
 
 ---
 

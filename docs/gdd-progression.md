@@ -38,11 +38,11 @@ Characters can equip up to 4 gear items (one per gear slot) and 1 skill item (co
 
 #### Skill Slots
 
-1 skill slot shown on the HUD and used during a run. Code supports multiple slots for future expansion. Whatever is equipped in the skill slot is what fires during the run. Any archetype can equip any skill — there are no restrictions.
+5 skill slots shown on the HUD and used during a run. All 5 are available from the start — no unlock progression. Any archetype can equip any skill in any slot — fully freeform, no restrictions.
 
-v1 starter skill: **Entity-Burst** (physical type, 1.0× multiplier). All archetypes start with plain Entity-Burst — no pre-socketed augments. Weapon drives the delivery animation; skill defines the damage type.
+v1 starter skill: **Entity-Burst** in slot 1 (physical type, 1.0× multiplier), slots 2–5 empty. All archetypes start with plain Entity-Burst — no augments socketed. Weapon drives the delivery animation; skill defines the damage type.
 
-Skill items are crafted (Craft New — accessible from an empty skill slot, left-click → Craft New; not yet implemented in v1) and equipped from the **Skills inventory tab**.
+Skill items are crafted (Craft New — accessible from an empty skill slot, left-click → Craft New; not yet implemented in v1) and equipped from the **Skills inventory tab**. Default keybindings: Q E R F + one mouse button for slots 1–5. Rebindable.
 
 #### Skill Augments
 
@@ -61,23 +61,24 @@ Skill Augments are craftable items that socket into a skill item to modify it. A
 - **Socketing:** choose a Skill Augment from inventory and place it into an open slot on the skill item
 - **Removing:** free, Skill Augment returns to inventory
 
-**Augment tag + trigger type system.** Each augment has a functional tag (e.g. `splash`, `pierce`, `slow`, `crit`). Each augment slot has a trigger type (e.g. `on_enemy_hit_%`, `always`) that declares which augment tags it accepts and how it fires. Mechanical augments (splash, pierce) use a trigger type with no % chance — they fire on every hit. Effect augments (slow, crit, burn) use `on_enemy_hit_%` with a fixed trigger chance defined on the augment. Full tag/trigger taxonomy TBD at implementation.
+**Augment tag + trigger type system.** Each augment has a functional tag (e.g. `splash`, `pierce`, `slow`, `burn`). Each augment slot has a trigger type that declares which augment tags it accepts and how it fires. All skill augments use `on_enemy_hit_%` — the trigger % is a property of the augment item, rolled at craft time and re-rollable via crafting. Full tag/trigger taxonomy TBD at implementation.
 
 **v1 Skill Augments:**
 
-| Skill Augment   | Tag      | Trigger type       | Effect |
-|-----------------|----------|--------------------|--------|
-| Splash          | `splash` | `always`           | Hit damages a small area around the impact point. Meaningful on Entity skills (Melee and Ranged). No effect on Self skills — UI warns. |
-| Pierce          | `pierce` | `always`           | Hit passes through the first enemy and continues. Ranged: projectile travels through. Melee: swing cuts through enemies in a line. No effect on Self skills — UI warns. |
-| Slow            | `slow`   | `on_enemy_hit_%`   | Applies the Slow EoT on hit |
-| Critical Strike | `crit`   | `on_enemy_hit_%`   | Hit deals base damage × 1.5×. Trigger chance = crit chance. Bow identity adds a flat bonus on top. |
-| Burn            | `burn`   | `on_enemy_hit_%`   | Applies the Burn EoT on hit |
+| Skill Augment | Tag | Trigger type | Effect |
+|---|---|---|---|
+| Splash | `splash` | `on_enemy_hit_%` | Hit damages a small area around the impact point. |
+| Pierce | `pierce` | `on_enemy_hit_%` | Hit passes through the first enemy and continues. |
+| Slow | `slow` | `on_enemy_hit_%` | Applies the Slow EoT on hit. |
+| Burn | `burn` | `on_enemy_hit_%` | Applies the Burn EoT on hit. |
 
 Exact values (splash radius, trigger chances, slow %, burn damage, duration) are TBD.
 
+All augments use `on_enemy_hit_%` trigger — including Splash and Pierce. The trigger % is a property of the augment item, rolled at craft time and re-rollable via crafting. Higher % is a meaningful crafting goal.
+
 **Future augment pattern — mine/trap placement:** A mine augment triggers `on_enemy_hit_%` and places a proximity trap at the hit location. Successive hits place additional mines up to an active cap. The cap scales with augment tier (e.g. tier 1 = 2 active mines, tier 2 = 4, tier 3 = 6). This introduces augment-tier-scaling caps as a mechanic — design in full when crafting tiers are being expanded.
 
-**Crafting cost (v1):** every Skill Augment costs **1 Common material** to craft.
+**Crafting cost (v1):** every Skill Augment costs **1 crafting resource** to craft.
 
 Skill Augments are crafted (Craft New entry point TBD — not yet implemented; planned via left-click on an open augment socket) and live in the **Augments inventory tab**.
 
@@ -94,6 +95,8 @@ Armour pieces (Hat and Body) carry a **category tag** that identifies their type
 Category is fixed per item — a Heavy hat stays Heavy regardless of tier.
 
 #### Equipment Augments
+
+Equipment Augments follow the same model as Skill Augments — separate socketable items, one type per equipment piece at a time, trigger % is rolled at craft time and re-rollable.
 
 Equipment Augments are craftable items that socket into an equipment item to add a **behaviour** — not just a stat bonus, but something that changes how that piece of equipment *feels* to use. They are the gear-layer equivalent of Skill Augments.
 
@@ -121,7 +124,7 @@ Equipment Augments are craftable items that socket into an equipment item to add
 | Fortify     | `fortify`     | `on_player_hit_%`   | On hit received: reduce damage taken from the next hit |
 | Dash Reflex | `dash_reflex` | `on_player_hit_%`   | On hit received: brief speed burst |
 | Ghost Step  | `ghost_step`  | `on_kill_%`         | On kill: restore a small amount of HP |
-| Mending     | `mending`     | `always`            | Regenerate a small amount of HP every 3s |
+| Mending     | `mending`     | `on_player_hit_%`   | Regenerate a small amount of HP every 3s |
 
 Exact trigger chances and values are TBD — owned by the Balancer.
 
@@ -129,7 +132,7 @@ Exact values for all behaviours are TBD — owned by the Balancer.
 
 **Aura augments:** Auras are Equipment Augments with the `aura` tag — a persistent area effect emanating from the player. The trigger type is player's choice: an `always` slot keeps the aura permanently active; an `on_player_hit_%` slot fires it reactively on taking a hit. The augment tag defines what the aura does; the trigger type defines when it runs. Focus reservation may apply as a cost for `always` aura augments — TBD when augment design is expanded.
 
-**Crafting cost (v1):** every Equipment Augment costs **1 Common material** to craft.
+**Crafting cost (v1):** every Equipment Augment costs **1 crafting resource** to craft.
 
 Equipment Augments are crafted (Craft New entry point TBD — not yet implemented; planned via left-click on an open augment socket) and live in the **Augments inventory tab**.
 
@@ -193,7 +196,7 @@ Rings grant **physical resistance (%)**. No category, no equipment tags — any 
 
 Each character starts with one item per slot, matched to their archetype:
 
-| Archetype | Weapon         | Hat            | Body           | Ring          | Skill slot 1        |
+| Archetype | Weapon         | Hat            | Body           | Ring          | Skill slot 1 (of 5) |
 |-----------|----------------|----------------|----------------|---------------|---------------------|
 | Warrior   | Sword (tier 1) | Heavy (tier 1) | Heavy (tier 1) | Ring (tier 1) | Entity-Burst (no augment) |
 | Rogue     | Bow (tier 1)   | Light (tier 1) | Light (tier 1) | Ring (tier 1) | Entity-Burst (no augment) |
@@ -203,7 +206,7 @@ All archetypes start with Entity-Burst — physical type, 1.0× multiplier, no a
 
 Specific item names and exact stat values are TBD.
 
-**Acquisition:** Gear is not dropped by enemies. New items come from crafting — each item has a recipe requiring a combination of materials (see Currencies).
+**Acquisition:** Gear is not dropped by enemies — enemies drop crafting materials only. All items (gear, skills, augments) come from crafting.
 
 **Item identity:** Each item is a unique instance with its own ID. Items **upgrade in-place** — tier increases on the existing item rather than producing a new one. The item's border colour updates to reflect its new tier (see Item Tiers).
 
@@ -227,13 +230,13 @@ Equipped items are held separately in the character's slots and do not count aga
 Earned during runs (25% enemy drop). **Account-shared** — earned by any character, spendable by any. Spend mechanic TBD — coins accumulate but have no current use.
 
 ### Crafting Materials
-Crafting materials are tiered — common through exotic. Each tier drops at a different rate during runs and enables crafting of items at the corresponding tier. **v1:** all items cost 1 Common material to craft. Future versions will use material combinations for higher-tier recipes.
+Crafting materials are the primary run reward — the only meaningful thing enemies drop. They are tiered — common through exotic. Each tier drops at a different rate during runs and enables crafting of items at the corresponding tier. **v1:** all items cost 1 crafting resource to craft. Future versions will use material combinations for higher-tier recipes.
 
-| Tier    | Current name        | Drop rate | Enables                          |
-|---------|---------------------|-----------|----------------------------------|
-| Common  | crafting-currency-1 | 20%       | Low-tier items                   |
-| [TBD]   | —                   | Rarer     | Mid-tier items                   |
-| Exotic  | —                   | Very rare | Exotic / high-tier items         |
+| Tier    | Current name     | Drop rate | Enables                          |
+|---------|------------------|-----------|----------------------------------|
+| Common  | crafting resource | 20%       | Low-tier items                   |
+| [TBD]   | —                | Rarer     | Mid-tier items                   |
+| Exotic  | —                | Very rare | Exotic / high-tier items         |
 
 - All materials are **account-shared** — earned by any character, spendable by any character
 - The more exotic the craftable item, the rarer its required materials
@@ -247,10 +250,9 @@ Crafting materials are tiered — common through exotic. Each tier drops at a di
 - XP bar + current level
 - Coin counter (this run)
 - Elapsed time / countdown
-- **Skill bar** — bottom-center of the HUD. 1 slot. Shows the slotted skill with cooldown/toggle state:
+- **Skill bar** — bottom-center of the HUD. 5 slots (Q E R F + mouse). Each slot shows its equipped skill with independent cooldown state:
   - Active skill on cooldown: slot is greyed out, fills from bottom as cooldown recovers
   - Active skill ready: slot fully lit
-  - Passive skill: lit when toggled on, greyed when off
   - Empty slot: visually empty (no icon)
 - **Floating HP bar** — above both player and enemies (see Hit Feedback in `gdd-mechanics.md` for colours and visibility rules)
 - **Damage numbers** — float upward from the hit point on every hit, colour-coded by damage type and crit (see Hit Feedback in `gdd-mechanics.md`)
