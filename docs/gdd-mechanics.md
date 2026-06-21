@@ -34,7 +34,7 @@ Skills drive all combat. Each skill has a **type**:
 
 The **skill bar** on the run HUD shows the slotted skill, its cooldown state, and whether auto-activate is enabled.
 
-**Auto-activate.** The player can toggle their skill to fire automatically on cooldown. When enabled, movement is where the player's active attention lives — positioning, dodging, kiting. Auto-activate must be DPS-equivalent to manual: a player pressing the skill key manually on cooldown gets the same output as auto-activate. It is pure convenience, not a power reduction. Auto-activate is retained in the codebase for development convenience only — it is not a player-facing design feature and all skill design assumes manual casting.
+**Auto-activate.** The player can toggle their skill to fire automatically on cooldown. When enabled, movement is where the player's active attention lives — positioning, dodging, kiting. Auto-activate must be DPS-equivalent to manual: a player pressing the skill key manually on cooldown gets the same output as auto-activate. It is pure convenience, not a power reduction. Auto-activate is retained in the codebase for development convenience only — all skill design assumes manual casting.
 
 **v1:** 5 skill slots. Slots can be empty — an empty slot does nothing. All slots are available from the start, no unlock progression. Each skill has its own cooldown or drain rate.
 
@@ -68,11 +68,11 @@ Archetype damage multipliers apply per damage type — a Warrior gets 1.5× on p
 
 Every skill declares one of three targeting shapes. The targeting system resolves the correct position or entity per shape and per input device:
 
-| Shape | Description | Mouse (PC) | Controller / Keyboard | Player-facing? |
-|---|---|---|---|---|
-| **Self** | Effect originates from or is centered on the player | Player position | Player position | ✓ Yes |
-| **Entity** | Effect is applied to a specific enemy; blocked if no valid target | Nearest enemy to cursor | Locked target | ✓ Yes |
-| **Position** | Effect lands at a ground location; no enemy required | Cursor world position | Locked target's world position | ✓ Yes |
+| Shape | Description | Mouse (PC) | Controller / Keyboard |
+|---|---|---|---|
+| **Self** | Effect originates from or is centered on the player | Player position | Player position |
+| **Entity** | Effect is applied to a specific enemy; blocked if no valid target | Nearest enemy to cursor | Locked target |
+| **Position** | Effect lands at a ground location; no enemy required | Cursor world position | Locked target's world position |
 
 - **Self:** no targeting input needed — always fires from the player.
 - **Entity:** must land on an enemy. On PC snaps to the nearest enemy to the cursor. On controller/keyboard fires at the locked target. Skill is blocked if no valid target exists.
@@ -155,15 +155,14 @@ Both player-received and enemy-received hits produce damage numbers. There is no
 
 ### Skills
 
-**Design rules for player-facing skills:**
-- **All player-facing skills must deal direct damage.** Skills are damage delivery mechanisms — they always deal at least one hit of direct damage on activation. Debuffs, EoTs, and secondary effects (mines, traps) are added by augments, not baked into skills.
-- **Player-facing skills use Entity or Self targeting only.** Position skills require manual ground placement, which does not fit the auto-target horde survival model. Position skills exist as engine proofs only and are not templates for future player-facing skill design. Self (non-enemy target) is always valid.
+**Design rule for skills:**
+- **EoTs and secondary effects (mines, traps) are added by augments, not baked into skills.** A skill's base behaviour is its damage delivery. Augments add what happens on top of that.
 
 #### Skill Prototypes
 
 All skills in v1 are prototypes. Prototypes are the building blocks — they prove mechanics and cover the full design space. Named skills with unique identities are post-v1 and will be derived from these prototypes.
 
-All 11 prototypes are player-facing and craftable. The `EngineProof` kind is retained in code for future use but nothing is marked as such currently.
+All 11 prototypes are craftable. The `EngineProof` kind is retained in code for future use but nothing is marked as such currently.
 
 | Prototype | Targeting | Damage pattern | Skill type |
 |---|---|---|---|
@@ -187,8 +186,8 @@ All archetypes start with plain Entity-Burst in slot 1, no augments pre-socketed
 
 | Property | Description |
 |---|---|
-| Description | What this skill is designed to prove or do (v1: mechanic proof; future: player-facing flavour) |
-| Kind | `Normal` = real named skill (post-v1). `Prototype` = all v1 skills are this kind — player-facing, craftable. `EngineProof` = reserved for future use, nothing currently marked as such. |
+| Description | What this skill is designed to prove or do (v1: mechanic proof; future: named skill flavour) |
+| Kind | `Normal` = real named skill (post-v1). `Prototype` = all v1 skills are this kind — craftable. `EngineProof` = reserved for future use, nothing currently marked as such. |
 | Targeting shape | Self / Position / Entity — how the skill resolves its target (see Targeting) |
 | Wind-up | Seconds of delay before effect lands; 0 = instant |
 | Damage pattern | Burst (single hit) / Tick (over duration) / None (debuff or utility only) |
@@ -367,8 +366,8 @@ All values (damage, cooldown, radius, tick rate, duration) are TBD — owned by 
 
 | Property | Value |
 |---|---|
-| Description | Proves Entity targeting with no damage output. Applies a debuff directly to the locked target; effect follows the target for its duration. Retained as a mechanic proof only — not a template for future skill design (all player-facing skills must deal direct damage). |
-| Good for | Engine proof of Entity targeting + debuff application. |
+| Description | Proves Entity targeting with no damage output. Applies a debuff directly to the locked target; effect follows the target for its duration. |
+| Good for | Utility/debuff skills — intentional no-damage builds, CC support, or mixed builds that pair debuffing with other damage slots. |
 | Kind | Prototype |
 | Targeting shape | Entity |
 | Wind-up | 0 (instant) |
@@ -492,13 +491,14 @@ Resistances are always soft (never total immunity). Exact values are TBD.
 
 ### Critical Hits
 
-Crit is an `on_enemy_hit_%` skill augment. When it triggers, the hit deals base skill damage × crit multiplier. Crit applies to base skill damage only — EoT damage from augments is unaffected.
+Crit rolls automatically on every hit — no augment needed. Crit applies to base skill damage only — EoT damage from augments is unaffected.
 
 `Final damage (on crit) = Skill base damage × Crit Multiplier`
 
-The augment's trigger chance is the crit chance. The Bow identity bonus adds a flat % on top of the augment's trigger chance — a Bow with a Critical Strike augment crits more often than a Sword with the same augment.
+- **CritChance** — comes from Dexterity. The Bow identity bonus adds a flat % on top of the Dex-derived crit chance.
+- **CritDamage (Crit Multiplier)** — comes from Strength. Fixed at 1.5× in v1 at base; grows with Str investment.
 
-**Crit Multiplier:** fixed at 1.5× in v1. Not investable. Future: investable via a dedicated augment.
+There is no Critical Strike augment.
 
 ### Effects over Time (EoT)
 

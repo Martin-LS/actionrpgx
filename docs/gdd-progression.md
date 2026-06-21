@@ -26,7 +26,7 @@ Exact stat differences per tier are TBD. Higher tier also unlocks more augment s
 
 ### Gear Slots
 
-Characters can equip up to 4 gear items (one per gear slot) and 1 skill item (code supports more slots for future expansion). All items persist between runs. Each slot has a distinct role:
+Characters can equip up to 4 gear items (one per gear slot) and 5 skill items. All items persist between runs. Each slot has a distinct role:
 
 | Slot      | Role                                                             | Progression axis                    |
 |-----------|------------------------------------------------------------------|-------------------------------------|
@@ -34,7 +34,7 @@ Characters can equip up to 4 gear items (one per gear slot) and 1 skill item (co
 | Hat       | Survival — HP, Speed, damage reduction (%) by category; Range Modifier by category | Tier → better stats within category |
 | Body      | Survival — HP, Speed, damage reduction (%) by category; Range Modifier by category | Tier → better stats within category |
 | Ring      | Mitigation — physical resistance (%)                             | Tier → higher resistance            |
-| Skill ×1  | Active/passive ability used during a run (code supports more slots for future expansion) | Tier → stronger effect + lower cooldown (cooldown is a skill attribute — no character-level attack speed stat exists) |
+| Skill ×5  | Active abilities used during a run. All 5 slots available from the start — no unlock progression | Tier → stronger effect + lower cooldown (cooldown is a skill attribute — no character-level attack speed stat exists) |
 
 #### Skill Slots
 
@@ -116,7 +116,7 @@ Equipment Augments are craftable items that socket into an equipment item to add
 - **Removing:** free, Equipment Augment returns to inventory
 - Any augment can socket into any equipment item — no tag gate. Each augment type can only be equipped once per item (no duplicates).
 
-**v1 Equipment Augments** — same augment tag + trigger type system as skill augments, but player-based triggers. Each augment has a tag and a trigger type; trigger chance is fixed per augment:
+**v1 Equipment Augments** — prototypes only. Exact trigger models, trigger types, and values are all TBD and out of scope for v1. Listed here to establish the design space, not to be implemented. Same augment tag + trigger type system as skill augments, but player-based triggers:
 
 | Augment     | Tag           | Trigger type        | Behaviour |
 |-------------|---------------|---------------------|-----------|
@@ -264,7 +264,7 @@ Crafting materials are the primary run reward — the only meaningful thing enem
   - **Character creation — name rules:** Required (non-empty). Alphanumeric only — no spaces or special characters. Must be unique across all characters on the account. Confirm button is disabled until all rules pass; inline error message explains which rule is violated.
 - **Character Screen** → full management hub for the selected character. Two tabs: **Loadout** (default) and **Sigils**. Start Run button at the bottom. Back button returns to Account Screen.
   - **Loadout tab** — two-column layout:
-    - *Left/centre* — character name, archetype, stats, and equipped slots: Weapon / Hat / Body / Ring / Skill 1
+    - *Left/centre* — character name, archetype, stats, and equipped slots: Weapon / Hat / Body / Ring / Skills 1–5
     - *Right column* — account inventory, always visible within this tab. Scrollable 5-column icon grid with three sub-tabs:
       - *Equipment* — crafted gear, 50-item cap
       - *Skills* — crafted skill items, 50-item cap

@@ -22,7 +22,7 @@ Items to discuss, in no particular order. Cross off when resolved.
 
 - [x] **Skill tags.** No skill tags in v1. Tags may be added post-v1 but not for gear-gating reasons — the no-gate philosophy holds. Tags are additive and easy to introduce later (just a property on skill data); nothing in the current architecture prevents it.
 
-- [x] **Skill prototype review + v1 skill system design.** All 11 prototypes reviewed and confirmed as-is. All are now ``Prototype`` kind — nothing is ``EngineProof`` (enum value retained in code for future use). The building blocks cover all three targeting shapes (Entity, Self, Position), all damage patterns (Burst, Tick, None), and key modifiers (Channeled, Windup, Stackable, Triggered). No gaps identified. V1 ships all 11 as player-facing prototypes; named skills with unique identities are post-v1.
+- [x] **Skill prototype review + v1 skill system design.** All 11 prototypes reviewed and confirmed as-is. All are now ``Prototype`` kind — nothing is ``EngineProof`` (enum value retained in code for future use). The building blocks cover all three targeting shapes (Entity, Self, Position), all damage patterns (Burst, Tick, None), and key modifiers (Channeled, Windup, Stackable, Triggered). No gaps identified. V1 ships all 11 as craftable prototypes; named skills with unique identities are post-v1.
 
 ---
 
@@ -49,7 +49,7 @@ Items to discuss, in no particular order. Cross off when resolved.
 - [x] **Skill slots — 5 slots, freeform, PoE2 keybinding layout.**
   - 5 skill slots available from the start — no unlock progression.
   - Fully freeform (PoE-style) — any skill in any slot, no typed slot restrictions.
-  - Auto-cast retained in the codebase for dev convenience only (see cast/targeting model decision above) — not a player-facing design concern for skill slots.
+  - Auto-cast retained in the codebase for dev convenience only (see cast/targeting model decision above) — not a player design concern for skill slots.
   - Default keybinding layout follows PoE2: `Q E R F` + one mouse button for the 5 slots. WASD for movement, `Space` for dodge.
   - Players can rebind `Q E R F` to `1 2 3 4` for D4-style preference — Godot's input action system handles this natively.
   - HUD skill bar and per-slot cooldown display are implementation details — TBD when HUD is redesigned for 5 slots.
