@@ -521,7 +521,7 @@ The EoT type defines *what it does* when active:
 |---|---|---|
 | Slow | No | Reduces enemy movement speed |
 | Burn | Yes (Magic) | Deals Magic damage per tick |
-| Vulnerability | No | Increases damage taken by the enemy |
+| Vulnerability | No | Increases damage taken by the enemy — **post-v1** (no augment or EotRegistry entry in v1) |
 
 When designing new EoTs: if it deals damage per tick, set tick rate and damage per tick. If not, leave those blank. That is the only distinction.
 

@@ -1,4 +1,4 @@
-# Technical Design Document — Scene & Architecture
+﻿# Technical Design Document — Scene & Architecture
 
 > Part of the technical docs. See also `technical-systems.md` for data types, save format, crafting, combat systems, and more.
 > Living document — architecture will evolve as systems are built and playtested.
@@ -150,7 +150,7 @@ SkillPickerPanel (Control, full-screen)
     └── VBox (VBoxContainer)
         ├── TitleLabel (Label) ← "Choose Skill"
         ├── Scroll (ScrollContainer)
-        │   └── ItemList (VBoxContainer) ← buttons added at runtime, one per OwnedSkillIds entry
+        │   └── ItemList (VBoxContainer) ← buttons added at runtime, one per OwnedSkillInstances entry
         └── CloseButton (Button)
 ```
 
