@@ -6,6 +6,11 @@ Code, systems, UI, and art tasks only. Design decisions live in `docs/game-desig
 
 ## Code — Design Sync
 
+- [ ] Add `DamageType` field to `SkillData` (DamageType enum, default Physical — each prototype already declares its type in the GDD)
+- [ ] `WeaponController`: remove `SetBaseDamageType()`; at fire time select `_physicalDamage` or `_magicDamage` pool via `slot.Skill.DamageType`
+- [ ] `PlayerController.ApplyWeaponDamage()`: compute both pools from `StatBlock` (no `archetypeMult` or weapon-type branching — see technical-systems.md § Weapon)
+- [ ] Replace `ArchetypeMultiplierRegistry` with `PrimaryStatGainRegistry` (3 gain rates per archetype) and `PrimaryStatConversions` (fixed derived-stat conversion rates); update `BuildStatBlock()` accordingly
+
 - [x] Remove Adaptation Equipment Augment from implementation (cut from v1 design)
 - [x] Skill slot count: HUD shows 1 slot (v1 design); `_skillCells` array stays at 3 for future expansion
 - [x] Rename BalanceConfig constants and WeaponController methods to match design names: Strike → EntityBurst, Cyclone → SelfChanneledTick, DamageAura → SelfDurationTick, Nova → SelfBurst. (`DamageAuraReservation` removed; replaced with `SelfDurationTickFocusCost = 15f`.)

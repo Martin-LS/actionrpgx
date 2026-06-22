@@ -18,7 +18,7 @@
 | `StatBlock`         | Plain C#    | Holds one effective value per `StatId`. `Get(StatId)` returns the final computed value — primary stat growth, conversion rates, and item bonuses all resolved by `BuildStatBlock()` before the block is returned, so callers always get ready-to-use effective values. |
 | `ItemData`          | C# record   | Id, Name, Slot (enum), IconPath, Tags (string[] — equipment tags for augment compatibility; e.g. `["Melee"]` for Sword, `["Heavy"]` for heavy armour, `[]` for Accessory) — plus slot-specific fields: `WeaponRange (float, in tiles)`, `PreferredDelivery (string — "Melee" or "Ranged")` for Weapon; `ArmorCategory`, `BonusHp`, `BonusSpeed`, `DamageReduction (float)`, `RangeModifier (float, in tiles)` for Armor; `PhysicalResistance (float)` for Accessory. Unused fields default to zero. `Tier` removed — tier lives on `GearItemInstance`, not the definition. **Range fields are always in tiles** — multiply by `GameScale.TileSize` to get world units. |
 | `ItemSlot`          | C# enum     | Weapon, Hat, Body, Ring                                        |
-| `SkillData`         | C# record   | Id, Name, Type (SkillType enum), Tags (string[]) — e.g. `["Melee","Attack"]`, `["Ranged","Attack"]`, `["Ranged","Magic","Spell"]`. Cooldown (float, seconds — for Active: time between casts; for Channeled/Aura: damage tick interval; 0 for Passive), FocusCost (float — Active: flat spend per cast; Channeled: drain per second; Aura: fraction of MaxFocus to reserve (0.0–1.0); Passive: 0/ignored), Range (float), IconPath (string, default ""), Description (string, default ""), IsPrototype (bool, default false — v1: all skills true; v2: derived skills false), TargetingShape (SkillTargetingShape enum, default Self), WindUp (float seconds, default 0.0f — 0 = instant), DamagePattern (SkillDamagePattern enum, default Burst), StackLimit (int — −1 = not a zone skill; 1+ = max simultaneous active instances), ZoneTracksEntity (bool, default false), Duration (float seconds, default 0f — 0 = permanent; zone and summon skills must set this), TriggerRadius (float tiles, default 0f — 0 = not a trap; >0 = trap proximity detection radius), ArmTime (float seconds, default 0f — delay after placement before trap can trigger; ignored when TriggerRadius = 0), TriggerCount (int, default 0 — 0 = not a trap; 1 = single-trigger then despawn; >1 = multi-trigger). No Tier — tier lives on `SkillItemInstance`. No `BasePrototypeId` — prototype relationship is design-time documentation only; C# record required fields enforce new-field completeness at compile time. |
+| `SkillData`         | C# record   | Id, Name, Type (SkillType enum), Tags (string[]) — e.g. `["Melee","Attack"]`, `["Ranged","Attack"]`, `["Ranged","Magic","Spell"]`. DamageType (DamageType enum, default Physical) — the damage type this skill deals; drives which damage pool fires and which enemy resistance applies. Cooldown (float, seconds — for Active: time between casts; for Channeled/Aura: damage tick interval; 0 for Passive), FocusCost (float — Active: flat spend per cast; Channeled: drain per second; Aura: fraction of MaxFocus to reserve (0.0–1.0); Passive: 0/ignored), Range (float), IconPath (string, default ""), Description (string, default ""), IsPrototype (bool, default false — v1: all skills true; v2: derived skills false), TargetingShape (SkillTargetingShape enum, default Self), WindUp (float seconds, default 0.0f — 0 = instant), DamagePattern (SkillDamagePattern enum, default Burst), StackLimit (int — −1 = not a zone skill; 1+ = max simultaneous active instances), ZoneTracksEntity (bool, default false), Duration (float seconds, default 0f — 0 = permanent; zone and summon skills must set this), TriggerRadius (float tiles, default 0f — 0 = not a trap; >0 = trap proximity detection radius), ArmTime (float seconds, default 0f — delay after placement before trap can trigger; ignored when TriggerRadius = 0), TriggerCount (int, default 0 — 0 = not a trap; 1 = single-trigger then despawn; >1 = multi-trigger). No Tier — tier lives on `SkillItemInstance`. No `BasePrototypeId` — prototype relationship is design-time documentation only; C# record required fields enforce new-field completeness at compile time. |
 | `SkillType`         | C# enum     | Active, Channeled, Aura, Passive                               |
 | `SkillTargetingShape` | C# enum   | Self (effect fires from player position — no targeting input needed), Position (effect lands at locked target's world position on controller/keyboard; at cursor on mouse — no enemy required), Entity (must land on a specific enemy — blocked if no valid target; on mouse snaps to nearest enemy to cursor; on controller/keyboard uses locked target) |
 | `SkillDamagePattern` | C# enum    | Burst (single hit fires on cast), Tick (damage repeats over duration at tick rate), None (debuff or utility only — no damage output) |
@@ -112,20 +112,17 @@ If multi-user slots or cloud saves are ever needed, evaluate wrapping save data 
 
 Single weapon per character (v1). `WeaponController` manages:
 
-**Damage model — weapon is the root of all damage.** `PlayerController` computes damage at run start (and on level-up) via `ApplyWeaponDamage()` and pushes the results into `WeaponController`. The formula:
+**Damage model — weapon is the root of all damage.** `PlayerController` computes damage at run start (and on level-up) via `ApplyWeaponDamage()` and pushes the results into `WeaponController`. Both pools are always pre-computed; each slot selects its pool from `skill.DamageType` at fire time:
 
 ```
-weaponDmg = weapon.BaseDamage
-          × archetypeMultiplier          // PhysicalDamageMultiplier or MagicDamageMultiplier per weapon type
-          × (1 + (level - 1) × 0.02)    // cumulative level bonus (DamageBonusPerLevel)
-          × (1 + weapon.DamageBonus)     // weapon identity bonus (e.g. Sword +10% phys)
-physDmg  = weaponDmg  (if weapon.BaseDamageType == Physical, else 0)
-magicDmg = weaponDmg  (if weapon.BaseDamageType == Magic,    else 0)
+levelBonus = 1 + (level - 1) × 0.02    // cumulative level bonus (DamageBonusPerLevel)
+// Both pools pre-computed from StatBlock — skill.DamageType selects the pool at fire time
+physDmg  = weapon.BaseDamage × statBlock.Get(PhysicalDamage) × levelBonus × (1 + weapon.DamageBonus)
+magicDmg = weapon.BaseDamage × statBlock.Get(MagicDamage)    × levelBonus × (1 + weapon.DamageBonus)
 ```
 
-`WeaponController` receives three calls from `PlayerController.ApplyWeaponDamage()`:
+`WeaponController` receives two calls from `PlayerController.ApplyWeaponDamage()`:
 - `SetDamage(physDmg, magicDmg)` — sets `_physicalDamage` and `_magicDamage`
-- `SetBaseDamageType(DamageType)` — sets `_baseDamageType`; determines which damage pool is used at fire time
 - `SetGlobalCritChance(float)` — aggregated flat crit chance from all non-skill sources (Dex stat baseline + Bow weapon identity bonus + future equipment augments, rings). Replaces the old `SetWeaponCritBonus()`.
 
 **Crit stat architecture — two pools, globally aggregated:**
@@ -153,7 +150,7 @@ At fire time: `critChance = _globalCritChance + slot.CritChanceBonus`. If `critC
 ```
 `HasMagicDamage` removed — no damage-type-converting augment exists in v1 (Burn is an EoT augment, not a type override). Each slot fires independently. Empty slots (null Skill) are skipped.
 
-Exposes: `SetDamage(float, float)`, `SetBaseDamageType(DamageType)`, `SetGlobalCritChance(float)`, `SetCritMultiplier(float)`, `SetSlot(int, SkillData, ...)`.
+Exposes: `SetDamage(float, float)`, `SetGlobalCritChance(float)`, `SetCritMultiplier(float)`, `SetSlot(int, SkillData, ...)`. `SetBaseDamageType` removed — pool selection is per-slot at fire time via `slot.Skill.DamageType`.
 
 `SetSlot` is called once per slot at run start. `SetGlobalCritChance` and `SetCritMultiplier` are called once at run start and again on level-up (same cadence as `SetDamage`).
 
@@ -573,16 +570,12 @@ EffectiveRange     = weapon.PreferredDelivery == "Ranged"
                      // tile values × TileSize → world units; standalone float, not part of StatId
 
 // Weapon-rooted damage — computed in PlayerController.ApplyWeaponDamage():
-archetypeMult      = weapon.BaseDamageType == Magic
-                       ? archetype.MagicDamageMultiplier
-                       : archetype.PhysicalDamageMultiplier
+// Both pools pre-computed; slot.Skill.DamageType selects which fires at runtime
 levelBonus         = 1 + (level - 1) × BalanceConfig.LevelUp.DamageBonusPerLevel
-weaponDmg          = weapon.BaseDamage × archetypeMult × levelBonus × (1 + weapon.DamageBonus)
-physDmg            = weapon.BaseDamageType == Physical ? weaponDmg : 0
-magicDmg           = weapon.BaseDamageType == Magic    ? weaponDmg : 0
+physDmg            = weapon.BaseDamage × statBlock.Get(PhysicalDamage) × levelBonus × (1 + weapon.DamageBonus)
+magicDmg           = weapon.BaseDamage × statBlock.Get(MagicDamage)    × levelBonus × (1 + weapon.DamageBonus)
 
 WeaponController.SetDamage(physDmg, magicDmg)
-WeaponController.SetBaseDamageType(weapon.BaseDamageType)
 WeaponController.SetCritMultiplier(statBlock.Get(CritDamage))  // Str-driven; fixed 1.5× in v1
 
 // Global crit chance — Dex stat baseline + weapon identity bonus (Bow) + future equipment augment / ring contributions
