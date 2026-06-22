@@ -94,10 +94,12 @@ CharacterScreen (Control)
         │       │   │       ├── HatSlot / HatLabel / HatSlotButton (same pattern)
         │       │   │       ├── BodySlot / BodyLabel / BodySlotButton (same pattern)
         │       │   │       └── RingSlot / RingLabel / RingSlotButton (same pattern)
-        │       │   ├── SkillBar (HBoxContainer, size_flags_h=SHRINK_CENTER)
+        │       │   ├── SkillBar (HBoxContainer, size_flags_h=SHRINK_CENTER)  ← design: 5 slots; code: 3 slots (expansion pending)
         │       │   │   ├── SkillSlot1 (VBoxContainer) → SkillLabel1 + SkillSlotButton1 (60×60)
         │       │   │   ├── SkillSlot2 / SkillLabel2 / SkillSlotButton2 (same pattern)
-        │       │   │   └── SkillSlot3 / SkillLabel3 / SkillSlotButton3 (same pattern)
+        │       │   │   ├── SkillSlot3 / SkillLabel3 / SkillSlotButton3 (same pattern)
+        │       │   │   ├── SkillSlot4 / SkillLabel4 / SkillSlotButton4 (same pattern — pending)
+        │       │   │   └── SkillSlot5 / SkillLabel5 / SkillSlotButton5 (same pattern — pending)
         │       │   └── Buttons (HBoxContainer)
         │       │       └── StartRunButton (Button, expand fill)
         │       └── InventoryPanel (PanelContainer, min width 280) ← right column
@@ -190,7 +192,7 @@ Main (Node)
 |-------------------|--------------------------------------------------------------|---------------------------|--------|
 | CharacterManager  | Autoload — load/save characters, hold selected character     | `res://src/character/`    | ✅ done |
 | Player            | Input, movement, stat sheet, taking damage, Focus pool (CurrentFocus, regen, TrySpendFocus, ReserveFocus/UnreserveFocus, Focus Shield — all archetypes) | `res://src/player/`       | ✅ done |
-| Weapon            | Skill firing — targeting nearest enemy, cooldown management; manual activation (keys 1/2/3) and per-slot auto-activate toggle pending | `res://src/weapon/` | 🔄 in progress |
+| Weapon            | Skill firing — targeting nearest enemy, cooldown management; manual activation (Q E R F + mouse button for 5 slots) and per-slot auto-activate toggle pending | `res://src/weapon/` | 🔄 in progress |
 | DungeonGenerator  | Procedural map: 7–11 rooms connected by corridors, wall collision, obstacle scatter, player spawn. Bakes navmesh synchronously via NavigationServer3D with DungeonMap as explicit geometry root; emits `MapReady` (deferred) when done. | `res://src/world/` | ✅ done |
 | EnemySpawner      | Time-based wave scaling; starts on `MapReady`. Draws from `MapData.EnemyPool` (typed variants with count + stat modifiers); weighted random selection; spawns enemies at room centres beyond `SpawnRadius * 0.5` from player. | `res://src/enemies/` | ✅ done |
 | Enemy             | State machine: Chasing (wave-spawned, immediate) or Idle (pre-placed, future). `NavigationAgent3D` steers via navmesh path updated every 0.25s. Lost-player threshold: `BalanceConfig.Enemies.LostPlayerDistanceTiles` (30 tiles for wave-spawn). Taking damage, death, drops. | `res://src/enemies/` | ✅ done (proximity cluster system pending) |

@@ -721,7 +721,7 @@ All archetypes share Focus Shield as a universal defensive layer — damage hits
 | Archetype | Primary defense | Focus Shield at base | Philosophy |
 |-----------|----------------|----------------------|------------|
 | Warrior | Physical Resistance | 24 (80 × 30%) | Mitigation — physical resistance reduces raw damage; shield buys extra time. Rewards staying in melee range. |
-| Rogue | Dodge | 30 (100 × 30%) | Avoidance — speed investment increases evasion; shield is a fallback when avoidance fails. |
+| Rogue | Evasion + Dodge | 30 (100 × 30%) | Avoidance — Dex investment increases Evasion (passive % to avoid hits); Dodge roll is the active fallback when Evasion fails. |
 | Mage | Focus Shield | 45 (150 × 30%) | Resource management — Focus Shield is the primary defense. Investing in Max Focus grows both the casting pool and the shield simultaneously. |
 
 Focus Shield is investable by any archetype through Equipment Augments (shield regen rate, shield on attack). This enables cross-archetype builds — a Warrior who invests in Max Focus and shield augments plays as a melee fighter with a magical damage buffer (Paladin-style), constrained naturally by their weapon (short range, physical damage primary).

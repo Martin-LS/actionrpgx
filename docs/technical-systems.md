@@ -29,15 +29,15 @@
 | `ItemRegistry`      | Static class| `All` dict, `Get(id)`, `ForSlot(slot)` — 7 starter gear definitions. Definitions carry no tier — all instances start at Tier = 1 when crafted. |
 | `SkillRegistry`     | Static class| `All` dict, `Get(id)` — v1: 4 renamed prototype entries: `entity_burst` (was `strike` — Active, Tags: `["Attack"]`, FocusCost: 5, IsPrototype: true), `self_channeled_tick` (was `cyclone` — Channeled, Tags: `["Melee","Attack"]`, FocusCost: 12/sec, Cooldown: 0.25s, IsPrototype: true), `self_burst` (was `nova` — Active, Tags: `["Attack"]`, FocusCost: 20, Cooldown: 1.5s, IsPrototype: true), `self_aura_tick` (was `damage_aura` — Aura, Tags: `["Aura"]`, FocusCost: 0.25 fraction, Cooldown: 1.0s, IsPrototype: true). Plus 7 new targeting-system prototype entries (TBD — see todo). **Save migration:** `CharacterManager.Load()` must rewrite old definition IDs before any registry lookup: `strike` → `entity_burst`, `cyclone` → `self_channeled_tick`, `nova` → `self_burst`, `damage_aura` → `self_aura_tick`. Apply to all `DefinitionId` fields in `OwnedSkillInstances` and `SlottedSkillInstanceIds` resolution. |
 | `RecipeData`        | C# record   | Id, OutputItemId (string — definition ID), RecipeType (enum), MaterialCosts (Dictionary\<string, int\>). Crafting always produces a new instance at Tier = 1. |
-| `SkillAugmentData`  | C# record   | Id (string), Name (string), RequiredTags (string[]) — skill must share at least one tag. EotId (string?, nullable) — links augment to an EoT definition; null for augments with no timed effect (e.g. Splash, Pierce). TriggerChance (float 0–1) — the `on_enemy_hit_%` value, rolled at craft time. No Effect field — behaviour dispatched by Id in code. v1: Splash (`["Melee"]`, EotId: null), Pierce (`["Ranged"]`, EotId: null), Slow (`["Attack"]`, EotId: `"slow"`), Critical Strike (`[]` — any skill, EotId: null — adds `TriggerChance` as a flat crit chance bonus for that skill slot on top of global Dex-derived CritChance), MagicDamage (`[]` — any skill, EotId: null). |
+| `SkillAugmentData`  | C# record   | Id (string), Name (string), RequiredTags (string[]) — skill must share at least one tag. EotId (string?, nullable) — links augment to an EoT definition; null for augments with no timed effect (e.g. Splash, Pierce). TriggerChance (float 0–1) — the `on_enemy_hit_%` value, rolled at craft time. No Effect field — behaviour dispatched by Id in code. v1: Splash (`["Melee"]`, EotId: null), Pierce (`["Ranged"]`, EotId: null), Slow (`["Attack"]`, EotId: `"slow"`), Burn (`[]` — any skill, EotId: `"burn"` — applies Burn EoT on hit; TriggerChance is the proc %), Critical Strike (`[]` — any skill, EotId: null — adds TriggerChance as a flat crit chance bonus for that skill slot on top of global Dex-derived CritChance). |
 | `SkillAugmentInstance` | Plain C# | Id (string, GUID), DefinitionId (string → `SkillAugmentRegistry`), TriggerChance (float) — the rolled `on_enemy_hit_%` for this instance. No tier — augments are flat items in v1. |
-| `SkillAugmentRegistry` | Static class | `All` dict, `Get(id)`, `All()` — static catalog of available Skill Augments. v1: 5 entries (splash, pierce, slow, critical_strike, magic_damage). |
+| `SkillAugmentRegistry` | Static class | `All` dict, `Get(id)`, `All()` — static catalog of available Skill Augments. v1: 5 entries (splash, pierce, slow, burn, critical_strike). |
 | `EquipmentAugmentData` | C# record | Id (string), Name (string), RequiredTags (string[]) — equipment item must share at least one tag; empty = universal (works on any equipment). No Effect field — behaviour dispatched by Id in code. v1: Retaliation (`["Heavy"]`), Fortify (`["Heavy"]`), Dash Reflex (`["Light"]`), Ghost Step (`["Light"]`), Mending (`["Medium"]`), Adaptation (`["Medium"]`). |
 | `EquipmentAugmentInstance` | Plain C# | Id (string, GUID), DefinitionId (string → `EquipmentAugmentRegistry`). No tier — augments are flat items in v1. |
 | `EquipmentAugmentRegistry` | Static class | `All` dict, `Get(id)`, `All()` — static catalog of available Equipment Augments. v1: 6 entries (retaliation, fortify, dash_reflex, ghost_step, mending, adaptation). |
 | `RecipeType`        | C# enum     | Gear, Skill, SkillAugment, EquipmentAugment                   |
 | `CraftResult`       | C# enum     | Success, InsufficientMaterials, InventoryFull                  |
-| `RecipeRegistry`    | Static class| `All` dict, `Get(id)`, `ForSlot(ItemSlot)`, `ForType(RecipeType)` — v1: 7 gear recipes + 7 skill recipes (prototype library: fixed_zone_burst, fixed_zone_tick, windup_burst, entity_debuff, tracked_tick, stackable_zone, triggered_zone_burst — 1× common each) + 5 SkillAugment recipes (Splash/Pierce/Slow/CriticalStrike/MagicDamage, 1× common each) + 6 EquipmentAugment recipes (Retaliation/Fortify/DashReflex/GhostStep/Mending/Adaptation, 1× common each). |
+| `RecipeRegistry`    | Static class| `All` dict, `Get(id)`, `ForSlot(ItemSlot)`, `ForType(RecipeType)` — v1: 7 gear recipes + 7 skill recipes (prototype library: fixed_zone_burst, fixed_zone_tick, windup_burst, entity_debuff, tracked_tick, stackable_zone, triggered_zone_burst — 1× common each) + 5 SkillAugment recipes (Splash/Pierce/Slow/Burn/CriticalStrike, 1× common each) + 6 EquipmentAugment recipes (Retaliation/Fortify/DashReflex/GhostStep/Mending/Adaptation, 1× common each). |
 | `EnemyData`         | C# record   | EnemyType (string), BaseSpeed, BaseHealth, ContactDamage, DamageInterval, PhysicalResistance (float), MagicResistance (float), ModelPath (string — GLB res:// path, defaults to enemy_generic.glb) |
 | `EnemyPoolEntry`    | Plain C#    | EnemyType (string), Count (int — spawn weight), Modifiers: ArmorBonus (int), HpBonus (int), SpeedBonus (int), DamageBonus (int). Applied to enemy instance at spawn on top of base `EnemyData` values. v1: all modifier fields zero. |
 | `EotData`           | C# record   | Id (string), Name (string), ApplyChance (float 0–1), Duration (float seconds), IsDamageEot (bool), TickRate (float seconds — ignored when IsDamageEot = false), DamagePerTick (float — ignored when IsDamageEot = false). All EoTs share these four properties; only damage EoTs use TickRate and DamagePerTick. |
@@ -141,16 +141,16 @@ At fire time: `critChance = _globalCritChance + slot.CritChanceBonus`. If `critC
 
 `SkillSlot.HasCriticalStrike (bool)` is replaced by `SkillSlot.CritChanceBonus (float)` — the aggregated float from that skill's augments. This removes the bool flag and makes adding future crit-granting skill augments a parameter change, not a new flag.
 
-**Slot state:** `_slots[3]` — internal array of 3 slot states:
+**Slot state:** `_slots[3]` — internal array of 3 slot states (design target: 5; code expansion pending):
 ```
 { SkillData Skill, float CooldownTimer, List<string> EotIds,
-  bool HasSplash, bool HasPierce, bool HasMagicDamage,
+  bool HasSplash, bool HasPierce,
   float CritChanceBonus, bool AutoActivate,
   bool AuraActive, float AuraReserved,
   float DamageMultiplier, bool IsChanneling,
   List<Node3D> ActiveZones }
 ```
-Each slot fires independently. Empty slots (null Skill) are skipped.
+`HasMagicDamage` removed — no damage-type-converting augment exists in v1 (Burn is an EoT augment, not a type override). Each slot fires independently. Empty slots (null Skill) are skipped.
 
 Exposes: `SetDamage(float, float)`, `SetBaseDamageType(DamageType)`, `SetGlobalCritChance(float)`, `SetCritMultiplier(float)`, `SetSlot(int, SkillData, ...)`.
 
@@ -268,7 +268,7 @@ emit ShieldChanged(_currentFocusShield, _maxFocusShield)
 
 ## Skill Bar (HUD)
 
-An `HBoxContainer` anchored **bottom-center** of the HUD. **3 cells**, one per skill slot.
+An `HBoxContainer` anchored **bottom-center** of the HUD. **1 cell visible in v1** (code array has 3 cells; design target is 5 cells — HUD redesign for 5 slots is pending).
 
 Each cell contains:
 - Skill icon (placeholder if slot empty)
@@ -597,10 +597,9 @@ for i in 0..2:
     if instanceId is non-empty:
         skill            = CharacterManager.FindSkillInstance(instanceId).Definition
         activeAugments   = AugmentResolver.Resolve(instance.SocketedSkillAugmentIds, lookup)
-        slotCritChance   = sum of CritChance from any Critical Strike augments in activeAugments
-        hasMagicDamage   = activeAugments contains magic_damage
+        slotCritChance   = sum of TriggerChance from any Critical Strike augments in activeAugments
         hasSplash / hasPierce / eotIds  = resolved from activeAugments
-        WeaponController.SetSlot(i, skill, eotIds, hasSplash, hasPierce, hasMagicDamage, slotCritChance)
+        WeaponController.SetSlot(i, skill, eotIds, hasSplash, hasPierce, slotCritChance)
 ```
 
 **`ApplyWeaponDamage` is called at run start and again on every level-up** — same cadence as `BuildStatBlock()`. `SetGlobalCritChance` and `SetCritMultiplier` follow the same cadence.
