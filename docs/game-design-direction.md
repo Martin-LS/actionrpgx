@@ -46,6 +46,15 @@ Items to discuss, in no particular order. Cross off when resolved.
   - **Possibly bound-on-socket in future** as a crafting resource sink — not current design, noted as a direction to consider.
   - **Critical Strike is a skill augment.** Adds a per-skill crit chance bonus on top of the global Dex-derived CritChance. Uses `on_enemy_hit_%` trigger like all augments — the trigger % is the additional crit chance for that skill. Any archetype can invest in crit via augments; Rogue builds crit more naturally through Dex.
 
+- [x] **Augment resolution order — projectile augments first, then on-hit augments.**
+  - Two augment categories determine resolution order:
+    - **Projectile augments** (Pierce, Chain) — resolve first. They determine what the projectile hits and how many times.
+    - **On-hit augments** (Splash, Burn, Slow, Lightning EoT, Critical Strike) — resolve on each resulting hit, independently and in parallel. Each rolls its `on_enemy_hit_%` independently per target.
+  - **Splash** creates secondary hits on nearby enemies. Those secondary hits re-run all on-hit augments (each at their own %) — but never projectile augments. Splash breaks the projectile chain.
+  - **Crit inheritance:** the primary hit's crit result is inherited by all splash-generated secondary hits. If the primary critted, all splash hits also crit. Splash hits do not roll crit independently.
+  - **Augment interactions across damage types:** on-hit EoT augments are independent of the skill's damage type. A Fire-typed skill can carry a Lightning EoT augment — the hit deals Fire damage and separately has a % chance to apply the Lightning EoT. Splash propagates both.
+  - Socket order (the order augments are placed in slots) has no effect on resolution — all on-hit augments resolve in parallel on each hit.
+
 - [x] **Skill slots — 5 slots, freeform, PoE2 keybinding layout.**
   - 5 skill slots available from the start — no unlock progression.
   - Fully freeform (PoE-style) — any skill in any slot, no typed slot restrictions.
