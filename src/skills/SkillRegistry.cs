@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using ActionRpgX.Items;
 
 namespace ActionRpgX.Skills;
 
@@ -37,7 +38,8 @@ public static class SkillRegistry
             Description: "Proves Active Self skill with ticking damage over a fixed duration. Activate → ticks damage in radius for duration → cooldown.",
             Kind: SkillKind.Prototype,
             TargetingShape: SkillTargetingShape.Self,
-            DamagePattern: SkillDamagePattern.Tick),
+            DamagePattern: SkillDamagePattern.Tick,
+            DamageType: DamageType.Magic),
 
         ["self_burst"] = new SkillData(
             "self_burst", "Self Burst", SkillType.Active,
@@ -58,7 +60,7 @@ public static class SkillRegistry
             Range: BalanceConfig.Skills.TrackedTickRange,
             FocusCost: BalanceConfig.Focus.TrackedTickFocusCost,
             Description: "Attaches a ticking damage zone to the locked enemy. Zone follows the enemy and expires when they die. Proves ZoneTracksEntity and entity death expiry.",
-            Kind: SkillKind.EngineProof,
+            Kind: SkillKind.Prototype,
             TargetingShape: SkillTargetingShape.Entity,
             DamagePattern: SkillDamagePattern.Tick,
             ZoneTracksEntity: true,
@@ -72,7 +74,7 @@ public static class SkillRegistry
             Range: BalanceConfig.Skills.TriggeredZoneBurstRange,
             FocusCost: BalanceConfig.Focus.TriggeredZoneBurstFocusCost,
             Description: "Places a dormant trap; arms after 0.5s then fires once when an enemy enters the trigger radius. Proves TriggerRadius/ArmTime/TriggerCount.",
-            Kind: SkillKind.EngineProof,
+            Kind: SkillKind.Prototype,
             TargetingShape: SkillTargetingShape.Position,
             DamagePattern: SkillDamagePattern.Burst,
             StackLimit: 3,
@@ -89,7 +91,7 @@ public static class SkillRegistry
             Range: BalanceConfig.Skills.StackableZoneRange,
             FocusCost: BalanceConfig.Focus.StackableZoneFocusCost,
             Description: "Each cast places an independent ticking zone; up to 3 active simultaneously. A 4th cast despawns the oldest. Proves StackLimit and oldest-despawn on cap.",
-            Kind: SkillKind.EngineProof,
+            Kind: SkillKind.Prototype,
             TargetingShape: SkillTargetingShape.Position,
             DamagePattern: SkillDamagePattern.Tick,
             StackLimit: 3,
@@ -103,7 +105,7 @@ public static class SkillRegistry
             Range: BalanceConfig.Skills.EntityDebuffRange,
             FocusCost: BalanceConfig.Focus.EntityDebuffFocusCost,
             Description: "Applies slow to locked target for 6s with no damage. Proves Entity targeting with pure debuff output.",
-            Kind: SkillKind.EngineProof,
+            Kind: SkillKind.Prototype,
             TargetingShape: SkillTargetingShape.Entity,
             DamagePattern: SkillDamagePattern.None,
             InherentEotIds: new[] { "slow" }),
@@ -115,7 +117,7 @@ public static class SkillRegistry
             Range: BalanceConfig.Skills.WindupBurstRange,
             FocusCost: BalanceConfig.Focus.WindupBurstFocusCost,
             Description: "Telegraphed 1.5s wind-up before a high-damage burst at cursor position. Proves wind-up mechanic.",
-            Kind: SkillKind.EngineProof,
+            Kind: SkillKind.Prototype,
             TargetingShape: SkillTargetingShape.Position,
             DamagePattern: SkillDamagePattern.Burst,
             WindUp: BalanceConfig.Skills.WindupBurstWindUp,
@@ -130,7 +132,7 @@ public static class SkillRegistry
             Range: BalanceConfig.Skills.FixedZoneBurstRange,
             FocusCost: BalanceConfig.Focus.FixedZoneBurstFocusCost,
             Description: "Instant explosion at locked target's position. Proves Position targeting resolves to enemy location, not player.",
-            Kind: SkillKind.EngineProof,
+            Kind: SkillKind.Prototype,
             TargetingShape: SkillTargetingShape.Position,
             DamagePattern: SkillDamagePattern.Burst,
             StackLimit: 1,
@@ -144,7 +146,7 @@ public static class SkillRegistry
             Range: BalanceConfig.Skills.FixedZoneTickRange,
             FocusCost: BalanceConfig.Focus.FixedZoneTickFocusCost,
             Description: "Persistent ticking zone at locked target's position. Proves Position targeting with duration and tick damage.",
-            Kind: SkillKind.EngineProof,
+            Kind: SkillKind.Prototype,
             TargetingShape: SkillTargetingShape.Position,
             DamagePattern: SkillDamagePattern.Tick,
             StackLimit: 1,

@@ -27,7 +27,7 @@ public class CharacterData
     {
         var block = new StatBlock();
 
-        // Archetype base stats — set directly, not subject to multiplier formula.
+        // Archetype base HP and Speed — set directly.
         var (baseHp, baseSpd) = Type switch
         {
             CharacterType.Warrior => (BalanceConfig.Archetypes.Warrior.MaxHp, BalanceConfig.Archetypes.Warrior.Speed),
@@ -48,16 +48,27 @@ public class CharacterData
         block.SetBase(StatId.MaxFocus,   baseFocus);
         block.SetBase(StatId.FocusRegen, baseFocusRegen);
 
-        // Level-up HP bonus — scaled by archetype multiplier × level.
-        // Damage is no longer stored in StatBlock — it is computed from weapon data in PlayerController.
-        int levelsAboveOne = CurrentLevel - 1;
-        if (levelsAboveOne > 0)
-        {
-            float hpBonus = levelsAboveOne * BalanceConfig.LevelUp.HpBonusPerLevel * CurrentLevel * ArchetypeMultiplierRegistry.Get(Type, StatId.MaxHp);
-            block.AddModifier(new StatModifier(StatId.MaxHp, ModifierType.FlatAdd, hpBonus, ModifierSource.Level));
-        }
+        // Primary stats — grow with level via archetype-specific rates.
+        var gains = PrimaryStatGainRegistry.Get(Type);
+        float str     = gains.StrBase + (CurrentLevel - 1) * gains.StrPerLevel;
+        float dex     = gains.DexBase + (CurrentLevel - 1) * gains.DexPerLevel;
+        float intStat = gains.IntBase + (CurrentLevel - 1) * gains.IntPerLevel;
 
-        // Item contributions — scaled by archetype multiplier × level.
+        // Damage multipliers — read by PlayerController.ApplyWeaponDamage.
+        block.SetBase(StatId.PhysicalDamage, str     * PrimaryStatConversions.StrToPhysDamageMultiplier);
+        block.SetBase(StatId.MagicDamage,    intStat * PrimaryStatConversions.IntToMagDamageMultiplier);
+
+        // Derived stats from primary growth (incremental above level-1 base).
+        float strGain = str - gains.StrBase;
+        if (strGain > 0f)
+            block.AddModifier(new StatModifier(StatId.MaxHp, ModifierType.FlatAdd,
+                strGain * PrimaryStatConversions.StrToMaxHp, ModifierSource.Level));
+
+        block.SetBase(StatId.CritChance, dex * PrimaryStatConversions.DexToCritChance);
+        block.SetBase(StatId.CritDamage, str * PrimaryStatConversions.StrToCritDamage);
+        block.SetBase(StatId.Evasion,    dex * PrimaryStatConversions.DexToEvasion);
+
+        // Item contributions — flat bonuses, no archetype/level scaling.
         foreach (var (_, instance) in EquippedGear)
         {
             var item = instance.Definition;
@@ -67,18 +78,15 @@ public class CharacterData
             {
                 if (item.BonusHp != 0)
                     block.AddModifier(new StatModifier(StatId.MaxHp, ModifierType.FlatAdd,
-                        item.BonusHp * CurrentLevel * ArchetypeMultiplierRegistry.Get(Type, StatId.MaxHp),
-                        ModifierSource.Item, instance.Id));
+                        item.BonusHp, ModifierSource.Item, instance.Id));
                 if (item.BonusSpeed != 0f)
                     block.AddModifier(new StatModifier(StatId.Speed, ModifierType.FlatAdd,
-                        item.BonusSpeed * CurrentLevel * ArchetypeMultiplierRegistry.Get(Type, StatId.Speed),
-                        ModifierSource.Item, instance.Id));
+                        item.BonusSpeed, ModifierSource.Item, instance.Id));
             }
             else if (item.Slot == ItemSlot.Ring && item.PhysicalResistance != 0f)
             {
                 block.AddModifier(new StatModifier(StatId.PhysicalResistance, ModifierType.FlatAdd,
-                    item.PhysicalResistance * CurrentLevel * ArchetypeMultiplierRegistry.Get(Type, StatId.PhysicalResistance),
-                    ModifierSource.Item, instance.Id));
+                    item.PhysicalResistance, ModifierSource.Item, instance.Id));
             }
         }
 

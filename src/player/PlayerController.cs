@@ -155,7 +155,6 @@ public partial class PlayerController : CharacterBody3D
             XpToNextLevel = ComputeXpToNextLevel(Level);
             var wc = GetNodeOrNull<Weapon.WeaponController>("Weapon");
             wc?.SetDamage(20f, 0f);
-            wc?.SetBaseDamageType(Items.DamageType.Physical);
             wc?.SetGlobalCritChance(0f);
             wc?.SetCritMultiplier(BalanceConfig.SkillAugments.CritMultiplier);
             wc?.SetRange(1.5f * GameScale.TileSize);
@@ -713,36 +712,17 @@ public partial class PlayerController : CharacterBody3D
     {
         if (wc == null || weapon == null) return;
 
-        var charType = _charData?.Type ?? Character.CharacterType.Warrior;
         bool isMagicWeapon = weapon.BaseDamageType == Items.DamageType.Magic;
 
-        float archetypeMult = isMagicWeapon
-            ? charType switch
-            {
-                Character.CharacterType.Warrior => BalanceConfig.Archetypes.Warrior.MagicDamageMultiplier,
-                Character.CharacterType.Rogue   => BalanceConfig.Archetypes.Rogue.MagicDamageMultiplier,
-                Character.CharacterType.Mage    => BalanceConfig.Archetypes.Mage.MagicDamageMultiplier,
-                _                               => 1.0f,
-            }
-            : charType switch
-            {
-                Character.CharacterType.Warrior => BalanceConfig.Archetypes.Warrior.PhysicalDamageMultiplier,
-                Character.CharacterType.Rogue   => BalanceConfig.Archetypes.Rogue.PhysicalDamageMultiplier,
-                Character.CharacterType.Mage    => BalanceConfig.Archetypes.Mage.PhysicalDamageMultiplier,
-                _                               => 1.0f,
-            };
-
-        float levelBonus = 1f + (Level - 1) * BalanceConfig.LevelUp.DamageBonusPerLevel;
-        float weaponDmg  = weapon.BaseDamage * archetypeMult * levelBonus * (1f + weapon.DamageBonus);
+        float statMult  = isMagicWeapon
+            ? _statBlock.Get(Stats.StatId.MagicDamage)
+            : _statBlock.Get(Stats.StatId.PhysicalDamage);
+        float weaponDmg = weapon.BaseDamage * statMult * (1f + weapon.DamageBonus);
 
         float physDmg  = isMagicWeapon ? 0f : weaponDmg;
         float magicDmg = isMagicWeapon ? weaponDmg : 0f;
 
-        _statBlock.SetBase(Stats.StatId.PhysicalDamage, physDmg);
-        _statBlock.SetBase(Stats.StatId.MagicDamage,    magicDmg);
-
         wc.SetDamage(physDmg, magicDmg);
-        wc.SetBaseDamageType(weapon.BaseDamageType);
         wc.SetGlobalCritChance(weapon.CritChanceBonus);
         wc.SetCritMultiplier(BalanceConfig.SkillAugments.CritMultiplier);
     }

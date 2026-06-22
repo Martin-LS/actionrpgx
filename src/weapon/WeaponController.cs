@@ -32,7 +32,6 @@ public partial class WeaponController : Node
 
     private float      _physicalDamage  = 20f;
     private float      _magicDamage     = 0f;
-    private Items.DamageType _baseDamageType  = Items.DamageType.Physical;
     private float      _globalCritChance = 0f;
     private float      _critMultiplier   = BalanceConfig.SkillAugments.CritMultiplier;
 
@@ -55,8 +54,7 @@ public partial class WeaponController : Node
         _magicDamage    = magicDamage;
     }
 
-    public void SetBaseDamageType(Items.DamageType damageType) => _baseDamageType   = damageType;
-    public void SetGlobalCritChance(float critChance)          => _globalCritChance = critChance;
+    public void SetGlobalCritChance(float critChance) => _globalCritChance = critChance;
     public void SetCritMultiplier(float multiplier)            => _critMultiplier   = multiplier;
 
     private struct SkillSlot
@@ -66,7 +64,7 @@ public partial class WeaponController : Node
         public List<string> EotIds;
         public bool         HasSplash;
         public bool         HasPierce;
-        public bool         HasMagicDamage;
+        public Items.DamageType EffectiveDamageType;
         public float        CritChanceBonus;
         public bool         AutoActivate;
         public float        DamageMultiplier;
@@ -94,7 +92,7 @@ public partial class WeaponController : Node
         _slots[slotIndex].EotIds           = merged;
         _slots[slotIndex].HasSplash        = hasSplash;
         _slots[slotIndex].HasPierce        = hasPierce;
-        _slots[slotIndex].HasMagicDamage   = hasMagicDamage;
+        _slots[slotIndex].EffectiveDamageType = hasMagicDamage ? Items.DamageType.Magic : skill.DamageType;
         _slots[slotIndex].CritChanceBonus  = critChanceBonus;
         _slots[slotIndex].AutoActivate  = true;
         _slots[slotIndex].IsChanneling  = false;
@@ -223,7 +221,7 @@ public partial class WeaponController : Node
         ref var slot   = ref _slots[slotIndex];
         var     origin = GetParent<Node3D>().GlobalPosition;
 
-        bool  isMagic = (_baseDamageType == Items.DamageType.Magic) || slot.HasMagicDamage;
+        bool  isMagic = slot.EffectiveDamageType == Items.DamageType.Magic;
         var   dmgType = isMagic ? Items.DamageType.Magic : Items.DamageType.Physical;
         float baseDmg = (isMagic ? _magicDamage : _physicalDamage) * slot.DamageMultiplier;
 
@@ -321,7 +319,7 @@ public partial class WeaponController : Node
 
         if (slot.Skill.DamagePattern == SkillDamagePattern.Tick && slot.Skill.ZoneTracksEntity)
         {
-            bool  ttMagic  = (_baseDamageType == Items.DamageType.Magic) || slot.HasMagicDamage;
+            bool  ttMagic  = slot.EffectiveDamageType == Items.DamageType.Magic;
             var   ttType   = ttMagic ? Items.DamageType.Magic : Items.DamageType.Physical;
             float ttDmg    = (ttMagic ? _magicDamage : _physicalDamage)
                              * slot.DamageMultiplier * BalanceConfig.Skills.TrackedTickDamageMult;
@@ -348,7 +346,7 @@ public partial class WeaponController : Node
             return;
         }
 
-        bool  isMagic   = (_baseDamageType == Items.DamageType.Magic) || slot.HasMagicDamage;
+        bool  isMagic   = slot.EffectiveDamageType == Items.DamageType.Magic;
         bool  hasMelee  = System.Array.Exists(slot.Skill!.Tags, t => t == "Melee");
         bool  hasRange  = System.Array.Exists(slot.Skill!.Tags, t => t == "Range");
         // Weapon-adaptive: no delivery tag → inherit weapon's PreferredDelivery
@@ -390,7 +388,7 @@ public partial class WeaponController : Node
         ref var slot   = ref _slots[slotIndex];
         var     origin = GetParent<Node3D>().GlobalPosition;
 
-        bool  isMagic = (_baseDamageType == Items.DamageType.Magic) || slot.HasMagicDamage;
+        bool  isMagic = slot.EffectiveDamageType == Items.DamageType.Magic;
         var   dmgType = isMagic ? Items.DamageType.Magic : Items.DamageType.Physical;
         float baseDmg = (isMagic ? _magicDamage : _physicalDamage) * BalanceConfig.Focus.SelfBurstDamageMultiplier;
 
@@ -417,7 +415,7 @@ public partial class WeaponController : Node
 
         if (slot.Skill!.TriggerRadius > 0f)
         {
-            bool  isMagic  = (_baseDamageType == Items.DamageType.Magic) || slot.HasMagicDamage;
+            bool  isMagic  = slot.EffectiveDamageType == Items.DamageType.Magic;
             var   dmgType  = isMagic ? Items.DamageType.Magic : Items.DamageType.Physical;
             float baseDmg  = (isMagic ? _magicDamage : _physicalDamage)
                              * BalanceConfig.Skills.TriggeredZoneBurstDamageMult;
@@ -453,7 +451,7 @@ public partial class WeaponController : Node
         }
         else if (slot.Skill!.DamagePattern == SkillDamagePattern.Burst)
         {
-            bool  isMagic    = (_baseDamageType == Items.DamageType.Magic) || slot.HasMagicDamage;
+            bool  isMagic    = slot.EffectiveDamageType == Items.DamageType.Magic;
             var   dmgType    = isMagic ? Items.DamageType.Magic : Items.DamageType.Physical;
             float burstMult  = slot.Skill.WindUp > 0f
                 ? BalanceConfig.Skills.WindupBurstDamageMult
@@ -511,7 +509,7 @@ public partial class WeaponController : Node
         }
         else if (slot.Skill!.DamagePattern == SkillDamagePattern.Tick)
         {
-            bool  isMagic = (_baseDamageType == Items.DamageType.Magic) || slot.HasMagicDamage;
+            bool  isMagic = slot.EffectiveDamageType == Items.DamageType.Magic;
             var   dmgType = isMagic ? Items.DamageType.Magic : Items.DamageType.Physical;
             float damageMult = slot.Skill.StackLimit > 1
                 ? BalanceConfig.Skills.StackableZoneDamageMult

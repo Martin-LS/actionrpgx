@@ -194,30 +194,22 @@ public static class BalanceConfig
 
     public static class Archetypes
     {
-        public const float DefaultMultiplier = 0.1f;
-
         public static class Warrior
         {
-            public const float MaxHp                    = 150f;
-            public const float Speed                    = 110f;
-            public const float PhysicalDamageMultiplier = 1.5f;
-            public const float MagicDamageMultiplier    = 0.5f;
+            public const float MaxHp  = 150f;
+            public const float Speed  = 110f;
         }
 
         public static class Rogue
         {
-            public const float MaxHp                    = 80f;
-            public const float Speed                    = 260f;
-            public const float PhysicalDamageMultiplier = 1.0f;
-            public const float MagicDamageMultiplier    = 0.5f;
+            public const float MaxHp  = 80f;
+            public const float Speed  = 260f;
         }
 
         public static class Mage
         {
-            public const float MaxHp                    = 100f;
-            public const float Speed                    = 200f;
-            public const float PhysicalDamageMultiplier = 0.5f;
-            public const float MagicDamageMultiplier    = 1.5f;
+            public const float MaxHp  = 100f;
+            public const float Speed  = 200f;
         }
     }
 
