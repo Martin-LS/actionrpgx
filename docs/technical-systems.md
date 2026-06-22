@@ -13,7 +13,7 @@
 | `ProfileData`       | Plain C#    | CoinBank, Materials (Dictionary\<string, int\>), OwnedGearInstances (List\<GearItemInstance\>), OwnedSkillInstances (List\<SkillItemInstance\>), OwnedSkillAugmentInstances (List\<SkillAugmentInstance\>), OwnedEquipmentAugmentInstances (List\<EquipmentAugmentInstance\>), MaxInventory (const = 50) — applies separately to each list. Account-shared. Migration: old `ownedItemIds`/`ownedSkillIds` string lists are wrapped into instances (new GUID, Tier = 1) on load. Old `augment`/`chainInstanceId` fields on skill instances are dropped on load. |
 | `CharacterData`     | Plain C#    | Id, Name, Type (enum), RunsCompleted, CurrentLevel, CurrentXp, EquippedGear (Dictionary\<string, GearItemInstance\> — slot → full instance), SlottedSkillInstanceIds (List\<string\> — instance GUIDs; skill instances stay in `OwnedSkillInstances`). Archetype base stats computed inline in `BuildStatBlock()` — applies archetype multiplier formula before returning. |
 | `CharacterType`     | C# enum     | Warrior, Rogue, Mage                                           |
-| `StatId`            | C# enum     | MaxHp, Speed, PhysicalDamage, MagicDamage, PhysicalResistance, MagicResistance, MaxFocus, FocusRegen |
+| `StatId`            | C# enum     | MaxHp, Speed, PhysicalDamage, MagicDamage, PhysicalResistance, MagicResistance, MaxFocus, FocusRegen, CritChance, CritDamage, Evasion |
 | `StatModifier`      | Plain C#    | StatId, ModifierType (FlatAdd), Value (float), ModifierSource (Level, Item) |
 | `StatBlock`         | Plain C#    | Internal flat modifier list per `StatId`. `Get(StatId)` returns the sum of all flat modifiers for that stat — archetype multiplier is applied in `BuildStatBlock()` before the block is returned, so callers always get effective values. |
 | `ItemData`          | C# record   | Id, Name, Slot (enum), IconPath, Tags (string[] — equipment tags for augment compatibility; e.g. `["Melee"]` for Sword, `["Heavy"]` for heavy armour, `[]` for Accessory) — plus slot-specific fields: `WeaponRange (float, in tiles)`, `PreferredDelivery (string — "Melee" or "Ranged")` for Weapon; `ArmorCategory`, `BonusHp`, `BonusSpeed`, `DamageReduction (float)`, `RangeModifier (float, in tiles)` for Armor; `PhysicalResistance (float)` for Accessory. Unused fields default to zero. `Tier` removed — tier lives on `GearItemInstance`, not the definition. **Range fields are always in tiles** — multiply by `GameScale.TileSize` to get world units. |
@@ -29,9 +29,9 @@
 | `ItemRegistry`      | Static class| `All` dict, `Get(id)`, `ForSlot(slot)` — 7 starter gear definitions. Definitions carry no tier — all instances start at Tier = 1 when crafted. |
 | `SkillRegistry`     | Static class| `All` dict, `Get(id)` — v1: 4 renamed prototype entries: `entity_burst` (was `strike` — Active, Tags: `["Attack"]`, FocusCost: 5, IsPrototype: true), `self_channeled_tick` (was `cyclone` — Channeled, Tags: `["Melee","Attack"]`, FocusCost: 12/sec, Cooldown: 0.25s, IsPrototype: true), `self_burst` (was `nova` — Active, Tags: `["Attack"]`, FocusCost: 20, Cooldown: 1.5s, IsPrototype: true), `self_aura_tick` (was `damage_aura` — Aura, Tags: `["Aura"]`, FocusCost: 0.25 fraction, Cooldown: 1.0s, IsPrototype: true). Plus 7 new targeting-system prototype entries (TBD — see todo). **Save migration:** `CharacterManager.Load()` must rewrite old definition IDs before any registry lookup: `strike` → `entity_burst`, `cyclone` → `self_channeled_tick`, `nova` → `self_burst`, `damage_aura` → `self_aura_tick`. Apply to all `DefinitionId` fields in `OwnedSkillInstances` and `SlottedSkillInstanceIds` resolution. |
 | `RecipeData`        | C# record   | Id, OutputItemId (string — definition ID), RecipeType (enum), MaterialCosts (Dictionary\<string, int\>). Crafting always produces a new instance at Tier = 1. |
-| `SkillAugmentData`  | C# record   | Id (string), Name (string), RequiredTags (string[]) — skill must share at least one tag. EotId (string?, nullable) — links augment to an EoT definition; null for augments with no timed effect (e.g. Splash, Pierce). No Effect field — behaviour dispatched by Id in code. v1: Splash (`["Melee"]`, EotId: null), Pierce (`["Ranged"]`, EotId: null), Slow (`["Attack"]`, EotId: `"slow"`). |
-| `SkillAugmentInstance` | Plain C# | Id (string, GUID), DefinitionId (string → `SkillAugmentRegistry`). No tier — augments are flat items in v1. |
-| `SkillAugmentRegistry` | Static class | `All` dict, `Get(id)`, `All()` — static catalog of available Skill Augments. v1: 3 entries (splash, pierce, slow). |
+| `SkillAugmentData`  | C# record   | Id (string), Name (string), RequiredTags (string[]) — skill must share at least one tag. EotId (string?, nullable) — links augment to an EoT definition; null for augments with no timed effect (e.g. Splash, Pierce). TriggerChance (float 0–1) — the `on_enemy_hit_%` value, rolled at craft time. No Effect field — behaviour dispatched by Id in code. v1: Splash (`["Melee"]`, EotId: null), Pierce (`["Ranged"]`, EotId: null), Slow (`["Attack"]`, EotId: `"slow"`), Critical Strike (`[]` — any skill, EotId: null — adds `TriggerChance` as a flat crit chance bonus for that skill slot on top of global Dex-derived CritChance), MagicDamage (`[]` — any skill, EotId: null). |
+| `SkillAugmentInstance` | Plain C# | Id (string, GUID), DefinitionId (string → `SkillAugmentRegistry`), TriggerChance (float) — the rolled `on_enemy_hit_%` for this instance. No tier — augments are flat items in v1. |
+| `SkillAugmentRegistry` | Static class | `All` dict, `Get(id)`, `All()` — static catalog of available Skill Augments. v1: 5 entries (splash, pierce, slow, critical_strike, magic_damage). |
 | `EquipmentAugmentData` | C# record | Id (string), Name (string), RequiredTags (string[]) — equipment item must share at least one tag; empty = universal (works on any equipment). No Effect field — behaviour dispatched by Id in code. v1: Retaliation (`["Heavy"]`), Fortify (`["Heavy"]`), Dash Reflex (`["Light"]`), Ghost Step (`["Light"]`), Mending (`["Medium"]`), Adaptation (`["Medium"]`). |
 | `EquipmentAugmentInstance` | Plain C# | Id (string, GUID), DefinitionId (string → `EquipmentAugmentRegistry`). No tier — augments are flat items in v1. |
 | `EquipmentAugmentRegistry` | Static class | `All` dict, `Get(id)`, `All()` — static catalog of available Equipment Augments. v1: 6 entries (retaliation, fortify, dash_reflex, ghost_step, mending, adaptation). |
@@ -125,7 +125,7 @@ magicDmg = weaponDmg  (if weapon.BaseDamageType == Magic,    else 0)
 `WeaponController` receives three calls from `PlayerController.ApplyWeaponDamage()`:
 - `SetDamage(physDmg, magicDmg)` — sets `_physicalDamage` and `_magicDamage`
 - `SetBaseDamageType(DamageType)` — sets `_baseDamageType`; determines which damage pool is used at fire time
-- `SetGlobalCritChance(float)` — aggregated flat crit chance from all non-skill sources (weapon identity + future equipment augments, rings). Replaces the old `SetWeaponCritBonus()`.
+- `SetGlobalCritChance(float)` — aggregated flat crit chance from all non-skill sources (Dex stat baseline + Bow weapon identity bonus + future equipment augments, rings). Replaces the old `SetWeaponCritBonus()`.
 
 **Crit stat architecture — two pools, globally aggregated:**
 
@@ -133,9 +133,9 @@ Crit Chance and Crit Multiplier are universal stats. `PlayerController` is respo
 
 | Pool | Sources | How passed |
 |---|---|---|
-| Global Crit Chance | Weapon identity bonus + equipment augments + ring stats | `SetGlobalCritChance(float)` — once per run start / level-up |
-| Per-slot Crit Chance | Skill augments on that skill (e.g. Critical Strike) | `SetSlot()` `critChanceBonus` float parameter |
-| Global Crit Multiplier | Fixed 1.5× in v1; future: investable via augments | `SetCritMultiplier(float)` — once per run start (v1: always 1.5) |
+| Global Crit Chance | **Dexterity stat** (primary baseline) + Bow weapon identity bonus + equipment augments + ring stats | `SetGlobalCritChance(float)` — once per run start / level-up |
+| Per-slot Crit Chance | Critical Strike skill augment on that skill | `SetSlot()` `critChanceBonus` float parameter |
+| Global Crit Multiplier | **Strength stat** (`CritDamage`) — fixed 1.5× in v1; grows with Str investment post-v1 | `SetCritMultiplier(float)` — once per run start / level-up |
 
 At fire time: `critChance = _globalCritChance + slot.CritChanceBonus`. If `critChance > 0` and roll succeeds: `baseDmg *= _critMultiplier`.
 
@@ -507,6 +507,10 @@ Always wrap in `try/catch` — if VFX instantiation throws, the exception must n
 `PlayerController.TakeDamage(float rawAmount, DamageType type)`
 
 ```
+// Evasion — passive % chance to completely avoid the hit (no damage, no effects)
+if Random() < _evasion:
+    return
+
 effectiveDamage = rawAmount × (1 − DamageReduction)
 if type == Physical:
     effectiveDamage ×= (1 − PhysicalResistance)
@@ -578,11 +582,14 @@ magicDmg           = weapon.BaseDamageType == Magic    ? weaponDmg : 0
 
 WeaponController.SetDamage(physDmg, magicDmg)
 WeaponController.SetBaseDamageType(weapon.BaseDamageType)
-WeaponController.SetCritMultiplier(BalanceConfig.SkillAugments.CritMultiplier)  // fixed 1.5× in v1
+WeaponController.SetCritMultiplier(statBlock.Get(CritDamage))  // Str-driven; fixed 1.5× in v1
 
-// Global crit chance — weapon identity + future equipment augment / ring contributions
-globalCritChance   = weapon.CritChanceBonus   // + future sources aggregated here
+// Global crit chance — Dex stat baseline + weapon identity bonus (Bow) + future equipment augment / ring contributions
+globalCritChance   = statBlock.Get(CritChance) + weapon.CritChanceBonus
 WeaponController.SetGlobalCritChance(globalCritChance)
+
+// Evasion — seeded into PlayerController for use in TakeDamage()
+_evasion           = statBlock.Get(Evasion)  // passive % chance to completely avoid a hit
 
 // Per-slot setup — skill augments resolved via AugmentResolver
 for i in 0..2:
@@ -618,6 +625,9 @@ The default multiplier is `0.1` for every stat/archetype pair. Each archetype ov
 | Magic Damage | 0.1 | 0.1 | TBD |
 | Physical Resistance | TBD | 0.1 | 0.1 |
 | Magic Resistance | 0.1 | 0.1 | TBD |
+| Crit Chance | 0.1 | TBD | 0.1 |
+| Evasion | 0.1 | TBD | 0.1 |
+| Crit Damage | TBD | 0.1 | 0.1 |
 
 Override values are TBD — owned by the Balancer.
 
