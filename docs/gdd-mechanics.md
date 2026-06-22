@@ -40,11 +40,9 @@ The **skill bar** on the run HUD shows the slotted skill, its cooldown state, an
 
 **Attack / cast speed — no character stat; CDR lives on the weapon.** There is no global attack speed stat on the character. A skill's cooldown belongs to the skill item and is reduced by tier upgrades. The weapon's **CDR property** is the one gear-level lever — it applies globally to all skills regardless of type. Different weapon types have different base CDR values; v1 CDR is fixed per weapon type (no roll variance).
 
-**Damage model.** The weapon provides the base damage number. The skill defines the damage type and a damage multiplier. Delivery (how the attack animates) is always driven by the equipped weapon — a Sword always swings, a Bow always shoots, a Wand always fires a bolt — regardless of which skill is equipped.
+**Damage model.** The weapon provides the base damage number. The skill defines the damage type. Delivery (how the attack animates) is always driven by the equipped weapon — a Sword always swings, a Bow always shoots, a Wand always fires a bolt — regardless of which skill is equipped.
 
-`Skill damage = Weapon base damage × Skill damage multiplier × Archetype damage multiplier (for skill's type) × (1 + level damage bonus%)`
-
-Archetype damage multipliers apply per damage type — a Warrior gets 1.5× on physical skills and 0.5× on magic skills. Mismatched builds (e.g. Warrior equipping a magic-type skill) are viable but produce reduced output.
+Damage output scales through the archetype's primary stat growth — a Warrior gains Strength faster per level, which converts to higher PhysicalDamage; a Mage gains Intelligence faster, which converts to higher MagicDamage. A mismatched build (e.g. Warrior equipping a magic-type skill) is viable but produces lower output because the stat driving that damage type grows slowly. See Archetype Stat Multipliers for the full formula.
 
 ### Targeting
 
@@ -428,7 +426,7 @@ All values (damage, cooldown, radius, tick rate, duration) are TBD — owned by 
 
 ---
 
-**Weapon is the root of the damage number.** Each weapon has a base damage value that increases with tier. The skill defines the damage type and multiplier — Entity-Burst is physical (placeholder); future named skills define their own type. The archetype multiplier keys off the skill's damage type, not the weapon's.
+**Weapon is the root of the damage number.** Each weapon has a base damage value that increases with tier. The skill defines the damage type — Entity-Burst is physical (placeholder); future named skills define their own type. Archetype damage output scales through primary stat growth (see Archetype Stat Multipliers), not a direct per-skill multiplier.
 
 **Level damage bonus: +2% per level (cumulative).** At level 10 = +20% total. All values below are placeholder — owned by the Balancer.
 
@@ -545,13 +543,13 @@ Every run requires a character. Characters are created by the player, persist be
 
 ### Character Archetypes
 
-| Archetype | Max HP | Speed | Phys Damage Multiplier | Magic Damage Multiplier | Max Focus | Focus Regen/sec | Default build |
-|-----------|--------|-------|------------------------|-------------------------|-----------|-----------------|---------------|
-| Warrior   | 150    | 170   | 1.5×                   | 0.5×                    | 80        | 12              | Sword + Heavy armour — close-range brawler |
-| Rogue     | 80     | 260   | 1.0×                   | 0.5×                    | 100       | 15              | Bow + Light armour — fast, fragile kiter   |
-| Mage      | 100    | 200   | 0.5×                   | 1.5×                    | 150       | 10              | Wand + Medium armour — glass cannon; largest Focus Shield by default |
+| Archetype | Max HP (base) | Speed (base) | Max Focus (base) | Focus Regen/sec (base) | Primary stat emphasis | Default build |
+|-----------|--------|-------|-----------|-----------------|--------------|---------------|
+| Warrior   | 150    | 170   | 80        | 12              | Strength (→ PhysicalDamage, MaxHp, PhysRes, CritDmg) | Sword + Heavy armour — close-range brawler |
+| Rogue     | 80     | 260   | 100       | 15              | Dexterity (→ CritChance, Evasion) | Bow + Light armour — fast, fragile kiter |
+| Mage      | 100    | 200   | 150       | 10              | Intelligence (→ MagicDamage, MaxFocus, MagRes, FocusRegen) | Wand + Medium armour — glass cannon; largest Focus Shield by default |
 
-Damage multipliers apply per skill damage type — a Warrior using a magic-type skill gets the 0.5× magic multiplier regardless of weapon equipped. Mismatched builds (archetype vs skill type) are viable but produce reduced output. All values are placeholder — owned by the Balancer.
+All values are base stats at level 1 — placeholder, owned by the Balancer. Damage and defensive stats scale through primary stat growth per level (see Archetype Stat Multipliers below).
 
 #### Archetype Stat Multipliers
 
