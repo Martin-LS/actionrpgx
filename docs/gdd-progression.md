@@ -71,6 +71,7 @@ Skill Augments are craftable items that socket into a skill item to modify it. A
 | Pierce | `pierce` | `on_enemy_hit_%` | Hit passes through the first enemy and continues. |
 | Slow | `slow` | `on_enemy_hit_%` | Applies the Slow EoT on hit. |
 | Burn | `burn` | `on_enemy_hit_%` | Applies the Burn EoT on hit. |
+| Critical Strike | `crit` | `on_enemy_hit_%` | Adds a per-skill crit chance bonus on top of the global Dex-derived CritChance. |
 
 Exact values (splash radius, trigger chances, slow %, burn damage, duration) are TBD.
 

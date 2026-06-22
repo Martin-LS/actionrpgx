@@ -491,14 +491,12 @@ Resistances are always soft (never total immunity). Exact values are TBD.
 
 ### Critical Hits
 
-Crit rolls automatically on every hit — no augment needed. Crit applies to base skill damage only — EoT damage from augments is unaffected.
+Crit applies to base skill damage only — EoT damage from augments is unaffected.
 
 `Final damage (on crit) = Skill base damage × Crit Multiplier`
 
-- **CritChance** — comes from Dexterity. The Bow identity bonus adds a flat % on top of the Dex-derived crit chance.
+- **CritChance** — global baseline comes from Dexterity. The Bow identity bonus adds a flat % on top. The Critical Strike skill augment adds a further per-skill bonus on top of the global chance — any archetype can invest in crit this way; Rogue builds it more naturally through Dex.
 - **CritDamage (Crit Multiplier)** — comes from Strength. Fixed at 1.5× in v1 at base; grows with Str investment.
-
-There is no Critical Strike augment.
 
 ### Effects over Time (EoT)
 
@@ -563,6 +561,9 @@ Where `modifier_total` is the sum of all modifier sources for that stat: level-u
 | Magic Damage | default | default | `level × TBD` |
 | Physical Resistance | `level × TBD` | default | default |
 | Magic Resistance | default | default | `level × TBD` |
+| CritChance | default | `level × TBD` | default |
+| Evasion | default | `level × TBD` | default |
+| CritDamage | `level × TBD` | default | default |
 
 "default" = `level × 0.1`. Exact override values are TBD — owned by the Balancer.
 
