@@ -223,7 +223,6 @@ The universal starter prototype. Hits the locked target using whatever the chara
 | Zone tracks entity | — |
 | Damage type | Physical |
 | Cooldown | 0.8s (tier 1) — lower at higher tiers |
-| Damage | 1× weapon base damage |
 | EoTs | None |
 | Acquire | Free — slot 1 pre-filled at character creation |
 
@@ -245,7 +244,6 @@ Spin continuously in place, hitting all enemies within melee range on each tick.
 | Type | Channeled |
 | Damage type | Physical |
 | Focus cost | 12 Focus/sec drain |
-| Damage per hit | 0.4× weapon base damage (placeholder) |
 | Tick rate | 4 hits/sec |
 | Acquire | Craft |
 
@@ -267,7 +265,6 @@ Activate once — pulses magic damage to all nearby enemies repeatedly for a few
 | Type | Active |
 | Damage type | Magic (placeholder) |
 | Focus cost | 15 Focus (flat, on activation — placeholder) |
-| Damage per tick | 0.2× weapon base damage (placeholder) |
 | Tick rate | 2/sec (placeholder) |
 | Duration | 3s (placeholder) |
 | Cooldown | 2s (after duration ends — placeholder) |
@@ -292,7 +289,6 @@ An instant explosion centered on the player — hits all enemies within a medium
 | Type | Active |
 | Damage type | Physical (placeholder) |
 | Focus cost | 20 Focus (flat) |
-| Damage | 0.8× weapon base damage |
 | Cooldown | 1.5s |
 | Radius | Medium (larger than melee range) |
 | Acquire | Craft |
@@ -426,7 +422,9 @@ All values (damage, cooldown, radius, tick rate, duration) are TBD — owned by 
 
 ---
 
-**Weapon is the root of the damage number.** Each weapon has a base damage value that increases with tier. The skill defines the damage type — Entity-Burst is physical (placeholder); future named skills define their own type. Archetype damage output scales through primary stat growth (see Archetype Stat Multipliers), not a direct per-skill multiplier.
+**Weapon is the root of the damage number.** Each weapon has a base damage value that increases with tier. The skill defines the damage type — Entity-Burst is physical (placeholder); future named skills define their own type. Archetype damage output scales through primary stat growth (see Archetype Stat Multipliers), not an archetype-level multiplier table.
+
+**Skills do not carry a per-skill damage multiplier.** Every skill draws from the same damage number: `weapon base × stat block`. A tick skill and a burst skill deal the same raw damage per hit — the design difference is delivery: tick rate, cooldown, AoE, and Focus cost. DPS balance between skills is the Balancer's domain, owned through tick rate and cooldown tuning. There is no `DamageMultiplier` field on a skill.
 
 **Level damage bonus: +2% per level (cumulative).** At level 10 = +20% total. All values below are placeholder — owned by the Balancer.
 
