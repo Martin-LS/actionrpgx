@@ -11,11 +11,11 @@
 | `EotInstance`       | Plain C#    | DefinitionId (string), TimeRemaining (float), TickTimer (float — damage EoTs only), **CritMultiplier (float, default 1.0f)** — set to the firing hit's crit multiplier when the applying hit was a critical hit; damage ticks use `DamagePerTick × CritMultiplier`. Non-damage EoTs ignore this field. |
 | `SkillItemInstance` | Plain C#    | Id (string, GUID), DefinitionId (string → `SkillRegistry`), Tier (int, 1–3), SocketedSkillAugmentIds (List\<string\> — instance GUIDs, one entry per augment slot; "" = empty slot; max length = augment slots for tier: 1/2/3). |
 | `ProfileData`       | Plain C#    | CoinBank, Materials (Dictionary\<string, int\>), OwnedGearInstances (List\<GearItemInstance\>), OwnedSkillInstances (List\<SkillItemInstance\>), OwnedSkillAugmentInstances (List\<SkillAugmentInstance\>), OwnedEquipmentAugmentInstances (List\<EquipmentAugmentInstance\>), MaxInventory (const = 50) — applies separately to each list. Account-shared. Migration: old `ownedItemIds`/`ownedSkillIds` string lists are wrapped into instances (new GUID, Tier = 1) on load. Old `augment`/`chainInstanceId` fields on skill instances are dropped on load. |
-| `CharacterData`     | Plain C#    | Id, Name, Type (enum), RunsCompleted, CurrentLevel, CurrentXp, EquippedGear (Dictionary\<string, GearItemInstance\> — slot → full instance), SlottedSkillInstanceIds (List\<string\> — instance GUIDs; skill instances stay in `OwnedSkillInstances`). Archetype base stats computed inline in `BuildStatBlock()` — applies archetype multiplier formula before returning. |
+| `CharacterData`     | Plain C#    | Id, Name, Type (enum), RunsCompleted, CurrentLevel, CurrentXp, EquippedGear (Dictionary\<string, GearItemInstance\> — slot → full instance), SlottedSkillInstanceIds (List\<string\> — instance GUIDs; skill instances stay in `OwnedSkillInstances`). Archetype base stats computed inline in `BuildStatBlock()` — applies primary stat growth formula (level × gain rate × conversion rate + item bonuses) before returning. |
 | `CharacterType`     | C# enum     | Warrior, Rogue, Mage                                           |
 | `StatId`            | C# enum     | MaxHp, Speed, PhysicalDamage, MagicDamage, PhysicalResistance, MagicResistance, MaxFocus, FocusRegen, CritChance, CritDamage, Evasion |
 | `StatModifier`      | Plain C#    | StatId, ModifierType (FlatAdd), Value (float), ModifierSource (Level, Item) |
-| `StatBlock`         | Plain C#    | Internal flat modifier list per `StatId`. `Get(StatId)` returns the sum of all flat modifiers for that stat — archetype multiplier is applied in `BuildStatBlock()` before the block is returned, so callers always get effective values. |
+| `StatBlock`         | Plain C#    | Holds one effective value per `StatId`. `Get(StatId)` returns the final computed value — primary stat growth, conversion rates, and item bonuses all resolved by `BuildStatBlock()` before the block is returned, so callers always get ready-to-use effective values. |
 | `ItemData`          | C# record   | Id, Name, Slot (enum), IconPath, Tags (string[] — equipment tags for augment compatibility; e.g. `["Melee"]` for Sword, `["Heavy"]` for heavy armour, `[]` for Accessory) — plus slot-specific fields: `WeaponRange (float, in tiles)`, `PreferredDelivery (string — "Melee" or "Ranged")` for Weapon; `ArmorCategory`, `BonusHp`, `BonusSpeed`, `DamageReduction (float)`, `RangeModifier (float, in tiles)` for Armor; `PhysicalResistance (float)` for Accessory. Unused fields default to zero. `Tier` removed — tier lives on `GearItemInstance`, not the definition. **Range fields are always in tiles** — multiply by `GameScale.TileSize` to get world units. |
 | `ItemSlot`          | C# enum     | Weapon, Hat, Body, Ring                                        |
 | `SkillData`         | C# record   | Id, Name, Type (SkillType enum), Tags (string[]) — e.g. `["Melee","Attack"]`, `["Ranged","Attack"]`, `["Ranged","Magic","Spell"]`. Cooldown (float, seconds — for Active: time between casts; for Channeled/Aura: damage tick interval; 0 for Passive), FocusCost (float — Active: flat spend per cast; Channeled: drain per second; Aura: fraction of MaxFocus to reserve (0.0–1.0); Passive: 0/ignored), Range (float), IconPath (string, default ""), Description (string, default ""), IsPrototype (bool, default false — v1: all skills true; v2: derived skills false), TargetingShape (SkillTargetingShape enum, default Self), WindUp (float seconds, default 0.0f — 0 = instant), DamagePattern (SkillDamagePattern enum, default Burst), StackLimit (int — −1 = not a zone skill; 1+ = max simultaneous active instances), ZoneTracksEntity (bool, default false), Duration (float seconds, default 0f — 0 = permanent; zone and summon skills must set this), TriggerRadius (float tiles, default 0f — 0 = not a trap; >0 = trap proximity detection radius), ArmTime (float seconds, default 0f — delay after placement before trap can trigger; ignored when TriggerRadius = 0), TriggerCount (int, default 0 — 0 = not a trap; 1 = single-trigger then despawn; >1 = multi-trigger). No Tier — tier lives on `SkillItemInstance`. No `BasePrototypeId` — prototype relationship is design-time documentation only; C# record required fields enforce new-field completeness at compile time. |
@@ -25,7 +25,7 @@
 | `ArmorCategory`     | C# enum     | None, Heavy, Medium, Light                                     |
 | `DamageType`        | C# enum     | Physical, Magic                                                |
 | `ItemTier`          | C# static class (const ints) | Common = 1, Uncommon = 2, Rare = 3, Max = 3. `Label(int)` → display name. `BorderColor(int)` → Godot `Color`. Used for the rarity border colour on item slot buttons. |
-| `BalanceConfig`     | Static class (nested) | Sections: `Weapons` (SwordRange/BowRange/WandRange), `Armour` (Heavy/Medium/Light — BonusHp, BonusSpeed, DamageReduction, RangeModifier per tier), `Accessories` (RingPhysicalResistance), `Skills` (cooldown + range per skill), `Eots` (ApplyChance, Duration, per-effect fields), `Enemies.Skeleton` + scaling consts + MeleeContactRange + `LostPlayerDistanceTiles` (float, default 8f, tunable 6–10 — distance in tiles at which a chasing enemy gives up and returns to idle) + `EnemyAggroRadiusTiles` (float — idle enemy's individual aggro detection radius) + `ClusterProximityRadiusTiles` (float — max distance between two idle enemies to be considered in the same cluster), `Drops` (coin/health/crafting chances), `Pickups` (XpShardValue, HealthHealAmount), `Archetypes` (DefaultMultiplier + MaxHp/Speed/PhysicalDamage/MagicDamage per archetype), `LevelUp` (HpBonusPerLevel, DamageBonusPerLevel), `Focus` (per-archetype MaxFocus/RegenPerSec base values, ShieldFraction, ShieldRegenPerSec; per-skill FocusCost constants). All values are `const` — compile-time resolvable. |
+| `BalanceConfig`     | Static class (nested) | Sections: `Weapons` (SwordRange/BowRange/WandRange), `Armour` (Heavy/Medium/Light — BonusHp, BonusSpeed, DamageReduction, RangeModifier per tier), `Accessories` (RingPhysicalResistance), `Skills` (cooldown + range per skill), `Eots` (ApplyChance, Duration, per-effect fields), `Enemies.Skeleton` + scaling consts + MeleeContactRange + `LostPlayerDistanceTiles` (float, default 8f, tunable 6–10 — distance in tiles at which a chasing enemy gives up and returns to idle) + `EnemyAggroRadiusTiles` (float — idle enemy's individual aggro detection radius) + `ClusterProximityRadiusTiles` (float — max distance between two idle enemies to be considered in the same cluster), `Drops` (coin/health/crafting chances), `Pickups` (XpShardValue, HealthHealAmount), `Archetypes` (base derived stats per archetype — MaxHp/Speed/PhysDmg/MagDmg/MaxFocus/FocusRegen at level 1; primary stat gain rates and conversion rates live in `PrimaryStatGainRegistry` and `PrimaryStatConversions`), `LevelUp` (HpBonusPerLevel, DamageBonusPerLevel), `Focus` (per-archetype MaxFocus/RegenPerSec base values, ShieldFraction, ShieldRegenPerSec; per-skill FocusCost constants). All values are `const` — compile-time resolvable. |
 | `ItemRegistry`      | Static class| `All` dict, `Get(id)`, `ForSlot(slot)` — 7 starter gear definitions. Definitions carry no tier — all instances start at Tier = 1 when crafted. |
 | `SkillRegistry`     | Static class| `All` dict, `Get(id)` — v1: 4 renamed prototype entries: `entity_burst` (was `strike` — Active, Tags: `["Attack"]`, FocusCost: 5, IsPrototype: true), `self_channeled_tick` (was `cyclone` — Channeled, Tags: `["Melee","Attack"]`, FocusCost: 12/sec, Cooldown: 0.25s, IsPrototype: true), `self_burst` (was `nova` — Active, Tags: `["Attack"]`, FocusCost: 20, Cooldown: 1.5s, IsPrototype: true), `self_aura_tick` (was `damage_aura` — Aura, Tags: `["Aura"]`, FocusCost: 0.25 fraction, Cooldown: 1.0s, IsPrototype: true). Plus 7 new targeting-system prototype entries (TBD — see todo). **Save migration:** `CharacterManager.Load()` must rewrite old definition IDs before any registry lookup: `strike` → `entity_burst`, `cyclone` → `self_channeled_tick`, `nova` → `self_burst`, `damage_aura` → `self_aura_tick`. Apply to all `DefinitionId` fields in `OwnedSkillInstances` and `SlottedSkillInstanceIds` resolution. |
 | `RecipeData`        | C# record   | Id, OutputItemId (string — definition ID), RecipeType (enum), MaterialCosts (Dictionary\<string, int\>). Crafting always produces a new instance at Tier = 1. |
@@ -43,7 +43,8 @@
 | `EotData`           | C# record   | Id (string), Name (string), ApplyChance (float 0–1), Duration (float seconds), IsDamageEot (bool), TickRate (float seconds — ignored when IsDamageEot = false), DamagePerTick (float — ignored when IsDamageEot = false). All EoTs share these four properties; only damage EoTs use TickRate and DamagePerTick. |
 | `EotInstance`       | Plain C#    | Runtime state per active EoT on an enemy: DefinitionId (string), TimeRemaining (float), TickTimer (float — only relevant for damage EoTs), CritMultiplier (float, default 1.0f — stamped with the applying hit's crit multiplier; damage ticks use DamagePerTick × CritMultiplier; non-damage EoTs ignore). Held in `EnemyController._activeEots (Dictionary<string, EotInstance>)` keyed by EotData.Id — enforces one instance per type. |
 | `EotRegistry`       | Static class| `Get(id)`, `GetAll()` — static catalogue of all EoT definitions. v1: `slow` (IsDamageEot = false), `burn` (IsDamageEot = true). |
-| `ArchetypeMultiplierRegistry` | Static class | `Get(CharacterType, StatId) → float` — returns the archetype-specific level multiplier for a stat. Returns `0.1f` for any unspecified pair. Override table lives here — owned by the Balancer. Lives in `src/character/`. |
+| `PrimaryStatGainRegistry` | Static class | `GetGain(CharacterType, PrimaryStat) → float` — returns the archetype's per-level gain rate for Str/Dex/Int. Three entries per archetype (9 total). Owned by the Balancer. Lives in `src/character/`. |
+| `PrimaryStatConversions` | Static class (const floats) | Fixed conversion rates from each primary stat to its derived stats — same for all archetypes. `StrToPhysDmg`, `StrToMaxHp`, `StrToPhysRes`, `StrToCritDmg`; `DexToCritChance`, `DexToEvasion`; `IntToMagDmg`, `IntToMaxFocus`, `IntToMagRes`, `IntToFocusRegen`. Owned by the Balancer. Lives in `src/character/`. |
 
 ---
 
@@ -604,37 +605,57 @@ for i in 0..2:
 
 **`ApplyWeaponDamage` is called at run start and again on every level-up** — same cadence as `BuildStatBlock()`. `SetGlobalCritChance` and `SetCritMultiplier` follow the same cadence.
 
-### Archetype Multiplier System
+### Archetype Stat Scaling System
 
-Every modifier source is amplified by the character's archetype and current level:
+Stats scale via **primary stat growth per level** (D4 / Last Epoch pattern). Two tables replace the old per-derived-stat multiplier registry:
 
+**Table 1 — Primary stat → derived stat conversions (fixed, all archetypes):**
+
+| Primary stat | Derived stats | Constants |
+|---|---|---|
+| Strength | PhysicalDamage, MaxHp, PhysicalResistance, CritDamage | `StrToPhysDmg`, `StrToMaxHp`, `StrToPhysRes`, `StrToCritDmg` |
+| Dexterity | CritChance, Evasion | `DexToCritChance`, `DexToEvasion` |
+| Intelligence | MagicDamage, MaxFocus, MagicResistance, FocusRegen | `IntToMagDmg`, `IntToMaxFocus`, `IntToMagRes`, `IntToFocusRegen` |
+
+All constants live in `PrimaryStatConversions` — TBD, owned by the Balancer.
+
+**Table 2 — Primary stat gains per level per archetype:**
+
+| Archetype | Str/level | Dex/level | Int/level |
+|---|---|---|---|
+| Warrior | TBD (high) | TBD (low) | TBD (low) |
+| Rogue | TBD (low) | TBD (high) | TBD (low) |
+| Mage | TBD (low) | TBD (low) | TBD (high) |
+
+Values live in `PrimaryStatGainRegistry` — TBD, owned by the Balancer.
+
+**Formula:**
 ```
-effective_stat = base_stat + modifier_total × (level × archetype_multiplier)
+strGained  = level × PrimaryStatGainRegistry.GetGain(archetype, Str)
+dexGained  = level × PrimaryStatGainRegistry.GetGain(archetype, Dex)
+intGained  = level × PrimaryStatGainRegistry.GetGain(archetype, Int)
+
+physDmg    = base.PhysDmg    + strGained × StrToPhysDmg    + item.PhysDmgBonus
+maxHp      = base.MaxHp      + strGained × StrToMaxHp       + item.MaxHpBonus
+physRes    = base.PhysRes    + strGained × StrToPhysRes     + item.PhysResBonus
+critDmg    = base.CritDmg   + strGained × StrToCritDmg     + item.CritDmgBonus
+critChance = base.CritChance + dexGained × DexToCritChance  + item.CritChanceBonus
+evasion    = base.Evasion    + dexGained × DexToEvasion     + item.EvasionBonus
+magDmg     = base.MagDmg    + intGained × IntToMagDmg      + item.MagDmgBonus
+maxFocus   = base.MaxFocus   + intGained × IntToMaxFocus    + item.MaxFocusBonus
+magRes     = base.MagRes     + intGained × IntToMagRes      + item.MagResBonus
+focusRegen = base.FocusRegen + intGained × IntToFocusRegen  + item.FocusRegenBonus
 ```
 
-`base_stat` = archetype base value — set directly, **not** subject to the multiplier. `modifier_total` = sum of all modifier sources: level-up bonuses + item contributions. At level 1 (no modifiers yet) effective stats equal base archetype stats unchanged.
+Base archetype stats (the `base.*` values) are applied directly at level 1 — not subject to the primary stat formula. Item bonuses are direct derived stat additions — flat, class-agnostic.
 
-The default multiplier is `0.1` for every stat/archetype pair. Each archetype overrides only the stats that define its identity — all other pairs stay at default:
+**Items:** items may grant +primary stat bonuses (converted via the fixed rates above) **or** +derived stat bonuses directly (flat, same value for all archetypes). Both are valid affix types.
 
-| Stat | Warrior | Rogue | Mage |
-|------|---------|-------|------|
-| Max HP | TBD | 0.1 | 0.1 |
-| Speed | 0.1 | TBD | 0.1 |
-| Physical Damage | TBD | TBD | 0.1 |
-| Magic Damage | 0.1 | 0.1 | TBD |
-| Physical Resistance | TBD | 0.1 | 0.1 |
-| Magic Resistance | 0.1 | 0.1 | TBD |
-| Crit Chance | 0.1 | TBD | 0.1 |
-| Evasion | 0.1 | TBD | 0.1 |
-| Crit Damage | TBD | 0.1 | 0.1 |
+**`BuildStatBlock()`** computes the full formula above and returns a `StatBlock` with effective values. Called once at run start and once per level-up — callers always receive ready-to-use effective values.
 
-Override values are TBD — owned by the Balancer.
+**Mid-run level-up:** `PlayerController` calls `BuildStatBlock()` with the new level and reseeds all stats from the result. ~10 calls over a 5-minute run — negligible cost.
 
-**Implementation:** A static `ArchetypeMultiplierRegistry` maps `(CharacterType, StatId) → float`, returning `0.1f` for any unspecified pair. `BuildStatBlock()` calls this after accumulating flat modifiers and before returning — callers always receive effective values.
-
-**Mid-run level-up:** `BuildStatBlock()` is called once at run start and once per level-up event (not per frame). On level-up, `PlayerController` calls `BuildStatBlock()` with the new level and reseeds all stats from the result. This keeps the formula live throughout a run at negligible cost (~10 calls over 5 minutes).
-
-`DamageReduction` is not part of the multiplier system — it is a flat percentage from the armor item and is applied as-is.
+`DamageReduction` is **not** part of this system — it is a flat percentage from armour and applied as-is in `TakeDamage()`.
 
 ---
 

@@ -491,7 +491,7 @@ Resistances are always soft (never total immunity). Exact values are TBD.
 
 ### Critical Hits
 
-Crit applies to base skill damage only — EoT damage from augments is unaffected.
+Crit applies to the hit that applies an EoT — damage EoT ticks inherit the crit multiplier of that hit for their full duration.
 
 `Final damage (on crit) = Skill base damage × Crit Multiplier`
 
@@ -513,7 +513,7 @@ Every EoT has the same three properties:
 **Application rules (all EoTs):**
 - No stacking — only one instance of each EoT type per enemy at a time
 - Reapplying refreshes the duration rather than stacking or being ignored
-- Crit does not affect EoT damage — crit only applies to base skill damage
+- **Crit stamping** — if the applying hit was a crit, damage EoT ticks deal `DamagePerTick × CritMultiplier` for the full duration. Re-applying with a non-crit resets the multiplier to 1×; re-applying with a crit refreshes it. Non-damage EoTs are unaffected.
 
 The EoT type defines *what it does* when active:
 
@@ -547,25 +547,35 @@ Damage multipliers apply per skill damage type — a Warrior using a magic-type 
 
 #### Archetype Stat Multipliers
 
-All stats scale through the archetype multiplier formula:
+Stats scale through **primary stat growth per level** (D4 / Last Epoch pattern):
 
-`modifier_total × (level × multiplier)`
+- Each level the character gains primary stats (Str/Dex/Int) at archetype-specific rates
+- Primary stats convert to derived stats via fixed conversion rates — the same for all archetypes
+- Items may grant either +primary stats (converted via fixed rates) or +derived stats directly (flat bonus, class-agnostic)
 
-Where `modifier_total` is the sum of all modifier sources for that stat: level-up bonuses + item contributions. Base archetype stats (the starting values at level 1) are not subject to the multiplier — they are applied directly. At level 1 (no modifiers yet) effective stats equal the archetype base stats unchanged. The default multiplier for every stat on every archetype is `0.1`. Archetypes override only the stats that define their identity — everything else stays at default.
+**Primary stat → derived stat groupings (fixed for all archetypes):**
 
-| Stat | Warrior | Rogue | Mage |
-|------|---------|-------|------|
-| Max HP | `level × TBD` | default | default |
-| Speed | default | `level × TBD` | default |
-| Physical Damage | `level × TBD` | `level × TBD` | default |
-| Magic Damage | default | default | `level × TBD` |
-| Physical Resistance | `level × TBD` | default | default |
-| Magic Resistance | default | default | `level × TBD` |
-| CritChance | default | `level × TBD` | default |
-| Evasion | default | `level × TBD` | default |
-| CritDamage | `level × TBD` | default | default |
+| Primary stat | Derived stats it feeds |
+|---|---|
+| Strength | PhysicalDamage, MaxHp, PhysicalResistance, CritDamage |
+| Dexterity | CritChance, Evasion |
+| Intelligence | MagicDamage, MaxFocus, MagicResistance, FocusRegen |
 
-"default" = `level × 0.1`. Exact override values are TBD — owned by the Balancer.
+Conversion rates are fixed constants — TBD, owned by the Balancer.
+
+**Primary stat gains per level per archetype:**
+
+| Archetype | Str/level | Dex/level | Int/level |
+|---|---|---|---|
+| Warrior | TBD (high) | TBD (low) | TBD (low) |
+| Rogue | TBD (low) | TBD (high) | TBD (low) |
+| Mage | TBD (low) | TBD (low) | TBD (high) |
+
+Exact values are TBD — owned by the Balancer.
+
+**Formula:** `effective_derived = archetype_base + (level × primary_gain_rate × conversion_rate) + item_derived_bonus`
+
+Base archetype stats (at level 1) are applied directly — not subject to the primary stat formula. At level 1 with no items, effective stats equal the archetype base stats unchanged.
 
 ### Character Lifecycle
 1. **Create** — player picks a name (required) and archetype
