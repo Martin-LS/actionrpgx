@@ -38,7 +38,7 @@ The **skill bar** on the run HUD shows the slotted skill, its cooldown state, an
 
 **v1:** 5 skill slots. Slots can be empty — an empty slot does nothing. All slots are available from the start, no unlock progression. Each skill has its own cooldown or drain rate.
 
-**Attack / cast speed is a skill attribute, not a character stat.** There is no global attack speed multiplier on the character or on gear. A skill's cooldown belongs to the skill item — it is tuned per skill and reduced by tier upgrades.
+**Attack / cast speed — no character stat; CDR lives on the weapon.** There is no global attack speed stat on the character. A skill's cooldown belongs to the skill item and is reduced by tier upgrades. The weapon's **CDR property** is the one gear-level lever — it applies globally to all skills regardless of type. Different weapon types have different base CDR values; v1 CDR is fixed per weapon type (no roll variance).
 
 **Damage model.** The weapon provides the base damage number. The skill defines the damage type and a damage multiplier. Delivery (how the attack animates) is always driven by the equipped weapon — a Sword always swings, a Bow always shoots, a Wand always fires a bolt — regardless of which skill is equipped.
 
