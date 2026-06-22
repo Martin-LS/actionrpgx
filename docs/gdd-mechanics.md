@@ -158,6 +158,14 @@ Both player-received and enemy-received hits produce damage numbers. There is no
 **Design rule for skills:**
 - **EoTs and secondary effects (mines, traps) are added by augments, not baked into skills.** A skill's base behaviour is its damage delivery. Augments add what happens on top of that.
 
+**Skill slot vs. Equipment Augment — the dividing line:**
+- **Skill slot = things you actively trigger** (requires a button press — Active, Channeled, toggled auras, War Cries).
+- **Equipment Augment = things that happen automatically** (no button press, gear-driven).
+
+There is no Passive skill type on the skill bar. Everything in a skill slot requires player input to fire. Persistent stat buffs and background effects belong on Equipment Augments (e.g. Mending, Retaliation) — not skill slots. Skills like War Cry stay on the skill bar because they are intentional activations with cooldowns, not background passives.
+
+**Skill tags — not in v1.** Skills do not carry tags in v1. Tags may be added post-v1 as a design tool but not for augment-gating purposes — the no-gate philosophy holds. Any augment can socket into any skill regardless of skill type. Tags, if introduced later, would be additive (enabling synergies) not restrictive.
+
 #### Skill Prototypes
 
 All skills in v1 are prototypes. Prototypes are the building blocks — they prove mechanics and cover the full design space. Named skills with unique identities are post-v1 and will be derived from these prototypes.

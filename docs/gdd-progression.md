@@ -77,6 +77,21 @@ Exact values (splash radius, trigger chances, slow %, burn damage, duration) are
 
 All augments use `on_enemy_hit_%` trigger — including Splash and Pierce. The trigger % is a property of the augment item, rolled at craft time and re-rollable via crafting. Higher % is a meaningful crafting goal.
 
+#### Augment Resolution Order
+
+Two augment categories determine resolution order:
+
+- **Projectile augments** (Pierce, Chain) — resolve first. They determine what the projectile hits and how many times.
+- **On-hit augments** (Splash, Burn, Slow, Critical Strike) — resolve on each resulting hit, independently and in parallel. Each rolls its `on_enemy_hit_%` independently per target.
+
+**Splash** creates secondary hits on nearby enemies. Those secondary hits re-run all on-hit augments (each at their own %) — but never projectile augments. Splash breaks the projectile chain.
+
+**Crit inheritance:** the primary hit's crit result is inherited by all splash-generated secondary hits. If the primary critted, all splash hits also crit. Splash hits do not roll crit independently.
+
+**Augment interactions across damage types:** on-hit EoT augments are independent of the skill's damage type. A magic-type skill can carry a Burn augment — the hit deals magic damage and separately has a % chance to apply the Burn EoT.
+
+**Socket order has no effect on resolution** — all on-hit augments resolve in parallel on each hit.
+
 **Future augment pattern — mine/trap placement:** A mine augment triggers `on_enemy_hit_%` and places a proximity trap at the hit location. Successive hits place additional mines up to an active cap. The cap scales with augment tier (e.g. tier 1 = 2 active mines, tier 2 = 4, tier 3 = 6). This introduces augment-tier-scaling caps as a mechanic — design in full when crafting tiers are being expanded.
 
 **Crafting cost (v1):** every Skill Augment costs **1 crafting resource** to craft.
