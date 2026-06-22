@@ -44,7 +44,7 @@ Items to discuss, in no particular order. Cross off when resolved.
   - **All augments use a single trigger type: `on_enemy_hit_%`.** No `always` trigger. Even mechanical augments (Splash, Pierce) have a % chance — higher base % than effect augments, but never guaranteed. Keeps the system uniform and balanced.
   - The trigger % is a property of the augment item itself, rolled at craft time and re-rollable via crafting — pushing the % higher is a meaningful crafting goal.
   - **Possibly bound-on-socket in future** as a crafting resource sink — not current design, noted as a direction to consider.
-  - **Crit is not an augment.** CritChance comes entirely from Dex, CritDamage from Str. Crits roll automatically on every hit — no augment needed to enable or boost them. The Critical Strike augment is removed.
+  - **Critical Strike is a skill augment.** Adds a per-skill crit chance bonus on top of the global Dex-derived CritChance. Uses `on_enemy_hit_%` trigger like all augments — the trigger % is the additional crit chance for that skill. Any archetype can invest in crit via augments; Rogue builds crit more naturally through Dex.
 
 - [x] **Skill slots — 5 slots, freeform, PoE2 keybinding layout.**
   - 5 skill slots available from the start — no unlock progression.
@@ -59,10 +59,11 @@ Items to discuss, in no particular order. Cross off when resolved.
   | Stat | Governs |
   |---|---|
   | **Strength** | PhysicalDamage, PhysicalResistance, MaxHp, CritDamage |
-  | **Dexterity** | CritChance |
+  | **Dexterity** | CritChance, Evasion |
   | **Intelligence** | MagicDamage, MagicResistance, MaxFocus, FocusRegen |
 
   - CritChance on Dex (precision — you land the crit), CritDamage on Str (power — the crit hurts more).
+  - Evasion on Dex — passive % chance to completely avoid an incoming hit. Distinct from the active Dodge roll (Space bar). Terminology: **Dodge** = the roll mechanic; **Evasion** = the passive stat.
   - MaxHp is under Strength (Str/Con merged — physical body, damage output, resistance, and survivability together).
   - **Movement speed is not a base stat.** No archetype gets it for free. Speed comes from gear, augments, or skills only.
   - **CDR is not a base stat.** See below.
