@@ -154,9 +154,7 @@ Specific item names and exact stat values are TBD.
 | Skills | Crafted skill items | 50 items |
 | Augments | Crafted Skill Augments and Equipment Augments | 50 items |
 
-Equipped items are held separately in the character's slots and do not count against inventory capacity. Each tab is visible on the Character Screen as a scrollable 5-column icon grid.
-
-**Equipping:** Right-click an inventory item → equips to first empty valid slot; if all valid slots are occupied, swaps with slot 1 (old item returns to inventory). Right-click an occupied character slot → unequips, item returns to inventory (blocked if inventory is full). See the full interaction model under *Character Screen — Mouse/Keyboard Interaction Model*.
+Equipped items are held separately in the character's slots and do not count against inventory capacity. See *Character Screen — Interaction Model* for how each tab behaves.
 
 ---
 
@@ -209,34 +207,64 @@ Crafting materials are the primary run reward — the only meaningful thing enem
   - **Sigils tab** — visible, empty (reserved for future sigil system)
   - Both tabs are always visible; empty tabs are not locked or greyed out
 
-#### Character Screen — Mouse/Keyboard Interaction Model
+#### Character Screen — Interaction Model
 
-Crafting is not a separate tab — it is accessed contextually through item interactions.
+**Reusable components — the core pattern.** Skills and Augments share one design pattern: a component that shows a Craft button and a list of owned items, reused in both the inventory tab and inside slot interactions. The component's event handlers differ by context (inventory vs. slot), but the visual is identical — styling changes propagate everywhere automatically.
 
-**Right-click = direct action (no menu):**
-- Right-click an **inventory item** → equip to first empty valid slot. If all valid slots are occupied, swap: new item equips to slot 1, old item returns to inventory.
-- Right-click an **equipped slot** → unequip; item returns to inventory (blocked if inventory is full).
-- Right-click a **filled augment socket** → remove augment; returns to inventory.
-- Right-click an **empty slot or empty socket** → no action.
+---
 
-**Left-click = context-sensitive menu:**
-- Left-click an **inventory item** → menu: **Equip**, **Modify**, **Delete**
-- Left-click an **equipped slot (filled)** → menu: **Unequip**, **Modify**, **Delete**
-- Left-click an **equipped slot (empty)** → menu: **Craft New** (opens create list for that slot type), **Equip from inventory** (item picker filtered to slot type)
-- Left-click an **open augment socket** → augment picker (compatible augments from inventory)
-- Left-click a **filled augment socket** → menu: **Remove** (returns augment to inventory)
+##### Skills Inventory Tab
 
-Equip/Unequip in the left-click menu mirrors the right-click shortcut — right-click is the fast path, left-click menu is the discoverable path for new players. Both apply the same logic (equip to first empty valid slot / swap with slot 1; unequip blocked if inventory full).
+- Lists all unslotted skill items
+- **Craft button** at top → switches view to craftable skills list (one button per craftable skill type)
+  - Click a skill type → crafts it (1 material) → adds to skills inventory → returns to owned list
+- **Click an owned skill** → opens Skill Modify Panel for that skill (no Remove — it's unslotted)
 
-**Drag and drop:**
-- Drag an inventory item onto a valid slot → equip to that specific slot (swap if occupied)
-- Drag an inventory augment onto an open socket → socket it
+##### Skills Slot (character loadout)
 
-**Modify panel** (opened from left-click → Modify on any item, from inventory or equipped slot):
-- Shows the item's current stats and tier
-- **Upgrade** button — increase tier (costs materials)
-- Augment socket rows — drag augment from inventory or left-click socket to open augment picker
-- Right-click a filled socket → removes augment directly
+- **Empty skill slot** → opens the Skills component (same visuals as the inventory tab; different handlers)
+  - Craft button → crafts skill + auto-slots it → opens Skill Modify Panel
+  - Click an owned skill → slots it → opens Skill Modify Panel
+- **Filled skill slot** → opens Skill Modify Panel directly
+
+##### Skill Modify Panel
+
+```
+[ Skill Name ]  [ Upgrade ]  [ Re-roll ]  [ Remove ]   ← Remove only when skill is slotted
+─────────────────────────────────────────────────────
+[ A1 ]   │  < context-sensitive right panel >
+[ A2 ]   │
+[ A3 ]   │
+```
+
+**Augment slot selected (left column):**
+- **Empty slot** → right panel shows the Augments component (same as Augments inventory tab; different handlers):
+  - Craft button → crafts augment + auto-slots it → right panel transitions to filled-slot view
+  - Click an owned augment → slots it → right panel transitions to filled-slot view
+- **Filled slot** → right panel shows: augment name, **Upgrade**, **Re-roll**, **Remove**
+  - Remove → unslots augment (returns to augments inventory) → right panel returns to empty-slot view
+
+---
+
+##### Augments Inventory Tab
+
+- Lists all unslotted augment items
+- **Craft button** at top → switches view to craftable augments list (one button per craftable augment type)
+  - Click an augment type → crafts it (1 material) → adds to augments inventory → returns to owned list
+- **Click an owned augment** → opens Augment Modify Panel for that augment (no Remove — it's unslotted)
+
+##### Augment Modify Panel (from inventory)
+
+Augment name + **Upgrade** + **Re-roll** (no Remove). Same visual as the filled-slot view in the Skill Modify Panel.
+
+---
+
+##### Equipment Tab
+
+- Lists all unslotted gear (weapons, armour, rings)
+- **Right-click** an inventory gear item → equips to first empty valid slot; swaps with slot 1 if all slots occupied
+- **Right-click** a filled gear slot → unequips; item returns to inventory
+- Left-click interactions for gear TBD (gear modify panel is post-v1)
 
 ---
 
