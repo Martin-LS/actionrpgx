@@ -414,10 +414,7 @@ public partial class CharacterManager : Node
         var augmentDef = EquipmentAugmentRegistry.Get(augment.DefinitionId);
         if (augmentDef == null) return CraftResult.InsufficientMaterials;
 
-        var itemDef = ItemRegistry.Get(gear.DefinitionId);
-        if (augmentDef.RequiredTags.Length > 0 &&
-            (itemDef == null || !itemDef.Tags.Any(t => augmentDef.RequiredTags.Contains(t))))
-            return CraftResult.InsufficientMaterials;
+
 
         for (int i = 0; i < gear.SocketedEquipmentAugmentIds.Count; i++)
         {

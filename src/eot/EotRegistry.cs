@@ -14,15 +14,6 @@ public static class EotRegistry
             IsDamageEot:  false,
             SlowFraction: BalanceConfig.Eots.SlowFraction
         ),
-        ["burn"] = new EotData(
-            Id:           "burn",
-            Name:         "Burn",
-            ApplyChance:  BalanceConfig.Eots.BurnApplyChance,
-            Duration:     BalanceConfig.Eots.BurnDuration,
-            IsDamageEot:  true,
-            TickRate:     BalanceConfig.Eots.BurnTickRate,
-            DamagePerTick: BalanceConfig.Eots.BurnDamagePerTick
-        ),
     };
 
     public static EotData?             Get(string id) => _all.TryGetValue(id, out var e) ? e : null;

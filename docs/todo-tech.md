@@ -24,17 +24,7 @@ Items where the GDD defines the design but no corresponding technical specificat
 - [ ] Spec AoE radius modifier pipeline — `AoEModifier` field on `SkillData` or `StatBlock`, accumulation across augments, application of formula `effective_radius = base_radius × sqrt(1 + total_aoe_pct_increase)`
 - [ ] Spec Proximity Cluster System — which class owns the computation, connected-component algorithm (flood fill vs. union-find), when recomputation fires, Dormant→Idle transition on `MapReady` for pre-placed enemies
 
-### Code Fixes
 
-- [ ] Update `ChunkCount` range from 7–11 to 4–6 (GDD v1 target); likely in `MapData.GenerateRandom()` or `BalanceConfig`
-- [ ] Fix `SkillAugmentRegistry` — remove `splash`, `pierce`, `burn`; add `magic_damage` (post-v1 augments must not be in v1 registry)
-- [ ] Fix `RecipeRegistry` — remove Splash/Pierce/Burn SkillAugment recipes; add MagicDamage recipe
-- [ ] Fix `EotRegistry` — remove `burn` (post-v1); v1 should have `slow` only
-- [ ] Fix `WeaponController` slot state — remove `HasSplash`/`HasPierce` fields; add `HasMagicDamage`; wire Magic Damage augment to override slot damage type to Magic at fire time
-- [ ] Fix `AugmentResolver.Resolve` — remove splash/pierce resolution; add magic_damage → `HasMagicDamage` resolution
-- [ ] Fix `WeaponController.SetSlot` signature — remove `hasSplash`/`hasPierce` params; add `hasMagicDamage`
-- [ ] Fix `EquipmentAugmentData` — remove `RequiredTags` field; all Equipment Augments are universal (no tag gate)
-- [ ] Fix `SocketEquipmentAugment` — remove tag-gate enforcement (the `RequiredTags` check that returns `InsufficientMaterials`)
 
 ---
 

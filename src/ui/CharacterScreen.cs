@@ -322,7 +322,7 @@ public partial class CharacterScreen : Control
                 if (def != null)
                 {
                     btn.Text        = def.Name;
-                    btn.TooltipText = $"[Equip] {def.Name}\nRequires: {string.Join(", ", def.RequiredTags)}";
+                    btn.TooltipText = $"[Equip] {def.Name}";
                     btn.AddThemeFontSizeOverride("font_size", 10);
                     var capturedInst = inst;
                     var capturedBtn  = btn;
@@ -1205,9 +1205,7 @@ public partial class CharacterScreen : Control
         if (def == null) return;
 
         var compatible = _manager.Profile.OwnedEquipmentAugmentInstances
-            .Where(a => a.Definition != null &&
-                        (a.Definition.RequiredTags.Length == 0 ||
-                         a.Definition.RequiredTags.Any(t => def.Tags.Contains(t))))
+            .Where(a => a.Definition != null)
             .ToList();
 
         var popup = NewStyledPopup();

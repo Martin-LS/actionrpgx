@@ -6,11 +6,11 @@ public static class EquipmentAugmentRegistry
 {
     private static readonly Dictionary<string, EquipmentAugmentData> _all = new()
     {
-        ["retaliation"] = new("retaliation", "Retaliation", new[] { "Heavy" }),
-        ["fortify"]     = new("fortify",     "Fortify",     new[] { "Heavy" }),
-        ["dash_reflex"] = new("dash_reflex", "Dash Reflex", new[] { "Light" }),
-        ["ghost_step"]  = new("ghost_step",  "Ghost Step",  new[] { "Light" }),
-        ["mending"]     = new("mending",     "Mending",     new[] { "Medium" }),
+        ["retaliation"] = new("retaliation", "Retaliation"),
+        ["fortify"]     = new("fortify",     "Fortify"),
+        ["dash_reflex"] = new("dash_reflex", "Dash Reflex"),
+        ["ghost_step"]  = new("ghost_step",  "Ghost Step"),
+        ["mending"]     = new("mending",     "Mending"),
     };
 
     public static EquipmentAugmentData?             Get(string id) => _all.TryGetValue(id, out var a) ? a : null;

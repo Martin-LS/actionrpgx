@@ -32,7 +32,7 @@ public partial class WeaponController : Node
     private static readonly PackedScene SelfBurstVfxScene =
         GD.Load<PackedScene>("res://src/vfx/self_burst_vfx.tscn");
 
-    private const float SplashRadius = 60f;
+
 
     private Player.PlayerController? _player;
     private GpuParticles3D? _selfChanneledTickVfx;
@@ -99,8 +99,7 @@ public partial class WeaponController : Node
         public SkillData?   Skill;
         public float        CooldownTimer;
         public List<string> EotIds;
-        public bool         HasSplash;
-        public bool         HasPierce;
+        public bool         HasMagicDamage;
         public Items.DamageType EffectiveDamageType;
         public float        CritChanceBonus;
         public bool         AutoActivate;
@@ -117,8 +116,7 @@ public partial class WeaponController : Node
     public void SetPreferredDelivery(string delivery)      => _preferredDelivery = delivery;
 
     public void SetSlot(int slotIndex, SkillData skill,
-        List<string>? eotIds = null, bool hasSplash = false, bool hasPierce = false,
-        bool hasMagicDamage = false, float critChanceBonus = 0f)
+        List<string>? eotIds = null, bool hasMagicDamage = false, float critChanceBonus = 0f)
     {
         if (slotIndex < 0 || slotIndex >= 3) return;
         _slots[slotIndex].Skill            = skill;
@@ -127,8 +125,7 @@ public partial class WeaponController : Node
         var merged   = new List<string>(inherent);
         if (eotIds != null) merged.AddRange(eotIds);
         _slots[slotIndex].EotIds           = merged;
-        _slots[slotIndex].HasSplash        = hasSplash;
-        _slots[slotIndex].HasPierce        = hasPierce;
+        _slots[slotIndex].HasMagicDamage   = hasMagicDamage;
         _slots[slotIndex].EffectiveDamageType = hasMagicDamage ? Items.DamageType.Magic : skill.DamageType;
         _slots[slotIndex].CritChanceBonus  = critChanceBonus;
         _slots[slotIndex].AutoActivate  = true;
@@ -290,7 +287,7 @@ public partial class WeaponController : Node
         ref var slot   = ref _slots[slotIndex];
         var     origin = GetParent<Node3D>().GlobalPosition;
 
-        bool  isMagic = slot.EffectiveDamageType == Items.DamageType.Magic;
+        bool  isMagic = slot.HasMagicDamage || slot.EffectiveDamageType == Items.DamageType.Magic;
         var   dmgType = isMagic ? Items.DamageType.Magic : Items.DamageType.Physical;
         float baseDmg = isMagic ? _magicDamage : _physicalDamage;
 
@@ -394,7 +391,7 @@ public partial class WeaponController : Node
 
         if (slot.Skill.DamagePattern == SkillDamagePattern.Tick && slot.Skill.ZoneTracksEntity)
         {
-            bool  ttMagic  = slot.EffectiveDamageType == Items.DamageType.Magic;
+            bool  ttMagic  = slot.HasMagicDamage || slot.EffectiveDamageType == Items.DamageType.Magic;
             var   ttType   = ttMagic ? Items.DamageType.Magic : Items.DamageType.Physical;
             float ttDmg    = ttMagic ? _magicDamage : _physicalDamage;
             float ttCritChance = _globalCritChance + slot.CritChanceBonus;
@@ -420,7 +417,7 @@ public partial class WeaponController : Node
             return;
         }
 
-        bool  isMagic   = slot.EffectiveDamageType == Items.DamageType.Magic;
+        bool  isMagic   = slot.HasMagicDamage || slot.EffectiveDamageType == Items.DamageType.Magic;
         bool  hasMelee  = System.Array.Exists(slot.Skill!.Tags, t => t == "Melee");
         bool  hasRange  = System.Array.Exists(slot.Skill!.Tags, t => t == "Range");
         // Weapon-adaptive: no delivery tag → inherit weapon's PreferredDelivery
@@ -440,7 +437,7 @@ public partial class WeaponController : Node
         {
             float windupDelay = slot.Skill!.Cooldown * BalanceConfig.Skills.MeleeWindupFraction;
             GetTree().CreateTimer(windupDelay).Timeout +=
-                () => { if (!target.IsQueuedForDeletion()) HitMelee(target, baseDmg, dmgType, slot.EotIds, slot.HasSplash, critMultiplier); };
+                () => { if (!target.IsQueuedForDeletion()) HitMelee(target, baseDmg, dmgType, slot.EotIds, critMultiplier); };
         }
         else
         {
@@ -449,7 +446,7 @@ public partial class WeaponController : Node
             var direction = new Vector3(diff.X, 0f, diff.Z).Normalized();
 
             var projectile = ProjectileScene.Instantiate<Projectile>();
-            projectile.Initialize(direction, baseDmg, dmgType, slot.EotIds, slot.HasSplash, slot.HasPierce, critMultiplier);
+            projectile.Initialize(direction, baseDmg, dmgType, slot.EotIds, false, false, critMultiplier);
             GetTree().Root.AddChild(projectile);
             projectile.GlobalPosition = new Vector3(origin.X, target.GlobalPosition.Y, origin.Z);
         }
@@ -462,7 +459,7 @@ public partial class WeaponController : Node
         ref var slot   = ref _slots[slotIndex];
         var     origin = GetParent<Node3D>().GlobalPosition;
 
-        bool  isMagic = slot.EffectiveDamageType == Items.DamageType.Magic;
+        bool  isMagic = slot.HasMagicDamage || slot.EffectiveDamageType == Items.DamageType.Magic;
         var   dmgType = isMagic ? Items.DamageType.Magic : Items.DamageType.Physical;
         float baseDmg = isMagic ? _magicDamage : _physicalDamage;
 
@@ -489,7 +486,7 @@ public partial class WeaponController : Node
 
         if (slot.Skill!.TriggerRadius > 0f)
         {
-            bool  isMagic  = slot.EffectiveDamageType == Items.DamageType.Magic;
+            bool  isMagic  = slot.HasMagicDamage || slot.EffectiveDamageType == Items.DamageType.Magic;
             var   dmgType  = isMagic ? Items.DamageType.Magic : Items.DamageType.Physical;
             float baseDmg  = isMagic ? _magicDamage : _physicalDamage;
 
@@ -524,7 +521,7 @@ public partial class WeaponController : Node
         }
         else if (slot.Skill!.DamagePattern == SkillDamagePattern.Burst)
         {
-            bool  isMagic    = slot.EffectiveDamageType == Items.DamageType.Magic;
+            bool  isMagic    = slot.HasMagicDamage || slot.EffectiveDamageType == Items.DamageType.Magic;
             var   dmgType    = isMagic ? Items.DamageType.Magic : Items.DamageType.Physical;
             float baseDmg    = isMagic ? _magicDamage : _physicalDamage;
 
@@ -579,7 +576,7 @@ public partial class WeaponController : Node
         }
         else if (slot.Skill!.DamagePattern == SkillDamagePattern.Tick)
         {
-            bool  isMagic = slot.EffectiveDamageType == Items.DamageType.Magic;
+            bool  isMagic = slot.HasMagicDamage || slot.EffectiveDamageType == Items.DamageType.Magic;
             var   dmgType = isMagic ? Items.DamageType.Magic : Items.DamageType.Physical;
             float baseDmg = isMagic ? _magicDamage : _physicalDamage;
 
@@ -636,7 +633,7 @@ public partial class WeaponController : Node
     }
 
     private void HitMelee(Enemies.EnemyController target, float damage, Items.DamageType dmgType,
-        List<string> eotIds, bool hasSplash, float critMultiplier)
+        List<string> eotIds, float critMultiplier)
     {
         bool   isCrit  = critMultiplier > 1f;
         var    hitPos  = target.GlobalPosition;
@@ -648,19 +645,6 @@ public partial class WeaponController : Node
         hitFx.GlobalPosition = hitPos;
         hitFx.GetNode<GpuParticles3D>("Particles").Emitting = true;
         GetTree().CreateTimer(0.6).Timeout += hitFx.QueueFree;
-
-        if (hasSplash)
-        {
-            foreach (var node in GetTree().GetNodesInGroup("enemies"))
-            {
-                if (node is not Enemies.EnemyController splash) continue;
-                if (splash.GlobalPosition.DistanceTo(hitPos) <= SplashRadius)
-                {
-                    splash.TakeDamage(damage, dmgType, isCrit);
-                    ApplyEots(splash, eotIds, critMultiplier);
-                }
-            }
-        }
     }
 
     private void ApplyEots(Enemies.EnemyController enemy, List<string> eotIds, float critMultiplier)

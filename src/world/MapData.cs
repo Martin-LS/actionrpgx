@@ -26,7 +26,7 @@ public class MapData
             Seed       = sys.Next(),
             Biome      = MapBiome.HollowDarkForest,
             Level      = level,
-            ChunkCount = sys.Next(7, 12),
+            ChunkCount = sys.Next(4, 7),
         };
     }
 }
