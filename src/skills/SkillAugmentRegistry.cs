@@ -6,11 +6,9 @@ public static class SkillAugmentRegistry
 {
     private static readonly Dictionary<string, SkillAugmentData> _all = new()
     {
-        ["splash"]           = new SkillAugmentData("splash",           "Splash",           new string[] { },    EotId: null),
-        ["pierce"]           = new SkillAugmentData("pierce",           "Pierce",           new string[] { },    EotId: null),
-        ["slow"]             = new SkillAugmentData("slow",             "Slow",             new string[] { },    EotId: "slow"),
-        ["critical_strike"]  = new SkillAugmentData("critical_strike",  "Critical Strike",  new string[] { },    EotId: null),
-        ["magic_damage"]     = new SkillAugmentData("magic_damage",     "Magic Damage",     new string[] { },    EotId: null, ConflictGroup: "damage_type"),
+        ["slow"]            = new SkillAugmentData("slow",            "Slow",            new string[] { }, EotId: "slow"),
+        ["critical_strike"] = new SkillAugmentData("critical_strike", "Critical Strike", new string[] { }, EotId: null),
+        ["magic_damage"]    = new SkillAugmentData("magic_damage",    "Magic Damage",    new string[] { }, EotId: null, ConflictGroup: "damage_type"),
     };
 
     public static SkillAugmentData?             Get(string id) => _all.TryGetValue(id, out var s) ? s : null;

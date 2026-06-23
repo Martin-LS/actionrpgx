@@ -22,38 +22,31 @@ Skill Augments are craftable items that socket into a skill item to modify it. A
 - **Socketing:** choose a Skill Augment from inventory and place it into an open slot on the skill item
 - **Removing:** free, Skill Augment returns to inventory
 
-**Augment tag + trigger type system.** Each augment has a functional tag (e.g. `splash`, `pierce`, `slow`, `burn`). Each augment slot has a trigger type that declares which augment tags it accepts and how it fires. All skill augments use `on_enemy_hit_%` — the trigger % is a property of the augment item, rolled at craft time and re-rollable via crafting. Full tag/trigger taxonomy TBD at implementation.
+**Augment tag + trigger type system.** Each augment has a functional tag. Each augment slot has a trigger type that declares which augment tags it accepts and how it fires. All skill augments use `on_enemy_hit_%` — the trigger % is a property of the augment item, rolled at craft time and re-rollable via crafting. Full tag/trigger taxonomy TBD at implementation.
 
-**v1 Skill Augments:**
+**v1 Skill Augments — generics only.** v1 uses three generic augments, each proving a concept. Named versions (Burn, Splash, Pierce, etc.) are post-v1 and will be derived from these generics in the same way named skills are derived from skill prototypes.
 
-| Skill Augment | Tag | Trigger type | Effect |
+| Skill Augment | Tag | Trigger type | Proves |
 |---|---|---|---|
-| Splash | `splash` | `on_enemy_hit_%` | Hit damages a small area around the impact point. |
-| Pierce | `pierce` | `on_enemy_hit_%` | Hit passes through the first enemy and continues. |
-| Slow | `slow` | `on_enemy_hit_%` | Applies the Slow EoT on hit. |
-| Burn | `burn` | `on_enemy_hit_%` | Applies the Burn EoT on hit. |
-| Critical Strike | `crit` | `on_enemy_hit_%` | Adds a per-skill crit chance bonus on top of the global Dex-derived CritChance. |
+| Magic Damage | `magic_damage` | `on_enemy_hit_%` | Damage-type augment: modifies the skill's effective damage type to Magic. Future named versions: Burn (magic DoT), Arcane Bolt, etc. |
+| Slow | `slow` | `on_enemy_hit_%` | Debuff augment: applies the Slow EoT on hit. Future named versions: Chill, Weaken, etc. |
+| Critical Strike | `crit` | `on_enemy_hit_%` | Stat-mod augment: adds a per-skill crit chance bonus on top of the global Dex-derived CritChance. |
 
-Exact values (splash radius, trigger chances, slow %, burn damage, duration) are TBD.
-
-All augments use `on_enemy_hit_%` trigger — including Splash and Pierce. The trigger % is a property of the augment item, rolled at craft time and re-rollable via crafting. Higher % is a meaningful crafting goal.
+Exact trigger chances and values are TBD — owned by the Balancer.
 
 ### Augment Resolution Order
 
-Two augment categories determine resolution order:
+All v1 skill augments are on-hit augments — they resolve on each hit, independently and in parallel. Each rolls its `on_enemy_hit_%` independently per target. Socket order has no effect.
 
-- **Projectile augments** (Pierce, Chain) — resolve first. They determine what the projectile hits and how many times.
-- **On-hit augments** (Splash, Burn, Slow, Critical Strike) — resolve on each resulting hit, independently and in parallel. Each rolls its `on_enemy_hit_%` independently per target.
+**Post-v1 resolution categories** (for when named augments are added):
 
-**Splash** creates secondary hits on nearby enemies. Those secondary hits re-run all on-hit augments (each at their own %) — but never projectile augments. Splash breaks the projectile chain.
+- **Projectile augments** (e.g. Pierce, Chain) — will resolve first, determining what the projectile hits and how many times.
+- **AoE augments** (e.g. Splash) — will create secondary hits on nearby enemies. Secondary hits re-run all on-hit augments independently, but never projectile augments.
+- **Crit inheritance** — if the primary hit crits, all splash-generated secondary hits will also crit. Splash hits do not roll crit independently.
 
-**Crit inheritance:** the primary hit's crit result is inherited by all splash-generated secondary hits. If the primary critted, all splash hits also crit. Splash hits do not roll crit independently.
+**Augment interactions across damage types:** on-hit EoT augments are independent of the skill's damage type. A magic-type skill can carry a Slow augment — the hit deals magic damage and separately has a % chance to apply the Slow EoT.
 
-**Augment interactions across damage types:** on-hit EoT augments are independent of the skill's damage type. A magic-type skill can carry a Burn augment — the hit deals magic damage and separately has a % chance to apply the Burn EoT.
-
-**Socket order has no effect on resolution** — all on-hit augments resolve in parallel on each hit.
-
-**Future augment pattern — mine/trap placement:** A mine augment triggers `on_enemy_hit_%` and places a proximity trap at the hit location. Successive hits place additional mines up to an active cap. The cap scales with augment tier (e.g. tier 1 = 2 active mines, tier 2 = 4, tier 3 = 6). This introduces augment-tier-scaling caps as a mechanic — design in full when crafting tiers are being expanded.
+**Future augment pattern — mine/trap placement:** A mine augment triggers `on_enemy_hit_%` and places a proximity trap at the hit location. Successive hits place additional mines up to an active cap. The cap scales with augment tier (e.g. tier 1 = 2 active mines, tier 2 = 4, tier 3 = 6).
 
 **Crafting cost (v1):** every Skill Augment costs **1 crafting resource** to craft.
 
@@ -121,80 +114,52 @@ Equipment Augments are crafted (Craft New entry point TBD — not yet implemente
 
 Augment prototypes follow the same philosophy as skill prototypes: each one proves a specific concept, covers a distinct design space, and is tested in isolation before combining. All augment prototypes are v1.
 
-Named augments (e.g. "Slow", "Burn") are post-v1 and will be derived from these prototypes.
+Named augments (e.g. "Burn", "Splash", "Pierce") are post-v1 and will be derived from these generics.
 
 ### Skill Augment Prototypes
 
 | Prototype | Tag | Trigger | Concept proven |
 |---|---|---|---|
-| Hit-EoT-Debuff | `slow` | `on_enemy_hit_%` | Hit lands → on-hit % fires → non-damage EoT (Slow) applied |
-| Hit-EoT-Damage | `burn` | `on_enemy_hit_%` | Hit lands → on-hit % fires → damage EoT (Burn) applied; crit stamping |
-| Hit-AoE | `splash` | `on_enemy_hit_%` | Hit lands → on-hit % fires → secondary AoE hit around impact |
-| Hit-Pierce | `pierce` | `on_enemy_hit_%` | Projectile augment resolves first; hit passes through, continues to next enemy |
-| Hit-Damage-Mod | `crit` | `on_enemy_hit_%` | Per-skill crit chance bonus stacks with global Dex crit; crit result confirmed |
+| Hit-Debuff | `slow` | `on_enemy_hit_%` | Debuff augment path: on-hit % → non-damage EoT applied |
+| Hit-Damage | `magic_damage` | `on_enemy_hit_%` | Damage augment path: switches skill's effective damage type to Magic |
+| Hit-Damage-Mod | `crit` | `on_enemy_hit_%` | Stat-mod augment path: per-skill crit bonus stacks with global Dex crit |
 
-#### Hit-EoT-Debuff
+#### Hit-Debuff
 
-Proves the non-damage EoT path. A % chance on each hit to apply Slow to the struck enemy — no damage, visible movement penalty only. Tests: Slow applies and expires correctly, doesn't stack, reapplication refreshes duration.
+Proves the debuff augment path. A % chance on each hit to apply Slow — no damage, visible movement penalty. Tests: Slow applies and expires correctly, doesn't stack, reapplication refreshes duration.
 
 | Property | Value |
 |---|---|
-| Description | On-hit % chance to apply Slow EoT. Proves non-damage EoT augment path. |
+| Description | On-hit % chance to apply Slow EoT. Generic debuff augment — post-v1 named versions: Chill, Weaken, etc. |
 | Tag | `slow` |
 | Trigger type | `on_enemy_hit_%` |
 | Trigger chance | 50% (test value) |
 | Effect | Slow EoT for 3s (test value) |
 | Acquire | Craft |
 
-#### Hit-EoT-Damage
+#### Hit-Damage
 
-Proves the damage EoT path and crit stamping. A % chance on each hit to apply Burn — damage ticks until duration expires. Tests: Burn ticks deal magic damage per tick, crit stamp applies full duration if applying hit was a crit, reapplication refreshes (no double-stack), non-crit reapplication resets the crit multiplier.
-
-| Property | Value |
-|---|---|
-| Description | On-hit % chance to apply Burn EoT. Proves damage EoT augment path and crit stamping. |
-| Tag | `burn` |
-| Trigger type | `on_enemy_hit_%` |
-| Trigger chance | 50% (test value) |
-| Effect | Burn EoT — 2 magic damage/tick, 1 tick/sec, 4s duration (test values) |
-| Acquire | Craft |
-
-#### Hit-AoE
-
-Proves splash — on-hit secondary hits spread to nearby enemies. Tests: primary hit triggers % roll, on success nearby enemies in splash radius take damage, splash hits also run all on-hit augments (each independently), splash never triggers another splash.
+Proves the damage-type augment path. Switches the skill's effective damage type to Magic. The Mage archetype uses this augment on their starter skill. Tests: damage numbers show as magic type, magic resistance applies, works regardless of equipped weapon.
 
 | Property | Value |
 |---|---|
-| Description | On-hit % chance to deal splash damage to enemies near the impact point. Proves AoE augment path. |
-| Tag | `splash` |
+| Description | Converts the skill's effective damage type to Magic. Generic damage augment — post-v1 named versions: Burn (magic DoT), Arcane Bolt, etc. |
+| Tag | `magic_damage` |
 | Trigger type | `on_enemy_hit_%` |
-| Trigger chance | 60% (test value) |
-| Effect | Hits all enemies within 1.5-tile radius of impact (test value) |
-| Acquire | Craft |
-
-#### Hit-Pierce
-
-Proves projectile augment resolution. When triggered, the projectile continues past the first enemy and can hit the next one in its path. Tests: resolves before on-hit augments, continuation hits run on-hit augments normally, only one continuation per pierce (not infinite chain).
-
-| Property | Value |
-|---|---|
-| Description | On-hit % chance for the projectile to pierce and continue past the struck enemy. Proves projectile augment path. |
-| Tag | `pierce` |
-| Trigger type | `on_enemy_hit_%` |
-| Trigger chance | 40% (test value) |
-| Effect | Projectile continues past first enemy, hits next enemy in path |
+| Trigger chance | N/A — always active when socketed |
+| Effect | Skill deals Magic damage instead of its base type |
 | Acquire | Craft |
 
 #### Hit-Damage-Mod
 
-Proves per-skill crit chance bonus stacking on top of global Dex crit. Tests: stat shows correctly on character sheet, crits fire at the combined %, crit multiplier applies correctly, works for all damage types.
+Proves the stat-mod augment path. Per-skill crit chance bonus stacks on top of global Dex crit. Tests: crits fire at the combined %, crit multiplier applies correctly, works for all damage types.
 
 | Property | Value |
 |---|---|
-| Description | Adds a per-skill crit chance bonus on top of the global Dex-derived CritChance. Proves damage mod augment path. |
+| Description | Adds a per-skill crit chance bonus on top of the global Dex-derived CritChance. Generic stat-mod augment. |
 | Tag | `crit` |
 | Trigger type | `on_enemy_hit_%` |
-| Trigger chance | N/A — always active; modifies the skill's crit roll, not a separate triggered event |
+| Trigger chance | N/A — always active; modifies the skill's crit roll |
 | Effect | +20% crit chance for this skill (test value) |
 | Acquire | Craft |
 
@@ -219,6 +184,6 @@ Augment mixes are combinations tested together after individual augment prototyp
 
 | Mix | Augments combined | Concept proven |
 |---|---|---|
-| AoE+EoT | Hit-AoE + Hit-EoT-Damage | Splash secondary hits independently roll Burn; crit stamp propagates through splash correctly |
-| Skill+Equip | Hit-EoT-Debuff (skill) + Equip-Reactive (body) | Skill augment and equipment augment fire independently; no cross-interference |
-| Ineffective combo | Hit-Pierce on Self-Burst | Pierce has no effect on a Self skill (no projectile); UI warns on socket; no error on fire |
+| Damage+Debuff | Hit-Damage + Hit-Debuff on same skill | Both augments fire independently on each hit; magic damage type applies, Slow EoT rolls separately |
+| Damage+Crit | Hit-Damage + Hit-Damage-Mod on same skill | Magic damage type applies; crit rolls at the boosted chance; crit multiplier applies correctly |
+| Debuff+Crit | Hit-Debuff + Hit-Damage-Mod on same skill | Slow EoT rolls at its own %; crit fires at boosted chance; both operate independently per hit |
