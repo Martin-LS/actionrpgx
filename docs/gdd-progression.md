@@ -1,6 +1,6 @@
 # Game Design Document — Meta-Progression, Gear & UI
 
-> Part of the GDD. See also `gdd-mechanics.md` for combat, skills, characters, and run structure.
+> Part of the GDD. See also `gdd-mechanics.md` for combat, characters, and run structure. See `gdd-skills.md` for skill design and prototypes. See `gdd-augments.md` for all augment design, prototypes, and augment resolution.
 > Living document — details will evolve as the game is playtested.
 
 ## Meta-Progression (Between Runs)
@@ -46,11 +46,9 @@ Skill items are crafted (Craft New — accessible from an empty skill slot, left
 
 #### Skill Augments
 
-Skill Augments are craftable items that socket into a skill item to modify it. Any augment can go into any skill slot — no archetype or skill type restrictions. Each augment type can only be equipped once per skill (no duplicates).
+> Skill Augment design, v1 augment list, trigger system, and augment resolution order are in `docs/gdd-augments.md`.
 
-**Ineffective combos — visual warning:** No augment is hard-locked from any skill, but some combinations produce no effect (e.g. Pierce on a Self skill — no projectile or impact point). The UI flags these with a warning indicator on the augment socket (red/yellow exclamation, hover tooltip explaining why). Exact indicator design TBD. Keeps the system open while giving players clear feedback when a slot is being wasted.
-
-**Skill Augment slots per tier** — upgrading a skill unlocks deeper modification, not just bigger numbers:
+**Skill Augment slots per tier:**
 
 | Skill tier | Skill Augment slots |
 |------------|--------------|
@@ -58,99 +56,21 @@ Skill Augments are craftable items that socket into a skill item to modify it. A
 | Uncommon   | 2            |
 | Rare       | 3            |
 
-- **Socketing:** choose a Skill Augment from inventory and place it into an open slot on the skill item
-- **Removing:** free, Skill Augment returns to inventory
-
-**Augment tag + trigger type system.** Each augment has a functional tag (e.g. `splash`, `pierce`, `slow`, `burn`). Each augment slot has a trigger type that declares which augment tags it accepts and how it fires. All skill augments use `on_enemy_hit_%` — the trigger % is a property of the augment item, rolled at craft time and re-rollable via crafting. Full tag/trigger taxonomy TBD at implementation.
-
-**v1 Skill Augments:**
-
-| Skill Augment | Tag | Trigger type | Effect |
-|---|---|---|---|
-| Splash | `splash` | `on_enemy_hit_%` | Hit damages a small area around the impact point. |
-| Pierce | `pierce` | `on_enemy_hit_%` | Hit passes through the first enemy and continues. |
-| Slow | `slow` | `on_enemy_hit_%` | Applies the Slow EoT on hit. |
-| Burn | `burn` | `on_enemy_hit_%` | Applies the Burn EoT on hit. |
-| Critical Strike | `crit` | `on_enemy_hit_%` | Adds a per-skill crit chance bonus on top of the global Dex-derived CritChance. |
-
-Exact values (splash radius, trigger chances, slow %, burn damage, duration) are TBD.
-
-All augments use `on_enemy_hit_%` trigger — including Splash and Pierce. The trigger % is a property of the augment item, rolled at craft time and re-rollable via crafting. Higher % is a meaningful crafting goal.
-
-#### Augment Resolution Order
-
-Two augment categories determine resolution order:
-
-- **Projectile augments** (Pierce, Chain) — resolve first. They determine what the projectile hits and how many times.
-- **On-hit augments** (Splash, Burn, Slow, Critical Strike) — resolve on each resulting hit, independently and in parallel. Each rolls its `on_enemy_hit_%` independently per target.
-
-**Splash** creates secondary hits on nearby enemies. Those secondary hits re-run all on-hit augments (each at their own %) — but never projectile augments. Splash breaks the projectile chain.
-
-**Crit inheritance:** the primary hit's crit result is inherited by all splash-generated secondary hits. If the primary critted, all splash hits also crit. Splash hits do not roll crit independently.
-
-**Augment interactions across damage types:** on-hit EoT augments are independent of the skill's damage type. A magic-type skill can carry a Burn augment — the hit deals magic damage and separately has a % chance to apply the Burn EoT.
-
-**Socket order has no effect on resolution** — all on-hit augments resolve in parallel on each hit.
-
-**Future augment pattern — mine/trap placement:** A mine augment triggers `on_enemy_hit_%` and places a proximity trap at the hit location. Successive hits place additional mines up to an active cap. The cap scales with augment tier (e.g. tier 1 = 2 active mines, tier 2 = 4, tier 3 = 6). This introduces augment-tier-scaling caps as a mechanic — design in full when crafting tiers are being expanded.
-
-**Crafting cost (v1):** every Skill Augment costs **1 crafting resource** to craft.
-
-Skill Augments are crafted (Craft New entry point TBD — not yet implemented; planned via left-click on an open augment socket) and live in the **Augments inventory tab**.
-
 #### Equipment Tags
 
-Armour pieces (Hat and Body) carry a **category tag** that identifies their type. The tag drives the stat profile described in Hat & Body below. No augment gating — any augment can socket into any equipment item regardless of category.
-
-| Armour | Tag |
-|---|---|
-| Hat / Body (Heavy) | `Heavy` |
-| Hat / Body (Medium) | `Medium` |
-| Hat / Body (Light) | `Light` |
-
-Category is fixed per item — a Heavy hat stays Heavy regardless of tier.
+Armour pieces (Hat and Body) carry a **category tag** (`Heavy`, `Medium`, `Light`) that drives their stat profile — see Hat & Body below. No augment gating — any augment can socket into any equipment item regardless of category. Category is fixed per item.
 
 #### Equipment Augments
 
-Equipment Augments follow the same model as Skill Augments — separate socketable items, one type per equipment piece at a time, trigger % is rolled at craft time and re-rollable.
+> Equipment Augment design, v1 augment list, and trigger system are in `docs/gdd-augments.md`.
 
-Equipment Augments are craftable items that socket into an equipment item to add a **behaviour** — not just a stat bonus, but something that changes how that piece of equipment *feels* to use. They are the gear-layer equivalent of Skill Augments.
-
-**Design intent — Equipment Augments are the defensive build layer.** Skill Augments handle offensive variance (splash, crit, pierce, damage conversion). Equipment Augments handle defensive variance — how the character survives, recovers, and punishes attackers. There is no stagger or hit-recovery system; the hit feedback is D4-style (always in control, no interrupts). All defensive investment flows through Equipment Augments. Future equipment augments should continue in this direction: barriers, dodge, resistance boosts, shield-on-hit, recovery mechanics. Offensive Equipment Augments (weapon/ring slot) are TBD and secondary to this defensive purpose.
-
-**Design rule:** `always` and `on_player_hit_%` augments may not deal proactive offensive damage — reactive damage (e.g. Retaliation/thorns) is acceptable. Auras via equipment augments are defensive or debuff only — a damage aura belongs on a skill augment, not armour. Offensive utility (e.g. cooldown reduction) is a grey area — flag for review when new augments are designed.
-
-**Equipment Augment slots per tier** — mirrors the Skill Augment slot system:
+**Equipment Augment slots per tier:**
 
 | Equipment tier | Equipment Augment slots |
 |----------------|------------------------|
 | Common         | 1                      |
 | Uncommon       | 2                      |
 | Rare           | 3                      |
-
-- **Socketing:** choose an Equipment Augment from inventory and place it into an open slot on the equipment item
-- **Removing:** free, Equipment Augment returns to inventory
-- Any augment can socket into any equipment item — no tag gate. Each augment type can only be equipped once per item (no duplicates).
-
-**v1 Equipment Augments** — prototypes only. Exact trigger models, trigger types, and values are all TBD and out of scope for v1. Listed here to establish the design space, not to be implemented. Same augment tag + trigger type system as skill augments, but player-based triggers:
-
-| Augment     | Tag           | Trigger type        | Behaviour |
-|-------------|---------------|---------------------|-----------|
-| Retaliation | `retaliation` | `on_player_hit_%`   | On hit received: deal small Physical damage to attacker |
-| Fortify     | `fortify`     | `on_player_hit_%`   | On hit received: reduce damage taken from the next hit |
-| Dash Reflex | `dash_reflex` | `on_player_hit_%`   | On hit received: brief speed burst |
-| Ghost Step  | `ghost_step`  | `on_kill_%`         | On kill: restore a small amount of HP |
-| Mending     | `mending`     | `on_player_hit_%`   | Regenerate a small amount of HP every 3s |
-
-Exact trigger chances and values are TBD — owned by the Balancer.
-
-Exact values for all behaviours are TBD — owned by the Balancer.
-
-**Aura augments:** Auras are Equipment Augments with the `aura` tag — a persistent area effect emanating from the player. The trigger type is player's choice: an `always` slot keeps the aura permanently active; an `on_player_hit_%` slot fires it reactively on taking a hit. The augment tag defines what the aura does; the trigger type defines when it runs. Focus reservation may apply as a cost for `always` aura augments — TBD when augment design is expanded.
-
-**Crafting cost (v1):** every Equipment Augment costs **1 crafting resource** to craft.
-
-Equipment Augments are crafted (Craft New entry point TBD — not yet implemented; planned via left-click on an open augment socket) and live in the **Augments inventory tab**.
 
 #### Weapon
 

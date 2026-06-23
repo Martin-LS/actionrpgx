@@ -28,6 +28,27 @@ Test each prototype in-game: fires correctly, damage lands, VFX plays, no errors
 
 ---
 
+## Augment Prototype Testing
+
+Test each augment prototype in-game. Do skill augments first (individually), then mixes.
+
+**Skill augments — individual:**
+- [ ] Hit-EoT-Debuff (Slow) — socket on Entity-Burst, hit enemy, confirm Slow applies and expires, no double-stack, recasting refreshes duration
+- [ ] Hit-EoT-Damage (Burn) — socket on Entity-Burst, hit enemy, confirm Burn ticks magic damage, crit stamp test: crit hit → Burn ticks deal crit×damage, non-crit reapply resets multiplier
+- [ ] Hit-AoE (Splash) — socket on Entity-Burst, hit enemy in a group, confirm nearby enemies also take damage, splash hits roll EoT augments independently
+- [ ] Hit-Pierce — socket on Entity-Burst (bow), shoot through enemy at another, confirm both take damage, pierce does not chain infinitely
+- [ ] Hit-Damage-Mod (Crit) — socket on Entity-Burst, confirm per-skill crit bonus stacks on top of global Dex crit, crits fire at combined chance
+
+**Augment mixes:**
+- [ ] AoE+EoT — Hit-AoE + Hit-EoT-Damage on same skill; splash secondaries independently roll Burn; crit stamp propagates through splash
+- [ ] Skill+Equip — Hit-EoT-Debuff (skill) + Equip-Reactive on armour; no cross-interference between skill and equipment augment triggers
+- [ ] Ineffective combo — Hit-Pierce socketed into Self-Burst; UI shows warning on socket; no error when skill fires
+
+**Pre-requisite check:**
+- [ ] Verify Burn augment uses correct EoT name (GDD says `burn`, code may have `magic_damage` — resolve before testing)
+
+---
+
 ## UI
 
 > **Not in scope.**

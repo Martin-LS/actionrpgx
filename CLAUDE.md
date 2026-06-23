@@ -7,9 +7,11 @@ Top-down action RPG in the vein of Diablo and Path of Exile — deliberate, buil
 
 ## Docs
 
-- `docs/gdd-mechanics.md` — Game design: combat, skills, EoT, characters, enemies, run structure, win/lose, future notes
+- `docs/gdd-mechanics.md` — Game design: combat, targeting, EoT, focus, damage types, characters, enemies, run structure, win/lose, future notes
+- `docs/gdd-skills.md` — Game design: skill design rules, targeting shapes, AoE, all 11 skill prototypes, damage model
+- `docs/gdd-augments.md` — Game design: Skill Augments, Equipment Augments, augment resolution, augment prototypes
 - `docs/gdd-map.md` — Game design: map generation, chunks, biomes, obstacle props, hollow dark forest
-- `docs/gdd-progression.md` — Game design: meta-progression, gear, augments, crafting, currencies, UI/menus
+- `docs/gdd-progression.md` — Game design: meta-progression, gear slots, currencies, UI/menus
 - `docs/technical-map.md` — Architecture: map generation, MapData, RunConfig, DungeonGenerator algorithm, constants, extension points
 - `docs/technical-scene.md` — Architecture: scene layout, scene flow, core systems table, signals, C# conventions, rendering, third-party tools
 - `docs/technical-systems.md` — Architecture: data types, save format, crafting methods, EoT system, damage pipeline, enemy spawner, drop system
@@ -69,6 +71,12 @@ The character faces **-Y** in Blender (standard convention). Bone local X rotati
 **Before keying any new bone type, run the empirical tail-position test**: apply a +35° X test rotation in Blender, read `bone.tail` world Y, then undo. If Y went positive → positive X is backward → use negative X for forward motion. Never assume — always verify first.
 
 **Do not export to Godot until the user has reviewed and approved the animation in Blender.**
+
+## UI Theming
+
+All UI styling goes through `assets/ui/game_theme.tres`. Use MCP theme tools (`set_theme_color`, `set_theme_stylebox`, `set_theme_font_size`, `set_theme_constant`) to modify it. Read `docs/color-scheme.md` before any theme work.
+
+Procedural or custom solutions (C# mesh construction, hardcoded styleboxes in code) are a **last resort**. Before going that route, stop and discuss with the user to confirm there is no standard Godot themed control that achieves the same result.
 
 ## Animation
 
