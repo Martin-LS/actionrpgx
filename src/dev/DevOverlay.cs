@@ -41,5 +41,12 @@ public partial class DevOverlay : CanvasLayer
 
         var godToggle = GetNode<CheckBox>("DevPanel/VBox/GodModeToggle");
         godToggle.Toggled += on => player.GodMode = on;
+
+        var addMatsBtn = GetNode<Button>("DevPanel/VBox/AddMaterialsButton");
+        addMatsBtn.Pressed += () =>
+        {
+            var manager = GetNode<Character.CharacterManager>("/root/CharacterManager");
+            manager.Profile?.AddMaterial("crafting_common", 500);
+        };
     }
 }

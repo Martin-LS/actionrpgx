@@ -30,10 +30,10 @@ public class CharacterData
         // Archetype base HP and Speed — set directly.
         var (baseHp, baseSpd) = Type switch
         {
-            CharacterType.Warrior => (BalanceConfig.Archetypes.Warrior.MaxHp, BalanceConfig.Archetypes.Warrior.Speed),
-            CharacterType.Rogue   => (BalanceConfig.Archetypes.Rogue.MaxHp,   BalanceConfig.Archetypes.Rogue.Speed),
-            CharacterType.Mage    => (BalanceConfig.Archetypes.Mage.MaxHp,    BalanceConfig.Archetypes.Mage.Speed),
-            _                     => (BalanceConfig.Archetypes.Warrior.MaxHp, BalanceConfig.Archetypes.Warrior.Speed),
+            CharacterType.Warrior => (BalanceConfig.Archetypes.Warrior.MaxHp, BalanceConfig.Archetypes.BaseSpeed),
+            CharacterType.Rogue   => (BalanceConfig.Archetypes.Rogue.MaxHp,   BalanceConfig.Archetypes.BaseSpeed),
+            CharacterType.Mage    => (BalanceConfig.Archetypes.Mage.MaxHp,    BalanceConfig.Archetypes.BaseSpeed),
+            _                     => (BalanceConfig.Archetypes.Warrior.MaxHp, BalanceConfig.Archetypes.BaseSpeed),
         };
         block.SetBase(StatId.MaxHp,  baseHp);
         block.SetBase(StatId.Speed,  baseSpd);

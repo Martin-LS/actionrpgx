@@ -99,8 +99,8 @@ public partial class CharacterScreen : Control
         c.EquippedGear.TryGetValue(ItemSlot.Hat.ToString(),    out var hatInst);
         c.EquippedGear.TryGetValue(ItemSlot.Body.ToString(),   out var bodyInst);
         float effectiveRange = (weaponInst?.Definition?.WeaponRange ?? 1.5f)
-                             + (hatInst?.Definition?.RangeModifier  ?? 0f)
-                             + (bodyInst?.Definition?.RangeModifier  ?? 0f);
+                             * (hatInst?.Definition?.RangeMultiplier  ?? 1f)
+                             * (bodyInst?.Definition?.RangeMultiplier ?? 1f);
 
         _nameLabel.Text  = c.Name;
         _typeLabel.Text  = c.Type.ToString();
@@ -221,7 +221,13 @@ public partial class CharacterScreen : Control
         foreach (Node child in _skillsGrid.GetChildren())
             child.QueueFree();
 
-        var ownedSkills = _manager.Profile.OwnedSkillInstances;
+        var equippedIds = new System.Collections.Generic.HashSet<string>(
+            _manager.GetAll()
+                .SelectMany(c => c.SlottedSkillInstanceIds)
+                .Where(id => !string.IsNullOrEmpty(id)));
+        var ownedSkills = _manager.Profile.OwnedSkillInstances
+            .Where(s => !equippedIds.Contains(s.Id))
+            .ToList();
 
         for (int i = 0; i < Character.ProfileData.MaxInventory; i++)
         {
@@ -1101,7 +1107,7 @@ public partial class CharacterScreen : Control
         if (item.BonusHp            != 0)  sb.Append($"\nHP {item.BonusHp:+#;-#;0}");
         if (item.BonusSpeed         != 0f) sb.Append($"\nSpeed {item.BonusSpeed:+#;-#;0}");
         if (item.WeaponRange        != 0f) sb.Append($"\nWeapon Range {item.WeaponRange:0.#} tiles");
-        if (item.RangeModifier      != 0f) sb.Append($"\nRange Modifier {item.RangeModifier:+0.#;-0.#} tiles");
+        if (item.RangeMultiplier    != 1f) sb.Append($"\nRange ×{item.RangeMultiplier:0.##}");
         if (item.DamageReduction    != 0f) sb.Append($"\nDamage Reduction {item.DamageReduction:P0}");
         if (item.PhysicalResistance != 0f) sb.Append($"\nPhys. Resist {item.PhysicalResistance:P0}");
         if (item.Tags.Length        > 0)   sb.Append($"\nTags: {string.Join(", ", item.Tags)}");

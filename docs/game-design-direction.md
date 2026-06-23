@@ -1,8 +1,8 @@
 # Game Design — Parked Items
 
-Design decisions not yet open for discussion. These are noted here so they are not forgotten, but they are out of scope until the game is far enough along to need them.
+Open design ideas and direction discussions — where the game is or should be heading. This file is for active or parked discussions only.
 
-All resolved design decisions live in the canonical GDD files (`gdd-mechanics.md`, `gdd-progression.md`, `gdd-map.md`).
+Resolved decisions are removed from this file and formalised into the canonical GDD (`gdd-mechanics.md`, `gdd-progression.md`, `gdd-map.md`). Nothing resolved lives here.
 
 ---
 

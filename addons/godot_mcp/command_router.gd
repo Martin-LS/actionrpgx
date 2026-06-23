@@ -40,6 +40,7 @@ func _register_commands() -> void:
 		preload("res://addons/godot_mcp/commands/navigation_commands.gd"),
 		preload("res://addons/godot_mcp/commands/particle_commands.gd"),
 		preload("res://addons/godot_mcp/commands/test_commands.gd"),
+		preload("res://addons/godot_mcp/commands/android_commands.gd"),
 	]
 
 	for cmd_class in command_classes:
@@ -104,6 +105,8 @@ func set_all_tools_disabled(disabled: bool) -> void:
 func _load_tool_config() -> void:
 	var cfg := ConfigFile.new()
 	if cfg.load(TOOL_CONFIG_PATH) != OK:
+		return
+	if not cfg.has_section("disabled_tools"):
 		return
 	for method: String in cfg.get_section_keys("disabled_tools"):
 		if cfg.get_value("disabled_tools", method, false):

@@ -7,7 +7,7 @@ const RESPONSE_PATH := "user://mcp_game_response"
 
 enum State { IDLE, CAPTURING_FRAMES, MONITORING, RECORDING, MOVING_TO, WATCHING_SIGNALS }
 
-var _state: State = State.IDLE
+var _state := State.IDLE
 var _pending_command: bool = false  # Crash recovery flag
 
 # Frame capture state
@@ -147,6 +147,8 @@ func _handle_request() -> void:
 			_cmd_move_to(params)
 		"watch_signals":
 			_cmd_watch_signals(params)
+		"assert_node_state":
+			_cmd_assert_node_state(params)
 		_:
 			_write_response({"error": "Unknown command: %s" % command})
 
@@ -671,6 +673,45 @@ func _cmd_execute_script(params: Dictionary) -> void:
 		_write_response({"error": "code is required"})
 		return
 
+	# Normalize indentation: convert leading spaces to tabs
+	var raw_lines := code.split("\n")
+	var indent_size := 0
+	for raw_line in raw_lines:
+		var spaces := 0
+		while spaces < raw_line.length() and raw_line[spaces] == " ":
+			spaces += 1
+		if spaces > 0 and (indent_size == 0 or spaces < indent_size):
+			indent_size = spaces
+	if indent_size > 0:
+		var space_unit := " ".repeat(indent_size)
+		for idx in raw_lines.size():
+			var rl: String = raw_lines[idx]
+			var tabs := ""
+			while rl.begins_with(space_unit):
+				tabs += "\t"
+				rl = rl.substr(indent_size)
+			raw_lines[idx] = tabs + rl
+
+	# Separate top-level func definitions (place at class level, not inside run())
+	var class_funcs: PackedStringArray = []
+	var body_lines: PackedStringArray = []
+	var i := 0
+	while i < raw_lines.size():
+		var line: String = raw_lines[i]
+		if not line.begins_with("\t") and not line.begins_with(" ") and line.begins_with("func "):
+			class_funcs.append(line)
+			i += 1
+			while i < raw_lines.size():
+				var next_line: String = raw_lines[i]
+				if next_line.is_empty() or next_line.begins_with("\t"):
+					class_funcs.append(next_line)
+					i += 1
+				else:
+					break
+		else:
+			body_lines.append(line)
+			i += 1
+
 	var wrapped := """extends Node
 
 var _mcp_output: Array = []
@@ -684,9 +725,15 @@ func _safe_get(node: Node, prop: String, default: Variant = null) -> Variant:
 		return default
 	return node.get(prop) if prop in node else default
 
-func run() -> Variant:
 """
-	for line in code.split("\n"):
+	# Add user's top-level functions at class level
+	for func_line in class_funcs:
+		wrapped += func_line + "\n"
+	if class_funcs.size() > 0:
+		wrapped += "\n"
+
+	wrapped += "func run() -> Variant:\n"
+	for line in body_lines:
 		wrapped += "\t" + line + "\n"
 	wrapped += "\treturn _mcp_output\n"
 
@@ -952,10 +999,27 @@ func _cmd_click_button_by_text(params: Dictionary) -> void:
 
 	var rect := btn.get_global_rect()
 	var center := rect.get_center()
+	var btn_text_value := btn.text
+
+	# Capture button path before clicking — the click may trigger a scene
+	# transition that removes the node from the tree.
+	var btn_path := str(btn.get_path()) if btn.is_inside_tree() else ""
 
 	# Emit the pressed signal directly — more reliable than Input.parse_input_event
 	# which doesn't always reach GUI Controls.
 	btn.emit_signal("pressed")
+
+	# After the click, the node may have been freed due to scene transition.
+	# Re-check before accessing any node properties.
+	if not is_instance_valid(btn) or not btn.is_inside_tree():
+		_write_response({
+			"clicked": true,
+			"button_text": btn_text_value,
+			"button_path": btn_path,
+			"position": {"x": center.x, "y": center.y},
+			"note": "Button was removed from scene tree after click (likely a scene transition)",
+		})
+		return
 
 	_write_response({
 		"clicked": true,
@@ -1550,6 +1614,67 @@ func _write_response(data: Dictionary) -> void:
 	if file:
 		file.store_string(json)
 		file.close()
+
+
+# ── assert_node_state ─────────────────────────────────────────────────────────
+
+func _cmd_assert_node_state(params: Dictionary) -> void:
+	var node_path: String = params.get("node_path", "")
+	if node_path.is_empty():
+		_write_response({"error": "node_path is required"})
+		return
+
+	var property: String = params.get("property", "")
+	if property.is_empty():
+		_write_response({"error": "property is required"})
+		return
+
+	var node := get_node_or_null(NodePath(node_path))
+	if node == null:
+		_write_response({"error": "Node not found: %s" % node_path})
+		return
+
+	var actual: Variant
+	if ":" in property:
+		actual = node.get_indexed(NodePath(property))
+	else:
+		actual = node.get(property)
+	var expected: Variant = params.get("expected", null)
+	var operator: String = params.get("operator", "eq")
+	var passed: bool = false
+
+	match operator:
+		"eq":
+			passed = (str(actual) == str(expected)) or (actual == expected)
+		"neq":
+			passed = (actual != expected) and (str(actual) != str(expected))
+		"gt":
+			passed = float(actual) > float(expected)
+		"lt":
+			passed = float(actual) < float(expected)
+		"gte":
+			passed = float(actual) >= float(expected)
+		"lte":
+			passed = float(actual) <= float(expected)
+		"contains":
+			passed = str(actual).contains(str(expected))
+		"type_is":
+			passed = typeof(actual) == int(expected) or type_string(typeof(actual)) == str(expected)
+		_:
+			_write_response({"error": "Unknown operator: %s" % operator})
+			return
+
+	_write_response({
+		"result": {
+			"assertion": "node_state",
+			"node_path": node_path,
+			"property": property,
+			"operator": operator,
+			"expected": _serialize_value(expected),
+			"actual": _serialize_value(actual),
+			"passed": passed,
+		}
+	})
 
 
 func _serialize_value(value: Variant) -> Variant:

@@ -26,13 +26,17 @@ anchor_right = 0.5
 offset_left = -175.0
 offset_top = 38.0
 offset_right = 175.0
-offset_bottom = 88.0
+offset_bottom = 250.0
 grow_horizontal = 2
 grow_vertical = 2
 
 [node name="VBox" type="VBoxContainer" parent="DevPanel" unique_id=1955350479]
 layout_mode = 2
 theme_override_constants/separation = 8
+
+[node name="AddMaterialsButton" type="Button" parent="DevPanel/VBox" unique_id=631077519]
+layout_mode = 2
+text = "+500 Common"
 
 [node name="SpeedRow" type="HBoxContainer" parent="DevPanel/VBox" unique_id=87377584]
 layout_mode = 2

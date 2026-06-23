@@ -13,6 +13,8 @@ public partial class EnemyController : CharacterBody3D
         GD.Load<PackedScene>("res://src/meta/coin_pickup.tscn");
     private static readonly PackedScene HealthScene =
         GD.Load<PackedScene>("res://src/health/health_pickup.tscn");
+    private static readonly PackedScene SlowVfxScene =
+        GD.Load<PackedScene>("res://src/vfx/entity_debuff_vfx.tscn");
     [Signal] public delegate void DiedEventHandler(Vector3 position);
     [Signal] public delegate void DamageTakenEventHandler(float effectiveDamage, bool isMagic, bool isCrit);
 
@@ -41,6 +43,7 @@ public partial class EnemyController : CharacterBody3D
     private readonly Dictionary<string, EotInstance> _activeEots = new();
     private float _baseSpeed;
     private AnimationNodeStateMachinePlayback? _smPlayback;
+    private Node3D? _slowVfx;
 
     public override void _Ready()
     {
@@ -232,13 +235,22 @@ public partial class EnemyController : CharacterBody3D
     private void ApplyEotEffect(EotData eot)
     {
         if (eot.Id == "slow")
+        {
             Speed = _baseSpeed * (1f - eot.SlowFraction);
+            _slowVfx = SlowVfxScene.Instantiate<Node3D>();
+            AddChild(_slowVfx);
+            _slowVfx.GetNode<GpuParticles3D>("Whirl").Emitting = true;
+        }
     }
 
     private void RemoveEotEffect(EotData eot)
     {
         if (eot.Id == "slow")
+        {
             Speed = _baseSpeed;
+            _slowVfx?.QueueFree();
+            _slowVfx = null;
+        }
     }
 
     public void TakeDamage(float rawAmount, Items.DamageType type, bool isCrit = false)

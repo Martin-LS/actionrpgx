@@ -34,7 +34,7 @@ public partial class CharacterManager : Node
         var (weapon, hat, body, ring) = c.Type switch
         {
             CharacterType.Warrior => ("sword_t1", "heavy_hat_t1",  "heavy_body_t1",  "ring_t1"),
-            CharacterType.Rogue   => ("bow_t1",   "light_hat_t1",  "light_body_t1",  "ring_t1"),
+            CharacterType.Rogue   => ("bow_t1",   "medium_hat_t1", "medium_body_t1", "ring_t1"),
             CharacterType.Mage    => ("wand_t1",  "medium_hat_t1", "medium_body_t1", "ring_t1"),
             _                     => ("sword_t1", "heavy_hat_t1",  "heavy_body_t1",  "ring_t1"),
         };

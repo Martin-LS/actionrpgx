@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://cen1o0gpbaswl"]
 
 [sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_1jf6v"]
+particle_flag_align_y = true
 emission_shape = 6
 emission_ring_axis = Vector3(0, 1, 0)
 emission_ring_height = 10.0
@@ -9,16 +10,13 @@ emission_ring_inner_radius = 60.0
 emission_ring_cone_angle = 5.0
 direction = Vector3(0, 0, 0)
 spread = 0.0
-initial_velocity_min = 0.0
-initial_velocity_max = 0.0
+gravity = Vector3(0, 0, 0)
 tangential_accel_min = 15.0
 tangential_accel_max = 25.0
 damping_min = 5.0
 damping_max = 8.0
-gravity = Vector3(0, 0, 0)
 scale_min = 3.0
 scale_max = 5.0
-particle_flag_align_y = true
 color = Color(0.75, 0.7, 0.6, 1)
 
 [sub_resource type="CapsuleMesh" id="CapsuleMesh_1jf6v"]
@@ -27,7 +25,7 @@ height = 5.0
 radial_segments = 4
 rings = 2
 
-[node name="CycloneVfx" type="Node3D" unique_id=1710824637]
+[node name="SelfChanneledTickVfx" type="Node3D" unique_id=1710824637]
 
 [node name="Whirl" type="GPUParticles3D" parent="." unique_id=1173450861]
 emitting = false

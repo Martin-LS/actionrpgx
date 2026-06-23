@@ -17,7 +17,7 @@ public record ItemData(
     int            BonusHp            = 0,
     float          BonusSpeed         = 0f,
     float          DamageReduction    = 0f,
-    float          RangeModifier      = 0f,
+    float          RangeMultiplier    = 1f,
     // Accessory fields
     float          PhysicalResistance = 0f
 )

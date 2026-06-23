@@ -21,6 +21,7 @@ public static class RecipeRegistry
         ["recipe_ring_t1"]         = new("recipe_ring_t1",         "ring_t1",         RecipeType.Gear,    new() { ["crafting_common"] = 1 }),
 
         // Skill recipes — prototype library (one added per test session)
+        ["recipe_entity_burst"]        = new("recipe_entity_burst",        "entity_burst",        RecipeType.Skill, new() { ["crafting_common"] = 1 }),
         ["recipe_self_channeled_tick"] = new("recipe_self_channeled_tick", "self_channeled_tick", RecipeType.Skill, new() { ["crafting_common"] = 1 }),
         ["recipe_self_duration_tick"]  = new("recipe_self_duration_tick",  "self_duration_tick",  RecipeType.Skill, new() { ["crafting_common"] = 1 }),
         ["recipe_self_burst"]          = new("recipe_self_burst",          "self_burst",          RecipeType.Skill, new() { ["crafting_common"] = 1 }),

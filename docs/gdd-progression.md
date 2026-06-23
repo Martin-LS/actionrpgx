@@ -166,9 +166,9 @@ Range values are expressed in **tiles** (the canonical internal distance unit). 
 
 | Weapon type | Base Damage (tier 1) | Weapon Range | Delivery | Identity bonus (tier 1) |
 |-------------|----------------------|--------------|----------|------------------------|
-| Sword       | 15                   | 1 tile       | `Melee`  | +10% physical damage (applies when skill is physical type) |
-| Bow         | 12                   | 7 tiles      | `Ranged` | +8% crit chance (type-agnostic — applies always) |
-| Wand        | 18                   | 5 tiles      | `Ranged` | +10% magic damage (applies when skill is magic type) + EoT affinity (higher base trigger chance for EoT augments) |
+| Sword       | 15                   | 1.5 tiles    | `Melee`  | +10% physical damage (applies when skill is physical type) |
+| Bow         | 12                   | 2.5 tiles    | `Ranged` | +8% crit chance (type-agnostic — applies always) |
+| Wand        | 18                   | 2 tiles      | `Ranged` | +10% magic damage (applies when skill is magic type) + EoT affinity (higher base trigger chance for EoT augments) |
 
 **Tier scaling:** tier 2 = ×1.5 base damage, tier 3 = ×2.0 base damage. Identity bonus % also scales with tier (TBD). All values are placeholder — owned by the Balancer.
 
@@ -182,27 +182,27 @@ Hat and Body are the two armour equipment slots. Each piece has a **category** t
 
 Any character can equip any category in any slot. Slots are independent — a character can mix freely (e.g. Heavy hat, Light body).
 
-| Category | Equipment tag | HP       | Speed   | Damage Reduction | Range Modifier     |
-|----------|---------------|----------|---------|------------------|--------------------|
-| Heavy    | `Heavy`       | High     | Penalty | Yes (%)          | −1.5 tiles per piece |
-| Medium   | `Medium`      | Moderate | Neutral | —                | None               |
-| Light    | `Light`       | Low      | Bonus   | —                | +1.5 tiles per piece |
+| Category | Equipment tag | HP       | Speed   | Damage Reduction | Range Multiplier (per piece) |
+|----------|---------------|----------|---------|------------------|------------------------------|
+| Heavy    | `Heavy`       | High     | Penalty | Yes (%)          | ×0.85 (placeholder — Balancer v2+) |
+| Medium   | `Medium`      | Moderate | Neutral | —                | ×1.00 (neutral)              |
+| Light    | `Light`       | Low      | Bonus   | —                | ×1.15 (placeholder — Balancer v2+) |
 
 Stats above apply per piece — each slot contributes its category's stats independently.
 
-**Range Modifier only applies to ranged weapons** — this is a universal rule for all armour categories. If the equipped weapon's `Delivery` is `Ranged`, both hat and body Range Modifiers are added to Effective Range. If `Delivery` is `Melee`, Range Modifier has no effect — a sword's reach is not shortened by heavy plate, and a Light archer's range bonus doesn't extend a sword swing.
+**Range Multiplier applies to all weapons.** Each armour piece multiplies Effective Range independently. Two pieces of the same category compound: e.g. two Heavy pieces at ×0.85 each → ×0.72 total. The multiplicative formula means higher base ranges are pulled down more by heavy armour than lower base ranges — a 2.5-tile bow takes a larger absolute hit from heavy armour than a 1.5-tile sword.
 
 **Effective Range** (visible on the character sheet):
-- Ranged weapon: `Weapon Range + hat Range Modifier + body Range Modifier + range buff bonus` (in tiles)
-- Melee weapon: `Weapon Range` (Range Modifiers ignored)
+- `Weapon Range × hat Range Multiplier × body Range Multiplier` (in tiles), then × `GameScale.TileSize` → world units
+- Range buff bonuses (v2+) are applied after the multiplier step as a flat tile addition.
 
 Displayed as tiles in the UI.
 
-**Range buffs (v2+):** Skills may temporarily or permanently modify Effective Range mid-run (e.g. a Shout that increases attack range for X seconds). Any such buff adds a flat tile bonus on top of the baseline formula. Effective Range is therefore not fixed at run start — the baseline is calculated at run start, but it is recalculated whenever a range buff is applied or expires. All skill cast distance checks use the current Effective Range at the moment of firing.
+**Range buffs (v2+):** Skills may temporarily or permanently modify Effective Range mid-run. Any such buff adds a flat tile bonus on top of the multiplied baseline. Effective Range is recalculated whenever a range buff is applied or expires.
 
 **Visuals (in-run):** Hat, Body, and Weapon are rendered on the character model. Ring has no visual representation.
 
-Heavy suits close-range builds taking hits; Light suits ranged builds that kite; Medium suits mixed or flexible builds. Mixing categories (e.g. Heavy hat, Light body) produces a middle-ground Effective Range for ranged weapons.
+Heavy suits close-range builds taking hits; Light suits ranged builds that kite; Medium suits mixed or flexible builds. Mixing categories (e.g. Heavy hat, Light body) produces an intermediate multiplier.
 
 #### Ring
 

@@ -4,9 +4,9 @@ public static class BalanceConfig
 {
     public static class Weapons
     {
-        public const float SwordRange = 1f;   // tiles
-        public const float BowRange   = 7f;
-        public const float WandRange  = 5f;
+        public const float SwordRange = 1.5f; // tiles
+        public const float BowRange   = 2.5f;
+        public const float WandRange  = 2f;
 
         // Base damage (tier 1) — placeholder, owned by Balancer
         public const float SwordBaseDamage  = 15f;
@@ -25,19 +25,19 @@ public static class BalanceConfig
         public const int   HeavyBonusHp         = 20;
         public const float HeavyBonusSpeed       = -20f;
         public const float HeavyDamageReduction  = 0.10f;
-        public const float HeavyRangeModifier    = -1.5f; // tiles; ranged weapons only
+        public const float HeavyRangeMultiplier   = 0.85f; // per piece; placeholder — Balancer v2+
 
         // Medium
         public const int   MediumBonusHp         = 10;
         public const float MediumBonusSpeed       = 0f;
         public const float MediumDamageReduction  = 0f;
-        public const float MediumRangeModifier    = 0f;
+        public const float MediumRangeMultiplier  = 1.0f; // neutral
 
         // Light
         public const int   LightBonusHp          = 0;
         public const float LightBonusSpeed        = 20f;
         public const float LightDamageReduction   = 0f;
-        public const float LightRangeModifier     = 1.5f;
+        public const float LightRangeMultiplier   = 1.15f; // per piece; placeholder — Balancer v2+
     }
 
     public static class Accessories
@@ -48,38 +48,34 @@ public static class BalanceConfig
     public static class Skills
     {
         public const float EntityBurstCooldown    = 0.8f;
-        public const float EntityBurstRange       = 200f; // world units
         public const float MeleeWindupFraction    = 0.35f; // fraction of cooldown before damage lands
 
         public const float SelfChanneledTickCooldown = 0.25f; // tick interval (4 hits/sec)
         public const float SelfChanneledTickRange    = 150f;
 
         public const float SelfBurstCooldown = 1.5f;
-        public const float SelfBurstRange    = 300f;
+        public const float SelfBurstRange    = 100f;
 
-        public const float SelfDurationTickCooldown = 1.0f; // damage tick interval
-        public const float SelfDurationTickRange    = 250f;
+        public const float SelfDurationTickCooldown  = 1.0f;  // damage tick interval
+        public const float SelfDurationTickDuration  = 5.0f;  // active phase length
+        public const float SelfDurationTickRange     = 108f;  // 3 tiles
 
         // Prototype: Fixed-Zone-Burst — test values, owned by Balancer
         public const float FixedZoneBurstCooldown    = 1.0f;
         public const float FixedZoneBurstRange       = 180f; // cast range (5 tiles)
         public const float FixedZoneBurstZoneRadius  = 72f;  // blast radius at landing (2 tiles)
-        public const float FixedZoneBurstDamageMult  = 1.0f;
 
         // Prototype: Windup-Burst — test values, owned by Balancer
         public const float WindupBurstCooldown    = 3.0f;
         public const float WindupBurstRange       = 180f;
         public const float WindupBurstZoneRadius  = 108f; // 3 tiles
         public const float WindupBurstWindUp      = 1.5f;
-        public const float WindupBurstDamageMult  = 2.0f;
 
         // Prototype: Tracked-Tick — test values, owned by Balancer
         public const float TrackedTickCooldown   = 3.0f;
-        public const float TrackedTickRange      = 180f;
         public const float TrackedTickZoneRadius = 72f;  // 2 tiles
         public const float TrackedTickDuration   = 5.0f;
         public const float TrackedTickRate       = 1.0f;
-        public const float TrackedTickDamageMult = 0.4f;
 
         // Prototype: Triggered-Zone-Burst — test values, owned by Balancer
         public const float TriggeredZoneBurstCooldown     = 1.5f;
@@ -88,7 +84,6 @@ public static class BalanceConfig
         public const float TriggeredZoneBurstZoneRadius   = 108f;  // 3-tile blast
         public const float TriggeredZoneBurstDuration     = 30.0f;
         public const float TriggeredZoneBurstArmTime      = 0.5f;
-        public const float TriggeredZoneBurstDamageMult   = 2.0f;
 
         // Prototype: Stackable-Zone — test values, owned by Balancer
         public const float StackableZoneCooldown   = 2.0f;
@@ -96,11 +91,9 @@ public static class BalanceConfig
         public const float StackableZoneZoneRadius = 72f;
         public const float StackableZoneDuration   = 10.0f;
         public const float StackableZoneRate       = 1.0f;
-        public const float StackableZoneDamageMult = 0.4f;
 
         // Prototype: Entity-Debuff — test values, owned by Balancer
         public const float EntityDebuffCooldown = 3.0f;
-        public const float EntityDebuffRange    = 180f;
 
         // Prototype: Fixed-Zone-Tick — test values, owned by Balancer
         public const float FixedZoneTickCooldown    = 4.0f;
@@ -108,7 +101,6 @@ public static class BalanceConfig
         public const float FixedZoneTickZoneRadius  = 72f;
         public const float FixedZoneTickDuration    = 5.0f;
         public const float FixedZoneTickRate        = 1.0f; // seconds between ticks
-        public const float FixedZoneTickDamageMult  = 0.4f; // per tick, hits multiple times
     }
 
     public static class Focus
@@ -140,9 +132,6 @@ public static class BalanceConfig
         public const float FixedZoneBurstFocusCost = 15f;
         public const float FixedZoneTickFocusCost  = 20f;
 
-        // Per-skill type damage multipliers — placeholder, owned by Balancer
-        public const float SelfChanneledTickDamageMultiplier = 0.4f;
-        public const float SelfBurstDamageMultiplier         = 0.8f;
     }
 
     public static class Eots
@@ -194,29 +183,27 @@ public static class BalanceConfig
 
     public static class Archetypes
     {
+        public const float BaseSpeed = 80f;
+
         public static class Warrior
         {
             public const float MaxHp  = 150f;
-            public const float Speed  = 110f;
         }
 
         public static class Rogue
         {
             public const float MaxHp  = 80f;
-            public const float Speed  = 260f;
         }
 
         public static class Mage
         {
             public const float MaxHp  = 100f;
-            public const float Speed  = 200f;
         }
     }
 
     public static class LevelUp
     {
-        public const float HpBonusPerLevel     = 5f;
-        public const float DamageBonusPerLevel = 0.02f; // +2% per level, cumulative — placeholder, owned by Balancer
+        public const float HpBonusPerLevel = 5f;
     }
 
     public static class SkillAugments

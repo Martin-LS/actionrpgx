@@ -8,7 +8,7 @@ public record SkillData(
     SkillType            Type,
     string[]             Tags,
     float                Cooldown,
-    float                Range,
+    float                Range              = 0f,
     float                FocusCost          = 0f,
     string               IconPath           = "",
     string               Description        = "",
@@ -24,5 +24,6 @@ public record SkillData(
     float                ArmTime           = 0f,
     int                  TriggerCount      = 0,
     string[]             InherentEotIds    = null!,
-    DamageType           DamageType        = DamageType.Physical
+    DamageType           DamageType        = DamageType.Physical,
+    string?              BasedOn           = null
 );

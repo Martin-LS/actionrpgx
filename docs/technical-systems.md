@@ -116,10 +116,10 @@ Single weapon per character (v1). `WeaponController` manages:
 **Damage model — weapon is the root of all damage.** `PlayerController` computes damage at run start (and on level-up) via `ApplyWeaponDamage()` and pushes the results into `WeaponController`. Both pools are always pre-computed; each slot selects its pool from `skill.DamageType` at fire time:
 
 ```
-levelBonus = 1 + (level - 1) × 0.02    // cumulative level bonus (DamageBonusPerLevel)
 // Both pools pre-computed from StatBlock — skill.DamageType selects the pool at fire time
-physDmg  = weapon.BaseDamage × statBlock.Get(PhysicalDamage) × levelBonus × (1 + weapon.DamageBonus)
-magicDmg = weapon.BaseDamage × statBlock.Get(MagicDamage)    × levelBonus × (1 + weapon.DamageBonus)
+// Damage increase per level is implicit: primary stat growth raises PhysicalDamage/MagicDamage multipliers
+physDmg  = weapon.BaseDamage × statBlock.Get(PhysicalDamage) × (1 + weapon.DamageBonus)
+magicDmg = weapon.BaseDamage × statBlock.Get(MagicDamage)    × (1 + weapon.DamageBonus)
 ```
 
 `WeaponController` receives two calls from `PlayerController.ApplyWeaponDamage()`:
@@ -563,17 +563,17 @@ Speed              = statBlock.Get(Speed)
 PhysicalResistance = statBlock.Get(PhysicalResistance)
 MagicResistance    = statBlock.Get(MagicResistance)
 DamageReduction    = hat.DamageReduction + body.DamageReduction  // flat sum, not multiplied
-EffectiveRange     = weapon.PreferredDelivery == "Ranged"
-                       ? (weapon.WeaponRange + hat.RangeModifier + body.RangeModifier) * GameScale.TileSize
-                       : weapon.WeaponRange * GameScale.TileSize
-                     // Range Modifiers only apply to ranged weapons — see GDD § Hat & Body
+EffectiveRange     = weapon.WeaponRange * hat.RangeMultiplier * body.RangeMultiplier * GameScale.TileSize
+                     // Multiplicative: each armour piece multiplies the running total independently.
+                     // Higher base ranges take a larger absolute hit from heavy armour — by design.
+                     // Applies to all weapons. RangeMultiplier = 1.0 for Medium (neutral).
                      // tile values × TileSize → world units; standalone float, not part of StatId
 
 // Weapon-rooted damage — computed in PlayerController.ApplyWeaponDamage():
 // Both pools pre-computed; slot.Skill.DamageType selects which fires at runtime
-levelBonus         = 1 + (level - 1) × BalanceConfig.LevelUp.DamageBonusPerLevel
-physDmg            = weapon.BaseDamage × statBlock.Get(PhysicalDamage) × levelBonus × (1 + weapon.DamageBonus)
-magicDmg           = weapon.BaseDamage × statBlock.Get(MagicDamage)    × levelBonus × (1 + weapon.DamageBonus)
+// Damage increase per level is implicit through primary stat growth (no separate level multiplier)
+physDmg  = weapon.BaseDamage × statBlock.Get(PhysicalDamage) × (1 + weapon.DamageBonus)
+magicDmg = weapon.BaseDamage × statBlock.Get(MagicDamage)    × (1 + weapon.DamageBonus)
 
 WeaponController.SetDamage(physDmg, magicDmg)
 WeaponController.SetCritMultiplier(statBlock.Get(CritDamage))  // Str-driven; fixed 1.5× in v1

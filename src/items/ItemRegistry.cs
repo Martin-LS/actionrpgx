@@ -9,7 +9,7 @@ public static class ItemRegistry
         new Dictionary<string, ItemData>
         {
             // Weapons
-            // WeaponRange and RangeModifier are in tiles (1 tile = GameScale.TileSize world units).
+            // WeaponRange is in tiles (1 tile = GameScale.TileSize world units). RangeMultiplier is dimensionless.
             ["sword_t1"] = new("sword_t1", "Sword", ItemSlot.Weapon,
                 IconPath: "res://assets/icons/items/iron_sword.png",
                 WeaponRange: BalanceConfig.Weapons.SwordRange, PreferredDelivery: "Melee",
@@ -29,24 +29,24 @@ public static class ItemRegistry
             // Hats
             ["heavy_hat_t1"]  = new("heavy_hat_t1",  "Heavy Hat",  ItemSlot.Hat,
                 IconPath: "res://assets/icons/items/chain_mail.png",
-                ArmorCategory: ArmorCategory.Heavy,  BonusHp: BalanceConfig.Armour.HeavyBonusHp,  BonusSpeed: BalanceConfig.Armour.HeavyBonusSpeed,  DamageReduction: BalanceConfig.Armour.HeavyDamageReduction,  RangeModifier: BalanceConfig.Armour.HeavyRangeModifier)  { Tags = new[] { "Heavy" } },
+                ArmorCategory: ArmorCategory.Heavy,  BonusHp: BalanceConfig.Armour.HeavyBonusHp,  BonusSpeed: BalanceConfig.Armour.HeavyBonusSpeed,  DamageReduction: BalanceConfig.Armour.HeavyDamageReduction,  RangeMultiplier: BalanceConfig.Armour.HeavyRangeMultiplier)  { Tags = new[] { "Heavy" } },
             ["medium_hat_t1"] = new("medium_hat_t1", "Medium Hat", ItemSlot.Hat,
                 IconPath: "res://assets/icons/items/mage_robe.png",
-                ArmorCategory: ArmorCategory.Medium, BonusHp: BalanceConfig.Armour.MediumBonusHp, BonusSpeed: BalanceConfig.Armour.MediumBonusSpeed, DamageReduction: BalanceConfig.Armour.MediumDamageReduction, RangeModifier: BalanceConfig.Armour.MediumRangeModifier) { Tags = new[] { "Medium" } },
+                ArmorCategory: ArmorCategory.Medium, BonusHp: BalanceConfig.Armour.MediumBonusHp, BonusSpeed: BalanceConfig.Armour.MediumBonusSpeed, DamageReduction: BalanceConfig.Armour.MediumDamageReduction, RangeMultiplier: BalanceConfig.Armour.MediumRangeMultiplier) { Tags = new[] { "Medium" } },
             ["light_hat_t1"]  = new("light_hat_t1",  "Light Hat",  ItemSlot.Hat,
                 IconPath: "res://assets/icons/items/leather_vest.png",
-                ArmorCategory: ArmorCategory.Light,  BonusHp: BalanceConfig.Armour.LightBonusHp,  BonusSpeed: BalanceConfig.Armour.LightBonusSpeed,  DamageReduction: BalanceConfig.Armour.LightDamageReduction,  RangeModifier: BalanceConfig.Armour.LightRangeModifier)  { Tags = new[] { "Light" } },
+                ArmorCategory: ArmorCategory.Light,  BonusHp: BalanceConfig.Armour.LightBonusHp,  BonusSpeed: BalanceConfig.Armour.LightBonusSpeed,  DamageReduction: BalanceConfig.Armour.LightDamageReduction,  RangeMultiplier: BalanceConfig.Armour.LightRangeMultiplier)  { Tags = new[] { "Light" } },
 
             // Body armour
             ["heavy_body_t1"]  = new("heavy_body_t1",  "Heavy Body",  ItemSlot.Body,
                 IconPath: "res://assets/icons/items/chain_mail.png",
-                ArmorCategory: ArmorCategory.Heavy,  BonusHp: BalanceConfig.Armour.HeavyBonusHp,  BonusSpeed: BalanceConfig.Armour.HeavyBonusSpeed,  DamageReduction: BalanceConfig.Armour.HeavyDamageReduction,  RangeModifier: BalanceConfig.Armour.HeavyRangeModifier)  { Tags = new[] { "Heavy" } },
+                ArmorCategory: ArmorCategory.Heavy,  BonusHp: BalanceConfig.Armour.HeavyBonusHp,  BonusSpeed: BalanceConfig.Armour.HeavyBonusSpeed,  DamageReduction: BalanceConfig.Armour.HeavyDamageReduction,  RangeMultiplier: BalanceConfig.Armour.HeavyRangeMultiplier)  { Tags = new[] { "Heavy" } },
             ["medium_body_t1"] = new("medium_body_t1", "Medium Body", ItemSlot.Body,
                 IconPath: "res://assets/icons/items/mage_robe.png",
-                ArmorCategory: ArmorCategory.Medium, BonusHp: BalanceConfig.Armour.MediumBonusHp, BonusSpeed: BalanceConfig.Armour.MediumBonusSpeed, DamageReduction: BalanceConfig.Armour.MediumDamageReduction, RangeModifier: BalanceConfig.Armour.MediumRangeModifier) { Tags = new[] { "Medium" } },
+                ArmorCategory: ArmorCategory.Medium, BonusHp: BalanceConfig.Armour.MediumBonusHp, BonusSpeed: BalanceConfig.Armour.MediumBonusSpeed, DamageReduction: BalanceConfig.Armour.MediumDamageReduction, RangeMultiplier: BalanceConfig.Armour.MediumRangeMultiplier) { Tags = new[] { "Medium" } },
             ["light_body_t1"]  = new("light_body_t1",  "Light Body",  ItemSlot.Body,
                 IconPath: "res://assets/icons/items/leather_vest.png",
-                ArmorCategory: ArmorCategory.Light,  BonusHp: BalanceConfig.Armour.LightBonusHp,  BonusSpeed: BalanceConfig.Armour.LightBonusSpeed,  DamageReduction: BalanceConfig.Armour.LightDamageReduction,  RangeModifier: BalanceConfig.Armour.LightRangeModifier)  { Tags = new[] { "Light" } },
+                ArmorCategory: ArmorCategory.Light,  BonusHp: BalanceConfig.Armour.LightBonusHp,  BonusSpeed: BalanceConfig.Armour.LightBonusSpeed,  DamageReduction: BalanceConfig.Armour.LightDamageReduction,  RangeMultiplier: BalanceConfig.Armour.LightRangeMultiplier)  { Tags = new[] { "Light" } },
 
             // Rings (no tags — universal augments only)
             ["ring_t1"] = new("ring_t1", "Ring", ItemSlot.Ring,

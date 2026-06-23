@@ -1,0 +1,36 @@
+[gd_scene format=3 uid="uid://ctasl72cycui0"]
+
+[sub_resource type="Gradient" id="Gradient_bfh8h"]
+offsets = PackedFloat32Array(0, 0.5, 1)
+colors = PackedColorArray(0.478, 0.627, 0.706, 1, 0.29, 0.408, 0.471, 1, 0.29, 0.408, 0.471, 0)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_0nsga"]
+gradient = SubResource("Gradient_bfh8h")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_ld83q"]
+direction = Vector3(0, 1, 0)
+spread = 180.0
+initial_velocity_min = 1.0
+initial_velocity_max = 2.5
+orbit_velocity_min = 0.5
+orbit_velocity_max = 1.5
+gravity = Vector3(0, 0, 0)
+damping_min = 1.0
+damping_max = 2.0
+scale_min = 4.0
+scale_max = 8.0
+color_ramp = SubResource("GradientTexture1D_0nsga")
+
+[sub_resource type="SphereMesh" id="SphereMesh_bfh8h"]
+radius = 2.0
+height = 4.0
+
+[node name="EntityDebuffVfx" type="Node3D" unique_id=125123596]
+
+[node name="Whirl" type="GPUParticles3D" parent="." unique_id=1321932401]
+emitting = false
+amount = 24
+lifetime = 2.0
+randomness = 0.3
+process_material = SubResource("ParticleProcessMaterial_ld83q")
+draw_pass_1 = SubResource("SphereMesh_bfh8h")

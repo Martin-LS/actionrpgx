@@ -38,33 +38,3 @@ text = "End Run"
 [node name="WarningLabel" type="Label" parent="Panel/VBox/HBox" unique_id=1767933917]
 layout_mode = 2
 text = "All progress from this run will be lost."
-
-[node name="DebugSeparator" type="HSeparator" parent="Panel/VBox" unique_id=725145105]
-layout_mode = 2
-
-[node name="DebugSection" type="VBoxContainer" parent="Panel/VBox" unique_id=1839824772]
-layout_mode = 2
-theme_override_constants/separation = 8
-
-[node name="SpeedRow" type="HBoxContainer" parent="Panel/VBox/DebugSection" unique_id=2084309944]
-layout_mode = 2
-theme_override_constants/separation = 8
-
-[node name="SpeedLabel" type="Label" parent="Panel/VBox/DebugSection/SpeedRow" unique_id=729940274]
-custom_minimum_size = Vector2(110, 0)
-layout_mode = 2
-text = "Speed: 200"
-vertical_alignment = 1
-
-[node name="SpeedSlider" type="HSlider" parent="Panel/VBox/DebugSection/SpeedRow" unique_id=1209354731]
-custom_minimum_size = Vector2(220, 0)
-layout_mode = 2
-size_flags_horizontal = 3
-min_value = 50.0
-max_value = 500.0
-step = 10.0
-value = 200.0
-
-[node name="RangeToggle" type="CheckBox" parent="Panel/VBox/DebugSection" unique_id=660866268]
-layout_mode = 2
-text = "Attack Range"

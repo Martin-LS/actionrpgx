@@ -20,8 +20,24 @@ Every run makes the character permanently stronger: level and XP carry over, sta
 
 ### Movement
 - Top-down, 8-directional
-- [TBD] Speed, acceleration values
 - **v1:** WASD movement + Space dodge roll. No movement skills.
+
+**Move speed model — all archetypes share one base speed.** Speed is not an archetype identity stat — every archetype starts at the same base. Speed variance comes entirely from gear and effects:
+
+| Source | Effect |
+|---|---|
+| Archetype base | Shared flat value (all archetypes) |
+| Heavy armour | −% per piece (hat + body each contribute) |
+| Light armour | +% per piece |
+| Medium armour | No modifier |
+| Slow EoT | −% for duration |
+| Dash Reflex augment | Temporary +% on hit received |
+
+- Rogue feels faster naturally because Light armour is their default — not because of a higher base
+- Primary stats (Str/Dex/Int) do not affect speed
+- Level progression does not affect speed
+- Movement is instant top-speed — no acceleration or deceleration
+- Speed values are placeholder, owned by the Balancer
 
 ### Combat
 
@@ -42,7 +58,9 @@ The **skill bar** on the run HUD shows the slotted skill, its cooldown state, an
 
 **Damage model.** The weapon provides the base damage number. The skill defines the damage type. Delivery (how the attack animates) is always driven by the equipped weapon — a Sword always swings, a Bow always shoots, a Wand always fires a bolt — regardless of which skill is equipped.
 
-Damage output scales through the archetype's primary stat growth — a Warrior gains Strength faster per level, which converts to higher PhysicalDamage; a Mage gains Intelligence faster, which converts to higher MagicDamage. A mismatched build (e.g. Warrior equipping a magic-type skill) is viable but produces lower output because the stat driving that damage type grows slowly. See Archetype Stat Multipliers for the full formula.
+**Weapon bonus is type-agnostic.** Each weapon type carries an identity bonus (e.g. Sword +10% damage, Wand +10% damage, Bow +8% crit chance). This bonus applies to all damage the character deals regardless of skill damage type — a Sword warrior casting a magic skill still benefits from the Sword's damage bonus. There are no skill-type gates on weapon bonuses.
+
+Damage output scales through the archetype's primary stat growth — a Warrior gains Strength faster per level, which converts to higher PhysicalDamage; a Mage gains Intelligence faster, which converts to higher MagicDamage. A mismatched build (e.g. Warrior equipping a magic-type skill) is viable but produces lower output because the stat multiplier for that damage type grows slowly. The weapon bonus never blocks or reduces mismatched output — only the stat multiplier is weaker. See Archetype Stat Multipliers for the full formula.
 
 ### Targeting
 
@@ -84,7 +102,7 @@ Every skill declares one of three targeting shapes. The targeting system resolve
 |---|---|---|
 | **Entity** | Effective Range (weapon + armour + buffs) | You are reaching out to hit an enemy — your weapon's reach determines how far you can do that |
 | **Position** | Skill's own `Range` field | You are placing an effect on the ground — this is a skill property, not a weapon property. A sword warrior can drop a zone as far as a wand mage if the skill allows it. |
-| **Self** | Skill's own `Range` field | The skill defines its own radius — a wide Self-Duration-Tick radius on a sword warrior should not be shrunk by the sword's 1-tile reach |
+| **Self** | Skill's own `Range` field | The skill defines its own radius — a wide Self-Duration-Tick radius on a sword warrior should not be shrunk by the sword's 1.5-tile reach |
 
 - **Entity skills always use Effective Range.** A new Entity skill must not define a separate cast range — it inherits the character's gear-driven range automatically.
 - **Position, Self, and Channeled skills always use their own `Range` field.** This is a skill property, not a gear property. Weapon and armour have no influence on zone placement distance or self/channeled radius.
@@ -162,7 +180,38 @@ Both player-received and enemy-received hits produce damage numbers. There is no
 
 There is no Passive skill type on the skill bar. Everything in a skill slot requires player input to fire. Persistent stat buffs and background effects belong on Equipment Augments (e.g. Mending, Retaliation) — not skill slots. Skills like War Cry stay on the skill bar because they are intentional activations with cooldowns, not background passives.
 
-**Skill tags — not in v1.** Skills do not carry tags in v1. Tags may be added post-v1 as a design tool but not for augment-gating purposes — the no-gate philosophy holds. Any augment can socket into any skill regardless of skill type. Tags, if introduced later, would be additive (enabling synergies) not restrictive.
+**Named skills are clones of prototypes — no runtime template system.** When a named skill (e.g. Strike) is created from a prototype (e.g. Entity-Burst), it is a complete standalone definition. All values are copied at authoring time; the prototype has no runtime relationship to the named skill after that. Changes to a prototype never cascade to existing named skills or crafted instances. The `BasedOn` field on `SkillData` records which prototype a named skill was cloned from — documentation only, no runtime behaviour. This keeps item instances stable and predictable: a crafted Strike is never changed by a prototype balance update without the designer explicitly editing Strike's definition.
+
+**Skill tags — not in v1 (except AoE).** Skills do not carry tags in v1 as a general system. The one exception is the `AoE` tag — it is introduced now because the modifier math for area scaling needs a hook, and the tag defines eligibility cleanly. All other tags are post-v1. Tags are additive (enabling synergies) not restrictive — the no-gate philosophy holds; any augment can socket into any skill regardless of tags.
+
+#### Area of Effect (AoE)
+
+Any skill that damages all enemies within a radius carries the `AoE` tag. The radius is a **skill property** — a fixed constant per skill owned by the Balancer. Weapon range has no influence on AoE radius (see Range resolution table above).
+
+**AoE modifier math (PoE / Last Epoch convention):**
+Modifiers increase *area*, not radius directly. The effective radius is:
+
+`effective_radius = base_radius × sqrt(1 + total_aoe_pct_increase)`
+
+Example: base 250 units + 100% AoE → 250 × √2 ≈ 354 units. Each additional % yields diminishing radius gains — the standard ARPG tradeoff.
+
+**Sources of AoE modifiers — post-v1, none in v1:** skill augments (e.g. "Increased Area"), gear affixes. Armour range modifiers and weapon range never feed AoE radius.
+
+**v1 AoE skills:**
+
+| Skill | AoE coverage |
+|---|---|
+| Self-Channeled-Tick | All enemies within radius of player |
+| Self-Duration-Tick | All enemies within radius of player |
+| Self-Burst | All enemies within radius of player |
+| Fixed-Zone-Tick | All enemies within zone radius |
+| Fixed-Zone-Burst | All enemies within zone radius at detonation |
+| Windup-Burst | All enemies within zone radius at detonation |
+| Tracked-Tick | Tracked enemy + all enemies within radius around them |
+| Stackable-Zone | All enemies within zone radius |
+| Triggered-Zone-Burst | All enemies within zone radius at detonation |
+
+Entity-Burst and Entity-Debuff are single-target — no AoE tag.
 
 #### Skill Prototypes
 
@@ -246,6 +295,8 @@ Spin continuously in place, hitting all enemies within melee range on each tick.
 | Focus cost | 12 Focus/sec drain |
 | Tick rate | 4 hits/sec |
 | Acquire | Craft |
+
+> **Balancer note:** At 4 ticks/sec with no per-skill damage multiplier, single-target DPS is ~3.2× Entity-Burst (which fires at 1.25 hits/sec). The compensating levers are tick rate and Focus drain — lower tick rate until single-target DPS sits at the intended ratio vs Entity-Burst, accepting that AoE coverage is the skill's actual advantage.
 
 #### Self-Duration-Tick
 
@@ -422,11 +473,9 @@ All values (damage, cooldown, radius, tick rate, duration) are TBD — owned by 
 
 ---
 
-**Weapon is the root of the damage number.** Each weapon has a base damage value that increases with tier. The skill defines the damage type — Entity-Burst is physical (placeholder); future named skills define their own type. Archetype damage output scales through primary stat growth (see Archetype Stat Multipliers), not an archetype-level multiplier table.
+**Weapon is the root of the damage number.** Each weapon has a base damage value that increases with tier. The skill defines the damage type — Entity-Burst is physical (placeholder); future named skills define their own type. The weapon's identity bonus (flat % damage or crit) applies universally to all skills regardless of damage type — no skill-type gate. Archetype damage output scales through primary stat growth (see Archetype Stat Multipliers), not an archetype-level multiplier table.
 
 **Skills do not carry a per-skill damage multiplier.** Every skill draws from the same damage number: `weapon base × stat block`. A tick skill and a burst skill deal the same raw damage per hit — the design difference is delivery: tick rate, cooldown, AoE, and Focus cost. DPS balance between skills is the Balancer's domain, owned through tick rate and cooldown tuning. There is no `DamageMultiplier` field on a skill.
-
-**Level damage bonus: +2% per level (cumulative).** At level 10 = +20% total. All values below are placeholder — owned by the Balancer.
 
 ### Focus
 
@@ -543,9 +592,9 @@ Every run requires a character. Characters are created by the player, persist be
 
 | Archetype | Max HP (base) | Speed (base) | Max Focus (base) | Focus Regen/sec (base) | Primary stat emphasis | Default build |
 |-----------|--------|-------|-----------|-----------------|--------------|---------------|
-| Warrior   | 150    | 170   | 80        | 12              | Strength (→ PhysicalDamage, MaxHp, PhysRes, CritDmg) | Sword + Heavy armour — close-range brawler |
-| Rogue     | 80     | 260   | 100       | 15              | Dexterity (→ CritChance, Evasion) | Bow + Light armour — fast, fragile kiter |
-| Mage      | 100    | 200   | 150       | 10              | Intelligence (→ MagicDamage, MaxFocus, MagRes, FocusRegen) | Wand + Medium armour — glass cannon; largest Focus Shield by default |
+| Warrior   | 150    | Shared base | 80        | 12              | Strength (→ PhysicalDamage, MaxHp, PhysRes, CritDmg) | Sword + Heavy armour — close-range brawler |
+| Rogue     | 80     | Shared base | 100       | 15              | Dexterity (→ CritChance, Evasion) | Bow + Medium armour — fast, agile kiter |
+| Mage      | 100    | Shared base | 150       | 10              | Intelligence (→ MagicDamage, MaxFocus, MagRes, FocusRegen) | Wand + Medium armour — glass cannon; largest Focus Shield by default |
 
 All values are base stats at level 1 — placeholder, owned by the Balancer. Damage and defensive stats scale through primary stat growth per level (see Archetype Stat Multipliers below).
 
@@ -606,7 +655,7 @@ A run cannot start without a selected character.
 - Killing an enemy grants **`1 XP × map level`** instantly (kill reward, no pickup required)
 - Killing enemies also drops **XP Shards** — collecting them adds further XP
 - Both sources fill the same XP bar
-- On level up: permanent HP bonus (flat) and a small cumulative % damage bonus are applied automatically; the damage bonus amplifies weapon base damage through the archetype multiplier formula
+- On level up: permanent HP bonus (flat) is applied automatically; damage increase is implicit through primary stat growth (more Str/Int per level → higher stat multiplier → more damage)
 - Level and XP within the current level persist when the run ends; the character picks up exactly where they left off
 - No popup or pause — levelling up is seamless
 

@@ -277,9 +277,7 @@ public partial class PlayerController : CharacterBody3D
         var body   = _charData != null ? GetEquippedItem(_charData, Items.ItemSlot.Body)   : null;
 
         float weaponRange = weapon?.WeaponRange ?? 1.5f;
-        EffectiveRange = weapon?.PreferredDelivery != "Melee"
-            ? (weaponRange + (hat?.RangeModifier ?? 0f) + (body?.RangeModifier ?? 0f) + _rangeBuffBonus) * GameScale.TileSize
-            : weaponRange * GameScale.TileSize;
+        EffectiveRange = (weaponRange * (hat?.RangeMultiplier ?? 1f) * (body?.RangeMultiplier ?? 1f) + _rangeBuffBonus) * GameScale.TileSize;
 
         GetNodeOrNull<Weapon.WeaponController>("Weapon")?.SetRange(EffectiveRange);
     }
@@ -313,7 +311,8 @@ public partial class PlayerController : CharacterBody3D
 
     private static MeshInstance3D CreateRangeIndicator(float radius)
     {
-        var torus = new TorusMesh { OuterRadius = radius, InnerRadius = 1.5f, Rings = 64, RingSegments = 8 };
+        const float tubeRadius = 1.5f;
+        var torus = new TorusMesh { OuterRadius = radius - tubeRadius, InnerRadius = tubeRadius, Rings = 64, RingSegments = 8 };
         var mat = new StandardMaterial3D
         {
             ShadingMode  = BaseMaterial3D.ShadingModeEnum.Unshaded,
@@ -712,15 +711,9 @@ public partial class PlayerController : CharacterBody3D
     {
         if (wc == null || weapon == null) return;
 
-        bool isMagicWeapon = weapon.BaseDamageType == Items.DamageType.Magic;
-
-        float statMult  = isMagicWeapon
-            ? _statBlock.Get(Stats.StatId.MagicDamage)
-            : _statBlock.Get(Stats.StatId.PhysicalDamage);
-        float weaponDmg = weapon.BaseDamage * statMult * (1f + weapon.DamageBonus);
-
-        float physDmg  = isMagicWeapon ? 0f : weaponDmg;
-        float magicDmg = isMagicWeapon ? weaponDmg : 0f;
+        float weaponBase = weapon.BaseDamage * (1f + weapon.DamageBonus);
+        float physDmg    = Mathf.Max(1f, weaponBase * _statBlock.Get(Stats.StatId.PhysicalDamage));
+        float magicDmg   = Mathf.Max(1f, weaponBase * _statBlock.Get(Stats.StatId.MagicDamage));
 
         wc.SetDamage(physDmg, magicDmg);
         wc.SetGlobalCritChance(weapon.CritChanceBonus);

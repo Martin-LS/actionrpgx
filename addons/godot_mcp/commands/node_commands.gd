@@ -24,6 +24,17 @@ func get_commands() -> Dictionary:
 	}
 
 
+func _find_script_by_class_name(class_name_str: String) -> Script:
+	# Search project files for a script with matching class_name
+	var global_classes: Array = ProjectSettings.get_global_class_list()
+	for entry: Dictionary in global_classes:
+		if entry.get("class", "") == class_name_str:
+			var path: String = entry.get("path", "")
+			if not path.is_empty():
+				return load(path) as Script
+	return null
+
+
 func _add_node(params: Dictionary) -> Dictionary:
 	var result := require_string(params, "type")
 	if result[1] != null:
@@ -34,9 +45,6 @@ func _add_node(params: Dictionary) -> Dictionary:
 	var node_name: String = optional_string(params, "name", "")
 	var properties: Dictionary = params.get("properties", {})
 
-	if not ClassDB.class_exists(type):
-		return error_invalid_params("Unknown node type: %s" % type)
-
 	var root := get_edited_root()
 	if root == null:
 		return error_no_scene()
@@ -45,7 +53,21 @@ func _add_node(params: Dictionary) -> Dictionary:
 	if parent == null:
 		return error_not_found("Parent node '%s'" % parent_path, "Use get_scene_tree to see available nodes")
 
-	var node: Node = ClassDB.instantiate(type)
+	var node: Node
+	var custom_script: Script = null
+
+	if ClassDB.class_exists(type):
+		node = ClassDB.instantiate(type)
+	else:
+		# Try to find a script with matching class_name
+		custom_script = _find_script_by_class_name(type)
+		if custom_script == null:
+			return error_invalid_params("Unknown node type: '%s'. Not found in ClassDB or as a script class_name. Use list_scripts to see available script classes." % type)
+		var base_type: String = custom_script.get_instance_base_type()
+		if not ClassDB.class_exists(base_type):
+			return error_invalid_params("Script '%s' extends '%s' which is not a valid node type" % [type, base_type])
+		node = ClassDB.instantiate(base_type)
+		node.set_script(custom_script)
 	if not node_name.is_empty():
 		node.name = node_name
 
@@ -235,6 +257,20 @@ func _update_property(params: Dictionary) -> Dictionary:
 	var target_type := typeof(old_value)
 	var parsed_value: Variant = PropertyParser.parse_value(value, target_type)
 
+	# Handle @export node references (e.g. @export var hud: HUD)
+	# typeof() returns TYPE_NIL when unset or TYPE_OBJECT when set,
+	# neither resolves a string path to a node — check the property hint instead
+	if value is String:
+		for prop in node.get_property_list():
+			if prop["name"] == property and prop["hint"] == PROPERTY_HINT_NODE_TYPE:
+				var target_node: Node = node.get_node_or_null(NodePath(value))
+				if target_node == null:
+					target_node = root.get_node_or_null(NodePath(value))
+				if target_node == null:
+					return error_not_found("Node '%s'" % value, "Could not resolve node path for property '%s'" % property)
+				parsed_value = target_node
+				break
+
 	var undo_redo := get_undo_redo()
 	undo_redo.create_action("MCP: Set %s.%s" % [node.name, property])
 	undo_redo.add_do_property(node, property, parsed_value)
@@ -319,7 +355,7 @@ func _add_resource(params: Dictionary) -> Dictionary:
 	var resource_props: Dictionary = params.get("resource_properties", {})
 	for prop_name: String in resource_props:
 		if prop_name in resource:
-			var current := resource.get(prop_name)
+			var current: Variant = resource.get(prop_name)
 			resource.set(prop_name, PropertyParser.parse_value(resource_props[prop_name], typeof(current)))
 
 	var old_value: Variant = node.get(property) if property in node else null
@@ -391,17 +427,18 @@ func _set_anchor_preset(params: Dictionary) -> Dictionary:
 	var old_anchors := [control.anchor_left, control.anchor_top, control.anchor_right, control.anchor_bottom]
 	var old_offsets := [control.offset_left, control.offset_top, control.offset_right, control.offset_bottom]
 
-	control.set_anchors_and_offsets_preset(presets[preset_name],
+	var target: Control = control.duplicate() as Control
+	target.set_anchors_and_offsets_preset(presets[preset_name],
 		Control.PRESET_MODE_KEEP_SIZE if keep_offsets else Control.PRESET_MODE_MINSIZE)
 
-	undo_redo.add_do_property(control, "anchor_left", control.anchor_left)
-	undo_redo.add_do_property(control, "anchor_top", control.anchor_top)
-	undo_redo.add_do_property(control, "anchor_right", control.anchor_right)
-	undo_redo.add_do_property(control, "anchor_bottom", control.anchor_bottom)
-	undo_redo.add_do_property(control, "offset_left", control.offset_left)
-	undo_redo.add_do_property(control, "offset_top", control.offset_top)
-	undo_redo.add_do_property(control, "offset_right", control.offset_right)
-	undo_redo.add_do_property(control, "offset_bottom", control.offset_bottom)
+	undo_redo.add_do_property(control, "anchor_left", target.anchor_left)
+	undo_redo.add_do_property(control, "anchor_top", target.anchor_top)
+	undo_redo.add_do_property(control, "anchor_right", target.anchor_right)
+	undo_redo.add_do_property(control, "anchor_bottom", target.anchor_bottom)
+	undo_redo.add_do_property(control, "offset_left", target.offset_left)
+	undo_redo.add_do_property(control, "offset_top", target.offset_top)
+	undo_redo.add_do_property(control, "offset_right", target.offset_right)
+	undo_redo.add_do_property(control, "offset_bottom", target.offset_bottom)
 
 	undo_redo.add_undo_property(control, "anchor_left", old_anchors[0])
 	undo_redo.add_undo_property(control, "anchor_top", old_anchors[1])
@@ -412,6 +449,7 @@ func _set_anchor_preset(params: Dictionary) -> Dictionary:
 	undo_redo.add_undo_property(control, "offset_right", old_offsets[2])
 	undo_redo.add_undo_property(control, "offset_bottom", old_offsets[3])
 
+	target.free()
 	undo_redo.commit_action()
 
 	return success({"node_path": str(root.get_path_to(control)), "preset": preset_name})
@@ -485,7 +523,12 @@ func _connect_signal(params: Dictionary) -> Dictionary:
 	if source.is_connected(signal_name, Callable(target, method_name)):
 		return success({"already_connected": true, "signal": signal_name})
 
-	source.connect(signal_name, Callable(target, method_name))
+	var callable := Callable(target, method_name)
+	var undo_redo := get_undo_redo()
+	undo_redo.create_action("MCP: Connect signal")
+	undo_redo.add_do_method(source, "connect", signal_name, callable)
+	undo_redo.add_undo_method(source, "disconnect", signal_name, callable)
+	undo_redo.commit_action()
 
 	return success({
 		"source": str(root.get_path_to(source)),
@@ -532,7 +575,12 @@ func _disconnect_signal(params: Dictionary) -> Dictionary:
 	if not source.is_connected(signal_name, Callable(target, method_name)):
 		return success({"was_connected": false})
 
-	source.disconnect(signal_name, Callable(target, method_name))
+	var callable := Callable(target, method_name)
+	var undo_redo := get_undo_redo()
+	undo_redo.create_action("MCP: Disconnect signal")
+	undo_redo.add_do_method(source, "disconnect", signal_name, callable)
+	undo_redo.add_undo_method(source, "connect", signal_name, callable)
+	undo_redo.commit_action()
 
 	return success({
 		"source": str(root.get_path_to(source)),
@@ -599,18 +647,25 @@ func _set_node_groups(params: Dictionary) -> Dictionary:
 	var added: Array = []
 	var removed: Array = []
 
-	# Remove groups not in desired
 	for group: String in current_groups:
 		if group not in desired_groups:
-			node.remove_from_group(group)
 			removed.append(group)
 
-	# Add groups not in current
 	for group in desired_groups:
 		var g: String = str(group)
 		if g not in current_groups:
-			node.add_to_group(g, true)
 			added.append(g)
+
+	if not added.is_empty() or not removed.is_empty():
+		var undo_redo := get_undo_redo()
+		undo_redo.create_action("MCP: Set node groups")
+		for group: String in removed:
+			undo_redo.add_do_method(node, "remove_from_group", group)
+			undo_redo.add_undo_method(node, "add_to_group", group, true)
+		for group: String in added:
+			undo_redo.add_do_method(node, "add_to_group", group, true)
+			undo_redo.add_undo_method(node, "remove_from_group", group)
+		undo_redo.commit_action()
 
 	return success({
 		"node_path": str(root.get_path_to(node)),

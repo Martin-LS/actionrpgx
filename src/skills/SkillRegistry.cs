@@ -12,7 +12,7 @@ public static class SkillRegistry
         ["entity_burst"] = new SkillData(
             "entity_burst", "Entity Burst", SkillType.Active,
             Tags: new[] { "Attack" },
-            Cooldown: BalanceConfig.Skills.EntityBurstCooldown, Range: BalanceConfig.Skills.EntityBurstRange,
+            Cooldown: BalanceConfig.Skills.EntityBurstCooldown,
             FocusCost: BalanceConfig.Focus.EntityBurstFocusCost,
             IconPath: "res://assets/icons/items/battle_axe.png",
             Description: "Proves Entity targeting and weapon-adaptive delivery. Universal starter — fires at locked target using equipped weapon.",
@@ -22,7 +22,7 @@ public static class SkillRegistry
 
         ["self_channeled_tick"] = new SkillData(
             "self_channeled_tick", "Self Channeled Tick", SkillType.Channeled,
-            Tags: new[] { "Melee", "Attack" },
+            Tags: new[] { "Melee", "Attack", "AoE" },
             Cooldown: BalanceConfig.Skills.SelfChanneledTickCooldown, Range: BalanceConfig.Skills.SelfChanneledTickRange,
             FocusCost: BalanceConfig.Focus.SelfChanneledTickFocusCostPerSec,
             Description: "Proves Channeled skill type with Self targeting. Continuous ticking damage while held; drains Focus over time.",
@@ -32,18 +32,19 @@ public static class SkillRegistry
 
         ["self_duration_tick"] = new SkillData(
             "self_duration_tick", "Self Duration Tick", SkillType.Active,
-            Tags: new[] { "Attack" },
+            Tags: new[] { "Attack", "AoE" },
             Cooldown: BalanceConfig.Skills.SelfDurationTickCooldown, Range: BalanceConfig.Skills.SelfDurationTickRange,
             FocusCost: BalanceConfig.Focus.SelfDurationTickFocusCost,
             Description: "Proves Active Self skill with ticking damage over a fixed duration. Activate → ticks damage in radius for duration → cooldown.",
             Kind: SkillKind.Prototype,
             TargetingShape: SkillTargetingShape.Self,
             DamagePattern: SkillDamagePattern.Tick,
+            Duration: BalanceConfig.Skills.SelfDurationTickDuration,
             DamageType: DamageType.Magic),
 
         ["self_burst"] = new SkillData(
             "self_burst", "Self Burst", SkillType.Active,
-            Tags: new[] { "Attack", "Burst" },
+            Tags: new[] { "Attack", "Burst", "AoE" },
             Cooldown: BalanceConfig.Skills.SelfBurstCooldown, Range: BalanceConfig.Skills.SelfBurstRange,
             FocusCost: BalanceConfig.Focus.SelfBurstFocusCost,
             Description: "Proves Active Self burst. Instant explosion centered on player; flat Focus cost.",
@@ -55,9 +56,8 @@ public static class SkillRegistry
 
         ["tracked_tick"] = new SkillData(
             "tracked_tick", "Tracked Tick", SkillType.Active,
-            Tags: new[] { "Attack" },
+            Tags: new[] { "Attack", "AoE" },
             Cooldown: BalanceConfig.Skills.TrackedTickCooldown,
-            Range: BalanceConfig.Skills.TrackedTickRange,
             FocusCost: BalanceConfig.Focus.TrackedTickFocusCost,
             Description: "Attaches a ticking damage zone to the locked enemy. Zone follows the enemy and expires when they die. Proves ZoneTracksEntity and entity death expiry.",
             Kind: SkillKind.Prototype,
@@ -69,7 +69,7 @@ public static class SkillRegistry
 
         ["triggered_zone_burst"] = new SkillData(
             "triggered_zone_burst", "Triggered Zone Burst", SkillType.Active,
-            Tags: new[] { "Attack" },
+            Tags: new[] { "Attack", "AoE" },
             Cooldown: BalanceConfig.Skills.TriggeredZoneBurstCooldown,
             Range: BalanceConfig.Skills.TriggeredZoneBurstRange,
             FocusCost: BalanceConfig.Focus.TriggeredZoneBurstFocusCost,
@@ -86,7 +86,7 @@ public static class SkillRegistry
 
         ["stackable_zone"] = new SkillData(
             "stackable_zone", "Stackable Zone", SkillType.Active,
-            Tags: new[] { "Attack" },
+            Tags: new[] { "Attack", "AoE" },
             Cooldown: BalanceConfig.Skills.StackableZoneCooldown,
             Range: BalanceConfig.Skills.StackableZoneRange,
             FocusCost: BalanceConfig.Focus.StackableZoneFocusCost,
@@ -102,7 +102,6 @@ public static class SkillRegistry
             "entity_debuff", "Entity Debuff", SkillType.Active,
             Tags: new[] { "Debuff" },
             Cooldown: BalanceConfig.Skills.EntityDebuffCooldown,
-            Range: BalanceConfig.Skills.EntityDebuffRange,
             FocusCost: BalanceConfig.Focus.EntityDebuffFocusCost,
             Description: "Applies slow to locked target for 6s with no damage. Proves Entity targeting with pure debuff output.",
             Kind: SkillKind.Prototype,
@@ -112,7 +111,7 @@ public static class SkillRegistry
 
         ["windup_burst"] = new SkillData(
             "windup_burst", "Windup Burst", SkillType.Active,
-            Tags: new[] { "Attack" },
+            Tags: new[] { "Attack", "AoE" },
             Cooldown: BalanceConfig.Skills.WindupBurstCooldown,
             Range: BalanceConfig.Skills.WindupBurstRange,
             FocusCost: BalanceConfig.Focus.WindupBurstFocusCost,
@@ -127,7 +126,7 @@ public static class SkillRegistry
 
         ["fixed_zone_burst"] = new SkillData(
             "fixed_zone_burst", "Fixed Zone Burst", SkillType.Active,
-            Tags: new[] { "Attack" },
+            Tags: new[] { "Attack", "AoE" },
             Cooldown: BalanceConfig.Skills.FixedZoneBurstCooldown,
             Range: BalanceConfig.Skills.FixedZoneBurstRange,
             FocusCost: BalanceConfig.Focus.FixedZoneBurstFocusCost,
@@ -141,7 +140,7 @@ public static class SkillRegistry
 
         ["fixed_zone_tick"] = new SkillData(
             "fixed_zone_tick", "Fixed Zone Tick", SkillType.Active,
-            Tags: new[] { "Attack" },
+            Tags: new[] { "Attack", "AoE" },
             Cooldown: BalanceConfig.Skills.FixedZoneTickCooldown,
             Range: BalanceConfig.Skills.FixedZoneTickRange,
             FocusCost: BalanceConfig.Focus.FixedZoneTickFocusCost,

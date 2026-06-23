@@ -15,8 +15,11 @@ public partial class WeaponController : Node
     private static readonly PackedScene ImpactHitScene =
         GD.Load<PackedScene>("res://PolyBlocks/EffectBlocks/assets/impacts/impact_5.tscn");
 
+    private static readonly PackedScene EntityBurstVfxScene =
+        GD.Load<PackedScene>("res://src/vfx/entity_burst_vfx.tscn");
+
     private static readonly PackedScene SelfChanneledTickVfxScene =
-        GD.Load<PackedScene>("res://src/vfx/cyclone_vfx.tscn");
+        GD.Load<PackedScene>("res://src/vfx/self_channeled_tick_vfx.tscn");
 
     private static readonly PackedScene FixedZoneBurstVfxScene =
         GD.Load<PackedScene>("res://src/vfx/fixed_zone_burst_vfx.tscn");
@@ -24,10 +27,17 @@ public partial class WeaponController : Node
     private static readonly PackedScene FixedZoneTickVfxScene =
         GD.Load<PackedScene>("res://src/vfx/fixed_zone_tick_vfx.tscn");
 
+    private static readonly PackedScene SelfDurationTickVfxScene =
+        GD.Load<PackedScene>("res://src/vfx/self_duration_tick_vfx.tscn");
+    private static readonly PackedScene SelfBurstVfxScene =
+        GD.Load<PackedScene>("res://src/vfx/self_burst_vfx.tscn");
+
     private const float SplashRadius = 60f;
 
     private Player.PlayerController? _player;
     private GpuParticles3D? _selfChanneledTickVfx;
+    private GpuParticles3D? _selfDurationTickVfx;
+    private GpuParticles3D? _selfBurstVfx;
     private bool _wasChanneling;
 
     private float      _physicalDamage  = 20f;
@@ -44,6 +54,33 @@ public partial class WeaponController : Node
             var vfxRoot = SelfChanneledTickVfxScene.Instantiate<Node3D>();
             _selfChanneledTickVfx = vfxRoot.GetNodeOrNull<GpuParticles3D>("Whirl");
             if (_selfChanneledTickVfx != null) _selfChanneledTickVfx.Emitting = false;
+            _player?.CallDeferred(Node.MethodName.AddChild, vfxRoot);
+        }
+
+        if (SelfDurationTickVfxScene != null)
+        {
+            var vfxRoot = SelfDurationTickVfxScene.Instantiate<Node3D>();
+            _selfDurationTickVfx = vfxRoot.GetNodeOrNull<GpuParticles3D>("Whirl");
+            if (_selfDurationTickVfx != null)
+            {
+                // Duplicate material so we can set emission radius per-instance at runtime
+                if (_selfDurationTickVfx.ProcessMaterial is ParticleProcessMaterial mat)
+                    _selfDurationTickVfx.ProcessMaterial = (ParticleProcessMaterial)mat.Duplicate();
+                _selfDurationTickVfx.Emitting = false;
+            }
+            _player?.CallDeferred(Node.MethodName.AddChild, vfxRoot);
+        }
+
+        if (SelfBurstVfxScene != null)
+        {
+            var vfxRoot = SelfBurstVfxScene.Instantiate<Node3D>();
+            _selfBurstVfx = vfxRoot.GetNodeOrNull<GpuParticles3D>("Whirl");
+            if (_selfBurstVfx != null)
+            {
+                if (_selfBurstVfx.ProcessMaterial is ParticleProcessMaterial mat)
+                    _selfBurstVfx.ProcessMaterial = (ParticleProcessMaterial)mat.Duplicate();
+                _selfBurstVfx.Emitting = false;
+            }
             _player?.CallDeferred(Node.MethodName.AddChild, vfxRoot);
         }
     }
@@ -67,8 +104,8 @@ public partial class WeaponController : Node
         public Items.DamageType EffectiveDamageType;
         public float        CritChanceBonus;
         public bool         AutoActivate;
-        public float        DamageMultiplier;
         public bool         IsChanneling;
+        public float        DurationTimer;
         public List<Node3D> ActiveZones;
     }
 
@@ -96,10 +133,8 @@ public partial class WeaponController : Node
         _slots[slotIndex].CritChanceBonus  = critChanceBonus;
         _slots[slotIndex].AutoActivate  = true;
         _slots[slotIndex].IsChanneling  = false;
+        _slots[slotIndex].DurationTimer = 0f;
         _slots[slotIndex].ActiveZones   = new List<Node3D>();
-        _slots[slotIndex].DamageMultiplier = skill.Type == SkillType.Channeled
-            ? BalanceConfig.Focus.SelfChanneledTickDamageMultiplier
-            : 1.0f;
     }
 
     public void SetSlotAutoActivate(int slotIndex, bool autoActivate)
@@ -173,14 +208,48 @@ public partial class WeaponController : Node
     private void ProcessActiveSlot(int i, float dt)
     {
         if (IsAnySlotChanneling()) return;
-        if (_slots[i].CooldownTimer > 0f) return;
 
         var shape = _slots[i].Skill!.TargetingShape;
+
+        // Self+Duration active phase: tick without spending focus again
+        if (shape == SkillTargetingShape.Self && _slots[i].Skill!.Duration > 0f && _slots[i].DurationTimer > 0f)
+        {
+            _slots[i].DurationTimer -= dt;
+            if (_slots[i].CooldownTimer <= 0f)
+            {
+                FireSelfBurst(i);
+                _slots[i].CooldownTimer = _slots[i].Skill!.Cooldown;
+            }
+            if (_selfDurationTickVfx != null) _selfDurationTickVfx.Emitting = true;
+            if (_slots[i].DurationTimer <= 0f && _selfDurationTickVfx != null)
+            {
+                _selfDurationTickVfx.Emitting = false;
+            }
+            return;
+        }
+
+        if (_slots[i].CooldownTimer > 0f) return;
 
         if (shape == SkillTargetingShape.Self)
         {
             if (FindNearestEnemy(_slots[i].Skill!.Range) == null) return;
             if (_player != null && !_player.TrySpendFocus(_slots[i].Skill!.FocusCost)) return;
+            if (_slots[i].Skill!.Duration > 0f)
+            {
+                _slots[i].DurationTimer = _slots[i].Skill!.Duration;
+                if (_selfDurationTickVfx != null)
+                {
+                    if (_selfDurationTickVfx.ProcessMaterial is ParticleProcessMaterial vfxMat)
+                        vfxMat.EmissionRingRadius = _slots[i].Skill!.Range;
+                    _selfDurationTickVfx.Emitting = true;
+                }
+            }
+            else if (_selfBurstVfx != null)
+            {
+                if (_selfBurstVfx.ProcessMaterial is ParticleProcessMaterial vfxMat)
+                    vfxMat.EmissionRingRadius = _slots[i].Skill!.Range;
+                _selfBurstVfx.Emitting = true;
+            }
             FireSelfBurst(i);
             _slots[i].CooldownTimer = _slots[i].Skill!.Cooldown;
         }
@@ -223,7 +292,7 @@ public partial class WeaponController : Node
 
         bool  isMagic = slot.EffectiveDamageType == Items.DamageType.Magic;
         var   dmgType = isMagic ? Items.DamageType.Magic : Items.DamageType.Physical;
-        float baseDmg = (isMagic ? _magicDamage : _physicalDamage) * slot.DamageMultiplier;
+        float baseDmg = isMagic ? _magicDamage : _physicalDamage;
 
         float critChance = _globalCritChance + slot.CritChanceBonus;
         float critMult   = 1.0f;
@@ -272,6 +341,12 @@ public partial class WeaponController : Node
         {
             if (FindNearestEnemy(slot.Skill.Range) == null) return;
             if (_player != null && !_player.TrySpendFocus(slot.Skill.FocusCost)) return;
+            if (slot.Skill.Duration == 0f && _selfBurstVfx != null)
+            {
+                if (_selfBurstVfx.ProcessMaterial is ParticleProcessMaterial vfxMat)
+                    vfxMat.EmissionRingRadius = slot.Skill.Range;
+                _selfBurstVfx.Emitting = true;
+            }
             FireSelfBurst(slotIndex);
             slot.CooldownTimer = slot.Skill.Cooldown;
             return;
@@ -321,8 +396,7 @@ public partial class WeaponController : Node
         {
             bool  ttMagic  = slot.EffectiveDamageType == Items.DamageType.Magic;
             var   ttType   = ttMagic ? Items.DamageType.Magic : Items.DamageType.Physical;
-            float ttDmg    = (ttMagic ? _magicDamage : _physicalDamage)
-                             * slot.DamageMultiplier * BalanceConfig.Skills.TrackedTickDamageMult;
+            float ttDmg    = ttMagic ? _magicDamage : _physicalDamage;
             float ttCritChance = _globalCritChance + slot.CritChanceBonus;
             float ttCrit   = 1.0f;
             if (ttCritChance > 0f && GD.Randf() < ttCritChance)
@@ -360,7 +434,7 @@ public partial class WeaponController : Node
         float critMultiplier  = 1.0f;
         if (critChance > 0f && GD.Randf() < critChance)
             critMultiplier = _critMultiplier;
-        baseDmg *= critMultiplier * slot.DamageMultiplier;
+        baseDmg *= critMultiplier;
 
         if (isMelee)
         {
@@ -377,7 +451,7 @@ public partial class WeaponController : Node
             var projectile = ProjectileScene.Instantiate<Projectile>();
             projectile.Initialize(direction, baseDmg, dmgType, slot.EotIds, slot.HasSplash, slot.HasPierce, critMultiplier);
             GetTree().Root.AddChild(projectile);
-            projectile.GlobalPosition = origin;
+            projectile.GlobalPosition = new Vector3(origin.X, target.GlobalPosition.Y, origin.Z);
         }
 
         EmitSignal(SignalName.SkillFired, slotIndex, slot.Skill.Cooldown, delivery);
@@ -390,7 +464,7 @@ public partial class WeaponController : Node
 
         bool  isMagic = slot.EffectiveDamageType == Items.DamageType.Magic;
         var   dmgType = isMagic ? Items.DamageType.Magic : Items.DamageType.Physical;
-        float baseDmg = (isMagic ? _magicDamage : _physicalDamage) * BalanceConfig.Focus.SelfBurstDamageMultiplier;
+        float baseDmg = isMagic ? _magicDamage : _physicalDamage;
 
         float critChance = _globalCritChance + slot.CritChanceBonus;
         float critMult   = 1.0f;
@@ -417,8 +491,7 @@ public partial class WeaponController : Node
         {
             bool  isMagic  = slot.EffectiveDamageType == Items.DamageType.Magic;
             var   dmgType  = isMagic ? Items.DamageType.Magic : Items.DamageType.Physical;
-            float baseDmg  = (isMagic ? _magicDamage : _physicalDamage)
-                             * BalanceConfig.Skills.TriggeredZoneBurstDamageMult;
+            float baseDmg  = isMagic ? _magicDamage : _physicalDamage;
 
             float critChance = _globalCritChance + slot.CritChanceBonus;
             float critMult   = 1.0f;
@@ -453,10 +526,7 @@ public partial class WeaponController : Node
         {
             bool  isMagic    = slot.EffectiveDamageType == Items.DamageType.Magic;
             var   dmgType    = isMagic ? Items.DamageType.Magic : Items.DamageType.Physical;
-            float burstMult  = slot.Skill.WindUp > 0f
-                ? BalanceConfig.Skills.WindupBurstDamageMult
-                : BalanceConfig.Skills.FixedZoneBurstDamageMult;
-            float baseDmg    = (isMagic ? _magicDamage : _physicalDamage) * burstMult;
+            float baseDmg    = isMagic ? _magicDamage : _physicalDamage;
 
             float critChance = _globalCritChance + slot.CritChanceBonus;
             float critMult   = 1.0f;
@@ -511,10 +581,7 @@ public partial class WeaponController : Node
         {
             bool  isMagic = slot.EffectiveDamageType == Items.DamageType.Magic;
             var   dmgType = isMagic ? Items.DamageType.Magic : Items.DamageType.Physical;
-            float damageMult = slot.Skill.StackLimit > 1
-                ? BalanceConfig.Skills.StackableZoneDamageMult
-                : BalanceConfig.Skills.FixedZoneTickDamageMult;
-            float baseDmg = (isMagic ? _magicDamage : _physicalDamage) * damageMult;
+            float baseDmg = isMagic ? _magicDamage : _physicalDamage;
 
             float critChance = _globalCritChance + slot.CritChanceBonus;
             float critMult   = 1.0f;
@@ -576,6 +643,11 @@ public partial class WeaponController : Node
         target.TakeDamage(damage, dmgType, isCrit);
         ApplyEots(target, eotIds, critMultiplier);
         SpawnHitVfx(hitPos);
+        var hitFx = EntityBurstVfxScene.Instantiate<Node3D>();
+        GetTree().Root.AddChild(hitFx);
+        hitFx.GlobalPosition = hitPos;
+        hitFx.GetNode<GpuParticles3D>("Particles").Emitting = true;
+        GetTree().CreateTimer(0.6).Timeout += hitFx.QueueFree;
 
         if (hasSplash)
         {
