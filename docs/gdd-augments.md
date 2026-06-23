@@ -9,8 +9,6 @@
 
 Skill Augments are craftable items that socket into a skill item to modify it. Any augment can go into any skill slot — no archetype or skill type restrictions. Each augment type can only be equipped once per skill (no duplicates).
 
-**Ineffective combos — visual warning:** No augment is hard-locked from any skill, but some combinations produce no effect (e.g. Pierce on a Self skill — no projectile or impact point). The UI flags these with a warning indicator on the augment socket (red/yellow exclamation, hover tooltip explaining why). Exact indicator design TBD. Keeps the system open while giving players clear feedback when a slot is being wasted.
-
 **Skill Augment slots per tier** — upgrading a skill unlocks deeper modification, not just bigger numbers:
 
 | Skill tier | Skill Augment slots |

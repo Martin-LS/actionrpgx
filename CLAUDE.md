@@ -4,15 +4,7 @@
 
 Top-down action RPG in the vein of Diablo and Path of Exile — deliberate, build-driven combat with deep skill and item systems. **Fully craft-driven:** items, skills, and maps are all obtained through crafting. Enemies drop only crafting materials; there are no direct item drops. The crafting system is the progression engine. Godot 4.6, C#, Forward Plus renderer. 3D world with custom voxel-art style characters, perspective camera.
 
-## Reference Documentation
-
-- [docs/index.md](file:///C:/work/my/github/actionrpgx/docs/index.md) — **Start here.** Full index of every doc: what it covers and when to read it.
-- [docs/todo-tech.md](file:///C:/work/my/github/actionrpgx/docs/todo-tech.md) — Pending tech work. Check and update each session.
-- [docs/project-rules.md](file:///C:/work/my/github/actionrpgx/docs/project-rules.md) — Shared project guidelines (Scope, Handedness, Bone Rotations, UI, Animation).
-
-**Read [docs/project-rules.md](file:///C:/work/my/github/actionrpgx/docs/project-rules.md) and any relevant spec doc before making design or architectural decisions or starting bug fixes.**
-
-At the start of every session: read `docs/index.md` to orient, read `docs/todo-tech.md` and tick off anything completed. Read `docs/tech-tips.md` before any 3D asset, animation, or bone work. Read `docs/color-scheme.md` before any visual, UI, VFX, or material work.
+At the start of every session: read `docs/index.md` to orient, read `docs/todo-tech.md` and tick off anything completed. Read `docs/project-rules.md` before any design or architectural decision or bug fix. Read `docs/tech-tips.md` before any 3D asset, animation, or bone work. Read `docs/color-scheme.md` before any visual, UI, VFX, or material work.
 
 ## Tools (Claude Specific)
 
