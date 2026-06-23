@@ -26,6 +26,9 @@ public partial class CharacterScreen : Control
 
     private Character.CharacterManager _manager = null!;
 
+    private Button _skillTabCraftBtn = null!;
+    private Button _augTabCraftBtn   = null!;
+
     private const string CharViewBase = "VBox/TabContainer/Loadout/LoadoutSplit/CharacterView";
     private const string InvBase      = "VBox/TabContainer/Loadout/LoadoutSplit/InventoryPanel/InventoryVBox";
 
@@ -66,7 +69,20 @@ public partial class CharacterScreen : Control
         }
 
         GetNode<Button>($"{CharViewBase}/CraftButtons/CraftEquipmentButton").Pressed += ShowCraftEquipmentPopup;
-        GetNode<Button>($"{CharViewBase}/CraftButtons/CraftSkillButton").Pressed    += ShowCraftSkillPopup;
+        GetNode<Button>($"{CharViewBase}/CraftButtons/CraftSkillButton").Pressed    += ShowCraftSkillToInventoryOverlay;
+
+        // Craft buttons at top of Skills / Augments inventory tabs
+        var skillsTab = GetNode<VBoxContainer>($"{InvBase}/InventoryTabs/Skills");
+        _skillTabCraftBtn = MakeModifyButton("Craft Skill  [1 Common]", false);
+        skillsTab.AddChild(_skillTabCraftBtn);
+        skillsTab.MoveChild(_skillTabCraftBtn, 0);
+        _skillTabCraftBtn.Pressed += ShowCraftSkillToInventoryOverlay;
+
+        var augmentsTab = GetNode<VBoxContainer>($"{InvBase}/InventoryTabs/Augments");
+        _augTabCraftBtn = MakeModifyButton("Craft Augment  [1 Common]", false);
+        augmentsTab.AddChild(_augTabCraftBtn);
+        augmentsTab.MoveChild(_augTabCraftBtn, 0);
+        _augTabCraftBtn.Pressed += ShowCraftAugmentToInventoryOverlay;
 
         GetNode<Button>($"{CharViewBase}/Buttons/StartRunButton").Pressed += () =>
         {
@@ -77,6 +93,9 @@ public partial class CharacterScreen : Control
         GetNode<Button>("VBox/BackButton").Pressed += () =>
             GetTree().ChangeSceneToFile("res://src/ui/account_screen.tscn");
 
+        // Prevent the TabContainer's tab headers from stealing keyboard focus after overlays close
+        GetNode<TabContainer>("VBox/TabContainer").GetTabBar().FocusMode = Control.FocusModeEnum.None;
+
         Refresh();
     }
 
@@ -86,6 +105,10 @@ public partial class CharacterScreen : Control
         RefreshSkillsInventory();
         RefreshAugmentsInventory();
         RefreshCharacter();
+
+        int common = _manager.Profile.GetMaterial("crafting_common");
+        _skillTabCraftBtn.Disabled = common < 1 || _manager.Profile.OwnedSkillInstances.Count >= Character.ProfileData.MaxInventory;
+        _augTabCraftBtn.Disabled   = common < 1 || _manager.Profile.OwnedSkillAugmentInstances.Count >= Character.ProfileData.MaxInventory;
     }
 
     // ── Character panel ───────────────────────────────────────────────────────
@@ -289,8 +312,7 @@ public partial class CharacterScreen : Control
                     btn.TooltipText = $"{def.Name}\nRequires: {string.Join(", ", def.RequiredTags)}";
                     btn.AddThemeFontSizeOverride("font_size", 10);
                     var capturedInst = inst;
-                    var capturedBtn  = btn;
-                    btn.Pressed += () => ShowSupportInventoryPopup(capturedInst, capturedBtn);
+                    btn.Pressed += () => ShowAugmentModifyPanel(capturedInst);
                 }
             }
             else if (i < skillAugs.Count + equipAugs.Count)
@@ -360,9 +382,14 @@ public partial class CharacterScreen : Control
         else if (mb.ButtonIndex == MouseButton.Left)
         {
             if (occupied)
-                ShowEquippedSkillPopup(slotIndex, instanceId!, _skillBtns[slotIndex]);
+            {
+                var instance = _manager.FindSkillInstance(instanceId!);
+                if (instance != null) ShowSkillModifyPanel(instance, slotIndex);
+            }
             else
-                ShowEmptySkillSlotMenu(slotIndex, _skillBtns[slotIndex]);
+            {
+                ShowSkillSlotPicker(slotIndex);
+            }
         }
     }
 
@@ -396,7 +423,7 @@ public partial class CharacterScreen : Control
         }
         else if (mb.ButtonIndex == MouseButton.Left)
         {
-            ShowSkillInventoryPopup(instance, btn);
+            ShowSkillModifyPanel(instance);
         }
     }
 
@@ -418,50 +445,21 @@ public partial class CharacterScreen : Control
         ShowPopupAt(popup, anchor);
     }
 
-    private void ShowSkillInventoryPopup(SkillItemInstance instance, Button anchor)
-    {
-        var popup = NewStyledPopup();
-        popup.AddItem("Equip",  0);
-        popup.AddItem("Modify", 1);
-        popup.AddItem("Delete", 2);
-        popup.IdPressed += (long id) =>
-        {
-            var c = _manager.SelectedCharacter;
-            if (id == 0 && c != null)
-            {
-                int emptySlot = c.SlottedSkillInstanceIds.IndexOf("");
-                if (emptySlot < 0) emptySlot = 0;
-                _manager.EquipSkill(c.Id, emptySlot, instance.Id);
-                Refresh();
-            }
-            else if (id == 1) ShowSkillModifyPanel(instance);
-            else if (id == 2) { _manager.DeleteSkillItem(instance.Id); Refresh(); }
-        };
-        ShowPopupAt(popup, anchor);
-    }
-
-    private void ShowSupportInventoryPopup(SkillAugmentInstance instance, Button anchor)
-    {
-        var popup = NewStyledPopup();
-        popup.AddItem("Delete", 0);
-        popup.IdPressed += (long id) =>
-        {
-            if (id == 0)
-                _manager.Profile.OwnedSkillAugmentInstances.Remove(instance);
-            Refresh();
-        };
-        ShowPopupAt(popup, anchor);
-    }
 
     private void ShowEquipmentAugmentInventoryPopup(EquipmentAugmentInstance instance, Button anchor)
     {
         var popup = NewStyledPopup();
-        popup.AddItem("Delete", 0);
+        popup.AddItem("Modify", 0);
+        popup.AddItem("Delete", 1);
         popup.IdPressed += (long id) =>
         {
             if (id == 0)
+                ShowEquipmentAugmentModifyPanel(instance);
+            else if (id == 1)
+            {
                 _manager.Profile.OwnedEquipmentAugmentInstances.Remove(instance);
-            Refresh();
+                Refresh();
+            }
         };
         ShowPopupAt(popup, anchor);
     }
@@ -486,27 +484,6 @@ public partial class CharacterScreen : Control
         ShowPopupAt(popup, anchor);
     }
 
-    private void ShowEquippedSkillPopup(int slotIndex, string instanceId, Button anchor)
-    {
-        var c        = _manager.SelectedCharacter!;
-        var instance = _manager.FindSkillInstance(instanceId);
-        var popup    = NewStyledPopup();
-        popup.AddItem("Unequip", 0);
-        popup.AddItem("Modify",  1);
-        popup.AddItem("Delete",  2);
-        popup.AddCheckItem("Auto-activate", 3);
-        bool autoOn = slotIndex < c.SlotAutoActivate.Count ? c.SlotAutoActivate[slotIndex] : true;
-        popup.SetItemChecked(3, autoOn);
-        popup.IdPressed += (long id) =>
-        {
-            if (id == 0) { _manager.UnequipSkillSlot(c.Id, slotIndex); Refresh(); }
-            else if (id == 1 && instance != null) ShowSkillModifyPanel(instance);
-            else if (id == 2) { _manager.DeleteSkillPermanently(c.Id, slotIndex); Refresh(); }
-            else if (id == 3) { _manager.SetSlotAutoActivate(c.Id, slotIndex, !popup.IsItemChecked(3)); }
-        };
-        ShowPopupAt(popup, anchor);
-    }
-
     private void ShowEmptyGearSlotMenu(ItemSlot slot, Button anchor)
     {
         var popup = NewStyledPopup();
@@ -516,19 +493,6 @@ public partial class CharacterScreen : Control
         {
             if      (id == 0) ShowCraftGearForSlotPanel(slot);
             else if (id == 1) OpenPicker(slot);
-        };
-        ShowPopupAt(popup, anchor);
-    }
-
-    private void ShowEmptySkillSlotMenu(int slotIndex, Button anchor)
-    {
-        var popup = NewStyledPopup();
-        popup.AddItem("Craft New",            0);
-        popup.AddItem("Equip from Inventory", 1);
-        popup.IdPressed += (long id) =>
-        {
-            if      (id == 0) ShowCraftSkillPopup();
-            else if (id == 1) OpenSkillPicker(slotIndex);
         };
         ShowPopupAt(popup, anchor);
     }
@@ -543,7 +507,7 @@ public partial class CharacterScreen : Control
         overlay.AddChild(panel);
         AddChild(overlay);
 
-        vbox.AddChild(MakeModifyHeader($"Craft {slot}", () => overlay.QueueFree()));
+        vbox.AddChild(MakeModifyHeader($"Craft {slot}", () => CloseOverlay(overlay)));
         vbox.AddChild(new HSeparator());
 
         int  common  = _manager.Profile.GetMaterial("crafting_common");
@@ -563,7 +527,7 @@ public partial class CharacterScreen : Control
             bool canCraft = !invFull && common >= cost;
             var  btn      = MakeModifyButton($"{itemDef.Name}  —  {cost} Common", !canCraft);
             string rid    = recipe.Id;
-            btn.Pressed  += () => { _manager.CraftGearItem(rid); overlay.QueueFree(); Refresh(); };
+            btn.Pressed  += () => { _manager.CraftGearItem(rid); CloseOverlay(overlay); Refresh(); };
             vbox.AddChild(btn);
         }
 
@@ -585,7 +549,7 @@ public partial class CharacterScreen : Control
         overlay.AddChild(panel);
         AddChild(overlay);
 
-        vbox.AddChild(MakeModifyHeader("Craft Equipment", () => overlay.QueueFree()));
+        vbox.AddChild(MakeModifyHeader("Craft Equipment", () => CloseOverlay(overlay)));
         vbox.AddChild(new HSeparator());
 
         int common    = _manager.Profile.GetMaterial("crafting_common");
@@ -607,14 +571,14 @@ public partial class CharacterScreen : Control
             btn.Pressed += () =>
             {
                 _manager.CraftGearItem(recipeId);
-                overlay.QueueFree();
+                CloseOverlay(overlay);
                 Refresh();
             };
             vbox.AddChild(btn);
         }
     }
 
-    private void ShowCraftSkillPopup()
+    private void ShowCraftSkillToInventoryOverlay()
     {
         var overlay = MakeModalOverlay();
         var panel   = MakeModifyPanel();
@@ -624,7 +588,7 @@ public partial class CharacterScreen : Control
         overlay.AddChild(panel);
         AddChild(overlay);
 
-        vbox.AddChild(MakeModifyHeader("Craft Skill", () => overlay.QueueFree()));
+        vbox.AddChild(MakeModifyHeader("Craft Skill", () => CloseOverlay(overlay)));
         vbox.AddChild(new HSeparator());
 
         int common   = _manager.Profile.GetMaterial("crafting_common");
@@ -638,17 +602,11 @@ public partial class CharacterScreen : Control
         {
             var skillDef = Skills.SkillRegistry.Get(recipe.OutputItemId);
             if (skillDef == null) continue;
-            int cost     = (recipe.MaterialCosts.TryGetValue("crafting_common", out var matCost) ? matCost : 1);
+            int cost      = recipe.MaterialCosts.TryGetValue("crafting_common", out var mc) ? mc : 1;
             bool canCraft = !invFull && common >= cost;
-            string label  = $"{skillDef.Name}  —  {cost} Common";
-            var btn       = MakeModifyButton(label, !canCraft);
-            string recipeId = recipe.Id;
-            btn.Pressed += () =>
-            {
-                _manager.CraftSkillItem(recipeId);
-                overlay.QueueFree();
-                Refresh();
-            };
+            var btn       = MakeModifyButton($"{skillDef.Name}  —  {cost} Common", !canCraft);
+            string rid    = recipe.Id;
+            btn.Pressed  += () => { _manager.CraftSkillItem(rid); CloseOverlay(overlay); Refresh(); };
             vbox.AddChild(btn);
         }
     }
@@ -671,14 +629,6 @@ public partial class CharacterScreen : Control
         AddChild(picker);
     }
 
-    private void OpenSkillPicker(int slotIndex)
-    {
-        var pickerScene = GD.Load<PackedScene>("res://src/ui/skill_picker_panel.tscn");
-        var picker      = pickerScene.Instantiate<SkillPickerPanel>();
-        picker.Init(_manager, _manager.SelectedCharacter!, slotIndex, () => Refresh());
-        AddChild(picker);
-    }
-
     // ── Modify panel ─────────────────────────────────────────────────────────
 
     private void ShowGearModifyPanel(GearItemInstance instance)
@@ -694,7 +644,7 @@ public partial class CharacterScreen : Control
         AddChild(overlay);
 
         // Title
-        var header = MakeModifyHeader($"{def?.Name ?? "Item"}  [{ItemTier.Label(instance.Tier)}]", () => overlay.QueueFree());
+        var header = MakeModifyHeader($"{def?.Name ?? "Item"}  [{ItemTier.Label(instance.Tier)}]", () => CloseOverlay(overlay));
         vbox.AddChild(header);
         vbox.AddChild(new HSeparator());
 
@@ -703,7 +653,7 @@ public partial class CharacterScreen : Control
         bool canAfford = _manager.Profile.GetMaterial("crafting_common") >= 1;
         string next    = instance.Tier switch { 1 => "Uncommon", 2 => "Rare", _ => "" };
         var upgradeBtn = MakeModifyButton(atMax ? "Max Tier" : $"Upgrade to {next}  [1 Common]", atMax || !canAfford);
-        upgradeBtn.Pressed += () => { _manager.UpgradeGearItem(instance.Id); overlay.QueueFree(); Refresh(); };
+        upgradeBtn.Pressed += () => { _manager.UpgradeGearItem(instance.Id); CloseOverlay(overlay); Refresh(); };
         vbox.AddChild(upgradeBtn);
 
         // Augment slots
@@ -718,40 +668,503 @@ public partial class CharacterScreen : Control
         }
     }
 
-    private void ShowSkillModifyPanel(SkillItemInstance instance)
+    // ── Skill slot picker (empty slot left-click) ─────────────────────────────
+
+    private void ShowSkillSlotPicker(int slotIndex)
     {
         var overlay = MakeModalOverlay();
         var panel   = MakeModifyPanel();
         var vbox    = new VBoxContainer();
-        vbox.AddThemeConstantOverride("separation", 10);
-
-        var def = instance.Definition;
+        vbox.AddThemeConstantOverride("separation", 8);
         panel.AddChild(vbox);
         overlay.AddChild(panel);
         AddChild(overlay);
 
-        // Title
-        var header = MakeModifyHeader($"{def?.Name ?? "Skill"}  [{ItemTier.Label(instance.Tier)}]", () => overlay.QueueFree());
-        vbox.AddChild(header);
+        vbox.AddChild(MakeModifyHeader("Equip Skill", () => CloseOverlay(overlay)));
         vbox.AddChild(new HSeparator());
 
-        // Upgrade
+        int common   = _manager.Profile.GetMaterial("crafting_common");
+        bool invFull = _manager.Profile.OwnedSkillInstances.Count >= Character.ProfileData.MaxInventory;
+        var craftBtn = MakeModifyButton("Craft Skill  [1 Common]", invFull || common < 1);
+        craftBtn.Pressed += () => { CloseOverlay(overlay); ShowCraftSkillAndSlot(slotIndex); };
+        vbox.AddChild(craftBtn);
+        vbox.AddChild(new HSeparator());
+
+        var equippedIds = new System.Collections.Generic.HashSet<string>(
+            _manager.GetAll()
+                .SelectMany(c => c.SlottedSkillInstanceIds)
+                .Where(id => !string.IsNullOrEmpty(id)));
+        var unslotted = _manager.Profile.OwnedSkillInstances
+            .Where(s => !equippedIds.Contains(s.Id))
+            .ToList();
+
+        if (unslotted.Count == 0)
+        {
+            vbox.AddChild(MakeModifySubLabel("No unslotted skills in inventory"));
+        }
+        else
+        {
+            foreach (var inst in unslotted)
+            {
+                var skill = inst.Definition;
+                if (skill == null) continue;
+                var cap = inst;
+                var btn = MakeModifyButton(skill.Name, false);
+                btn.Pressed += () =>
+                {
+                    var c = _manager.SelectedCharacter;
+                    if (c != null) _manager.EquipSkill(c.Id, slotIndex, cap.Id);
+                    CloseOverlay(overlay);
+                    Refresh();
+                    ShowSkillModifyPanel(cap, slotIndex);
+                };
+                vbox.AddChild(btn);
+            }
+        }
+    }
+
+    private void ShowCraftSkillAndSlot(int slotIndex)
+    {
+        var overlay = MakeModalOverlay();
+        var panel   = MakeModifyPanel();
+        var vbox    = new VBoxContainer();
+        vbox.AddThemeConstantOverride("separation", 8);
+        panel.AddChild(vbox);
+        overlay.AddChild(panel);
+        AddChild(overlay);
+
+        vbox.AddChild(MakeModifyHeader("Craft Skill", () => CloseOverlay(overlay)));
+        vbox.AddChild(new HSeparator());
+
+        int common   = _manager.Profile.GetMaterial("crafting_common");
+        bool invFull = _manager.Profile.OwnedSkillInstances.Count >= Character.ProfileData.MaxInventory;
+        var statusLbl = new Label { Text = invFull ? "Inventory full" : $"Common material: {common}" };
+        statusLbl.AddThemeColorOverride("font_color", new Color("#8AA0AE"));
+        vbox.AddChild(statusLbl);
+
+        foreach (var recipe in RecipeRegistry.ForType(RecipeType.Skill))
+        {
+            var skillDef = Skills.SkillRegistry.Get(recipe.OutputItemId);
+            if (skillDef == null) continue;
+            int cost  = recipe.MaterialCosts.TryGetValue("crafting_common", out var mc) ? mc : 1;
+            bool can  = !invFull && common >= cost;
+            var btn   = MakeModifyButton($"{skillDef.Name}  —  {cost} Common", !can);
+            string rid = recipe.Id;
+            btn.Pressed += () =>
+            {
+                _manager.CraftSkillItem(rid);
+                var newInst = _manager.Profile.OwnedSkillInstances[^1];
+                var c = _manager.SelectedCharacter;
+                if (c != null) _manager.EquipSkill(c.Id, slotIndex, newInst.Id);
+                CloseOverlay(overlay);
+                Refresh();
+                ShowSkillModifyPanel(newInst, slotIndex);
+            };
+            vbox.AddChild(btn);
+        }
+    }
+
+    // ── Skill Modify Panel (2-column layout) ─────────────────────────────────
+
+    private void ShowSkillModifyPanel(SkillItemInstance instance, int charSlotIndex = -1, int initialSelectedSlot = -1)
+    {
+        var overlay = MakeModalOverlay();
+        AddChild(overlay);
+
+        int[] selSlot = { initialSelectedSlot };
+        System.Action rebuild = null!;
+        rebuild = () =>
+        {
+            foreach (Node child in overlay.GetChildren()) child.QueueFree();
+            overlay.AddChild(BuildSkillModifyContent(instance, charSlotIndex, overlay, selSlot, rebuild));
+        };
+        rebuild();
+    }
+
+    private Control BuildSkillModifyContent(SkillItemInstance instance, int charSlotIndex, Control overlay, int[] selSlot, System.Action rebuild)
+    {
+        var def  = instance.Definition;
+        var font = GD.Load<Font>("res://assets/fonts/Exo_2/Exo_2_2.ttf");
+
+        var panel = new PanelContainer
+        {
+            AnchorLeft = 0.5f, AnchorRight  = 0.5f,
+            AnchorTop  = 0.5f, AnchorBottom = 0.5f,
+            GrowHorizontal    = Control.GrowDirection.Both,
+            GrowVertical      = Control.GrowDirection.Both,
+            CustomMinimumSize = new Vector2(560f, 0f),
+        };
+        panel.AddThemeStyleboxOverride("panel", new StyleBoxFlat
+        {
+            BgColor                 = new Color("#1E252B"),
+            BorderColor             = new Color("#3A4650"),
+            BorderWidthTop          = 1, BorderWidthBottom      = 1,
+            BorderWidthLeft         = 1, BorderWidthRight       = 1,
+            CornerRadiusTopLeft     = 4, CornerRadiusTopRight   = 4,
+            CornerRadiusBottomLeft  = 4, CornerRadiusBottomRight = 4,
+            ContentMarginLeft       = 16f, ContentMarginRight   = 16f,
+            ContentMarginTop        = 16f, ContentMarginBottom  = 16f,
+        });
+
+        var root = new VBoxContainer();
+        root.AddThemeConstantOverride("separation", 8);
+        panel.AddChild(root);
+
+        // ── Header ──
+        var header = new HBoxContainer();
+        header.AddThemeConstantOverride("separation", 8);
+
+        var nameLabel = new Label
+        {
+            Text                = $"{def?.Name ?? "Skill"}  [{ItemTier.Label(instance.Tier)}]",
+            SizeFlagsHorizontal = SizeFlags.ExpandFill,
+        };
+        nameLabel.AddThemeFontOverride("font", font);
+        nameLabel.AddThemeFontSizeOverride("font_size", 18);
+        nameLabel.AddThemeColorOverride("font_color", new Color("#C8D4DC"));
+        header.AddChild(nameLabel);
+
         bool atMax     = instance.Tier >= ItemTier.Max;
         bool canAfford = _manager.Profile.GetMaterial("crafting_common") >= 1;
-        string next    = instance.Tier switch { 1 => "Uncommon", 2 => "Rare", _ => "" };
-        var upgradeBtn = MakeModifyButton(atMax ? "Max Tier" : $"Upgrade to {next}  [1 Common]", atMax || !canAfford);
-        upgradeBtn.Pressed += () => { _manager.UpgradeSkillItem(instance.Id); overlay.QueueFree(); Refresh(); };
-        vbox.AddChild(upgradeBtn);
+        string nextTier = instance.Tier switch { 1 => "Uncommon", 2 => "Rare", _ => "" };
+        var upBtn = new Button { Text = atMax ? "Max" : "Upgrade", Disabled = atMax || !canAfford };
+        upBtn.AddThemeFontOverride("font", font);
+        upBtn.TooltipText = atMax ? "Max tier" : $"Upgrade to {nextTier}  [1 Common]";
+        upBtn.Pressed    += () => { _manager.UpgradeSkillItem(instance.Id); CloseOverlay(overlay); Refresh(); };
+        header.AddChild(upBtn);
 
-        // Augment slots
-        if (instance.MaxSkillAugmentSlots > 0)
+        var rrBtn = new Button { Text = "Re-roll", Disabled = true, TooltipText = "Re-roll (v2+)" };
+        rrBtn.AddThemeFontOverride("font", font);
+        header.AddChild(rrBtn);
+
+        if (charSlotIndex >= 0)
         {
-            vbox.AddChild(new HSeparator());
-            vbox.AddChild(MakeModifySubLabel("Skill Augments"));
-            var row = new HBoxContainer();
-            row.AddThemeConstantOverride("separation", 6);
-            vbox.AddChild(row);
-            BuildSkillAugSlots(row, instance);
+            var removeBtn = new Button { Text = "Remove" };
+            removeBtn.AddThemeFontOverride("font", font);
+            removeBtn.Pressed += () =>
+            {
+                var c = _manager.SelectedCharacter;
+                if (c != null) _manager.UnequipSkillSlot(c.Id, charSlotIndex);
+                CloseOverlay(overlay);
+                Refresh();
+            };
+            header.AddChild(removeBtn);
+        }
+
+        var closeBtn = new Button { Text = "✕" };
+        closeBtn.AddThemeFontOverride("font", font);
+        closeBtn.Pressed += () => CloseOverlay(overlay);
+        header.AddChild(closeBtn);
+
+        root.AddChild(header);
+        root.AddChild(new HSeparator());
+
+        // ── Body: left slots + right context ──
+        var body = new HBoxContainer();
+        body.AddThemeConstantOverride("separation", 0);
+        root.AddChild(body);
+
+        var leftMargin = new MarginContainer();
+        leftMargin.AddThemeConstantOverride("margin_right", 12);
+        leftMargin.AddThemeConstantOverride("margin_top", 4);
+        var leftCol = new VBoxContainer();
+        leftCol.AddThemeConstantOverride("separation", 6);
+        leftCol.CustomMinimumSize = new Vector2(110, 200);
+        leftMargin.AddChild(leftCol);
+        body.AddChild(leftMargin);
+
+        body.AddChild(new VSeparator());
+
+        var rightMargin = new MarginContainer { SizeFlagsHorizontal = SizeFlags.ExpandFill };
+        rightMargin.AddThemeConstantOverride("margin_left", 12);
+        rightMargin.AddThemeConstantOverride("margin_top", 4);
+        var rightContent = new VBoxContainer { SizeFlagsHorizontal = SizeFlags.ExpandFill };
+        rightMargin.AddChild(rightContent);
+        body.AddChild(rightMargin);
+
+        // Placeholder
+        var placeholder = new Label { Text = "← Select an augment slot" };
+        placeholder.AddThemeFontOverride("font", font);
+        placeholder.AddThemeFontSizeOverride("font_size", 14);
+        placeholder.AddThemeColorOverride("font_color", new Color("#4A5560"));
+        rightContent.AddChild(placeholder);
+
+        // Build augment slot buttons
+        int numSlots = instance.MaxSkillAugmentSlots;
+        if (numSlots == 0)
+        {
+            var noSlots = new Label { Text = "Upgrade skill\nto unlock augment slots" };
+            noSlots.AddThemeFontOverride("font", font);
+            noSlots.AddThemeFontSizeOverride("font_size", 12);
+            noSlots.AddThemeColorOverride("font_color", new Color("#4A5560"));
+            leftCol.AddChild(noSlots);
+        }
+        else
+        {
+            var btnGroup = new ButtonGroup();
+            for (int i = 0; i < numSlots; i++)
+            {
+                int cap = i;
+                string sockId = i < instance.SocketedSkillAugmentIds.Count ? instance.SocketedSkillAugmentIds[i] : "";
+                var aug = _manager.FindSkillAugmentInstance(sockId);
+                bool filled = aug?.Definition != null;
+
+                var slotBtn = new Button
+                {
+                    CustomMinimumSize   = new Vector2(110, 50),
+                    SizeFlagsHorizontal = SizeFlags.Fill,
+                    Text                = filled ? aug!.Definition!.Name : $"A{i + 1}",
+                    ToggleMode          = true,
+                    ButtonGroup         = btnGroup,
+                    ButtonPressed       = selSlot[0] == i,
+                };
+                slotBtn.AddThemeFontOverride("font", font);
+                slotBtn.AddThemeFontSizeOverride("font_size", 13);
+                if (!filled) slotBtn.Modulate = new Color(1f, 1f, 1f, 0.5f);
+
+                slotBtn.Pressed += () =>
+                {
+                    selSlot[0] = cap;
+                    foreach (Node child in rightContent.GetChildren()) child.QueueFree();
+                    string curId = cap < instance.SocketedSkillAugmentIds.Count ? instance.SocketedSkillAugmentIds[cap] : "";
+                    var curAug = _manager.FindSkillAugmentInstance(curId);
+                    if (curAug?.Definition != null)
+                        BuildFilledAugSlotPanel(rightContent, instance, cap, charSlotIndex, overlay, rebuild, font);
+                    else
+                        BuildEmptyAugSlotPanel(rightContent, instance, cap, charSlotIndex, overlay, rebuild, font);
+                };
+
+                leftCol.AddChild(slotBtn);
+            }
+        }
+
+        // Auto-show right panel when a slot was selected before rebuild
+        if (selSlot[0] >= 0 && selSlot[0] < numSlots)
+        {
+            foreach (Node child in rightContent.GetChildren()) child.QueueFree();
+            string curId = selSlot[0] < instance.SocketedSkillAugmentIds.Count ? instance.SocketedSkillAugmentIds[selSlot[0]] : "";
+            var curAug = _manager.FindSkillAugmentInstance(curId);
+            if (curAug?.Definition != null)
+                BuildFilledAugSlotPanel(rightContent, instance, selSlot[0], charSlotIndex, overlay, rebuild, font);
+            else
+                BuildEmptyAugSlotPanel(rightContent, instance, selSlot[0], charSlotIndex, overlay, rebuild, font);
+        }
+
+        return panel;
+    }
+
+    private void BuildEmptyAugSlotPanel(VBoxContainer container, SkillItemInstance skill, int augSlot, int charSlotIndex, Control overlay, System.Action rebuild, Font font)
+    {
+        var hdr = new Label { Text = $"Slot A{augSlot + 1} — Empty" };
+        hdr.AddThemeFontOverride("font", font);
+        hdr.AddThemeFontSizeOverride("font_size", 15);
+        hdr.AddThemeColorOverride("font_color", new Color("#8AA0AE"));
+        container.AddChild(hdr);
+        container.AddChild(new HSeparator());
+
+        int common   = _manager.Profile.GetMaterial("crafting_common");
+        bool invFull = _manager.Profile.OwnedSkillAugmentInstances.Count >= Character.ProfileData.MaxInventory;
+        var craftBtn = MakeModifyButton("Craft Augment  [1 Common]", invFull || common < 1);
+        craftBtn.Pressed += () => { CloseOverlay(overlay); ShowCraftAugmentAndSocket(skill, augSlot, charSlotIndex); };
+        container.AddChild(craftBtn);
+        container.AddChild(new HSeparator());
+
+        var owned = _manager.Profile.OwnedSkillAugmentInstances
+            .Where(a => a.Definition != null).ToList();
+
+        if (owned.Count == 0)
+        {
+            var lbl = new Label { Text = "No augments in inventory" };
+            lbl.AddThemeFontOverride("font", font);
+            lbl.AddThemeFontSizeOverride("font_size", 13);
+            lbl.AddThemeColorOverride("font_color", new Color("#4A5560"));
+            container.AddChild(lbl);
+        }
+        else
+        {
+            foreach (var aug in owned)
+            {
+                var capAug = aug;
+                var btn = MakeModifyButton(aug.Definition!.Name, false);
+                btn.Pressed += () => { _manager.SocketSkillAugment(skill.Id, augSlot, capAug.Id); rebuild(); };
+                container.AddChild(btn);
+            }
+        }
+    }
+
+    private void BuildFilledAugSlotPanel(VBoxContainer container, SkillItemInstance skill, int augSlot, int charSlotIndex, Control overlay, System.Action rebuild, Font font)
+    {
+        string sockId = augSlot < skill.SocketedSkillAugmentIds.Count ? skill.SocketedSkillAugmentIds[augSlot] : "";
+        var aug = _manager.FindSkillAugmentInstance(sockId);
+        if (aug?.Definition == null) return;
+
+        var nameLabel = new Label { Text = $"{aug.Definition.Name}  [{Items.ItemTier.Label(aug.Tier)}]  (Trigger: {aug.TriggerChance}%)" };
+        nameLabel.AddThemeFontOverride("font", font);
+        nameLabel.AddThemeFontSizeOverride("font_size", 16);
+        nameLabel.AddThemeColorOverride("font_color", new Color("#C8D4DC"));
+        container.AddChild(nameLabel);
+        container.AddChild(new HSeparator());
+
+        int common = _manager.Profile.GetMaterial("crafting_common");
+        bool atMax = aug.Tier >= Items.ItemTier.Max;
+        bool canUpgrade = !atMax && common >= 1;
+        var upBtn = MakeModifyButton(atMax ? "Max Tier" : "Upgrade  [1 Common]", !canUpgrade);
+        upBtn.Pressed += () => { _manager.UpgradeSkillAugment(aug.Id); rebuild(); Refresh(); };
+        container.AddChild(upBtn);
+
+        bool canReroll = common >= 1;
+        var rrBtn = MakeModifyButton("Re-roll Trigger %  [1 Common]", !canReroll);
+        rrBtn.Pressed += () => { _manager.RerollSkillAugment(aug.Id); rebuild(); Refresh(); };
+        container.AddChild(rrBtn);
+
+        var removeBtn = MakeModifyButton("Remove", false);
+        removeBtn.Pressed += () => { _manager.RemoveSkillAugment(skill.Id, augSlot); rebuild(); Refresh(); };
+        container.AddChild(removeBtn);
+    }
+
+    private void ShowCraftAugmentAndSocket(SkillItemInstance skill, int augSlot, int charSlotIndex)
+    {
+        var overlay = MakeModalOverlay();
+        var panel   = MakeModifyPanel();
+        var vbox    = new VBoxContainer();
+        vbox.AddThemeConstantOverride("separation", 8);
+        panel.AddChild(vbox);
+        overlay.AddChild(panel);
+        AddChild(overlay);
+
+        vbox.AddChild(MakeModifyHeader("Craft Augment", () =>
+        {
+            CloseOverlay(overlay);
+            ShowSkillModifyPanel(skill, charSlotIndex);
+        }));
+        vbox.AddChild(new HSeparator());
+
+        int common   = _manager.Profile.GetMaterial("crafting_common");
+        bool invFull = _manager.Profile.OwnedSkillAugmentInstances.Count >= Character.ProfileData.MaxInventory;
+        var statusLbl = new Label { Text = invFull ? "Inventory full" : $"Common material: {common}" };
+        statusLbl.AddThemeColorOverride("font_color", new Color("#8AA0AE"));
+        vbox.AddChild(statusLbl);
+
+        foreach (var recipe in RecipeRegistry.ForType(RecipeType.SkillAugment))
+        {
+            var augDef = SkillAugmentRegistry.Get(recipe.OutputItemId);
+            if (augDef == null) continue;
+            int cost  = recipe.MaterialCosts.TryGetValue("crafting_common", out var mc) ? mc : 1;
+            bool can  = !invFull && common >= cost;
+            var btn   = MakeModifyButton($"{augDef.Name}  —  {cost} Common", !can);
+            string rid = recipe.Id;
+            btn.Pressed += () =>
+            {
+                _manager.CraftSkillAugmentItem(rid);
+                var newAug = _manager.Profile.OwnedSkillAugmentInstances[^1];
+                _manager.SocketSkillAugment(skill.Id, augSlot, newAug.Id);
+                CloseOverlay(overlay);
+                Refresh();
+                ShowSkillModifyPanel(skill, charSlotIndex);
+            };
+            vbox.AddChild(btn);
+        }
+    }
+
+    private void ShowAugmentModifyPanel(SkillAugmentInstance instance)
+    {
+        var overlay = MakeModalOverlay();
+        var panel   = MakeModifyPanel();
+        var vbox    = new VBoxContainer();
+        vbox.AddThemeConstantOverride("separation", 8);
+        panel.AddChild(vbox);
+        overlay.AddChild(panel);
+        AddChild(overlay);
+
+        var def = instance.Definition;
+        var font = GD.Load<Font>("res://assets/fonts/Exo_2/Exo_2_2.ttf");
+        vbox.AddChild(MakeModifyHeader(def?.Name ?? "Augment", () => CloseOverlay(overlay)));
+        vbox.AddChild(new HSeparator());
+
+        var statsLbl = new Label { Text = $"Tier: {Items.ItemTier.Label(instance.Tier)}\nTrigger Chance: {instance.TriggerChance}%" };
+        statsLbl.AddThemeFontOverride("font", font);
+        statsLbl.AddThemeFontSizeOverride("font_size", 14);
+        statsLbl.AddThemeColorOverride("font_color", new Color("#C8D4DC"));
+        vbox.AddChild(statsLbl);
+        vbox.AddChild(new HSeparator());
+
+        int common = _manager.Profile.GetMaterial("crafting_common");
+        bool atMax = instance.Tier >= Items.ItemTier.Max;
+        bool canUpgrade = !atMax && common >= 1;
+        var upBtn = MakeModifyButton(atMax ? "Max Tier" : "Upgrade  [1 Common]", !canUpgrade);
+        upBtn.Pressed += () => { _manager.UpgradeSkillAugment(instance.Id); CloseOverlay(overlay); Refresh(); ShowAugmentModifyPanel(instance); };
+        vbox.AddChild(upBtn);
+
+        bool canReroll = common >= 1;
+        var rrBtn = MakeModifyButton("Re-roll Trigger %  [1 Common]", !canReroll);
+        rrBtn.Pressed += () => { _manager.RerollSkillAugment(instance.Id); CloseOverlay(overlay); Refresh(); ShowAugmentModifyPanel(instance); };
+        vbox.AddChild(rrBtn);
+    }
+
+    private void ShowEquipmentAugmentModifyPanel(EquipmentAugmentInstance instance)
+    {
+        var overlay = MakeModalOverlay();
+        var panel   = MakeModifyPanel();
+        var vbox    = new VBoxContainer();
+        vbox.AddThemeConstantOverride("separation", 8);
+        panel.AddChild(vbox);
+        overlay.AddChild(panel);
+        AddChild(overlay);
+
+        var def = instance.Definition;
+        var font = GD.Load<Font>("res://assets/fonts/Exo_2/Exo_2_2.ttf");
+        vbox.AddChild(MakeModifyHeader(def?.Name ?? "Equipment Augment", () => CloseOverlay(overlay)));
+        vbox.AddChild(new HSeparator());
+
+        var statsLbl = new Label { Text = $"Tier: {Items.ItemTier.Label(instance.Tier)}\nTrigger Chance: {instance.TriggerChance}%" };
+        statsLbl.AddThemeFontOverride("font", font);
+        statsLbl.AddThemeFontSizeOverride("font_size", 14);
+        statsLbl.AddThemeColorOverride("font_color", new Color("#C8D4DC"));
+        vbox.AddChild(statsLbl);
+        vbox.AddChild(new HSeparator());
+
+        int common = _manager.Profile.GetMaterial("crafting_common");
+        bool atMax = instance.Tier >= Items.ItemTier.Max;
+        bool canUpgrade = !atMax && common >= 1;
+        var upBtn = MakeModifyButton(atMax ? "Max Tier" : "Upgrade  [1 Common]", !canUpgrade);
+        upBtn.Pressed += () => { _manager.UpgradeEquipmentAugment(instance.Id); CloseOverlay(overlay); Refresh(); ShowEquipmentAugmentModifyPanel(instance); };
+        vbox.AddChild(upBtn);
+
+        bool canReroll = common >= 1;
+        var rrBtn = MakeModifyButton("Re-roll Trigger %  [1 Common]", !canReroll);
+        rrBtn.Pressed += () => { _manager.RerollEquipmentAugment(instance.Id); CloseOverlay(overlay); Refresh(); ShowEquipmentAugmentModifyPanel(instance); };
+        vbox.AddChild(rrBtn);
+    }
+
+    private void ShowCraftAugmentToInventoryOverlay()
+    {
+        var overlay = MakeModalOverlay();
+        var panel   = MakeModifyPanel();
+        var vbox    = new VBoxContainer();
+        vbox.AddThemeConstantOverride("separation", 8);
+        panel.AddChild(vbox);
+        overlay.AddChild(panel);
+        AddChild(overlay);
+
+        vbox.AddChild(MakeModifyHeader("Craft Augment", () => CloseOverlay(overlay)));
+        vbox.AddChild(new HSeparator());
+
+        int common   = _manager.Profile.GetMaterial("crafting_common");
+        bool invFull = _manager.Profile.OwnedSkillAugmentInstances.Count >= Character.ProfileData.MaxInventory;
+        var statusLbl = new Label { Text = invFull ? "Inventory full" : $"Common material: {common}" };
+        statusLbl.AddThemeColorOverride("font_color", new Color("#8AA0AE"));
+        vbox.AddChild(statusLbl);
+
+        foreach (var recipe in RecipeRegistry.ForType(RecipeType.SkillAugment))
+        {
+            var augDef = SkillAugmentRegistry.Get(recipe.OutputItemId);
+            if (augDef == null) continue;
+            int cost  = recipe.MaterialCosts.TryGetValue("crafting_common", out var mc) ? mc : 1;
+            bool can  = !invFull && common >= cost;
+            var btn   = MakeModifyButton($"{augDef.Name}  —  {cost} Common", !can);
+            string rid = recipe.Id;
+            btn.Pressed += () => { _manager.CraftSkillAugmentItem(rid); CloseOverlay(overlay); Refresh(); };
+            vbox.AddChild(btn);
         }
     }
 
@@ -786,37 +1199,6 @@ public partial class CharacterScreen : Control
         }
     }
 
-    private void BuildSkillAugSlots(HBoxContainer row, SkillItemInstance instance)
-    {
-        foreach (Node child in row.GetChildren()) child.QueueFree();
-
-        for (int i = 0; i < instance.MaxSkillAugmentSlots; i++)
-        {
-            int    captured   = i;
-            string socketedId = i < instance.SocketedSkillAugmentIds.Count
-                ? instance.SocketedSkillAugmentIds[i] : "";
-            var    augment    = _manager.FindSkillAugmentInstance(socketedId);
-            var    btn        = new TooltipButton { CustomMinimumSize = new Vector2(60, 60) };
-
-            if (augment?.Definition != null)
-            {
-                btn.Text        = augment.Definition.Name;
-                btn.TooltipText = augment.Definition.Name;
-                btn.AddThemeFontSizeOverride("font_size", 9);
-                btn.Pressed += () => { _manager.RemoveSkillAugment(instance.Id, captured); BuildSkillAugSlots(row, instance); };
-            }
-            else
-            {
-                btn.Text        = $"S{i + 1}";
-                btn.TooltipText = "Empty — click to socket";
-                btn.Modulate    = new Color(1f, 1f, 1f, 0.5f);
-                btn.Pressed     += () => OpenSkillAugmentPicker(row, instance, captured);
-            }
-
-            row.AddChild(btn);
-        }
-    }
-
     private void OpenGearAugmentPicker(HBoxContainer row, GearItemInstance gear, int slotIndex)
     {
         var def = gear.Definition;
@@ -845,29 +1227,6 @@ public partial class CharacterScreen : Control
         ShowPopupAt(popup, anchor);
     }
 
-    private void OpenSkillAugmentPicker(HBoxContainer row, SkillItemInstance skill, int slotIndex)
-    {
-        var compatible = _manager.Profile.OwnedSkillAugmentInstances
-            .Where(s => s.Definition != null)
-            .ToList();
-
-        var popup = NewStyledPopup();
-        if (compatible.Count == 0)
-        {
-            popup.AddItem("No skill augments owned", 0);
-            popup.SetItemDisabled(0, true);
-        }
-        else
-        {
-            for (int i = 0; i < compatible.Count; i++)
-                popup.AddItem(compatible[i].Definition!.Name, i);
-            popup.IdPressed += (long id) => { _manager.SocketSkillAugment(skill.Id, slotIndex, compatible[(int)id].Id); BuildSkillAugSlots(row, skill); };
-        }
-
-        Control anchor = slotIndex < row.GetChildCount() && row.GetChild(slotIndex) is Control c ? c : row;
-        ShowPopupAt(popup, anchor);
-    }
-
     private static ColorRect MakeModalOverlay()
     {
         return new ColorRect
@@ -877,6 +1236,12 @@ public partial class CharacterScreen : Control
             AnchorTop    = 0f, AnchorBottom = 1f,
             MouseFilter  = Control.MouseFilterEnum.Stop,
         };
+    }
+
+    private void CloseOverlay(Control overlay)
+    {
+        GetViewport().GuiReleaseFocus();
+        overlay.QueueFree();
     }
 
     private static PanelContainer MakeModifyPanel()
@@ -1122,5 +1487,55 @@ public partial class CharacterScreen : Control
         sb.Append($"\nCD: {skill.Cooldown:F1}s");
         sb.Append($"\nAugments: {instance.SocketedSkillAugmentIds.Count(id => !string.IsNullOrEmpty(id))}/{instance.MaxSkillAugmentSlots}");
         return sb.ToString();
+    }
+
+    public void OpenSkillSlotModifyPanel(int slotIndex)
+    {
+        var c = _manager.SelectedCharacter;
+        if (c == null) return;
+        if (slotIndex < 0 || slotIndex >= c.SlottedSkillInstanceIds.Count) return;
+        string instanceId = c.SlottedSkillInstanceIds[slotIndex];
+        if (string.IsNullOrEmpty(instanceId)) return;
+        var instance = _manager.FindSkillInstance(instanceId);
+        if (instance != null) ShowSkillModifyPanel(instance, slotIndex, 0);
+    }
+
+    public void SocketTestAugment()
+    {
+        var c = _manager.SelectedCharacter;
+        if (c == null || c.SlottedSkillInstanceIds.Count == 0) return;
+        string skillId = c.SlottedSkillInstanceIds[0];
+        if (string.IsNullOrEmpty(skillId)) return;
+        
+        if (_manager.Profile.OwnedSkillAugmentInstances.Count == 0) return;
+        var aug = _manager.Profile.OwnedSkillAugmentInstances[0];
+        
+        _manager.SocketSkillAugment(skillId, 0, aug.Id);
+        
+        var oldOverlay = GetNodeOrNull("ColorRect");
+        if (oldOverlay != null) oldOverlay.QueueFree();
+        
+        var skill = _manager.FindSkillInstance(skillId);
+        if (skill != null) ShowSkillModifyPanel(skill, 0, 0);
+    }
+
+    public void UpgradeAndRerollTestAugment()
+    {
+        var c = _manager.SelectedCharacter;
+        if (c == null || c.SlottedSkillInstanceIds.Count == 0) return;
+        string skillId = c.SlottedSkillInstanceIds[0];
+        if (string.IsNullOrEmpty(skillId)) return;
+        var skill = _manager.FindSkillInstance(skillId);
+        if (skill == null || skill.SocketedSkillAugmentIds.Count == 0) return;
+        string augId = skill.SocketedSkillAugmentIds[0];
+        if (string.IsNullOrEmpty(augId)) return;
+        
+        _manager.UpgradeSkillAugment(augId);
+        _manager.RerollSkillAugment(augId);
+        
+        var oldOverlay = GetNodeOrNull("ColorRect");
+        if (oldOverlay != null) oldOverlay.QueueFree();
+        
+        ShowSkillModifyPanel(skill, 0, 0);
     }
 }

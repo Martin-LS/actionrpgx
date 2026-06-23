@@ -33,14 +33,14 @@ Test each prototype in-game: fires correctly, damage lands, VFX plays, no errors
 Test each augment prototype in-game. Do skill augments first (individually), then mixes.
 
 **Skill augments — individual:**
-- [ ] Hit-Debuff (Slow) — socket on Entity-Burst, hit enemy, confirm Slow applies and expires, no double-stack, reapplication refreshes duration
-- [ ] Hit-Damage (Magic Damage) — socket on Entity-Burst, confirm damage numbers show as magic type, magic resistance applies, works regardless of weapon
-- [ ] Hit-Damage-Mod (Critical Strike) — socket on Entity-Burst, confirm per-skill crit bonus stacks on top of global Dex crit, crits fire at combined chance
+- [x] Hit-Debuff (Slow) — socket on Entity-Burst, hit enemy, confirm Slow applies and expires, no double-stack, reapplication refreshes duration
+- [x] Hit-Damage (Magic Damage) — socket on Entity-Burst, confirm damage numbers show as magic type, magic resistance applies, works regardless of weapon
+- [x] Hit-Damage-Mod (Critical Strike) — socket on Entity-Burst, confirm per-skill crit bonus stacks on top of global Dex crit, crits fire at combined chance
 
 **Augment mixes:**
-- [ ] Damage+Debuff — Hit-Damage + Hit-Debuff on same skill; both fire independently; magic type applies, Slow EoT rolls separately
-- [ ] Damage+Crit — Hit-Damage + Hit-Damage-Mod; magic damage type applies; crit rolls at boosted chance
-- [ ] Debuff+Crit — Hit-Debuff + Hit-Damage-Mod; Slow EoT rolls at its own %; crit fires at boosted chance; both independent
+- [x] Damage+Debuff — Hit-Damage + Hit-Debuff on same skill; both fire independently; magic type applies, Slow EoT rolls separately
+- [x] Damage+Crit — Hit-Damage + Hit-Damage-Mod; magic damage type applies; crit rolls at boosted chance; 28 kills / 3m 24s run; "13" magic hits and "19" crits (12.4 × 1.5) confirmed
+- [x] Debuff+Crit — Hit-Debuff + Hit-Damage-Mod; Slow EoT rolls at its own %; crit fires at boosted chance; both independent
 
 ---
 
@@ -57,7 +57,8 @@ Test each augment prototype in-game. Do skill augments first (individually), the
 > **Not in scope.**
 
 - [ ] Map selection screen — currently one hardcoded arena; no selection or variety
-- [ ] Craft New flow — not yet implemented (left-click empty skill/gear slot → craft new)
+- [x] Craft New flow — not yet implemented (left-click empty skill/gear slot → craft new)
+- [x] Augment Upgrades & Re-rolls — upgrade augment tier (up to Tier 3/Rare) and reroll trigger chance for 1 Common material (Skill/Equipment Augments)
 - [ ] Boss mechanic — run win condition triggers on timer expiry; boss is unimplemented
 
 ---

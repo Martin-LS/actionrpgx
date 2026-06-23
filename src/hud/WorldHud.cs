@@ -14,9 +14,9 @@ public partial class WorldHud : Node2D
     private static readonly Color PlayerBarFill = Color.FromHtml("#A32D2D");
     private static readonly Color EnemyBarFill  = Color.FromHtml("#C03030");
     private static readonly Color BarTrack      = Color.FromHtml("#181C1F");
-    private static readonly Color PhysColor     = Colors.White;
-    private static readonly Color MagicColor    = Colors.White;
-    private static readonly Color CritColor     = Colors.White;
+    private static readonly Color PhysColor     = Color.FromHtml("#E8DCC8"); // Bone White
+    private static readonly Color MagicColor    = Color.FromHtml("#B8D8E8"); // Ice Shimmer
+    private static readonly Color CritColor     = Color.FromHtml("#D4A017"); // Gold
 
     private Camera3D?         _camera;
     private PlayerController? _player;

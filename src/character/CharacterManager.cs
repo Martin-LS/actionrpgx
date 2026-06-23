@@ -20,6 +20,39 @@ public partial class CharacterManager : Node
 
     public IReadOnlyList<CharacterData> GetAll() => _characters;
 
+    public void SetupTestScenario()
+    {
+        var chars = GetAll();
+        CharacterData c;
+        if (chars.Count > 0)
+        {
+            c = chars[0];
+            SelectCharacter(c.Id);
+        }
+        else
+        {
+            c = Create("TestHero", CharacterType.Warrior);
+            SelectCharacter(c.Id);
+        }
+
+        Profile.Materials["crafting_common"] = 100;
+
+        if (Profile.OwnedSkillInstances.Count == 0)
+        {
+            CraftSkillItem("recipe_entity_burst");
+        }
+
+        var skillInst = Profile.OwnedSkillInstances[0];
+        EquipSkill(c.Id, 0, skillInst.Id);
+
+        if (Profile.OwnedSkillAugmentInstances.Count == 0)
+        {
+            CraftSkillAugmentItem("recipe_slow");
+        }
+        
+        Save();
+    }
+
     public CharacterData Create(string name, CharacterType type)
     {
         var c = new CharacterData { Name = name, Type = type };
@@ -283,7 +316,11 @@ public partial class CharacterManager : Node
         foreach (var (matId, qty) in recipe.MaterialCosts)
             Profile.Materials[matId] -= qty;
 
-        Profile.OwnedSkillAugmentInstances.Add(new SkillAugmentInstance { DefinitionId = recipe.OutputItemId });
+        Profile.OwnedSkillAugmentInstances.Add(new SkillAugmentInstance 
+        { 
+            DefinitionId = recipe.OutputItemId,
+            TriggerChance = new System.Random().Next(10, 31)
+        });
         Save();
         return CraftResult.Success;
     }
@@ -317,6 +354,30 @@ public partial class CharacterManager : Node
         Save();
     }
 
+    public CraftResult UpgradeSkillAugment(string instanceId)
+    {
+        var inst = FindSkillAugmentInstance(instanceId);
+        if (inst == null || inst.Tier >= Items.ItemTier.Max) return CraftResult.InsufficientMaterials;
+        if (Profile.GetMaterial("crafting_common") < 1) return CraftResult.InsufficientMaterials;
+        Profile.Materials["crafting_common"] -= 1;
+        inst.Tier++;
+        Save();
+        return CraftResult.Success;
+    }
+
+    public CraftResult RerollSkillAugment(string instanceId)
+    {
+        var inst = FindSkillAugmentInstance(instanceId);
+        if (inst == null) return CraftResult.InsufficientMaterials;
+        if (Profile.GetMaterial("crafting_common") < 1) return CraftResult.InsufficientMaterials;
+        Profile.Materials["crafting_common"] -= 1;
+        int min = 10 * inst.Tier;
+        int max = 30 * inst.Tier;
+        inst.TriggerChance = new System.Random().Next(min, max + 1);
+        Save();
+        return CraftResult.Success;
+    }
+
     // ── Equipment Augment inventory ───────────────────────────────────────────
 
     public CraftResult CraftEquipmentAugmentItem(string recipeId)
@@ -334,7 +395,11 @@ public partial class CharacterManager : Node
         foreach (var (matId, qty) in recipe.MaterialCosts)
             Profile.Materials[matId] -= qty;
 
-        Profile.OwnedEquipmentAugmentInstances.Add(new EquipmentAugmentInstance { DefinitionId = recipe.OutputItemId });
+        Profile.OwnedEquipmentAugmentInstances.Add(new EquipmentAugmentInstance 
+        { 
+            DefinitionId = recipe.OutputItemId,
+            TriggerChance = new System.Random().Next(10, 31)
+        });
         Save();
         return CraftResult.Success;
     }
@@ -374,6 +439,30 @@ public partial class CharacterManager : Node
         if (gear == null || slotIndex >= gear.SocketedEquipmentAugmentIds.Count) return;
         gear.SocketedEquipmentAugmentIds[slotIndex] = "";
         Save();
+    }
+
+    public CraftResult UpgradeEquipmentAugment(string instanceId)
+    {
+        var inst = FindEquipmentAugmentInstance(instanceId);
+        if (inst == null || inst.Tier >= Items.ItemTier.Max) return CraftResult.InsufficientMaterials;
+        if (Profile.GetMaterial("crafting_common") < 1) return CraftResult.InsufficientMaterials;
+        Profile.Materials["crafting_common"] -= 1;
+        inst.Tier++;
+        Save();
+        return CraftResult.Success;
+    }
+
+    public CraftResult RerollEquipmentAugment(string instanceId)
+    {
+        var inst = FindEquipmentAugmentInstance(instanceId);
+        if (inst == null) return CraftResult.InsufficientMaterials;
+        if (Profile.GetMaterial("crafting_common") < 1) return CraftResult.InsufficientMaterials;
+        Profile.Materials["crafting_common"] -= 1;
+        int min = 10 * inst.Tier;
+        int max = 30 * inst.Tier;
+        inst.TriggerChance = new System.Random().Next(min, max + 1);
+        Save();
+        return CraftResult.Success;
     }
 
     public void SetSlotAutoActivate(string charId, int slotIndex, bool value)
@@ -416,14 +505,18 @@ public partial class CharacterManager : Node
 
     private static Godot.Collections.Dictionary SkillAugInstToDict(SkillAugmentInstance s) => new()
     {
-        ["id"]    = s.Id,
-        ["defId"] = s.DefinitionId,
+        ["id"]            = s.Id,
+        ["defId"]         = s.DefinitionId,
+        ["tier"]          = s.Tier,
+        ["triggerChance"] = s.TriggerChance,
     };
 
     private static Godot.Collections.Dictionary EquipAugInstToDict(EquipmentAugmentInstance a) => new()
     {
-        ["id"]    = a.Id,
-        ["defId"] = a.DefinitionId,
+        ["id"]            = a.Id,
+        ["defId"]         = a.DefinitionId,
+        ["tier"]          = a.Tier,
+        ["triggerChance"] = a.TriggerChance,
     };
 
     private static GearItemInstance DictToGearInst(Godot.Collections.Dictionary d)
@@ -460,14 +553,18 @@ public partial class CharacterManager : Node
 
     private static SkillAugmentInstance DictToSkillAugInst(Godot.Collections.Dictionary d) => new()
     {
-        Id           = d["id"].ToString()!,
-        DefinitionId = d["defId"].ToString()!,
+        Id            = d["id"].ToString()!,
+        DefinitionId  = d["defId"].ToString()!,
+        Tier          = d.ContainsKey("tier") ? System.Convert.ToInt32(d["tier"].Obj) : 1,
+        TriggerChance = d.ContainsKey("triggerChance") ? System.Convert.ToInt32(d["triggerChance"].Obj) : 15,
     };
 
     private static EquipmentAugmentInstance DictToEquipAugInst(Godot.Collections.Dictionary d) => new()
     {
-        Id           = d["id"].ToString()!,
-        DefinitionId = d["defId"].ToString()!,
+        Id            = d["id"].ToString()!,
+        DefinitionId  = d["defId"].ToString()!,
+        Tier          = d.ContainsKey("tier") ? System.Convert.ToInt32(d["tier"].Obj) : 1,
+        TriggerChance = d.ContainsKey("triggerChance") ? System.Convert.ToInt32(d["triggerChance"].Obj) : 15,
     };
 
     private void Save()
