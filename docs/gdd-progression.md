@@ -86,9 +86,9 @@ Range values are expressed in **tiles** (the canonical internal distance unit). 
 
 | Weapon type | Base Damage (tier 1) | Weapon Range | Delivery | Identity bonus (tier 1) |
 |-------------|----------------------|--------------|----------|------------------------|
-| Sword       | 15                   | 1.5 tiles    | `Melee`  | +10% physical damage (applies when skill is physical type) |
+| Sword       | 15                   | 1.5 tiles    | `Melee`  | +10% damage (type-agnostic — applies always) |
 | Bow         | 12                   | 2.5 tiles    | `Ranged` | +8% crit chance (type-agnostic — applies always) |
-| Wand        | 18                   | 2 tiles      | `Ranged` | +10% magic damage (applies when skill is magic type) + EoT affinity (higher base trigger chance for EoT augments) |
+| Wand        | 18                   | 2 tiles      | `Ranged` | +10% damage (type-agnostic — applies always) + EoT affinity (higher base trigger chance for EoT augments) |
 
 **Tier scaling:** tier 2 = ×1.5 base damage, tier 3 = ×2.0 base damage. Identity bonus % also scales with tier (TBD). All values are placeholder — owned by the Balancer.
 
@@ -146,7 +146,7 @@ Specific item names and exact stat values are TBD.
 
 **Item identity:** Each item is a unique instance with its own ID. Items **upgrade in-place** — tier increases on the existing item rather than producing a new one. The item's border colour updates to reflect its new tier (see Item Tiers).
 
-**Inventory:** Crafted (unequipped) items go into the **account inventory** — a shared pool accessible by every character. The inventory has three tabs:
+**Inventory:** Crafted (unequipped) items go into the **account inventory** — a shared pool accessible by every character. The inventory has four tabs:
 
 | Tab | Contents | Capacity |
 |---|---|---|

@@ -48,7 +48,7 @@ All v1 skill augments are on-hit augments — they resolve on each hit, independ
 
 **Crafting cost (v1):** every Skill Augment costs **1 crafting resource** to craft.
 
-Skill Augments are crafted (Craft New entry point TBD — not yet implemented; planned via left-click on an open augment socket) and live in the **Augments inventory tab**.
+Skill Augments are crafted (Craft New entry point TBD — not yet implemented; planned via left-click on an open augment socket) and live in the **Skill Augments inventory tab**.
 
 ---
 
@@ -88,7 +88,7 @@ Equipment Augments are craftable items that socket into an equipment item to add
 - **Removing:** free, Equipment Augment returns to inventory
 - Any augment can socket into any equipment item — no tag gate. Each augment type can only be equipped once per item (no duplicates).
 
-**v1 Equipment Augments** — out of scope for v1. Listed here to establish the design space, not to be implemented. Same augment tag + trigger type system as skill augments, but player-based triggers:
+**v1 Equipment Augments** — same augment tag + trigger type system as skill augments, but player-based triggers:
 
 | Augment     | Tag           | Trigger type        | Behaviour |
 |-------------|---------------|---------------------|-----------|
@@ -96,7 +96,7 @@ Equipment Augments are craftable items that socket into an equipment item to add
 | Fortify     | `fortify`     | `on_player_hit_%`   | On hit received: reduce damage taken from the next hit |
 | Dash Reflex | `dash_reflex` | `on_player_hit_%`   | On hit received: brief speed burst |
 | Ghost Step  | `ghost_step`  | `on_kill_%`         | On kill: restore a small amount of HP |
-| Mending     | `mending`     | `on_player_hit_%`   | Regenerate a small amount of HP every 3s |
+| Mending     | `mending`     | `always`            | Regenerate a small amount of HP every 3s |
 
 Exact trigger chances and values are TBD — owned by the Balancer.
 
@@ -104,7 +104,7 @@ Exact trigger chances and values are TBD — owned by the Balancer.
 
 **Crafting cost (v1):** every Equipment Augment costs **1 crafting resource** to craft.
 
-Equipment Augments are crafted (Craft New entry point TBD — not yet implemented; planned via left-click on an open augment socket) and live in the **Augments inventory tab**.
+Equipment Augments are crafted (Craft New entry point TBD — not yet implemented; planned via left-click on an open augment socket) and live in the **Equipment Augments inventory tab**.
 
 ---
 

@@ -207,7 +207,7 @@ The character model is a base body with equipment meshes added on top. Each equi
 | Armour (Light) | Thin padded vest + Cloth cap (low profile) | `Chest`, `Head` |
 | No armour | Base body only | — |
 | Weapon (Sword) | Short rectangular blade mesh | `Hand_R` |
-| Weapon (Bow) | Bow frame mesh | `Hand_R` |
+| Weapon (Bow) | Bow frame mesh | `Hand_L` |
 | Weapon (Wand) | Thin staff/rod mesh | `Hand_R` |
 | Accessory | No visual representation | — |
 

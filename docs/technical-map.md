@@ -38,7 +38,7 @@ DungeonGenerator._Ready()
 | `Seed` | `int` | Drives all random decisions in the generator |
 | `Biome` | `MapBiome` | Determines visual theme and future asset library |
 | `Level` | `int` | Map difficulty; feeds into XP scaling and future modifiers |
-| `ChunkCount` | `int` | Number of rooms to generate (v1: 7–11) |
+| `ChunkCount` | `int` | Number of rooms to generate (v1: 4–6) |
 | `EnemyPool` | `List<EnemyPoolEntry>` | Typed pool of enemy variants with count + stat modifiers; drawn by EnemySpawner |
 
 `MapData.GenerateRandom(level)` creates a new instance with a random seed via `System.Random` (not Godot's RNG, so it works before the scene is loaded).

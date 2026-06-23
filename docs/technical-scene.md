@@ -113,9 +113,12 @@ CharacterScreen (Control)
         │                   ├── Skills tab
         │                   │   └── SkillsScroll (ScrollContainer)
         │                   │       └── SkillsGrid (GridContainer, 5 cols) ← 50 slots, OwnedSkillInstances
-        │                   └── Augments tab
-        │                       └── AugmentsScroll (ScrollContainer)
-        │                           └── AugmentsGrid (GridContainer, 5 cols) ← OwnedSkillAugmentInstances + OwnedEquipmentAugmentInstances (Skill Augments first)
+        │                   ├── Skill Augments tab
+        │                   │   └── SkillAugmentsScroll (ScrollContainer)
+        │                   │       └── SkillAugmentsGrid (GridContainer, 5 cols) ← 50 slots, OwnedSkillAugmentInstances
+        │                   └── Equipment Augments tab
+        │                       └── EquipmentAugmentsScroll (ScrollContainer)
+        │                           └── EquipmentAugmentsGrid (GridContainer, 5 cols) ← 50 slots, OwnedEquipmentAugmentInstances
         └── Sigils tab ← empty; reserved for future sigil system
 ```
 **Slot interaction model (CharacterScreen.cs):**
@@ -126,7 +129,7 @@ CharacterScreen (Control)
 - **Left-click** an empty skill slot → `SkillPickerPanel`
 - **Modify** opens a dark modal overlay (`ColorRect` full-screen + centred `PanelContainer`) showing: item name/tier, Upgrade button (costs 1 Common; disabled at max tier or insufficient materials), and augment socket row. Socket buttons: empty → popup from `OwnedCompatibleAugmentInstances`; filled → click to remove augment (returns to inventory).
 
-**Inventory grids:** 50 slots per tab (5 cols, scrollable), all always visible. Empty slots are dimmed. Augment buttons (Augments tab) open a Delete popup — augments are socketed into items via the Modify panel, not directly equipped. Capacity: `ProfileData.MaxInventory = 50` — counts only unequipped/unsocketed items. If `SelectedCharacter` is null on `_Ready`, redirects to `account_screen.tscn`.
+**Inventory grids:** 50 slots per tab (5 cols, scrollable), all always visible. Empty slots are dimmed. Augment buttons (Skill Augments / Equipment Augments tabs) open a Delete popup — augments are socketed into items via the Modify panel, not directly equipped. Capacity: `ProfileData.MaxInventory = 50` — counts only unequipped/unsocketed items. If `SelectedCharacter` is null on `_Ready`, redirects to `account_screen.tscn`.
 
 ### `src/ui/item_picker_panel.tscn`
 Modal overlay opened from gear slot buttons **when the slot is empty** (left-click). Occupied slots use a left-click PopupMenu (Modify / Delete) instead — ItemPickerPanel is never opened for an occupied slot.
@@ -193,7 +196,7 @@ Main (Node)
 | CharacterManager  | Autoload — load/save characters, hold selected character     | `res://src/character/`    | ✅ done |
 | Player            | Input, movement, stat sheet, taking damage, Focus pool (CurrentFocus, regen, TrySpendFocus, ReserveFocus/UnreserveFocus, Focus Shield — all archetypes) | `res://src/player/`       | ✅ done |
 | Weapon            | Skill firing — targeting nearest enemy, cooldown management; manual activation (Q E R F + mouse button for 5 slots) and per-slot auto-activate toggle pending | `res://src/weapon/` | 🔄 in progress |
-| DungeonGenerator  | Procedural map: 7–11 rooms connected by corridors, wall collision, obstacle scatter, player spawn. Bakes navmesh synchronously via NavigationServer3D with DungeonMap as explicit geometry root; emits `MapReady` (deferred) when done. | `res://src/world/` | ✅ done |
+| DungeonGenerator  | Procedural map: 4–6 rooms connected by corridors, wall collision, obstacle scatter, player spawn. Bakes navmesh synchronously via NavigationServer3D with DungeonMap as explicit geometry root; emits `MapReady` (deferred) when done. | `res://src/world/` | ✅ done |
 | EnemySpawner      | Time-based wave scaling; starts on `MapReady`. Draws from `MapData.EnemyPool` (typed variants with count + stat modifiers); weighted random selection; spawns enemies at room centres beyond `SpawnRadius * 0.5` from player. | `res://src/enemies/` | ✅ done |
 | Enemy             | State machine: Chasing (wave-spawned, immediate) or Idle (pre-placed, future). `NavigationAgent3D` steers via navmesh path updated every 0.25s. Lost-player threshold: `BalanceConfig.Enemies.LostPlayerDistanceTiles` (30 tiles for wave-spawn). Taking damage, death, drops. | `res://src/enemies/` | ✅ done (proximity cluster system pending) |
 | XpShard           | XP Shard pickup — auto-collected on contact                  | `res://src/xp/`           | ✅ done |
