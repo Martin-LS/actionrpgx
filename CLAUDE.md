@@ -6,13 +6,13 @@ Top-down action RPG in the vein of Diablo and Path of Exile — deliberate, buil
 
 ## Reference Documentation
 
+- [docs/index.md](file:///C:/work/my/github/actionrpgx/docs/index.md) — **Start here.** Full index of every doc: what it covers and when to read it.
 - [docs/todo-tech.md](file:///C:/work/my/github/actionrpgx/docs/todo-tech.md) — Pending tech work. Check and update each session.
 - [docs/project-rules.md](file:///C:/work/my/github/actionrpgx/docs/project-rules.md) — Shared project guidelines (Scope, Handedness, Bone Rotations, UI, Animation).
-- Other docs in `docs/` cover game design mechanics, skills, augments, maps, and technical specs.
 
 **Read [docs/project-rules.md](file:///C:/work/my/github/actionrpgx/docs/project-rules.md) and any relevant spec doc before making design or architectural decisions or starting bug fixes.**
 
-At the start of every session: read `docs/todo-tech.md`, note what's pending, and tick off anything completed during the session. Read `docs/tech-tips.md` before any 3D asset, animation, or bone work. Read `docs/color-scheme.md` before any visual, UI, VFX, or material work.
+At the start of every session: read `docs/index.md` to orient, read `docs/todo-tech.md` and tick off anything completed. Read `docs/tech-tips.md` before any 3D asset, animation, or bone work. Read `docs/color-scheme.md` before any visual, UI, VFX, or material work.
 
 ## Tools (Claude Specific)
 
