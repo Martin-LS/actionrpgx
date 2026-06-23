@@ -1,6 +1,6 @@
 # Game Design Document — Meta-Progression, Gear & UI
 
-> Part of the GDD. See also `gdd-mechanics.md` for combat, characters, and run structure. See `gdd-skills.md` for skill design and prototypes. See `gdd-augments.md` for all augment design, prototypes, and augment resolution.
+> Part of the GDD. See also `gdd-mechanics.md` for combat, characters, and run structure. See `gdd-skills.md` for skill design and prototypes. See `gdd-augments.md` for all augment design, prototypes, and augment resolution. See `gdd-ui.md` for screen layouts and HUD. See `gdd-ui-mechanics.md` for interaction flows.
 > Living document — details will evolve as the game is playtested.
 
 ## Meta-Progression (Between Runs)
@@ -152,7 +152,8 @@ Specific item names and exact stat values are TBD.
 |---|---|---|
 | Equipment | Crafted gear (weapons, armour, accessories) | 50 items |
 | Skills | Crafted skill items | 50 items |
-| Augments | Crafted Skill Augments and Equipment Augments | 50 items |
+| Skill Augments | Crafted Skill Augments | 50 items |
+| Equipment Augments | Crafted Equipment Augments | 50 items |
 
 Equipped items are held separately in the character's slots and do not count against inventory capacity. See *Character Screen — Interaction Model* for how each tab behaves.
 
@@ -178,98 +179,6 @@ Crafting materials are the primary run reward — the only meaningful thing enem
 
 ---
 
-## UI / HUD
+## UI & HUD
 
-- Health bar (HUD, bottom-left)
-- XP bar + current level
-- Coin counter (this run)
-- Elapsed time / countdown
-- **Skill bar** — bottom-center of the HUD. 5 slots (Q E R F + mouse). Each slot shows its equipped skill with independent cooldown state:
-  - Active skill on cooldown: slot is greyed out, fills from bottom as cooldown recovers
-  - Active skill ready: slot fully lit
-  - Empty slot: visually empty (no icon)
-- **Floating HP bar** — above both player and enemies (see Hit Feedback in `gdd-mechanics.md` for colours and visibility rules)
-- **Damage numbers** — float upward from the hit point on every hit, colour-coded by damage type and crit (see Hit Feedback in `gdd-mechanics.md`)
-- [TBD] Minimap
-
-### Menus
-- **Main Menu** → title screen, Play button
-- **Account Screen** → the account-level hub. Always the first screen after Main Menu. Contains the character roster (list characters, create new, delete). Designed to grow — future account-level info (account stats, global progress, etc.) will live alongside the roster. Selecting a character navigates to their Character Screen.
-  - **Character creation — name rules:** Required (non-empty). Alphanumeric only — no spaces or special characters. Must be unique across all characters on the account. Confirm button is disabled until all rules pass; inline error message explains which rule is violated.
-- **Character Screen** → full management hub for the selected character. Two tabs: **Loadout** (default) and **Sigils**. Start Run button at the bottom. Back button returns to Account Screen.
-  - **Loadout tab** — two-column layout:
-    - *Left/centre* — character name, archetype, stats, and equipped slots: Weapon / Hat / Body / Ring / Skills 1–5
-    - *Right column* — account inventory, always visible within this tab. Scrollable 5-column icon grid with three sub-tabs:
-      - *Equipment* — crafted gear, 50-item cap
-      - *Skills* — crafted skill items, 50-item cap
-      - *Augments* — crafted Skill Augments and Equipment Augments, 50-item cap
-    - Equipped items are not shown in the inventory — they live in the character slots.
-  - **Sigils tab** — visible, empty (reserved for future sigil system)
-  - Both tabs are always visible; empty tabs are not locked or greyed out
-
-#### Character Screen — Interaction Model
-
-**Reusable components — the core pattern.** Skills and Augments share one design pattern: a component that shows a Craft button and a list of owned items, reused in both the inventory tab and inside slot interactions. The component's event handlers differ by context (inventory vs. slot), but the visual is identical — styling changes propagate everywhere automatically.
-
----
-
-##### Skills Inventory Tab
-
-- Lists all unslotted skill items
-- **Craft button** at top → switches view to craftable skills list (one button per craftable skill type)
-  - Click a skill type → crafts it (1 material) → adds to skills inventory → returns to owned list
-- **Click an owned skill** → opens Skill Modify Panel for that skill (no Remove — it's unslotted)
-
-##### Skills Slot (character loadout)
-
-- **Empty skill slot** → opens the Skills component (same visuals as the inventory tab; different handlers)
-  - Craft button → crafts skill + auto-slots it → opens Skill Modify Panel
-  - Click an owned skill → slots it → opens Skill Modify Panel
-- **Filled skill slot** → opens Skill Modify Panel directly
-
-##### Skill Modify Panel
-
-```
-[ Skill Name ]  [ Upgrade ]  [ Re-roll ]  [ Remove ]   ← Remove only when skill is slotted
-─────────────────────────────────────────────────────
-[ A1 ]   │  < context-sensitive right panel >
-[ A2 ]   │
-[ A3 ]   │
-```
-
-**Augment slot selected (left column):**
-- **Empty slot** → right panel shows the Augments component (same as Augments inventory tab; different handlers):
-  - Craft button → crafts augment + auto-slots it → right panel transitions to filled-slot view
-  - Click an owned augment → slots it → right panel transitions to filled-slot view
-- **Filled slot** → right panel shows: augment name, **Upgrade**, **Re-roll**, **Remove**
-  - Remove → unslots augment (returns to augments inventory) → right panel returns to empty-slot view
-
----
-
-##### Augments Inventory Tab
-
-- Lists all unslotted augment items
-- **Craft button** at top → switches view to craftable augments list (one button per craftable augment type)
-  - Click an augment type → crafts it (1 material) → adds to augments inventory → returns to owned list
-- **Click an owned augment** → opens Augment Modify Panel for that augment (no Remove — it's unslotted)
-
-##### Augment Modify Panel (from inventory)
-
-Augment name + **Upgrade** + **Re-roll** (no Remove). Same visual as the filled-slot view in the Skill Modify Panel.
-
----
-
-##### Equipment Tab
-
-- Lists all unslotted gear (weapons, armour, rings)
-- **Right-click** an inventory gear item → equips to first empty valid slot; swaps with slot 1 if all slots occupied
-- **Right-click** a filled gear slot → unequips; item returns to inventory
-- Left-click interactions for gear TBD (gear modify panel is post-v1)
-
----
-
-- **Run results overlay** → shown at run end; return button goes back to Character Screen
-- **Pause menu** — ESC during a run; second ESC or Resume button closes it; run is paused while open
-  - **Resume** button — closes menu, run continues
-  - **End Run** button — exits immediately to character screen; all progress from this run is discarded (level, XP, coins, crafting materials). Warning text alongside: *"All progress from this run will be lost."*
-  - No confirmation step — warning text is the friction
+See `gdd-ui.md` for screen layouts and HUD, and `gdd-ui-mechanics.md` for interaction flows.
