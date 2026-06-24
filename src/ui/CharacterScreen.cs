@@ -191,7 +191,7 @@ public partial class CharacterScreen : Control
         ClearTierStyle(btn);
     }
 
-    // ── Equipment inventory component (in-place state machine) ───────────────
+    // ── Equipment inventory component (in-place state machine) ─────────────
 
     private void ShowEquipmentOwnedList()
     {
@@ -207,21 +207,39 @@ public partial class CharacterScreen : Control
         craftBtn.Pressed += ShowEquipmentTypeStep;
         _equipmentListArea.AddChild(craftBtn);
 
+        var c = _manager.SelectedCharacter;
+        BuildEquipmentIconGrid(
+            _equipmentListArea,
+            profile.OwnedGearInstances,
+            Character.ProfileData.MaxInventory,
+            inst => ShowEquipmentModifyPanel(inst, isEquipped: false),
+            inst => { if (c != null) { _manager.EquipItem(c.Id, inst.Definition!.Slot, inst.Id); ShowEquipmentOwnedList(); RefreshCharacter(); } });
+    }
+
+    /// <summary>
+    /// Renders a 5-column icon grid of gear items into <paramref name="container"/>.
+    /// <paramref name="gridSlots"/> controls the total slot count (use MaxInventory for the
+    /// full inventory tab; use <c>items.Count</c> for slot-context overlays).
+    /// </summary>
+    private void BuildEquipmentIconGrid(
+        VBoxContainer container,
+        System.Collections.Generic.IList<GearItemInstance> items,
+        int gridSlots,
+        System.Action<GearItemInstance> onLeftClick,
+        System.Action<GearItemInstance> onRightClick)
+    {
         var grid = new GridContainer { Columns = 5 };
         grid.AddThemeConstantOverride("h_separation", 4);
         grid.AddThemeConstantOverride("v_separation", 4);
-        _equipmentListArea.AddChild(grid);
+        container.AddChild(grid);
 
-        var c     = _manager.SelectedCharacter;
-        var owned = profile.OwnedGearInstances;
-
-        for (int i = 0; i < Character.ProfileData.MaxInventory; i++)
+        for (int i = 0; i < gridSlots; i++)
         {
             var btn = new TooltipButton { CustomMinimumSize = new Vector2(72, 72) };
 
-            if (i < owned.Count)
+            if (i < items.Count)
             {
-                var inst = owned[i];
+                var inst = items[i];
                 var item = inst.Definition;
                 if (item != null)
                 {
@@ -242,13 +260,9 @@ public partial class CharacterScreen : Control
                     {
                         if (e is not InputEventMouseButton mb || !mb.Pressed) return;
                         if (mb.ButtonIndex == MouseButton.Left)
-                            ShowGearModifyPanel(capturedInst);
-                        else if (mb.ButtonIndex == MouseButton.Right && c != null)
-                        {
-                            _manager.EquipItem(c.Id, item.Slot, capturedInst.Id);
-                            ShowEquipmentOwnedList();
-                            RefreshCharacter();
-                        }
+                            onLeftClick(capturedInst);
+                        else if (mb.ButtonIndex == MouseButton.Right)
+                            onRightClick(capturedInst);
                     };
                 }
             }
@@ -320,17 +334,60 @@ public partial class CharacterScreen : Control
             _manager.GetAll()
                 .SelectMany(c => c.SlottedSkillInstanceIds)
                 .Where(id => !string.IsNullOrEmpty(id)));
-        var ownedSkills = _manager.Profile.OwnedSkillInstances
+        var unslotted = _manager.Profile.OwnedSkillInstances
             .Where(s => !equippedIds.Contains(s.Id))
             .ToList();
 
-        for (int i = 0; i < Character.ProfileData.MaxInventory; i++)
+        var c = _manager.SelectedCharacter;
+        BuildSkillIconGrid(
+            _skillsGrid,
+            unslotted,
+            Character.ProfileData.MaxInventory,
+            inst => ShowSkillModifyPanel(inst),
+            inst =>
+            {
+                if (c != null)
+                {
+                    int emptySlot = c.SlottedSkillInstanceIds.IndexOf("");
+                    if (emptySlot < 0) emptySlot = 0;
+                    _manager.EquipSkill(c.Id, emptySlot, inst.Id);
+                    Refresh();
+                }
+            });
+    }
+
+    /// <summary>
+    /// Renders skill icon buttons into an existing <paramref name="grid"/>.
+    /// Use <c>gridSlots = Character.ProfileData.MaxInventory</c> for the inventory tab
+    /// and <c>gridSlots = items.Count</c> for slot-context overlays (no empty padding).
+    /// </summary>
+    private void BuildSkillIconGrid(
+        Control container,
+        System.Collections.Generic.IList<SkillItemInstance> items,
+        int gridSlots,
+        System.Action<SkillItemInstance> onLeftClick,
+        System.Action<SkillItemInstance> onRightClick)
+    {
+        GridContainer grid;
+        if (container is GridContainer gc)
+        {
+            grid = gc;
+        }
+        else
+        {
+            grid = new GridContainer { Columns = 5 };
+            grid.AddThemeConstantOverride("h_separation", 4);
+            grid.AddThemeConstantOverride("v_separation", 4);
+            container.AddChild(grid);
+        }
+
+        for (int i = 0; i < gridSlots; i++)
         {
             var btn = new TooltipButton { CustomMinimumSize = new Vector2(72, 72) };
 
-            if (i < ownedSkills.Count)
+            if (i < items.Count)
             {
-                var instance = ownedSkills[i];
+                var instance = items[i];
                 var skill    = instance.Definition;
                 if (skill != null)
                 {
@@ -347,8 +404,14 @@ public partial class CharacterScreen : Control
                     btn.TooltipText = BuildSkillTooltip(skill, instance);
                     ApplyTierStyle(btn, instance.Tier);
                     var capturedInst = instance;
-                    var capturedBtn  = btn;
-                    btn.GuiInput += (e) => OnInventorySkillInput(e, capturedInst, capturedBtn);
+                    btn.GuiInput += (e) =>
+                    {
+                        if (e is not InputEventMouseButton mb || !mb.Pressed) return;
+                        if (mb.ButtonIndex == MouseButton.Left)
+                            onLeftClick(capturedInst);
+                        else if (mb.ButtonIndex == MouseButton.Right)
+                            onRightClick(capturedInst);
+                    };
                 }
             }
             else
@@ -357,7 +420,7 @@ public partial class CharacterScreen : Control
                 btn.Disabled = true;
             }
 
-            _skillsGrid.AddChild(btn);
+            grid.AddChild(btn);
         }
     }
 
@@ -432,16 +495,15 @@ public partial class CharacterScreen : Control
         else if (mb.ButtonIndex == MouseButton.Left)
         {
             if (occupied)
-                ShowEquippedItemPopup(slot, btn);
+            {
+                if (c.EquippedGear.TryGetValue(slot.ToString(), out var instance))
+                    ShowEquipmentModifyPanel(instance, isEquipped: true);
+            }
             else
-                OpenEquipmentTabFiltered(slot);
+            {
+                ShowEquipmentSlotOverlay(slot);
+            }
         }
-    }
-
-    private void OpenEquipmentTabFiltered(ItemSlot slot)
-    {
-        _inventoryTabs.CurrentTab = 0; // Equipment is tab index 0
-        ShowEquipmentOwnedList();
     }
 
     private void OnSkillSlotInput(InputEvent e, int slotIndex)
@@ -483,46 +545,11 @@ public partial class CharacterScreen : Control
         }
         else if (mb.ButtonIndex == MouseButton.Left)
         {
-            ShowInventoryItemPopup(instance, item, btn);
-        }
-    }
-
-    private void OnInventorySkillInput(InputEvent e, SkillItemInstance instance, Button btn)
-    {
-        if (e is not InputEventMouseButton mb || !mb.Pressed) return;
-        var c = _manager.SelectedCharacter;
-
-        if (mb.ButtonIndex == MouseButton.Right && c != null)
-        {
-            int emptySlot = c.SlottedSkillInstanceIds.IndexOf("");
-            if (emptySlot < 0) emptySlot = 0;
-            _manager.EquipSkill(c.Id, emptySlot, instance.Id);
-            Refresh();
-        }
-        else if (mb.ButtonIndex == MouseButton.Left)
-        {
-            ShowSkillModifyPanel(instance);
+            ShowEquipmentModifyPanel(instance, isEquipped: false);
         }
     }
 
     // ── Popups ────────────────────────────────────────────────────────────────
-
-    private void ShowInventoryItemPopup(GearItemInstance instance, ItemData item, Button anchor)
-    {
-        var popup = NewStyledPopup();
-        popup.AddItem("Equip",  0);
-        popup.AddItem("Modify", 1);
-        popup.AddItem("Delete", 2);
-        popup.IdPressed += (long id) =>
-        {
-            var c = _manager.SelectedCharacter;
-            if (id == 0 && c != null) { _manager.EquipItem(c.Id, item.Slot, instance.Id); Refresh(); }
-            else if (id == 1) ShowGearModifyPanel(instance);
-            else if (id == 2) { _manager.DeleteGearItem(instance.Id); Refresh(); }
-        };
-        ShowPopupAt(popup, anchor);
-    }
-
 
     private void ShowEquipmentAugmentInventoryPopup(EquipmentAugmentInstance instance, Button anchor)
     {
@@ -538,26 +565,6 @@ public partial class CharacterScreen : Control
                 _manager.Profile.OwnedEquipmentAugmentInstances.Remove(instance);
                 Refresh();
             }
-        };
-        ShowPopupAt(popup, anchor);
-    }
-
-    private void ShowEquippedItemPopup(ItemSlot slot, Button anchor)
-    {
-        var c = _manager.SelectedCharacter!;
-        if (!c.EquippedGear.TryGetValue(slot.ToString(), out var instance)) return;
-
-        var popup = NewStyledPopup();
-        popup.AddItem("Unequip", 0);
-        popup.AddItem("Modify",  1);
-        popup.AddItem("Delete",  2);
-        bool inventoryFull = _manager.Profile.OwnedGearInstances.Count >= Character.ProfileData.MaxInventory;
-        popup.SetItemDisabled(0, inventoryFull);
-        popup.IdPressed += (long id) =>
-        {
-            if (id == 0) { _manager.UnequipItem(c.Id, slot); Refresh(); }
-            else if (id == 1) ShowGearModifyPanel(instance);
-            else if (id == 2) { _manager.DeleteGearItem(instance.Id); Refresh(); }
         };
         ShowPopupAt(popup, anchor);
     }
@@ -645,42 +652,308 @@ public partial class CharacterScreen : Control
         popup.Popup();
     }
 
-    // ── Modify panel ─────────────────────────────────────────────────────────
+    // ── Equipment Modify Panel (2-column layout) ──────────────────────────────
 
-    private void ShowGearModifyPanel(GearItemInstance instance)
+    private void ShowEquipmentModifyPanel(GearItemInstance instance, bool isEquipped)
+    {
+        var overlay = MakeModalOverlay();
+        AddChild(overlay);
+
+        int[] selSlot = { -1 };
+        System.Action rebuild = null!;
+        rebuild = () =>
+        {
+            foreach (Node child in overlay.GetChildren()) child.QueueFree();
+            overlay.AddChild(BuildEquipmentModifyContent(instance, isEquipped, overlay, selSlot, rebuild));
+        };
+        rebuild();
+    }
+
+    private Control BuildEquipmentModifyContent(GearItemInstance instance, bool isEquipped, Control overlay, int[] selSlot, System.Action rebuild)
+    {
+        var def  = instance.Definition;
+        var font = GD.Load<Font>("res://assets/fonts/Exo_2/Exo_2_2.ttf");
+
+        var panel = new PanelContainer
+        {
+            AnchorLeft = 0.5f, AnchorRight  = 0.5f,
+            AnchorTop  = 0.5f, AnchorBottom = 0.5f,
+            GrowHorizontal    = Control.GrowDirection.Both,
+            GrowVertical      = Control.GrowDirection.Both,
+            CustomMinimumSize = new Vector2(560f, 0f),
+        };
+        panel.AddThemeStyleboxOverride("panel", new StyleBoxFlat
+        {
+            BgColor                 = new Color("#1E252B"),
+            BorderColor             = new Color("#3A4650"),
+            BorderWidthTop          = 1, BorderWidthBottom      = 1,
+            BorderWidthLeft         = 1, BorderWidthRight       = 1,
+            CornerRadiusTopLeft     = 4, CornerRadiusTopRight   = 4,
+            CornerRadiusBottomLeft  = 4, CornerRadiusBottomRight = 4,
+            ContentMarginLeft       = 16f, ContentMarginRight   = 16f,
+            ContentMarginTop        = 16f, ContentMarginBottom  = 16f,
+        });
+
+        var root = new VBoxContainer();
+        root.AddThemeConstantOverride("separation", 8);
+        panel.AddChild(root);
+
+        // ── Header ──
+        var header = new HBoxContainer();
+        header.AddThemeConstantOverride("separation", 8);
+
+        var nameLabel = new Label
+        {
+            Text                = $"{def?.Name ?? "Item"}  [{ItemTier.Label(instance.Tier)}]",
+            SizeFlagsHorizontal = SizeFlags.ExpandFill,
+        };
+        nameLabel.AddThemeFontOverride("font", font);
+        nameLabel.AddThemeFontSizeOverride("font_size", 18);
+        nameLabel.AddThemeColorOverride("font_color", new Color("#C8D4DC"));
+        header.AddChild(nameLabel);
+
+        bool atMax      = instance.Tier >= ItemTier.Max;
+        bool canAfford  = _manager.Profile.GetMaterial("crafting_common") >= 1;
+        string nextTier = instance.Tier switch { 1 => "Uncommon", 2 => "Rare", _ => "" };
+        var upBtn = new Button { Text = atMax ? "Max" : "Upgrade", Disabled = atMax || !canAfford };
+        upBtn.AddThemeFontOverride("font", font);
+        upBtn.TooltipText = atMax ? "Max tier" : $"Upgrade to {nextTier}  [1 Common]";
+        upBtn.Pressed    += () => { _manager.UpgradeGearItem(instance.Id); CloseOverlay(overlay); Refresh(); };
+        header.AddChild(upBtn);
+
+        var rrBtn = new Button { Text = "Re-roll", Disabled = true, TooltipText = "Re-roll (v2+)" };
+        rrBtn.AddThemeFontOverride("font", font);
+        header.AddChild(rrBtn);
+
+        if (isEquipped)
+        {
+            var unEquipBtn = new Button { Text = "Un-Equip" };
+            unEquipBtn.AddThemeFontOverride("font", font);
+            unEquipBtn.Pressed += () =>
+            {
+                var c = _manager.SelectedCharacter;
+                if (c != null)
+                {
+                    bool inventoryFull = _manager.Profile.OwnedGearInstances.Count >= Character.ProfileData.MaxInventory;
+                    if (!inventoryFull) _manager.UnequipItem(c.Id, def!.Slot);
+                }
+                CloseOverlay(overlay);
+                Refresh();
+            };
+            header.AddChild(unEquipBtn);
+        }
+
+        var closeBtn = new Button { Text = "✕" };
+        closeBtn.AddThemeFontOverride("font", font);
+        closeBtn.Pressed += () => CloseOverlay(overlay);
+        header.AddChild(closeBtn);
+
+        root.AddChild(header);
+        root.AddChild(new HSeparator());
+
+        // ── Body: left aug slots + right context ──
+        var body = new HBoxContainer();
+        body.AddThemeConstantOverride("separation", 0);
+        root.AddChild(body);
+
+        var leftMargin = new MarginContainer();
+        leftMargin.AddThemeConstantOverride("margin_right", 12);
+        leftMargin.AddThemeConstantOverride("margin_top", 4);
+        var leftCol = new VBoxContainer();
+        leftCol.AddThemeConstantOverride("separation", 6);
+        leftCol.CustomMinimumSize = new Vector2(110, 200);
+        leftMargin.AddChild(leftCol);
+        body.AddChild(leftMargin);
+
+        body.AddChild(new VSeparator());
+
+        var rightMargin = new MarginContainer { SizeFlagsHorizontal = SizeFlags.ExpandFill };
+        rightMargin.AddThemeConstantOverride("margin_left", 12);
+        rightMargin.AddThemeConstantOverride("margin_top", 4);
+        var rightContent = new VBoxContainer { SizeFlagsHorizontal = SizeFlags.ExpandFill };
+        rightMargin.AddChild(rightContent);
+        body.AddChild(rightMargin);
+
+        // Placeholder
+        var placeholder = new Label { Text = "← Select an augment slot" };
+        placeholder.AddThemeFontOverride("font", font);
+        placeholder.AddThemeFontSizeOverride("font_size", 14);
+        placeholder.AddThemeColorOverride("font_color", new Color("#4A5560"));
+        rightContent.AddChild(placeholder);
+
+        // Build augment slot buttons
+        int numSlots = instance.MaxEquipmentAugSlots;
+        if (numSlots == 0)
+        {
+            var noSlots = new Label { Text = "Upgrade item\nto unlock augment slots" };
+            noSlots.AddThemeFontOverride("font", font);
+            noSlots.AddThemeFontSizeOverride("font_size", 12);
+            noSlots.AddThemeColorOverride("font_color", new Color("#4A5560"));
+            leftCol.AddChild(noSlots);
+        }
+        else
+        {
+            var btnGroup = new ButtonGroup();
+            for (int i = 0; i < numSlots; i++)
+            {
+                int cap = i;
+                string sockId = i < instance.SocketedEquipmentAugmentIds.Count ? instance.SocketedEquipmentAugmentIds[i] : "";
+                var aug = _manager.FindEquipmentAugmentInstance(sockId);
+                bool filled = aug?.Definition != null;
+
+                var slotBtn = new Button
+                {
+                    CustomMinimumSize   = new Vector2(110, 50),
+                    SizeFlagsHorizontal = SizeFlags.Fill,
+                    Text                = filled ? aug!.Definition!.Name : $"E{i + 1}",
+                    ToggleMode          = true,
+                    ButtonGroup         = btnGroup,
+                    ButtonPressed       = selSlot[0] == i,
+                };
+                slotBtn.AddThemeFontOverride("font", font);
+                slotBtn.AddThemeFontSizeOverride("font_size", 13);
+                if (!filled) slotBtn.Modulate = new Color(1f, 1f, 1f, 0.5f);
+
+                slotBtn.Pressed += () =>
+                {
+                    selSlot[0] = cap;
+                    foreach (Node child in rightContent.GetChildren()) child.QueueFree();
+                    string curId = cap < instance.SocketedEquipmentAugmentIds.Count ? instance.SocketedEquipmentAugmentIds[cap] : "";
+                    var curAug = _manager.FindEquipmentAugmentInstance(curId);
+                    if (curAug?.Definition != null)
+                        BuildFilledEquipAugSlotPanel(rightContent, instance, cap, isEquipped, overlay, rebuild, font);
+                    else
+                        BuildEmptyEquipAugSlotPanel(rightContent, instance, cap, isEquipped, overlay, rebuild, font);
+                };
+
+                leftCol.AddChild(slotBtn);
+            }
+        }
+
+        // Auto-show right panel when a slot was selected before rebuild
+        if (selSlot[0] >= 0 && selSlot[0] < numSlots)
+        {
+            foreach (Node child in rightContent.GetChildren()) child.QueueFree();
+            string curId = selSlot[0] < instance.SocketedEquipmentAugmentIds.Count ? instance.SocketedEquipmentAugmentIds[selSlot[0]] : "";
+            var curAug = _manager.FindEquipmentAugmentInstance(curId);
+            if (curAug?.Definition != null)
+                BuildFilledEquipAugSlotPanel(rightContent, instance, selSlot[0], isEquipped, overlay, rebuild, font);
+            else
+                BuildEmptyEquipAugSlotPanel(rightContent, instance, selSlot[0], isEquipped, overlay, rebuild, font);
+        }
+
+        return panel;
+    }
+
+    private void BuildEmptyEquipAugSlotPanel(VBoxContainer container, GearItemInstance gear, int augSlot, bool isEquipped, Control overlay, System.Action rebuild, Font font)
+    {
+        var hdr = new Label { Text = $"Slot E{augSlot + 1} — Empty" };
+        hdr.AddThemeFontOverride("font", font);
+        hdr.AddThemeFontSizeOverride("font_size", 15);
+        hdr.AddThemeColorOverride("font_color", new Color("#8AA0AE"));
+        container.AddChild(hdr);
+        container.AddChild(new HSeparator());
+
+        int common   = _manager.Profile.GetMaterial("crafting_common");
+        bool invFull = _manager.Profile.OwnedEquipmentAugmentInstances.Count >= Character.ProfileData.MaxInventory;
+        var craftBtn = MakeModifyButton("Craft Augment  [1 Common]", invFull || common < 1);
+        craftBtn.Pressed += () => { CloseOverlay(overlay); ShowCraftEquipAugAndSocket(gear, augSlot, isEquipped); };
+        container.AddChild(craftBtn);
+        container.AddChild(new HSeparator());
+
+        var owned = _manager.Profile.OwnedEquipmentAugmentInstances
+            .Where(a => a.Definition != null).ToList();
+
+        if (owned.Count == 0)
+        {
+            var lbl = new Label { Text = "No augments in inventory" };
+            lbl.AddThemeFontOverride("font", font);
+            lbl.AddThemeFontSizeOverride("font_size", 13);
+            lbl.AddThemeColorOverride("font_color", new Color("#4A5560"));
+            container.AddChild(lbl);
+        }
+        else
+        {
+            foreach (var aug in owned)
+            {
+                var capAug = aug;
+                var btn = MakeModifyButton(aug.Definition!.Name, false);
+                btn.Pressed += () => { _manager.SocketEquipmentAugment(gear.Id, augSlot, capAug.Id); rebuild(); };
+                container.AddChild(btn);
+            }
+        }
+    }
+
+    private void BuildFilledEquipAugSlotPanel(VBoxContainer container, GearItemInstance gear, int augSlot, bool isEquipped, Control overlay, System.Action rebuild, Font font)
+    {
+        string sockId = augSlot < gear.SocketedEquipmentAugmentIds.Count ? gear.SocketedEquipmentAugmentIds[augSlot] : "";
+        var aug = _manager.FindEquipmentAugmentInstance(sockId);
+        if (aug?.Definition == null) return;
+
+        var nameLabel = new Label { Text = $"{aug.Definition.Name}  [{Items.ItemTier.Label(aug.Tier)}]  (Trigger: {aug.TriggerChance}%)" };
+        nameLabel.AddThemeFontOverride("font", font);
+        nameLabel.AddThemeFontSizeOverride("font_size", 16);
+        nameLabel.AddThemeColorOverride("font_color", new Color("#C8D4DC"));
+        container.AddChild(nameLabel);
+        container.AddChild(new HSeparator());
+
+        int common = _manager.Profile.GetMaterial("crafting_common");
+        bool atMax = aug.Tier >= Items.ItemTier.Max;
+        bool canUpgrade = !atMax && common >= 1;
+        var upBtn = MakeModifyButton(atMax ? "Max Tier" : "Upgrade  [1 Common]", !canUpgrade);
+        upBtn.Pressed += () => { _manager.UpgradeEquipmentAugment(aug.Id); rebuild(); Refresh(); };
+        container.AddChild(upBtn);
+
+        var rrBtn = MakeModifyButton("Re-roll Trigger %  [1 Common]", true);
+        rrBtn.TooltipText = "Re-roll (v2+)";
+        container.AddChild(rrBtn);
+
+        var unSocketBtn = MakeModifyButton("Un-Socket", false);
+        unSocketBtn.Pressed += () => { _manager.RemoveEquipmentAugment(gear.Id, augSlot); rebuild(); Refresh(); };
+        container.AddChild(unSocketBtn);
+    }
+
+    private void ShowCraftEquipAugAndSocket(GearItemInstance gear, int augSlot, bool isEquipped)
     {
         var overlay = MakeModalOverlay();
         var panel   = MakeModifyPanel();
         var vbox    = new VBoxContainer();
-        vbox.AddThemeConstantOverride("separation", 10);
-
-        var def = instance.Definition;
+        vbox.AddThemeConstantOverride("separation", 8);
         panel.AddChild(vbox);
         overlay.AddChild(panel);
         AddChild(overlay);
 
-        // Title
-        var header = MakeModifyHeader($"{def?.Name ?? "Item"}  [{ItemTier.Label(instance.Tier)}]", () => CloseOverlay(overlay));
-        vbox.AddChild(header);
+        vbox.AddChild(MakeModifyHeader("Craft Equipment Augment", () =>
+        {
+            CloseOverlay(overlay);
+            ShowEquipmentModifyPanel(gear, isEquipped);
+        }));
         vbox.AddChild(new HSeparator());
 
-        // Upgrade
-        bool atMax     = instance.Tier >= ItemTier.Max;
-        bool canAfford = _manager.Profile.GetMaterial("crafting_common") >= 1;
-        string next    = instance.Tier switch { 1 => "Uncommon", 2 => "Rare", _ => "" };
-        var upgradeBtn = MakeModifyButton(atMax ? "Max Tier" : $"Upgrade to {next}  [1 Common]", atMax || !canAfford);
-        upgradeBtn.Pressed += () => { _manager.UpgradeGearItem(instance.Id); CloseOverlay(overlay); Refresh(); };
-        vbox.AddChild(upgradeBtn);
+        int common   = _manager.Profile.GetMaterial("crafting_common");
+        bool invFull = _manager.Profile.OwnedEquipmentAugmentInstances.Count >= Character.ProfileData.MaxInventory;
+        var statusLbl = new Label { Text = invFull ? "Inventory full" : $"Common material: {common}" };
+        statusLbl.AddThemeColorOverride("font_color", new Color("#8AA0AE"));
+        vbox.AddChild(statusLbl);
 
-        // Augment slots
-        if (instance.MaxEquipmentAugSlots > 0)
+        foreach (var recipe in RecipeRegistry.ForType(RecipeType.EquipmentAugment))
         {
-            vbox.AddChild(new HSeparator());
-            vbox.AddChild(MakeModifySubLabel("Equipment Augments"));
-            var row = new HBoxContainer();
-            row.AddThemeConstantOverride("separation", 6);
-            vbox.AddChild(row);
-            BuildGearAugSlots(row, instance);
+            var augDef = EquipmentAugmentRegistry.Get(recipe.OutputItemId);
+            if (augDef == null) continue;
+            int cost  = recipe.MaterialCosts.TryGetValue("crafting_common", out var mc) ? mc : 1;
+            bool can  = !invFull && common >= cost;
+            var btn   = MakeModifyButton($"{augDef.Name}  —  {cost} Common", !can);
+            string rid = recipe.Id;
+            btn.Pressed += () =>
+            {
+                _manager.CraftEquipmentAugmentItem(rid);
+                var newAug = _manager.Profile.OwnedEquipmentAugmentInstances[^1];
+                _manager.SocketEquipmentAugment(gear.Id, augSlot, newAug.Id);
+                CloseOverlay(overlay);
+                Refresh();
+                ShowEquipmentModifyPanel(gear, isEquipped);
+            };
+            vbox.AddChild(btn);
         }
     }
 
@@ -696,15 +969,21 @@ public partial class CharacterScreen : Control
         overlay.AddChild(panel);
         AddChild(overlay);
 
+        ShowSkillSlotDefault(vbox, slotIndex, overlay);
+    }
+
+    private void ShowSkillSlotDefault(VBoxContainer vbox, int slotIndex, Control overlay)
+    {
+        foreach (Node child in vbox.GetChildren()) child.QueueFree();
+
         vbox.AddChild(MakeModifyHeader("Equip Skill", () => CloseOverlay(overlay)));
         vbox.AddChild(new HSeparator());
 
         int common   = _manager.Profile.GetMaterial("crafting_common");
         bool invFull = _manager.Profile.OwnedSkillInstances.Count >= Character.ProfileData.MaxInventory;
         var craftBtn = MakeModifyButton("Craft Skill  [1 Common]", invFull || common < 1);
-        craftBtn.Pressed += () => { CloseOverlay(overlay); ShowCraftSkillAndSlot(slotIndex); };
+        craftBtn.Pressed += () => ShowCraftSkillSubtype(vbox, slotIndex, overlay);
         vbox.AddChild(craftBtn);
-        vbox.AddChild(new HSeparator());
 
         var equippedIds = new System.Collections.Generic.HashSet<string>(
             _manager.GetAll()
@@ -716,40 +995,42 @@ public partial class CharacterScreen : Control
 
         if (unslotted.Count == 0)
         {
+            vbox.AddChild(new HSeparator());
             vbox.AddChild(MakeModifySubLabel("No unslotted skills in inventory"));
+            return;
         }
-        else
-        {
-            foreach (var inst in unslotted)
+
+        vbox.AddChild(new HSeparator());
+
+        BuildSkillIconGrid(
+            vbox,
+            unslotted,
+            unslotted.Count,
+            inst =>
             {
-                var skill = inst.Definition;
-                if (skill == null) continue;
-                var cap = inst;
-                var btn = MakeModifyButton(skill.Name, false);
-                btn.Pressed += () =>
-                {
-                    var c = _manager.SelectedCharacter;
-                    if (c != null) _manager.EquipSkill(c.Id, slotIndex, cap.Id);
-                    CloseOverlay(overlay);
-                    Refresh();
-                    ShowSkillModifyPanel(cap, slotIndex);
-                };
-                vbox.AddChild(btn);
-            }
-        }
+                var c = _manager.SelectedCharacter;
+                if (c != null) _manager.EquipSkill(c.Id, slotIndex, inst.Id);
+                CloseOverlay(overlay);
+                Refresh();
+                ShowSkillModifyPanel(inst, slotIndex);
+            },
+            inst =>
+            {
+                var c = _manager.SelectedCharacter;
+                if (c != null) _manager.EquipSkill(c.Id, slotIndex, inst.Id);
+                CloseOverlay(overlay);
+                Refresh();
+                ShowSkillModifyPanel(inst, slotIndex);
+            });
     }
 
-    private void ShowCraftSkillAndSlot(int slotIndex)
+    private void ShowCraftSkillSubtype(VBoxContainer vbox, int slotIndex, Control overlay)
     {
-        var overlay = MakeModalOverlay();
-        var panel   = MakeModifyPanel();
-        var vbox    = new VBoxContainer();
-        vbox.AddThemeConstantOverride("separation", 8);
-        panel.AddChild(vbox);
-        overlay.AddChild(panel);
-        AddChild(overlay);
+        foreach (Node child in vbox.GetChildren()) child.QueueFree();
 
-        vbox.AddChild(MakeModifyHeader("Craft Skill", () => CloseOverlay(overlay)));
+        var backBtn = MakeModifyButton("← Back", false);
+        backBtn.Pressed += () => ShowSkillSlotDefault(vbox, slotIndex, overlay);
+        vbox.AddChild(backBtn);
         vbox.AddChild(new HSeparator());
 
         int common   = _manager.Profile.GetMaterial("crafting_common");
@@ -855,16 +1136,16 @@ public partial class CharacterScreen : Control
 
         if (charSlotIndex >= 0)
         {
-            var removeBtn = new Button { Text = "Remove" };
-            removeBtn.AddThemeFontOverride("font", font);
-            removeBtn.Pressed += () =>
+            var unSocketBtn = new Button { Text = "Un-Socket" };
+            unSocketBtn.AddThemeFontOverride("font", font);
+            unSocketBtn.Pressed += () =>
             {
                 var c = _manager.SelectedCharacter;
                 if (c != null) _manager.UnequipSkillSlot(c.Id, charSlotIndex);
                 CloseOverlay(overlay);
                 Refresh();
             };
-            header.AddChild(removeBtn);
+            header.AddChild(unSocketBtn);
         }
 
         var closeBtn = new Button { Text = "✕" };
@@ -1033,9 +1314,9 @@ public partial class CharacterScreen : Control
         rrBtn.Pressed += () => { _manager.RerollSkillAugment(aug.Id); rebuild(); Refresh(); };
         container.AddChild(rrBtn);
 
-        var removeBtn = MakeModifyButton("Remove", false);
-        removeBtn.Pressed += () => { _manager.RemoveSkillAugment(skill.Id, augSlot); rebuild(); Refresh(); };
-        container.AddChild(removeBtn);
+        var unSocketBtn = MakeModifyButton("Un-Socket", false);
+        unSocketBtn.Pressed += () => { _manager.RemoveSkillAugment(skill.Id, augSlot); rebuild(); Refresh(); };
+        container.AddChild(unSocketBtn);
     }
 
     private void ShowCraftAugmentAndSocket(SkillItemInstance skill, int augSlot, int charSlotIndex)
@@ -1184,61 +1465,103 @@ public partial class CharacterScreen : Control
         }
     }
 
-    private void BuildGearAugSlots(HBoxContainer row, GearItemInstance instance)
+    // ── Equipment Slot Overlay (empty slot left-click) ────────────────────────
+
+    private void ShowEquipmentSlotOverlay(ItemSlot slot)
     {
-        foreach (Node child in row.GetChildren()) child.QueueFree();
+        var overlay = MakeModalOverlay();
+        var panel   = MakeModifyPanel();
+        var vbox    = new VBoxContainer();
+        vbox.AddThemeConstantOverride("separation", 8);
+        panel.AddChild(vbox);
+        overlay.AddChild(panel);
+        AddChild(overlay);
 
-        for (int i = 0; i < instance.MaxEquipmentAugSlots; i++)
-        {
-            int    captured   = i;
-            string socketedId = i < instance.SocketedEquipmentAugmentIds.Count
-                ? instance.SocketedEquipmentAugmentIds[i] : "";
-            var    augInst    = _manager.FindEquipmentAugmentInstance(socketedId);
-            var    btn        = new TooltipButton { CustomMinimumSize = new Vector2(60, 60) };
-
-            if (augInst?.Definition != null)
-            {
-                btn.Text        = augInst.Definition.Name;
-                btn.TooltipText = augInst.Definition.Name;
-                btn.AddThemeFontSizeOverride("font_size", 9);
-                btn.Pressed += () => { _manager.RemoveEquipmentAugment(instance.Id, captured); BuildGearAugSlots(row, instance); };
-            }
-            else
-            {
-                btn.Text        = $"E{i + 1}";
-                btn.TooltipText = "Empty — click to socket";
-                btn.Modulate    = new Color(1f, 1f, 1f, 0.5f);
-                btn.Pressed     += () => OpenGearAugmentPicker(row, instance, captured);
-            }
-
-            row.AddChild(btn);
-        }
+        ShowEquipmentSlotDefault(vbox, slot, overlay);
     }
 
-    private void OpenGearAugmentPicker(HBoxContainer row, GearItemInstance gear, int slotIndex)
+    private void ShowEquipmentSlotDefault(VBoxContainer vbox, ItemSlot slot, Control overlay)
     {
-        var def = gear.Definition;
-        if (def == null) return;
+        foreach (Node child in vbox.GetChildren()) child.QueueFree();
 
-        var compatible = _manager.Profile.OwnedEquipmentAugmentInstances
-            .Where(a => a.Definition != null)
+        vbox.AddChild(MakeModifyHeader($"Equip {slot}", () => CloseOverlay(overlay)));
+        vbox.AddChild(new HSeparator());
+
+        int common   = _manager.Profile.GetMaterial("crafting_common");
+        bool invFull = _manager.Profile.OwnedGearInstances.Count >= Character.ProfileData.MaxInventory;
+        var craftBtn = MakeModifyButton($"Craft {slot}  [1 Common]", invFull || common < 1);
+        craftBtn.Pressed += () => ShowEquipmentSlotCraftSubtype(vbox, slot, overlay);
+        vbox.AddChild(craftBtn);
+
+        var owned = _manager.Profile.OwnedGearInstances
+            .Where(g => g.Definition?.Slot == slot)
             .ToList();
 
-        var popup = NewStyledPopup();
-        if (compatible.Count == 0)
+        if (owned.Count == 0)
         {
-            popup.AddItem("No compatible augments owned", 0);
-            popup.SetItemDisabled(0, true);
-        }
-        else
-        {
-            for (int i = 0; i < compatible.Count; i++)
-                popup.AddItem(compatible[i].Definition!.Name, i);
-            popup.IdPressed += (long id) => { _manager.SocketEquipmentAugment(gear.Id, slotIndex, compatible[(int)id].Id); BuildGearAugSlots(row, gear); };
+            vbox.AddChild(new HSeparator());
+            vbox.AddChild(MakeModifySubLabel($"No {slot} gear owned"));
+            return;
         }
 
-        Control anchor = slotIndex < row.GetChildCount() && row.GetChild(slotIndex) is Control c ? c : row;
-        ShowPopupAt(popup, anchor);
+        vbox.AddChild(new HSeparator());
+        BuildEquipmentIconGrid(
+            vbox,
+            owned,
+            owned.Count,
+            inst =>
+            {
+                var c = _manager.SelectedCharacter;
+                if (c != null) _manager.EquipItem(c.Id, slot, inst.Id);
+                CloseOverlay(overlay);
+                Refresh();
+                ShowEquipmentModifyPanel(inst, isEquipped: true);
+            },
+            inst =>
+            {
+                var c = _manager.SelectedCharacter;
+                if (c != null) _manager.EquipItem(c.Id, slot, inst.Id);
+                CloseOverlay(overlay);
+                Refresh();
+                ShowEquipmentModifyPanel(inst, isEquipped: true);
+            });
+    }
+
+    private void ShowEquipmentSlotCraftSubtype(VBoxContainer vbox, ItemSlot slot, Control overlay)
+    {
+        foreach (Node child in vbox.GetChildren()) child.QueueFree();
+
+        var backBtn = MakeModifyButton("← Back", false);
+        backBtn.Pressed += () => ShowEquipmentSlotDefault(vbox, slot, overlay);
+        vbox.AddChild(backBtn);
+        vbox.AddChild(new HSeparator());
+
+        int common    = _manager.Profile.GetMaterial("crafting_common");
+        bool invFull  = _manager.Profile.OwnedGearInstances.Count >= Character.ProfileData.MaxInventory;
+        var statusLbl = new Label { Text = invFull ? "Inventory full" : $"Common material: {common}" };
+        statusLbl.AddThemeColorOverride("font_color", new Color("#8AA0AE"));
+        vbox.AddChild(statusLbl);
+
+        foreach (var recipe in RecipeRegistry.ForType(RecipeType.Gear))
+        {
+            var itemDef = ItemRegistry.Get(recipe.OutputItemId);
+            if (itemDef == null || itemDef.Slot != slot) continue;
+            int cost      = recipe.MaterialCosts.TryGetValue("crafting_common", out var mc) ? mc : 1;
+            bool canCraft = !invFull && common >= cost;
+            var btn       = MakeModifyButton($"{itemDef.Name}  —  {cost} Common", !canCraft);
+            string rid    = recipe.Id;
+            btn.Pressed  += () =>
+            {
+                _manager.CraftGearItem(rid);
+                var newInst = _manager.Profile.OwnedGearInstances[^1];
+                var c = _manager.SelectedCharacter;
+                if (c != null) _manager.EquipItem(c.Id, slot, newInst.Id);
+                CloseOverlay(overlay);
+                Refresh();
+                ShowEquipmentModifyPanel(newInst, isEquipped: true);
+            };
+            vbox.AddChild(btn);
+        }
     }
 
     private static ColorRect MakeModalOverlay()

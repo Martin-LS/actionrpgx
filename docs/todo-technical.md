@@ -11,14 +11,10 @@ Items where the GDD defines the design but no corresponding technical specificat
 
 ### UI
 
-- [ ] Spec Game Options / Settings Menu — Centralized overlay accessible from Main Menu and Pause Menu containing Gameplay settings (auto-cast checkboxes) and audio/video placeholder controls.
+
 
 > **(v1 — postponed)**
 
-- [ ] Spec Skill Modify Panel — two-column layout, left augment slot column, context-sensitive right panel, empty→filled slot state transitions, Upgrade/Re-roll/Remove wiring
-- [ ] Spec Equipment Modify Panel — same two-column pattern as Skill Modify Panel; augment slots use Equipment Augments component; Remove = unequip
-- [ ] Spec Craft New entry point — how CharacterScreen triggers craft+auto-slot flow for Skills and Augments; which controller/signal owns it; how crafted item transitions into Modify Panel
-- [ ] Spec Re-roll mechanic — what is re-rolled (TriggerChance on augments? stat roll on gear?), cost, which CharacterManager method handles it
 - [ ] Spec Run Results Overlay content — what data is displayed (XP gained, level reached, materials earned, coins, win/lose state) and how it is populated from RunSession
 
 ### Systems
@@ -47,6 +43,17 @@ These were found by cross-checking tech spec against live code. Each entry is a 
 - [ ] **AugmentInstance.TriggerChance (Skill and Equipment) has no gameplay effect** *(v2+, not in scope)* — Value is stored and serialized. Critical Strike uses hardcoded `BalanceConfig.SkillAugments.CritChance`; Slow uses `EotData.ApplyChance`; Equipment Augments trigger at 100% or static rates. Per-instance proc % wiring deferred until v2 balance pass.
 
 ### Inventory Systems
+
+### UI
+
+- [x] **Skill slot picker — parity with Equipment slot overlay.** Three sub-tasks to bring `ShowSkillSlotPicker` / `ShowCraftSkillAndSlot` in line with the equivalent equipment flow implemented this session:
+  1. [x] **Icon grid** — `ShowSkillSlotPicker` renders owned skills as plain `MakeModifyButton(skill.Name)` text buttons. Extract a `BuildSkillIconGrid(VBoxContainer container, IList<SkillItemInstance> items, int gridSlots, Action<SkillItemInstance> onLeftClick, Action<SkillItemInstance> onRightClick)` helper (same shape as `BuildEquipmentIconGrid`) and use it in both `RefreshSkillsInventory` and `ShowSkillSlotPicker`. Icon buttons should use `skill.IconPath`, `ApplyTierStyle`, and `BuildSkillTooltip` — identical to how the inventory tab already renders them.
+  2. [x] **Craft flow** — `ShowSkillSlotPicker` currently closes its own overlay before opening a separate `ShowCraftSkillAndSlot` overlay, meaning if the user cancels the craft step they are left on the bare character screen with no picker open. Equipment's `ShowEquipmentSlotCraftSubtype` instead rebuilds the same vbox in-place (via `foreach child.QueueFree()` + rebuild) with a `← Back` button that returns to the default state. Change `ShowCraftSkillAndSlot` to follow this pattern: instead of a new overlay, pass the picker's vbox into a `ShowCraftSkillSubtype(VBoxContainer vbox, int slotIndex, Control overlay)` method that clears and rebuilds in-place, with Back → `ShowSkillSlotDefault(vbox, slotIndex, overlay)`.
+  3. [x] **Label cleanup** — rename top-level `"Remove"` → `"Un-Socket"` in `ShowSkillModifyPanel` header (only shown when `charSlotIndex >= 0`, i.e. skill is actually slotted); rename augment right-panel `"Remove"` → `"Un-Socket"` in `BuildFilledAugSlotPanel`. Same applies to equipment augment modify panel. Conditional visibility is already correct — label-only changes.
+
+- [ ] **Split Augments inventory tab.** As designed in `gdd-augments.md`, Skill Augments and Equipment Augments should live in separate inventory tabs rather than a single combined "Augments" tab:
+  1. **UI Tabs** — In `character_screen.tscn`, split the single "Augments" tab under `InventoryTabs` into two separate tabs: "Skill Augs" and "Equip Augs" (each containing their own ScrollContainer and GridContainer).
+  2. **Refactor C#** — Split `RefreshAugmentsInventory()` in `CharacterScreen.cs` into `RefreshSkillAugmentsInventory()` and `RefreshEquipmentAugmentsInventory()`, updating them to bind to their respective grids and populate only their respective items.
 
 ---
 
