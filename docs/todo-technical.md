@@ -5,12 +5,15 @@ Code, systems, UI, and art tasks only. Design decisions live in the GDD files.
 ---
 
 
-
 ## Tech Spec Gaps — GDD designed, no technical spec written yet
 
 Items where the GDD defines the design but no corresponding technical specification exists in the tech docs. Write the spec before implementing.
 
 ### UI
+
+- [ ] Spec Game Options / Settings Menu — Centralized overlay accessible from Main Menu and Pause Menu containing Gameplay settings (auto-cast checkboxes) and audio/video placeholder controls.
+
+> **(v1 — postponed)**
 
 - [ ] Spec Skill Modify Panel — two-column layout, left augment slot column, context-sensitive right panel, empty→filled slot state transitions, Upgrade/Re-roll/Remove wiring
 - [ ] Spec Equipment Modify Panel — same two-column pattern as Skill Modify Panel; augment slots use Equipment Augments component; Remove = unequip
@@ -20,6 +23,8 @@ Items where the GDD defines the design but no corresponding technical specificat
 - [ ] Spec Run Results Overlay content — what data is displayed (XP gained, level reached, materials earned, coins, win/lose state) and how it is populated from RunSession
 
 ### Systems
+
+> **(v1 — postponed)**
 
 - [ ] Spec runtime targeting resolver — which class owns it, how Entity/Position/Self targeting shapes are resolved at runtime, cursor-to-world projection, range clamping for Position skills, auto-pick logic for Entity skills
 - [ ] Spec zone skill lifecycle — how Fixed-Zone, Stackable-Zone, and Triggered-Zone-Burst zones are spawned/tracked/evicted; proximity detection for Triggered-Zone-Burst; Tracked-Tick entity follow; stack cap eviction order
@@ -37,7 +42,7 @@ These were found by cross-checking tech spec against live code. Each entry is a 
 ### Combat / Stats
 
 - [ ] **Evasion not applied in TakeDamage** *(v2+)* — `BuildStatBlock()` computes `StatId.Evasion` (Dex × DexToEvasion) but `PlayerController` never reads it. Deferred by design for v1. When implemented: probability roll (`if Random() < _evasion: return`), not guaranteed full miss; v2 will tune the balance. Field `_evasion` also needs adding to PlayerController.
-- [ ] **Dodge Roll unimplemented** *(v1)* — Space Bar dodge roll is specified in GDD (WASD movement + Space dodge roll with I-frames and short cooldown), but input checking and roll state are not implemented in PlayerController.cs.
+- [x] **Dodge Roll unimplemented** *(v1)* — Space Bar dodge roll is specified in GDD (WASD movement + Space dodge roll with I-frames and short cooldown), but input checking and roll state are not implemented in PlayerController.cs.
 - [ ] **Physical/Magic Resistance scaling unimplemented** *(v2+)* — Strength is supposed to scale Physical Resistance and Intelligence is supposed to scale Magic Resistance, but StrToPhysResistance and IntToMagResistance are set to 0f in PrimaryStatConversions.cs and CharacterData.cs doesn't generate resistance modifiers.
 - [ ] **Flat vs. Percentage Speed Modifiers mismatch** — GDD specifies percentage speed penalties/bonuses for Heavy/Light armor, but BalanceConfig.cs and ItemRegistry.cs define flat values (+20f/-20f) that are added directly to the base speed (80) in the stat block.
 
@@ -55,11 +60,13 @@ These were found by cross-checking tech spec against live code. Each entry is a 
 
 ### Aura SkillType
 
-- [ ] **Aura Focus reservation system unimplemented** *(v1 — spec before implementing)* — Needs spec written first: how AuraActive/AuraReserved live on SkillSlot, how `_totalReserved` accumulates, how `ReserveFocus()`/`UnreserveFocus()` interact with `GetAvailableFocus()`, and the toggle-firing guard in WeaponController. `self_aura_tick` is `EngineProof` so no Aura skill can ship until this is in place.
+- [ ] **Aura Focus reservation system unimplemented** *(v1 — spec before implementing)* — Needs spec written first: how AuraActive/AuraReserved live on SkillSlot, how `_totalReserved` accumulates, how `ReserveFocus()`/`UnreserveFocus()` interact with `GetAvailableFocus()`, and the toggle-firing guard in WeaponController. The `self_aura` prototype (see GDD) cannot fully ship until this is in place.
+- [x] **Reclassify and rename `self_aura_tick` → `self_aura` in SkillRegistry.cs** — Done: renamed, reclassified to `Prototype`, dedicated `BalanceConfig.Skills.SelfAura*` and `BalanceConfig.Focus.SelfAuraFocusReservation` entries added. `SkillType.Active` left as placeholder pending Aura reservation spec.
+- [ ] **Test `self_aura` is craftable and fires** *(v1 — limited test, pending reservation spec)* — Verify `self_aura` appears in the craft list, can be crafted, slotted, and fires a damage tick on activation. Full toggle/reservation behaviour cannot be tested until the Aura Focus reservation system is implemented — this test only confirms the registry entry and basic Active firing are wired correctly.
 
 ### Skill Cooldowns
 
-- [ ] **Duration Skill Cooldown mismatch** — GDD and technical specifications require `self_duration_tick` (Damage Aura) to enter its cooldown *after* the active duration ends. Currently, the codebase starts the cooldown immediately on cast.
+- [x] **Duration Skill Cooldown mismatch** — Fixed: `ProcessActiveSlot` now sets `CooldownTimer = BalanceConfig.Skills.SelfDurationTickPostCooldown` (2s) when `DurationTimer` expires, instead of letting the tick-interval timer wind down with no post-duration gate. `SelfDurationTickPostCooldown` added to `BalanceConfig`.
 
 ### Inventory Systems
 
@@ -81,3 +88,4 @@ These were found by cross-checking tech spec against live code. Each entry is a 
 > **Not in scope.**
 
 - [ ] Hollow Dark Forest assets — floor tile, tree trunk wall, wall corner (Blender); replace placeholder box geometry in DungeonGenerator
+- [ ] **Roll animation** *(v2+)* — No roll clip exists in the player GLB; characters slide while dodging. Needs rig animation in Blender.

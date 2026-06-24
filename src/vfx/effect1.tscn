@@ -1,0 +1,40 @@
+[gd_scene format=3 uid="uid://cehgj1f1f0ydg"]
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_1jf6v"]
+emission_shape = 6
+emission_ring_axis = Vector3(0, 1, 0)
+emission_ring_height = 20.0
+emission_ring_radius = 80.0
+emission_ring_inner_radius = 30.0
+emission_ring_cone_angle = 10.0
+direction = Vector3(0, 1, 0)
+spread = 15.0
+initial_velocity_min = 20.0
+initial_velocity_max = 40.0
+orbit_velocity_min = 3.0
+orbit_velocity_max = 5.0
+gravity = Vector3(0, 0, 0)
+damping_min = 5.0
+damping_max = 12.0
+scale_min = 6.0
+scale_max = 12.0
+color = Color(0.75, 0.7, 0.6, 1)
+
+[sub_resource type="SphereMesh" id="SphereMesh_1jf6v"]
+radius = 1.0
+height = 2.0
+radial_segments = 4
+rings = 2
+
+[node name="GenericEffect1" type="Node3D" unique_id=615347485]
+
+[node name="Whirl" type="GPUParticles3D" parent="." unique_id=972623604]
+emitting = false
+amount = 120
+lifetime = 0.9
+preprocess = 1.0
+randomness = 0.3
+visibility_aabb = AABB(-120, -30, -120, 240, 60, 240)
+local_coords = true
+process_material = SubResource("ParticleProcessMaterial_1jf6v")
+draw_pass_1 = SubResource("SphereMesh_1jf6v")

@@ -140,6 +140,12 @@ public partial class WeaponController : Node
         _slots[slotIndex].AutoActivate = autoActivate;
     }
 
+    public bool GetSlotAutoActivate(int slotIndex)
+    {
+        if (slotIndex < 0 || slotIndex >= 5) return true;
+        return _slots[slotIndex].AutoActivate;
+    }
+
     public bool HasAnyPositionSkill()
     {
         for (int i = 0; i < 5; i++)
@@ -218,9 +224,11 @@ public partial class WeaponController : Node
                 _slots[i].CooldownTimer = _slots[i].Skill!.Cooldown;
             }
             if (_selfDurationTickVfx != null) _selfDurationTickVfx.Emitting = true;
-            if (_slots[i].DurationTimer <= 0f && _selfDurationTickVfx != null)
+            if (_slots[i].DurationTimer <= 0f)
             {
-                _selfDurationTickVfx.Emitting = false;
+                // Active phase ended — start post-duration cooldown before allowing re-cast
+                _slots[i].CooldownTimer = BalanceConfig.Skills.SelfDurationTickPostCooldown;
+                if (_selfDurationTickVfx != null) _selfDurationTickVfx.Emitting = false;
             }
             return;
         }
@@ -316,6 +324,17 @@ public partial class WeaponController : Node
         if (slotIndex < 0 || slotIndex >= 5) return;
         if (_slots[slotIndex].Skill?.Type == SkillType.Channeled)
             _slots[slotIndex].IsChanneling = false;
+    }
+
+    public void CancelActiveSkills()
+    {
+        for (int i = 0; i < 5; i++)
+        {
+            if (_slots[i].Skill != null)
+            {
+                _slots[i].IsChanneling = false;
+            }
+        }
     }
 
     public void TryFireSlot(int slotIndex)

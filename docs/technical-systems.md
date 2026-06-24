@@ -267,6 +267,44 @@ emit ShieldChanged(_currentFocusShield, _maxFocusShield)
 
 ---
 
+## Dodge Roll
+
+Active tactical roll available to the player character at all times.
+
+### Design Details
+* **Cost:** Free (no Focus cost).
+* **Speed:** Overrides movement velocity with a 2.0x multiplier based on base movement speed.
+* **Duration:** 0.35 seconds.
+* **Cooldown:** 1.0 second, starts immediately upon roll initiation.
+* **Direction:** Current WASD vector. If standing still, rolls in the direction the character is currently facing.
+* **Invincibility (I-frames):** Grants full damage immunity for the duration.
+* **Animation:** Bypassed in v1 (characters slide). Model instantly snaps to face the roll direction and locks rotation until the roll ends.
+* **Skill Cancellation:** Cancels and aborts any active or channeled skills on activation.
+
+### Technical Flow
+1. **Input Detection:** `PlayerController._UnhandledInput` checks for the `Key.Space` press event.
+2. **Initiation (`TryStartDodge`):**
+   * Guarded by `_isDodging || _dodgeCooldownTimer > 0`.
+   * Aborts `shot_right` and `shot_left` OneShot nodes on the `AnimationTree`.
+   * Invokes `WeaponController.CancelActiveSkills()` to disable skill channeling.
+   * Resolves movement vector (or facing vector derived from `_yaw` if WASD input is zero) as `_dodgeDirection`.
+   * Instantly snaps `_model.Rotation` (and `_yaw`) to `_dodgeDirection`.
+   * Sets `_isDodging = true`, `_dodgeTimer = 0.35f`, and `_dodgeCooldownTimer = 1.0f`.
+3. **Movement (`_PhysicsProcess`):**
+   * Ticks down `_dodgeTimer` and `_dodgeCooldownTimer`.
+   * If `_isDodging` is active, overrides `Velocity` to `_dodgeDirection * Speed * BalanceConfig.Dodge.SpeedMultiplier`.
+   * Bypasses character rotation logic and movement state machine transitions during the roll.
+4. **Damage Mitigation (`TakeDamage`):**
+   * Early-returns (ignores all damage and hitstop feedback) if `_isDodging` is true.
+5. **UI Integration:**
+   * `PlayerController` declares and emits a `DodgeFired(float cooldown)` signal when a dodge roll is successfully initiated.
+   * `Hud.cs` connects to `DodgeFired` at initialization.
+   * `Hud.cs` creates a separate `SkillCell _dodgeCell` for the Dodge cooldown slot.
+   * In `BuildSkillBar()`, after placing the 5 skill cells, a spacer of 16px is added to the `HBoxContainer`, followed by the Dodge slot cell (a `PanelContainer` with a `ProgressBar` and a centered `Label` overlay showing `"Space"`).
+   * The `_Process` loop ticks `_dodgeCell` timers and updates its `ProgressBar` fill from bottom to top as the cooldown recovers.
+
+---
+
 ## Skill Bar (HUD)
 
 An `HBoxContainer` anchored **bottom-center** of the HUD. **5 cells visible in v1** (mapped to Q E R F + Right Click).
@@ -525,6 +563,10 @@ Always wrap in `try/catch` — if VFX instantiation throws, the exception must n
 `PlayerController.TakeDamage(float rawAmount, DamageType type)`
 
 ```
+// Dodge I-frames — invulnerable during active dodge roll
+if _isDodging:
+    return
+
 // Evasion — passive % chance to completely avoid the hit (no damage, no effects)
 if Random() < _evasion:
     return

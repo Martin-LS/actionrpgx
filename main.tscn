@@ -3,11 +3,10 @@
 [ext_resource type="PackedScene" uid="uid://b2jv4d1ynue3q" path="res://src/player/player.tscn" id="1_0xm2m"]
 [ext_resource type="Script" uid="uid://bpey7ysst6hsh" path="res://src/enemies/EnemySpawner.cs" id="6_7mycd"]
 [ext_resource type="PackedScene" uid="uid://c000f6ave0x4q" path="res://src/hud/hud.tscn" id="6_272bh"]
-[ext_resource type="PackedScene" uid="uid://wpa5tn0s7nyp" path="res://src/hud/world_hud.tscn" id="9_efxa6"]
+[ext_resource type="Script" uid="uid://clvc3ypi7ty0y" path="res://src/hud/WorldHud.cs" id="8_5vw27"]
 [ext_resource type="Script" uid="uid://drs7mknbpx3t" path="res://src/run/RunSession.cs" id="9_rsess"]
 [ext_resource type="PackedScene" uid="uid://drend0vrlay1" path="res://src/ui/run_end_overlay.tscn" id="10_rend"]
 [ext_resource type="Script" uid="uid://jmt4n4cl5jb1" path="res://src/CameraFollow.cs" id="11_camf"]
-[ext_resource type="PackedScene" uid="uid://dpausemenu01" path="res://src/ui/pause_menu.tscn" id="12_pause"]
 [ext_resource type="Script" uid="uid://bkbuyt8udd24v" path="res://src/world/DungeonGenerator.cs" id="14_dungeon"]
 
 [sub_resource type="Environment" id="Environment_main"]
@@ -37,6 +36,5 @@ script = ExtResource("9_rsess")
 
 [node name="RunEndOverlay" parent="." unique_id=1662657642 instance=ExtResource("10_rend")]
 
-[node name="PauseMenu" parent="." unique_id=1059022373 instance=ExtResource("12_pause")]
-
-[node name="WorldHud" parent="." unique_id=713671818 instance=ExtResource("9_efxa6")]
+[node name="WorldHud" type="Node2D" parent="." unique_id=534818003]
+script = ExtResource("8_5vw27")

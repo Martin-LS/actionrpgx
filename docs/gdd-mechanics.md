@@ -220,9 +220,11 @@ Every character has a dodge roll available at all times.
 
 - **Input:** Space bar
 - **Cost:** Free — no Focus cost
-- **Direction:** Any direction, independent of movement direction
-- **I-frames:** Grants invincibility frames for the duration of the roll
-- **Cooldown:** Short — exact value TBD (owned by Balancer)
+- **Direction:** Current movement input direction (WASD). If standing still (no input), rolls in the current character facing direction.
+- **I-frames:** Grants full invincibility frames (immunity to all damage) for the duration of the roll (0.35 seconds).
+- **Cooldown:** 1.0 second, starting immediately when the dodge begins.
+- **Speed Boost:** Overrides movement velocity with a 2.0x speed multiplier during the roll.
+- **Skill Cancellation:** Instantly interrupts and cancels any active or channeled skill animation/cast on activation.
 
 ---
 

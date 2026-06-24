@@ -16,6 +16,7 @@ public partial class PlayerController : CharacterBody3D
     [Signal] public delegate void FocusChangedEventHandler(float current, float max);
     [Signal] public delegate void ShieldChangedEventHandler(float current, float max);
     [Signal] public delegate void DamageTakenEventHandler(float effectiveDamage, bool isMagic);
+    [Signal] public delegate void DodgeFiredEventHandler(float cooldown);
 
     [Export] public float Speed = 200f;
     [Export] public int MaxHealth = 100;
@@ -69,6 +70,12 @@ public partial class PlayerController : CharacterBody3D
     private float _dashReflexTimer;
     private float _ghostStepTimer;
     private float _mendingTimer;
+
+    // Dodge state
+    private bool    _isDodging = false;
+    private float   _dodgeTimer = 0f;
+    private float   _dodgeCooldownTimer = 0f;
+    private Vector3 _dodgeDirection;
 
     public override void _Ready()
     {
@@ -265,6 +272,8 @@ public partial class PlayerController : CharacterBody3D
         GetTree().Root.CallDeferred(Node.MethodName.AddChild, _aimReticle);
     }
 
+    public bool RangeIndicatorVisible => _rangeIndicator?.Visible ?? false;
+
     public void SetRangeIndicatorVisible(bool visible)
     {
         if (_rangeIndicator != null)
@@ -333,11 +342,37 @@ public partial class PlayerController : CharacterBody3D
                 _moveSm = at.Get("parameters/movement/playback").As<AnimationNodeStateMachinePlayback>();
         }
 
+        float dt = (float)delta;
+
+        // Tick dodge timers
+        if (_isDodging)
+        {
+            _dodgeTimer -= dt;
+            if (_dodgeTimer <= 0f)
+            {
+                _isDodging = false;
+            }
+        }
+        if (_dodgeCooldownTimer > 0f)
+        {
+            _dodgeCooldownTimer -= dt;
+        }
+
         var input     = Input.GetVector("move_left", "move_right", "move_up", "move_down");
         var direction = new Vector3(input.X, 0f, input.Y);
+        bool moving = direction.LengthSquared() > 0.01f;
 
-        float moveSpeed = Speed + (_dashReflexTimer > 0f ? 100f : 0f);
-        Velocity = direction * moveSpeed;
+        if (_isDodging)
+        {
+            float moveSpeed = Speed * BalanceConfig.Dodge.SpeedMultiplier;
+            Velocity = _dodgeDirection * moveSpeed;
+        }
+        else
+        {
+            float moveSpeed = Speed + (_dashReflexTimer > 0f ? 100f : 0f);
+            Velocity = direction * moveSpeed;
+        }
+
         MoveAndSlide();
 
         UpdateLockedTarget();
@@ -372,36 +407,36 @@ public partial class PlayerController : CharacterBody3D
                 _aimReticle.GlobalPosition = new Vector3(TargetPosition.X, 0.5f, TargetPosition.Z);
         }
 
-        bool moving = direction.LengthSquared() > 0.01f;
         bool inAttack = _animTree != null &&
             (((bool)_animTree.Get("parameters/shot_right/active")) ||
              ((bool)_animTree.Get("parameters/shot_left/active")));
 
-        if (moving && !inAttack)
+        if (!_isDodging)
         {
-            float targetYaw = Mathf.Atan2(direction.X, direction.Z);
-            _yaw = Mathf.LerpAngle(_yaw, targetYaw, Mathf.Min(1f, RotationSpeed * (float)delta));
-            _model.Rotation = new Vector3(0f, _yaw, 0f);
-        }
-        else
-        {
-            var toAim = new Vector3(TargetPosition.X - GlobalPosition.X, 0f, TargetPosition.Z - GlobalPosition.Z);
-            if (toAim.LengthSquared() > 1f)
+            if (moving && !inAttack)
             {
-                float targetYaw = Mathf.Atan2(toAim.X, toAim.Z);
-                _yaw = Mathf.LerpAngle(_yaw, targetYaw, Mathf.Min(1f, RotationSpeed * (float)delta));
+                float targetYaw = Mathf.Atan2(direction.X, direction.Z);
+                _yaw = Mathf.LerpAngle(_yaw, targetYaw, Mathf.Min(1f, RotationSpeed * dt));
                 _model.Rotation = new Vector3(0f, _yaw, 0f);
             }
-        }
+            else
+            {
+                var toAim = new Vector3(TargetPosition.X - GlobalPosition.X, 0f, TargetPosition.Z - GlobalPosition.Z);
+                if (toAim.LengthSquared() > 1f)
+                {
+                    float targetYaw = Mathf.Atan2(toAim.X, toAim.Z);
+                    _yaw = Mathf.LerpAngle(_yaw, targetYaw, Mathf.Min(1f, RotationSpeed * dt));
+                    _model.Rotation = new Vector3(0f, _yaw, 0f);
+                }
+            }
 
-        if (_moveSm != null)
-        {
-            var want = moving ? "run" : "idle";
-            if (_moveSm.GetCurrentNode() != want)
-                _moveSm.Travel(want);
+            if (_moveSm != null)
+            {
+                var want = moving ? "run" : "idle";
+                if (_moveSm.GetCurrentNode() != want)
+                    _moveSm.Travel(want);
+            }
         }
-
-        float dt = (float)delta;
 
         CurrentFocus = Mathf.Min(CurrentFocus + _focusRegen * dt, MaxFocus);
         EmitSignal(SignalName.FocusChanged, GetAvailableFocus(), MaxFocus);
@@ -431,7 +466,8 @@ public partial class PlayerController : CharacterBody3D
         {
             if (key.Pressed)
             {
-                if      (key.Keycode == Key.Q) wc?.TryFireSlot(0);
+                if      (key.Keycode == Key.Space) TryStartDodge();
+                else if (key.Keycode == Key.Q) wc?.TryFireSlot(0);
                 else if (key.Keycode == Key.E) wc?.TryFireSlot(1);
                 else if (key.Keycode == Key.R) wc?.TryFireSlot(2);
                 else if (key.Keycode == Key.F) wc?.TryFireSlot(3);
@@ -454,9 +490,48 @@ public partial class PlayerController : CharacterBody3D
         }
     }
 
+    private void TryStartDodge()
+    {
+        if (_isDodging || _dodgeCooldownTimer > 0f) return;
+
+        // Cancel any active attack/skill animations (both OneShots)
+        if (_animTree != null)
+        {
+            _animTree.Set("parameters/shot_right/request", (int)AnimationNodeOneShot.OneShotRequest.Abort);
+            _animTree.Set("parameters/shot_left/request", (int)AnimationNodeOneShot.OneShotRequest.Abort);
+        }
+
+        // Cancel channeling skills
+        GetNodeOrNull<Weapon.WeaponController>("Weapon")?.CancelActiveSkills();
+
+        // Get movement input direction, or fall back to character facing direction
+        var input = Input.GetVector("move_left", "move_right", "move_up", "move_down");
+        if (input.LengthSquared() > 0.01f)
+        {
+            _dodgeDirection = new Vector3(input.X, 0f, input.Y).Normalized();
+        }
+        else
+        {
+            _dodgeDirection = new Vector3(Mathf.Sin(_yaw), 0f, Mathf.Cos(_yaw)).Normalized();
+        }
+
+        // Rotate character model to face the roll direction instantly
+        if (_dodgeDirection.LengthSquared() > 0.01f)
+        {
+            _yaw = Mathf.Atan2(_dodgeDirection.X, _dodgeDirection.Z);
+            _model.Rotation = new Vector3(0f, _yaw, 0f);
+        }
+
+        _isDodging = true;
+        _dodgeTimer = BalanceConfig.Dodge.Duration;
+        _dodgeCooldownTimer = BalanceConfig.Dodge.Cooldown;
+        EmitSignal(SignalName.DodgeFired, BalanceConfig.Dodge.Cooldown);
+    }
+
     public void TakeDamage(float rawAmount, Items.DamageType type, Node3D? attacker = null)
     {
         if (GodMode) return;
+        if (_isDodging) return; // Invulnerability frames during dodge roll
         float effective = rawAmount * (1f - DamageReduction);
         if (type == Items.DamageType.Physical)
             effective *= (1f - PhysicalResistance);

@@ -56,9 +56,10 @@ public static class BalanceConfig
         public const float SelfBurstCooldown = 1.5f;
         public const float SelfBurstRange    = 100f;
 
-        public const float SelfDurationTickCooldown  = 1.0f;  // damage tick interval
-        public const float SelfDurationTickDuration  = 5.0f;  // active phase length
-        public const float SelfDurationTickRange     = 108f;  // 3 tiles
+        public const float SelfDurationTickCooldown     = 1.0f;  // damage tick interval while active
+        public const float SelfDurationTickPostCooldown = 2.0f;  // cooldown after active duration ends (placeholder)
+        public const float SelfDurationTickDuration     = 5.0f;  // active phase length
+        public const float SelfDurationTickRange        = 108f;  // 3 tiles
 
         // Prototype: Fixed-Zone-Burst — test values, owned by Balancer
         public const float FixedZoneBurstCooldown    = 1.0f;
@@ -101,6 +102,10 @@ public static class BalanceConfig
         public const float FixedZoneTickZoneRadius  = 72f;
         public const float FixedZoneTickDuration    = 5.0f;
         public const float FixedZoneTickRate        = 1.0f; // seconds between ticks
+
+        // Prototype: Self-Aura — test values, owned by Balancer
+        public const float SelfAuraCooldown = 1.0f;  // tick interval while active (placeholder)
+        public const float SelfAuraRange    = 108f;  // aura pulse radius — 3 tiles (placeholder)
     }
 
     public static class Focus
@@ -131,6 +136,9 @@ public static class BalanceConfig
         public const float WindupBurstFocusCost    = 20f;
         public const float FixedZoneBurstFocusCost = 15f;
         public const float FixedZoneTickFocusCost  = 20f;
+
+        // Aura prototype — reservation amount (flat Focus locked while active; placeholder)
+        public const float SelfAuraFocusReservation = 15f;
 
     }
 
@@ -204,6 +212,13 @@ public static class BalanceConfig
     public static class LevelUp
     {
         public const float HpBonusPerLevel = 5f;
+    }
+
+    public static class Dodge
+    {
+        public const float Duration = 0.35f; // seconds
+        public const float Cooldown = 1.0f;  // seconds
+        public const float SpeedMultiplier = 2.0f; // speed multiplier during dodge
     }
 
     public static class SkillAugments

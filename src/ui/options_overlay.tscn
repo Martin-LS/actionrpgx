@@ -1,0 +1,49 @@
+[gd_scene format=3 uid="uid://cdea74afvff0h"]
+
+[ext_resource type="Script" uid="uid://dxxja5yde7ju0" path="res://src/ui/OptionsOverlay.cs" id="1_nlfnl"]
+
+[node name="OptionsOverlay" type="CanvasLayer" unique_id=1855197832]
+process_mode = 3
+layer = 100
+script = ExtResource("1_nlfnl")
+
+[node name="GlobalButton" type="Button" parent="." unique_id=310555920]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -160.0
+offset_top = 10.0
+offset_right = -10.0
+offset_bottom = 40.0
+text = "⚙ Options"
+
+[node name="MenuControl" type="Control" parent="." unique_id=653919708]
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="PanelContainer" type="PanelContainer" parent="MenuControl" unique_id=1568020985]
+layout_mode = 0
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MenuControl/PanelContainer" unique_id=1066298150]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="TitleLabel" type="Label" parent="MenuControl/PanelContainer/VBoxContainer" unique_id=1693810484]
+layout_mode = 2
+text = "Options"
+horizontal_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="MenuControl/PanelContainer/VBoxContainer" unique_id=1350664811]
+layout_mode = 2
+
+[node name="ButtonList" type="VBoxContainer" parent="MenuControl/PanelContainer/VBoxContainer" unique_id=261797661]
+layout_mode = 2

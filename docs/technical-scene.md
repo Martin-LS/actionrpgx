@@ -173,20 +173,9 @@ Main (Node)
 ├── EnemySpawner (Node)
 ├── RunSession (Node)          ← tracks elapsed time; emits RunEnded(won, level, elapsed)
 ├── RunEndOverlay (CanvasLayer)← shown on RunEnded; returns to character_screen.tscn
-├── PauseMenu (CanvasLayer)
-└── DevOverlay (CanvasLayer)   ← debug only; hidden when OS.IsDebugBuild() is false
-    ├── ToggleButton (Button)  ← anchored top-center; always visible in debug builds
-    └── DevPanel (PanelContainer) ← hidden by default; toggled by ToggleButton
-        └── VBox (VBoxContainer)
-            ├── SpeedRow (HBoxContainer)
-            │   ├── SpeedLabel (Label)   ← displays current speed value
-            │   └── SpeedSlider (HSlider) ← live-edits PlayerController.Speed
-            ├── RangeToggle (CheckBox) ← toggles attack range indicator; on by default in editor (OS.HasFeature("editor"))
-            └── GodModeToggle (CheckBox) ← sets PlayerController.GodMode; TakeDamage is a no-op while active
+└── WorldHud (Node2D)          ← world-space overlay: health bars + floating damage numbers (see Core Systems)
 ```
-**DevOverlay behaviour:** `_Ready()` checks `OS.IsDebugBuild()` — if false, hides the entire overlay. `ToggleButton` flips `DevPanel.Visible`. The slider writes to `PlayerController.Speed`; `RangeToggle` calls `PlayerController.SetRangeIndicatorVisible(bool)`; `GodModeToggle` sets `PlayerController.GodMode`.
-
-**Attack range indicator:** `PlayerController._Ready()` creates a `TorusMesh` ring (`MeshInstance3D`) at the player's feet — `OuterRadius` = effective weapon range, cyan `#00CCFF` at 50% alpha, unshaded, no depth test. Visible by default when running from the editor; hidden in exported builds. Toggled via `DevOverlay.RangeToggle`.
+**Attack range indicator:** `PlayerController._Ready()` creates a `TorusMesh` ring (`MeshInstance3D`) at the player's feet — `OuterRadius` = effective weapon range, cyan `#00CCFF` at 50% alpha, unshaded, no depth test. Hidden by default. Toggled via the Debug Options panel (`OptionsOverlay` → Debug Options → Range Indicator checkbox).
 
 **Target indicator:** Small torus spawned from `res://src/vfx/target_indicator.tscn`, added to scene root (not as a player child). Follows `LockedTarget.GlobalPosition` at Y=1. Visible only while a valid locked target exists.
 
@@ -225,6 +214,7 @@ Main (Node)
 | SkillRegistry     | Static catalogue of all `SkillData` records                  | `res://src/skills/`       | ✅ done |
 | RecipeRegistry    | Static catalogue of all `RecipeData` records                 | `res://src/crafting/`     | ✅ done |
 | RunEndOverlay     | Show win/die results, flush run to character, return to character screen | `res://src/ui/` | ✅ done |
+| OptionsOverlay    | Autoload — global ESC/options modal; pauses tree when open; context-aware buttons (in-run: Resume/End Run; out-of-run: Close); blocked on main_menu.tscn | `res://src/ui/` | ✅ done |
 | CoinPickup        | Coin drop (25% on enemy death) — reports to RunSession       | `res://src/meta/`         | ✅ done |
 | MetaProgression   | Level bonuses (automatic +HP/+DMG per level); coin bank accumulates — spend mechanic TBD | `res://src/meta/`, `src/ui/` | ✅ done |
 | HealthPickup      | Health drop (10% on enemy death) — heals player on contact   | `res://src/health/`       | ✅ done |
@@ -396,6 +386,51 @@ EnemyPoolEntry { EnemyType, Count, Modifiers { ArmorBonus, HpBonus, SpeedBonus, 
 ```
 
 Count drives spawn weighting. Modifiers are applied to the enemy instance at spawn on top of base `EnemyData` values. v1: one entry, `skeleton`, count 1, all modifiers zero.
+
+---
+
+## Global Options Overlay
+
+Unified modal options interface registered globally to handle input, pausing, and options access.
+
+### 1. Autoload Registration
+* **Scene Path:** `res://src/ui/options_overlay.tscn` (script: `OptionsOverlay.cs`).
+* **Name:** `OptionsOverlay` registered in project autoloads.
+* **Process Mode:** Set to `Always` (runs when SceneTree is paused).
+
+### 2. Node & Scene Structure
+* `OptionsOverlay` (CanvasLayer — Layer = 100 to draw over all game and HUD UI layers)
+  * `GlobalButton` (Button — Small cog icon/text positioned in top-right: `AnchorLeft = 1.0, AnchorRight = 1.0`, offset `(-50, 10)`). Visible only when menu is closed and current scene is not `main_menu.tscn`.
+  * `MenuControl` (Control — Stretch full-rect modal mask, mouse filter set to `Stop` to capture background clicks).
+    * `PanelContainer` (Centered container, themed stylebox with gold border).
+      * `VBoxContainer` (Separation = 8)
+        * `Label` (Title: "Options", centered).
+        * `HSeparator`
+        * `ButtonList` (VBoxContainer — Cleared and rebuilt dynamically on menu opening).
+          * In-Run: `"Resume"`, `"End Run"`, HSeparator, `"Debug Options"`.
+          * Out-of-Run: `"Close"`, HSeparator, `"Debug Options"`.
+
+### 3. Controller Lifecycle (`OptionsOverlay.cs`)
+* Checks `GetTree().CurrentScene.SceneFilePath` to determine if welcome screen (`main_menu.tscn`) is active.
+* Intercepts `ui_cancel` (Escape) in `_UnhandledInput(InputEvent @event)`.
+* `Toggle()` updates:
+  * `MenuControl.Visible = !MenuControl.Visible`
+  * `GetTree().Paused = MenuControl.Visible`
+  * `GlobalButton.Visible = !MenuControl.Visible && CurrentScene != main_menu.tscn`
+  * On open (`MenuControl.Visible == true`): Clears `ButtonList` and builds buttons dynamically based on whether the current scene path is `"res://main.tscn"`.
+  * On `"End Run"` press: Sets `GetTree().Paused = false`, calls `GetTree().ChangeSceneToFile("res://src/ui/character_screen.tscn")`, and closes the overlay.
+  * On `"Debug Options"` press: Clears `ButtonList` and rebuilds as the debug panel (see §4 below). Only shown when `OS.IsDebugBuild()`.
+
+### 4. Debug Options Panel (`OptionsOverlay.cs` — `RebuildDebugMenu()`)
+* `"← Back"` button — calls `RebuildMenu()` to return to the main options list.
+* **In-run only** (resolved via `GetTree().GetFirstNodeInGroup("player")` and `player.GetNode<WeaponController>("Weapon")`):
+  * Range Indicator `CheckBox` — `player.SetRangeIndicatorVisible(bool)`. Initialised from current state.
+  * God Mode `CheckBox` — `player.GodMode = bool`. Initialised from current state.
+  * `Label` (`"Skill Auto-cast"`), then `HBoxContainer` of 5 `VBoxContainer` columns each containing a `Label` (`"1"`–`"5"`) and a `CheckBox` → `weapon.SetSlotAutoActivate(i, bool)`. Initialised via `weapon.GetSlotAutoActivate(i)` (getter added to `WeaponController`).
+* **Always shown:**
+  * `"Add Materials"` button — `CharacterManager.Profile?.AddMaterial("crafting_common", 500)`.
+* The `"Debug Options"` button itself is hidden when `!OS.IsDebugBuild()`.
+* **Replaces `DevOverlay`:** `DevOverlay.cs` and the `WorldHud` CanvasLayer node in `main.tscn` (which was the DevOverlay) are deleted as part of this change.
 
 ---
 

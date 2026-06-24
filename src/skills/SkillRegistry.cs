@@ -152,13 +152,13 @@ public static class SkillRegistry
             Duration: BalanceConfig.Skills.FixedZoneTickDuration,
             ZoneRadius: BalanceConfig.Skills.FixedZoneTickZoneRadius),
 
-        ["self_aura_tick"] = new SkillData(
-            "self_aura_tick", "Self Aura Tick", SkillType.Active,
+        ["self_aura"] = new SkillData(
+            "self_aura", "Self Aura", SkillType.Active, // SkillType.Active is a placeholder — SkillType.Aura pending Aura reservation spec
             Tags: new[] { "Attack" },
-            Cooldown: BalanceConfig.Skills.SelfDurationTickCooldown, Range: BalanceConfig.Skills.SelfDurationTickRange,
-            FocusCost: BalanceConfig.Focus.SelfDurationTickFocusCost,
-            Description: "Old Aura mechanic — persistent passive pulse. Replaced by Self-Duration-Tick. Retained as engine proof.",
-            Kind: SkillKind.EngineProof,
+            Cooldown: BalanceConfig.Skills.SelfAuraCooldown, Range: BalanceConfig.Skills.SelfAuraRange,
+            FocusCost: BalanceConfig.Focus.SelfAuraFocusReservation,
+            Description: "Proves Aura toggle + Focus reservation mechanic. Toggle on → reserves Focus and pulses effect each tick. Toggle off → unreserves Focus.",
+            Kind: SkillKind.Prototype,
             TargetingShape: SkillTargetingShape.Self,
             DamagePattern: SkillDamagePattern.Tick),
     };

@@ -8,7 +8,7 @@ Quick reference for every doc in this folder. Load this first each session to kn
 
 | File | When to read |
 |------|--------------|
-| [todo-tech.md](todo-tech.md) | Every session — check what's pending, tick off anything completed |
+| [todo-technical.md](todo-technical.md) | Every session — check what's pending, tick off anything completed |
 | [project-rules.md](project-rules.md) | Before any design or architectural decision, before any bug fix — scope rules, handedness, bone rotations, UI theming, animation constraints |
 
 ---
@@ -18,7 +18,7 @@ Quick reference for every doc in this folder. Load this first each session to kn
 | File | When to read |
 |------|--------------|
 | [color-scheme.md](color-scheme.md) | Before any visual, UI, VFX, material, or lighting work — full color palette with hex values |
-| [tech-tips.md](tech-tips.md) | Before any 3D asset, animation, or bone work — hard-won Blender→Godot lessons |
+| [technical-tips.md](technical-tips.md) | Before any 3D asset, animation, or bone work — hard-won Blender→Godot lessons |
 
 ---
 

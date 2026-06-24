@@ -53,7 +53,7 @@ entity_burst and entity_debuff are single-target — no AoE tag.
 
 All skills in v1 are prototypes. Prototypes are the building blocks — they prove mechanics and cover the full design space. Named skills with unique identities are post-v1 and will be derived from these prototypes.
 
-All 11 prototypes are craftable. The `EngineProof` kind is retained in code for future use but nothing is marked as such currently.
+All 12 prototypes are craftable. The `EngineProof` kind is retained in code for future use but nothing in v1 is marked as such — all v1 skills are `Prototype`.
 
 | Prototype | Targeting | Damage pattern | Skill type |
 |---|---|---|---|
@@ -68,6 +68,7 @@ All 11 prototypes are craftable. The `EngineProof` kind is retained in code for 
 | entity_debuff | Entity | None | Active |
 | stackable_zone | Position | Tick | Active |
 | triggered_zone_burst | Position | Burst | Active |
+| self_aura | Self | Tick | Aura |
 
 > **Tech note — renames, not new skills:** entity_burst, self_channeled_tick, self_duration_tick, and self_burst are renames of the existing Strike, Cyclone, Damage Aura, and Nova implementations. Rename in code and data — do not create new skill objects. v2 will create the real named versions (Strike, Cyclone, etc.) derived from these prototypes.
 
@@ -306,6 +307,27 @@ All values (damage, cooldown, radius, tick rate, duration) are TBD — owned by 
 | Trigger | Single (fires once, despawns) |
 | Type | Active |
 | Damage type | Magic |
+
+**self_aura**
+
+Toggle on — the aura activates, reserves a flat amount of Focus (permanently reducing the available pool for other skills while active), and begins pulsing its effect on every tick. Toggle off — the aura deactivates and the reserved Focus is returned immediately. Proves the Aura toggle + Focus reservation mechanic. The only v1 prototype where a skill runs indefinitely with no player input after activation.
+
+The effect the aura produces (damage AoE, player buff, enemy debuff AoE) is defined on each named skill cloned from this prototype in v2+. The prototype itself uses a placeholder damage tick.
+
+| Property | Value |
+|---|---|
+| Description | Proves Aura toggle + Focus reservation mechanic. Toggle on → reserves Focus and pulses effect each tick. Toggle off → unreserves Focus. |
+| Kind | Prototype |
+| Targeting shape | Self |
+| Wind-up | 0 (instant) |
+| Damage pattern | Tick |
+| Stack limit | — |
+| Zone tracks entity | — |
+| Type | Aura |
+| Focus reservation | TBD (Balancer) — flat amount reserved from Max Focus while active |
+| Tick rate | TBD (Balancer) |
+| Effect | Placeholder damage tick in v1; buff, debuff, or damage AoE on named clones in v2+ |
+| Acquire | Craft |
 
 ---
 

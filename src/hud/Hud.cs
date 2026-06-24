@@ -23,6 +23,7 @@ public partial class Hud : CanvasLayer
         public float          Elapsed;
     }
     private readonly SkillCell[] _skillCells = new SkillCell[5];
+    private SkillCell? _dodgeCell;
 
     public override void _Ready()
     {
@@ -55,6 +56,7 @@ public partial class Hud : CanvasLayer
             player.XpChanged     += OnXpChanged;
             player.LeveledUp     += OnLeveledUp;
             player.PlayerHit     += OnPlayerHit;
+            player.DodgeFired    += OnDodgeFired;
 
             _focusBar.MaxValue  = player.MaxFocus;
             _focusBar.Value     = player.CurrentFocus;
@@ -111,6 +113,45 @@ public partial class Hud : CanvasLayer
             _skillCells[i] = new SkillCell { Bar = bar, Panel = cell, Cooldown = 0f, Elapsed = 0f };
         }
 
+        // Add a visual separation gap for the Dodge slot
+        var spacer = new Control { CustomMinimumSize = new Vector2(16f, 0f) };
+        skillBar.AddChild(spacer);
+
+        // Build Dodge cell
+        var dodgeBar = new ProgressBar
+        {
+            MaxValue          = 1.0,
+            Value             = 1.0,
+            ShowPercentage    = false,
+            FillMode          = 3, // bottom-to-top
+            CustomMinimumSize = new Vector2(64f, 64f),
+            SizeFlagsHorizontal = Control.SizeFlags.Fill,
+            SizeFlagsVertical   = Control.SizeFlags.Fill,
+        };
+        StyleSkillBar(dodgeBar);
+
+        // Distinct styling: Cool slate/grey fill for dodge roll
+        var fill = new StyleBoxFlat { BgColor = new Color(0.45f, 0.45f, 0.45f) };
+        dodgeBar.AddThemeStyleboxOverride("fill", fill);
+
+        var dodgeLabel = new Label
+        {
+            Text = "Space",
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
+            SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+            SizeFlagsVertical = Control.SizeFlags.ExpandFill
+        };
+        dodgeLabel.AddThemeColorOverride("font_color", new Color(1f, 1f, 1f, 0.7f));
+        dodgeLabel.AddThemeFontSizeOverride("font_size", 12);
+
+        var dodgeCell = new PanelContainer { CustomMinimumSize = new Vector2(64f, 64f) };
+        dodgeCell.AddChild(dodgeBar);
+        dodgeCell.AddChild(dodgeLabel);
+        skillBar.AddChild(dodgeCell);
+
+        _dodgeCell = new SkillCell { Bar = dodgeBar, Panel = dodgeCell, Cooldown = 0f, Elapsed = 0f };
+
         container.AddChild(skillBar);
     }
 
@@ -128,6 +169,12 @@ public partial class Hud : CanvasLayer
             if (cell == null || cell.Cooldown <= 0f || cell.Elapsed >= cell.Cooldown) continue;
             cell.Elapsed = Mathf.Min(cell.Cooldown, cell.Elapsed + (float)delta);
             cell.Bar.Value = cell.Elapsed / cell.Cooldown;
+        }
+
+        if (_dodgeCell != null && _dodgeCell.Cooldown > 0f && _dodgeCell.Elapsed < _dodgeCell.Cooldown)
+        {
+            _dodgeCell.Elapsed = Mathf.Min(_dodgeCell.Cooldown, _dodgeCell.Elapsed + (float)delta);
+            _dodgeCell.Bar.Value = _dodgeCell.Elapsed / _dodgeCell.Cooldown;
         }
     }
 
@@ -160,6 +207,14 @@ public partial class Hud : CanvasLayer
         cell.Cooldown  = cooldown;
         cell.Elapsed   = 0f;
         cell.Bar.Value = 0.0;
+    }
+
+    private void OnDodgeFired(float cooldown)
+    {
+        if (_dodgeCell == null) return;
+        _dodgeCell.Cooldown  = cooldown;
+        _dodgeCell.Elapsed   = 0f;
+        _dodgeCell.Bar.Value = 0.0;
     }
 
     private void OnXpChanged(int currentXp, int xpToNextLevel)
