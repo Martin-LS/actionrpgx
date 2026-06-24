@@ -1,0 +1,40 @@
+[gd_scene format=3 uid="uid://34d1cep53f8q"]
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_winet"]
+emission_shape = 6
+emission_ring_axis = Vector3(0, 1, 0)
+emission_ring_height = 15.0
+emission_ring_radius = 108.0
+emission_ring_inner_radius = 95.0
+emission_ring_cone_angle = 5.0
+direction = Vector3(0, 1, 0)
+spread = 5.0
+initial_velocity_min = 3.0
+initial_velocity_max = 8.0
+gravity = Vector3(0, 0, 0)
+tangential_accel_min = 3.0
+tangential_accel_max = 8.0
+damping_min = 2.0
+damping_max = 5.0
+scale_min = 2.0
+scale_max = 4.0
+color = Color(0.91, 0.54, 0.16, 1)
+
+[sub_resource type="SphereMesh" id="SphereMesh_c47w3"]
+radius = 1.0
+height = 2.0
+radial_segments = 4
+rings = 2
+
+[node name="SelfAuraVfx" type="Node3D" unique_id=270320408]
+
+[node name="Ring" type="GPUParticles3D" parent="." unique_id=289904993]
+emitting = false
+amount = 80
+lifetime = 2.0
+preprocess = 2.0
+randomness = 0.2
+visibility_aabb = AABB(-140, -30, -140, 280, 60, 280)
+local_coords = true
+process_material = SubResource("ParticleProcessMaterial_winet")
+draw_pass_1 = SubResource("SphereMesh_c47w3")

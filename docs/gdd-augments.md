@@ -166,12 +166,13 @@ Proves the stat-mod augment path. Per-skill crit chance bonus stacks on top of g
 
 ### Equipment Augment Prototypes
 
-Equipment augment prototypes are **out of scope for v1**. Listed here to establish the design space for v2.
+Equipment augment prototypes are **v1 scope** — all five are implemented, craftable, and active in the runtime.
 
 | Prototype | Tag | Trigger | Concept proven |
 |---|---|---|---|
 | Equip-Always | `mending` | `always` | Passive always-on background regen effect |
 | Equip-Reactive | `retaliation` | `on_player_hit_%` | Reactive effect fires on taking damage |
+| Equip-Reactive-Def | `fortify` | `on_player_hit_%` | Damage reduction on the next hit after being struck |
 | Equip-Reactive-Move | `dash_reflex` | `on_player_hit_%` | Reactive movement/speed effect on hit received |
 | Equip-Regen | `ghost_step` | `on_kill_%` | Kill-triggered recovery; reward for aggressive play |
 

@@ -42,7 +42,6 @@ These were found by cross-checking tech spec against live code. Each entry is a 
 ### Combat / Stats
 
 - [ ] **Evasion not applied in TakeDamage** *(v2+)* — `BuildStatBlock()` computes `StatId.Evasion` (Dex × DexToEvasion) but `PlayerController` never reads it. Deferred by design for v1. When implemented: probability roll (`if Random() < _evasion: return`), not guaranteed full miss; v2 will tune the balance. Field `_evasion` also needs adding to PlayerController.
-- [x] **Dodge Roll unimplemented** *(v1)* — Space Bar dodge roll is specified in GDD (WASD movement + Space dodge roll with I-frames and short cooldown), but input checking and roll state are not implemented in PlayerController.cs.
 - [ ] **Physical/Magic Resistance scaling unimplemented** *(v2+)* — Strength is supposed to scale Physical Resistance and Intelligence is supposed to scale Magic Resistance, but StrToPhysResistance and IntToMagResistance are set to 0f in PrimaryStatConversions.cs and CharacterData.cs doesn't generate resistance modifiers.
 - [ ] **Flat vs. Percentage Speed Modifiers mismatch** — GDD specifies percentage speed penalties/bonuses for Heavy/Light armor, but BalanceConfig.cs and ItemRegistry.cs define flat values (+20f/-20f) that are added directly to the base speed (80) in the stat block.
 
@@ -50,23 +49,9 @@ These were found by cross-checking tech spec against live code. Each entry is a 
 
 - [ ] **AugmentInstance.TriggerChance (Skill and Equipment) has no gameplay effect** *(v2+, not in scope)* — Value is stored and serialized. Critical Strike uses hardcoded `BalanceConfig.SkillAugments.CritChance`; Slow uses `EotData.ApplyChance`; Equipment Augments trigger at 100% or static rates. Per-instance proc % wiring deferred until v2 balance pass.
 
-### Equipment Augments
-
-- [ ] **Equipment Augments scope mismatch** — GDD (`gdd-augments.md`) states that Equipment Augments are out of scope for v1 (v2+ only). However, the technical specification (`technical-systems.md`) and codebase fully implement them in v1 (with runtime logic, recipes, and registry entries for `retaliation`, `fortify`, `dash_reflex`, `ghost_step`, and `mending`). Clarify if GDD should be updated to bring them into v1 scope, or if they should be disabled.
-
 ### Skill Tags
 
 - [ ] **Skill tags taxonomy mismatch** — GDD (`gdd-skills.md`) states that skill tags (other than `AoE`) are deferred post-v1. However, the codebase (`SkillRegistry.cs` and `WeaponController.cs`) defines and relies on `Melee` and `Range` tags to dynamically resolve weapon-adaptive skill delivery type (Melee swing vs. Ranged projectile). Decide whether to update GDD to allow these tags for delivery logic, or restructure the code to resolve delivery type without tags.
-
-### Aura SkillType
-
-- [x] **Aura Focus reservation system unimplemented** *(v1 — spec before implementing)* — Needs spec written first: how AuraActive/AuraReserved live on SkillSlot, how `_totalReserved` accumulates, how `ReserveFocus()`/`UnreserveFocus()` interact with `GetAvailableFocus()`, and the toggle-firing guard in WeaponController. The `self_aura` prototype (see GDD) cannot fully ship until this is in place.
-- [x] **Reclassify and rename `self_aura_tick` → `self_aura` in SkillRegistry.cs** — Done: renamed, reclassified to `Prototype`, dedicated `BalanceConfig.Skills.SelfAura*` and `BalanceConfig.Focus.SelfAuraFocusReservation` entries added. `SkillType.Active` left as placeholder pending Aura reservation spec.
-- [x] **Test `self_aura` is craftable and fires** *(v1)* — Reservation system implemented: `SkillType.Aura` added to enum, `recipe_self_aura` added to RecipeRegistry, `AuraActive`/`AuraReserved` on SkillSlot, `ReserveFocus`/`UnreserveFocus` on PlayerController, toggle wired in `TryFireSlot`, `ProcessAuraSlot`/`FireAuraTick` in WeaponController. Build verified clean.
-
-### Skill Cooldowns
-
-- [x] **Duration Skill Cooldown mismatch** — Fixed: `ProcessActiveSlot` now sets `CooldownTimer = BalanceConfig.Skills.SelfDurationTickPostCooldown` (2s) when `DurationTimer` expires, instead of letting the tick-interval timer wind down with no post-duration gate. `SelfDurationTickPostCooldown` added to `BalanceConfig`.
 
 ### Inventory Systems
 

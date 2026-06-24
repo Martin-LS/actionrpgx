@@ -24,6 +24,7 @@ public partial class Hud : CanvasLayer
     }
     private readonly SkillCell[] _skillCells = new SkillCell[5];
     private SkillCell? _dodgeCell;
+    private readonly bool[] _slotIsAuraActive = new bool[5];
 
     public override void _Ready()
     {
@@ -66,6 +67,8 @@ public partial class Hud : CanvasLayer
             var weaponController = player.GetNodeOrNull<Weapon.WeaponController>("Weapon");
             weaponController?.Connect(Weapon.WeaponController.SignalName.SkillFired,
                 Callable.From<int, float, string>(OnSkillFired));
+            weaponController?.Connect(Weapon.WeaponController.SignalName.AuraToggled,
+                Callable.From<int, bool>(OnAuraToggled));
         }
 
         BuildSkillBar();
@@ -204,9 +207,32 @@ public partial class Hud : CanvasLayer
         if (slotIndex < 0 || slotIndex >= _skillCells.Length) return;
         var cell = _skillCells[slotIndex];
         if (cell == null) return;
+        if (_slotIsAuraActive[slotIndex]) return; // aura ticks don't look like cooldowns
         cell.Cooldown  = cooldown;
         cell.Elapsed   = 0f;
         cell.Bar.Value = 0.0;
+    }
+
+    private void OnAuraToggled(int slotIndex, bool active)
+    {
+        if (slotIndex < 0 || slotIndex >= _skillCells.Length) return;
+        _slotIsAuraActive[slotIndex] = active;
+        var cell = _skillCells[slotIndex];
+        if (cell == null) return;
+        if (active)
+        {
+            var amber = new StyleBoxFlat { BgColor = new Color("#E88A28") };
+            cell.Bar.AddThemeStyleboxOverride("fill",       amber);
+            cell.Bar.AddThemeStyleboxOverride("background", amber);
+        }
+        else
+        {
+            cell.Bar.AddThemeStyleboxOverride("fill",       new StyleBoxFlat { BgColor = new Color(0.3f, 0.55f, 0.9f) });
+            cell.Bar.AddThemeStyleboxOverride("background", new StyleBoxFlat { BgColor = new Color(0.15f, 0.15f, 0.15f) });
+            cell.Bar.Value = 1.0;
+            cell.Cooldown  = 0f;
+            cell.Elapsed   = 0f;
+        }
     }
 
     private void OnDodgeFired(float cooldown)

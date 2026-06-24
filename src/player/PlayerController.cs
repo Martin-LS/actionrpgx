@@ -645,6 +645,7 @@ public partial class PlayerController : CharacterBody3D
 
     private void OnSkillFired(int slotIndex, float cooldown, string delivery)
     {
+        if (delivery == "AuraTick") return;
         if (_animTree == null) return;
         var param = delivery switch
         {

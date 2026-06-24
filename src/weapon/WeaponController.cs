@@ -8,6 +8,7 @@ namespace ActionRpgX.Weapon;
 public partial class WeaponController : Node
 {
     [Signal] public delegate void SkillFiredEventHandler(int slotIndex, float cooldown, string delivery);
+    [Signal] public delegate void AuraToggledEventHandler(int slotIndex, bool active);
 
     private static readonly PackedScene ProjectileScene =
         GD.Load<PackedScene>("res://src/weapon/projectile.tscn");
@@ -32,12 +33,16 @@ public partial class WeaponController : Node
     private static readonly PackedScene SelfBurstVfxScene =
         GD.Load<PackedScene>("res://src/vfx/self_burst_vfx.tscn");
 
+    private static readonly PackedScene SelfAuraVfxScene =
+        GD.Load<PackedScene>("res://src/vfx/self_aura_vfx.tscn");
+
 
 
     private Player.PlayerController? _player;
     private GpuParticles3D? _selfChanneledTickVfx;
     private GpuParticles3D? _selfDurationTickVfx;
     private GpuParticles3D? _selfBurstVfx;
+    private GpuParticles3D? _selfAuraVfx;
     private bool _wasChanneling;
 
     private float      _physicalDamage  = 20f;
@@ -81,6 +86,14 @@ public partial class WeaponController : Node
                     _selfBurstVfx.ProcessMaterial = (ParticleProcessMaterial)mat.Duplicate();
                 _selfBurstVfx.Emitting = false;
             }
+            _player?.CallDeferred(Node.MethodName.AddChild, vfxRoot);
+        }
+
+        if (SelfAuraVfxScene != null)
+        {
+            var vfxRoot = SelfAuraVfxScene.Instantiate<Node3D>();
+            _selfAuraVfx = vfxRoot.GetNodeOrNull<GpuParticles3D>("Ring");
+            if (_selfAuraVfx != null) _selfAuraVfx.Emitting = false;
             _player?.CallDeferred(Node.MethodName.AddChild, vfxRoot);
         }
     }
@@ -331,7 +344,7 @@ public partial class WeaponController : Node
             ApplyEots(enemy, slot.EotIds, critMult);
         }
 
-        EmitSignal(SignalName.SkillFired, slotIndex, slot.Skill!.Cooldown, "SelfBurst");
+        EmitSignal(SignalName.SkillFired, slotIndex, slot.Skill!.Cooldown, "AuraTick");
     }
 
     private void FireSelfChanneledTick(int slotIndex)
@@ -394,6 +407,8 @@ public partial class WeaponController : Node
                 _player?.UnreserveFocus(slot.AuraReserved);
                 _slots[slotIndex].AuraActive  = false;
                 _slots[slotIndex].AuraReserved = 0f;
+                if (_selfAuraVfx != null) { _selfAuraVfx.Restart(); _selfAuraVfx.Emitting = false; }
+                EmitSignal(SignalName.AuraToggled, slotIndex, false);
             }
             else
             {
@@ -403,6 +418,8 @@ public partial class WeaponController : Node
                 _slots[slotIndex].AuraActive   = true;
                 _slots[slotIndex].AuraReserved = reserve;
                 _slots[slotIndex].CooldownTimer = 0f;
+                if (_selfAuraVfx != null) _selfAuraVfx.Emitting = true;
+                EmitSignal(SignalName.AuraToggled, slotIndex, true);
             }
             return;
         }
