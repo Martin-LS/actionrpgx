@@ -1468,7 +1468,7 @@ public partial class CharacterScreen : Control
         var sb = new System.Text.StringBuilder();
         sb.Append($"{item.Name}  [{item.Slot}]  [{ItemTier.Label(tier)}]");
         if (item.BonusHp            != 0)  sb.Append($"\nHP {item.BonusHp:+#;-#;0}");
-        if (item.BonusSpeed         != 0f) sb.Append($"\nSpeed {item.BonusSpeed:+#;-#;0}");
+        if (item.BonusSpeed         != 0f) sb.Append($"\nSpeed {item.BonusSpeed:+#%;-#%;0%}");
         if (item.WeaponRange        != 0f) sb.Append($"\nWeapon Range {item.WeaponRange:0.#} tiles");
         if (item.RangeMultiplier    != 1f) sb.Append($"\nRange ×{item.RangeMultiplier:0.##}");
         if (item.DamageReduction    != 0f) sb.Append($"\nDamage Reduction {item.DamageReduction:P0}");

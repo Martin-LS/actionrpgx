@@ -23,7 +23,7 @@ public static class BalanceConfig
     {
         // Heavy — per piece (hat + body each contribute independently)
         public const int   HeavyBonusHp         = 20;
-        public const float HeavyBonusSpeed       = -20f;
+        public const float HeavyBonusSpeed       = -0.20f; // −20% movement speed per piece
         public const float HeavyDamageReduction  = 0.10f;
         public const float HeavyRangeMultiplier   = 0.85f; // per piece; placeholder — Balancer v2+
 
@@ -35,7 +35,7 @@ public static class BalanceConfig
 
         // Light
         public const int   LightBonusHp          = 0;
-        public const float LightBonusSpeed        = 20f;
+        public const float LightBonusSpeed        = 0.20f;  // +20% movement speed per piece
         public const float LightDamageReduction   = 0f;
         public const float LightRangeMultiplier   = 1.15f; // per piece; placeholder — Balancer v2+
     }

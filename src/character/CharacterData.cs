@@ -89,7 +89,7 @@ public class CharacterData
                     block.AddModifier(new StatModifier(StatId.MaxHp, ModifierType.FlatAdd,
                         item.BonusHp, ModifierSource.Item, instance.Id));
                 if (item.BonusSpeed != 0f)
-                    block.AddModifier(new StatModifier(StatId.Speed, ModifierType.FlatAdd,
+                    block.AddModifier(new StatModifier(StatId.Speed, ModifierType.PercentAdd,
                         item.BonusSpeed, ModifierSource.Item, instance.Id));
             }
             else if (item.Slot == ItemSlot.Ring && item.PhysicalResistance != 0f)
