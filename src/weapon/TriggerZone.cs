@@ -65,7 +65,7 @@ public partial class TriggerZone : Node3D
 
     private void CheckExpiry()
     {
-        if (_elapsed >= Duration) QueueFree();
+        if (Duration > 0f && _elapsed >= Duration) QueueFree();
     }
 
     private void Burst()

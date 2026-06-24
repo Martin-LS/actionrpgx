@@ -74,7 +74,7 @@ public class CharacterData
         }
 
         block.SetBase(StatId.CritChance, dex * PrimaryStatConversions.DexToCritChance);
-        block.SetBase(StatId.CritDamage, str * PrimaryStatConversions.StrToCritDamage);
+        block.SetBase(StatId.CritDamage, 1.5f + str * PrimaryStatConversions.StrToCritDamage);
         block.SetBase(StatId.Evasion,    dex * PrimaryStatConversions.DexToEvasion);
 
         // Item contributions — flat bonuses, no archetype/level scaling.

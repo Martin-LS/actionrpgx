@@ -48,7 +48,7 @@ public partial class StackableZone : Node3D
             Tick();
             _nextTick = TickInterval;
         }
-        if (_elapsed >= Duration)
+        if (Duration > 0f && _elapsed >= Duration)
             QueueFree();
     }
 

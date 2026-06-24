@@ -37,6 +37,9 @@ These were found by cross-checking tech spec against live code. Each entry is a 
 ### Combat / Stats
 
 - [ ] **Evasion not applied in TakeDamage** *(v2+)* — `BuildStatBlock()` computes `StatId.Evasion` (Dex × DexToEvasion) but `PlayerController` never reads it. Deferred by design for v1. When implemented: probability roll (`if Random() < _evasion: return`), not guaranteed full miss; v2 will tune the balance. Field `_evasion` also needs adding to PlayerController.
+- [ ] **Dodge Roll unimplemented** *(v1)* — Space Bar dodge roll is specified in GDD (WASD movement + Space dodge roll with I-frames and short cooldown), but input checking and roll state are not implemented in PlayerController.cs.
+- [ ] **Physical/Magic Resistance scaling unimplemented** *(v2+)* — Strength is supposed to scale Physical Resistance and Intelligence is supposed to scale Magic Resistance, but StrToPhysResistance and IntToMagResistance are set to 0f in PrimaryStatConversions.cs and CharacterData.cs doesn't generate resistance modifiers.
+- [ ] **Flat vs. Percentage Speed Modifiers mismatch** — GDD specifies percentage speed penalties/bonuses for Heavy/Light armor, but BalanceConfig.cs and ItemRegistry.cs define flat values (+20f/-20f) that are added directly to the base speed (80) in the stat block.
 
 ### Skill Augments
 
@@ -53,6 +56,14 @@ These were found by cross-checking tech spec against live code. Each entry is a 
 ### Aura SkillType
 
 - [ ] **Aura Focus reservation system unimplemented** *(v1 — spec before implementing)* — Needs spec written first: how AuraActive/AuraReserved live on SkillSlot, how `_totalReserved` accumulates, how `ReserveFocus()`/`UnreserveFocus()` interact with `GetAvailableFocus()`, and the toggle-firing guard in WeaponController. `self_aura_tick` is `EngineProof` so no Aura skill can ship until this is in place.
+
+### Skill Cooldowns
+
+- [ ] **Duration Skill Cooldown mismatch** — GDD and technical specifications require `self_duration_tick` (Damage Aura) to enter its cooldown *after* the active duration ends. Currently, the codebase starts the cooldown immediately on cast.
+
+### Inventory Systems
+
+- [ ] **Slotted Skills Inventory Cap mismatch** — Slotted skills remain inside `OwnedSkillInstances` and continue to count toward the 50-item inventory cap, unlike equipped gear which is moved out of `OwnedGearInstances`.
 
 ---
 

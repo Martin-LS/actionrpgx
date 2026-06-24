@@ -54,7 +54,7 @@ public partial class TrackedTick : Node3D
             _nextTick = TickInterval;
         }
 
-        if (_elapsed >= Duration)
+        if (Duration > 0f && _elapsed >= Duration)
             QueueFree();
     }
 

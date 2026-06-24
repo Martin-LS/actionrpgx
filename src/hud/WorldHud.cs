@@ -12,7 +12,7 @@ public partial class WorldHud : Node2D
     private const float HeadScreenOffY = -48f;
 
     private static readonly Color PlayerBarFill = Color.FromHtml("#A32D2D");
-    private static readonly Color EnemyBarFill  = Color.FromHtml("#C03030");
+    private static readonly Color EnemyBarFill  = Color.FromHtml("#8C2E2E");
     private static readonly Color BarTrack      = Color.FromHtml("#181C1F");
     private static readonly Color PhysColor     = Color.FromHtml("#E8DCC8"); // Bone White
     private static readonly Color MagicColor    = Color.FromHtml("#B8D8E8"); // Ice Shimmer

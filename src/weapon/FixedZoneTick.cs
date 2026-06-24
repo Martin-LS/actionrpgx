@@ -33,7 +33,7 @@ public partial class FixedZoneTick : Node3D
             _nextTick = TickInterval;
         }
 
-        if (_elapsed >= Duration)
+        if (Duration > 0f && _elapsed >= Duration)
             QueueFree();
     }
 

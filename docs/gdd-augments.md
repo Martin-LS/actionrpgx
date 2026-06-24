@@ -19,6 +19,7 @@ Skill Augments are craftable items that socket into a skill item to modify it. A
 
 - **Socketing:** choose a Skill Augment from inventory and place it into an open slot on the skill item
 - **Removing:** free, Skill Augment returns to inventory
+- **Conflict Groups:** certain augments share a Conflict Group. A skill item cannot have more than one socketed augment sharing the same Conflict Group (for example, you cannot socket multiple damage type conversion augments on the same skill).
 
 **Augment tag + trigger type system.** Each augment has a functional tag. Each augment slot has a trigger type that declares which augment tags it accepts and how it fires. All skill augments use `on_enemy_hit_%` — the trigger % is a property of the augment item, rolled at craft time and re-rollable via crafting. Full tag/trigger taxonomy TBD at implementation.
 

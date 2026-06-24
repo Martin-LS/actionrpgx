@@ -96,7 +96,7 @@ Note: empty augment slots serialize as `""` inside `socketedSkillAugmentIds` and
 
 **Migration:** On load, if old `ownedItemIds` (string list) is present, each entry is wrapped into a `GearItemInstance` with a fresh GUID and Tier = 1. Same for `ownedSkillIds` → `SkillItemInstance`. Old `equippedItems` (slot → definition ID) wraps each into a `GearItemInstance` and sets the slot directly. Old `craftingCurrency1` int → `materials["crafting_common"]` migration also handled. Migration runs once on first load.
 
-Starter gear and starter skills are both seeded in `SeedStarterGear()`. Starter gear is archetype-dependent — Warrior gets sword + heavy hat + heavy body + ring; Rogue gets bow + medium hat + medium body + ring; Mage gets wand + medium hat + medium body + ring. Starter gear writes directly to `EquippedGear`. The single starter `SkillItemInstance` (always `entity_burst`) goes into `OwnedSkillInstances`, referenced 3× in `SlottedSkillInstanceIds`. Rogue additionally gets a pre-socketed `critical_strike` augment on the starter skill; Mage gets a pre-socketed `magic_damage` augment.
+Starter gear and starter skills are both seeded in `SeedStarterGear()`. Starter gear is archetype-dependent — Warrior gets sword + heavy hat + heavy body + ring; Rogue gets bow + medium hat + medium body + ring; Mage gets wand + medium hat + medium body + ring. Starter gear writes directly to `EquippedGear`. The single starter `SkillItemInstance` (always `entity_burst`) goes into `OwnedSkillInstances`, referenced 3× in `SlottedSkillInstanceIds`. Starter skills have no pre-socketed augments (matching the GDD starter loadouts).
 
 ### Run Session (in-memory only)
 Lives on the `RunSession` node. Discarded when the scene unloads. On run end, `CharacterManager.RecordRunCompletion(finalLevel, finalXp, coinsEarned)` writes the persistent state.
@@ -681,7 +681,7 @@ Time-driven, no fixed waves. `EnemySpawner` recalculates each spawn:
 
 | Type     | Speed | HP | Damage | Physical Resist | Model                        |
 |----------|-------|----|--------|-----------------|------------------------------|
-| Skeleton | 65    | 2  | 5      | 10%             | `kaykit_enemy_skeleton.glb`  |
+| Skeleton | 42    | 2  | 5      | 10%             | `kaykit_enemy_skeleton.glb`  |
 
 All types receive a time-scaling bonus on top: `Speed += 5 * minutes`, `MaxHealth += 3 * (int)minutes`.
 
