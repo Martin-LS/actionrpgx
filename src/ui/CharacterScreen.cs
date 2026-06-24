@@ -1481,7 +1481,7 @@ public partial class CharacterScreen : Control
     {
         var sb = new System.Text.StringBuilder();
         sb.Append($"{skill.Name}  [{skill.Type}]  [{ItemTier.Label(instance.Tier)}]");
-        sb.Append($"\nTags: {string.Join(", ", skill.Tags)}");
+        if (skill.Tags.Length > 0) sb.Append($"\nTags: {string.Join(", ", skill.Tags)}");
         sb.Append($"\nCD: {skill.Cooldown:F1}s");
         sb.Append($"\nAugments: {instance.SocketedSkillAugmentIds.Count(id => !string.IsNullOrEmpty(id))}/{instance.MaxSkillAugmentSlots}");
         return sb.ToString();

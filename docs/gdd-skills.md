@@ -18,7 +18,12 @@ There is no Passive skill type on the skill bar. Everything in a skill slot requ
 
 **Named skills are clones of prototypes — no runtime template system.** When a named skill (e.g. Strike) is created from a prototype (e.g. entity_burst), it is a complete standalone definition. All values are copied at authoring time; the prototype has no runtime relationship to the named skill after that. Changes to a prototype never cascade to existing named skills or crafted instances. The `BasedOn` field on `SkillData` records which prototype a named skill was cloned from — documentation only, no runtime behaviour. This keeps item instances stable and predictable: a crafted Strike is never changed by a prototype balance update without the designer explicitly editing Strike's definition.
 
-**Skill tags — not in v1 (except AoE).** Skills do not carry tags in v1 as a general system. The one exception is the `AoE` tag — it is introduced now because the modifier math for area scaling needs a hook, and the tag defines eligibility cleanly. All other tags are post-v1. Tags are additive (enabling synergies) not restrictive — the no-gate philosophy holds; any augment can socket into any skill regardless of tags.
+**Skill tags — limited to delivery-resolution and AoE in v1.** Skills carry two categories of tag in v1:
+
+- **`AoE`** — marks skills that damage all enemies within a radius. Introduced now because the radius modifier math needs a hook. All skills that deal damage to a radius (self/zone/tracked) carry this tag.
+- **`Melee` / `Range`** — delivery-override tags used internally by `WeaponController` to determine how entity hits are resolved. A skill with `Melee` always fires a melee swing regardless of equipped weapon; a skill with `Range` always fires a ranged projectile. No delivery tag means the skill inherits the weapon's preferred delivery type (weapon-adaptive). Only `self_channeled_tick` carries `Melee` in v1 — it spins in place and must always be a melee swing.
+
+All other tags (e.g. `Attack`, `Burst`, `Debuff`) are post-v1. Tags are additive (enabling synergies) not restrictive — the no-gate philosophy holds; any augment can socket into any skill regardless of tags.
 
 #### Area of Effect (AoE)
 

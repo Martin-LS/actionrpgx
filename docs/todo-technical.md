@@ -49,10 +49,6 @@ These were found by cross-checking tech spec against live code. Each entry is a 
 
 - [ ] **AugmentInstance.TriggerChance (Skill and Equipment) has no gameplay effect** *(v2+, not in scope)* — Value is stored and serialized. Critical Strike uses hardcoded `BalanceConfig.SkillAugments.CritChance`; Slow uses `EotData.ApplyChance`; Equipment Augments trigger at 100% or static rates. Per-instance proc % wiring deferred until v2 balance pass.
 
-### Skill Tags
-
-- [ ] **Skill tags taxonomy mismatch** — GDD (`gdd-skills.md`) states that skill tags (other than `AoE`) are deferred post-v1. However, the codebase (`SkillRegistry.cs` and `WeaponController.cs`) defines and relies on `Melee` and `Range` tags to dynamically resolve weapon-adaptive skill delivery type (Melee swing vs. Ranged projectile). Decide whether to update GDD to allow these tags for delivery logic, or restructure the code to resolve delivery type without tags.
-
 ### Inventory Systems
 
 - [ ] **Slotted Skills Inventory Cap mismatch** — Slotted skills remain inside `OwnedSkillInstances` and continue to count toward the 50-item inventory cap, unlike equipped gear which is moved out of `OwnedGearInstances`.
