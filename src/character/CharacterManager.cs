@@ -79,22 +79,8 @@ public partial class CharacterManager : Node
 
         var skillInst = new SkillItemInstance { DefinitionId = "entity_burst" };
 
-        string? starterAugId = c.Type switch
-        {
-            CharacterType.Rogue => "critical_strike",
-            CharacterType.Mage  => "magic_damage",
-            _                   => null,
-        };
-
-        if (starterAugId != null)
-        {
-            var augInst = new Skills.SkillAugmentInstance { DefinitionId = starterAugId };
-            Profile.OwnedSkillAugmentInstances.Add(augInst);
-            skillInst.SocketedSkillAugmentIds.Add(augInst.Id);
-        }
-
         Profile.OwnedSkillInstances.Add(skillInst);
-        c.SlottedSkillInstanceIds = new List<string> { skillInst.Id, "", "" };
+        c.SlottedSkillInstanceIds = new List<string> { skillInst.Id, "", "", "", "" };
     }
 
     public void Delete(string id)
@@ -327,15 +313,24 @@ public partial class CharacterManager : Node
 
     public CraftResult SocketSkillAugment(string skillInstanceId, int slotIndex, string augmentInstanceId)
     {
-        var skill   = FindSkillInstance(skillInstanceId);
+        var skill = FindSkillInstance(skillInstanceId);
         var augment = FindSkillAugmentInstance(augmentInstanceId);
         if (skill == null || augment == null) return CraftResult.InsufficientMaterials;
         if (slotIndex >= skill.MaxSkillAugmentSlots) return CraftResult.InsufficientMaterials;
 
+        var newGroup = augment.Definition?.ConflictGroup;
         for (int i = 0; i < skill.SocketedSkillAugmentIds.Count; i++)
         {
             if (i == slotIndex) continue;
-            if (FindSkillAugmentInstance(skill.SocketedSkillAugmentIds[i])?.DefinitionId == augment.DefinitionId)
+            var otherAugId = skill.SocketedSkillAugmentIds[i];
+            if (string.IsNullOrEmpty(otherAugId)) continue;
+            var otherAug = FindSkillAugmentInstance(otherAugId);
+            if (otherAug == null) continue;
+
+            if (otherAug.DefinitionId == augment.DefinitionId)
+                return CraftResult.InsufficientMaterials;
+
+            if (newGroup != null && otherAug.Definition?.ConflictGroup == newGroup)
                 return CraftResult.InsufficientMaterials;
         }
 
@@ -750,12 +745,12 @@ public partial class CharacterManager : Node
                 }).ToList();
             }
 
-            while (c.SlottedSkillInstanceIds.Count < 3)
+            while (c.SlottedSkillInstanceIds.Count < 5)
                 c.SlottedSkillInstanceIds.Add("");
 
             if (gd.ContainsKey("slotAutoActivate") && gd["slotAutoActivate"].Obj is Godot.Collections.Array aaArr)
                 c.SlotAutoActivate = aaArr.Select(v => System.Convert.ToBoolean(v.Obj)).ToList();
-            while (c.SlotAutoActivate.Count < 3)
+            while (c.SlotAutoActivate.Count < 5)
                 c.SlotAutoActivate.Add(true);
 
             _characters.Add(c);
@@ -779,6 +774,7 @@ public partial class CharacterManager : Node
         "strike"                 => "entity_burst",
         "cyclone"                => "self_channeled_tick",
         "nova"                   => "self_burst",
+        "damage_aura"            => "self_duration_tick",
         _                        => oldId,
     };
 

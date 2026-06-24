@@ -165,7 +165,7 @@ Every hit displays a floating damage number above the struck entity's head. Numb
 
 Critical hit colour overrides the damage-type colour — a magic crit shows gold, not blue. This makes crits immediately legible regardless of damage type.
 
-Numbers are individual per hit — no stacking. Self-Channeled-Tick ticks each pop their own number; this preserves tick-rate readability and lets the player feel the difference between a fast and slow attack speed.
+Numbers are individual per hit — no stacking. self_channeled_tick ticks each pop their own number; this preserves tick-rate readability and lets the player feel the difference between a fast and slow attack speed.
 
 Both player-received and enemy-received hits produce damage numbers. There is no threshold — all damage shows.
 
@@ -187,10 +187,10 @@ Focus is the universal skill resource. All archetypes spend Focus to fire skills
 
 | Skill | Cost |
 |---|---|
-| Entity-Burst | 5 Focus (flat) — effectively free; regens faster than you spend |
-| Self-Burst | 20 Focus (flat) — meaningful burst cost |
-| Self-Channeled-Tick | 12 Focus/sec (drain while held) — expensive over time, requires management |
-| Self-Duration-Tick | 15 Focus (flat, on activation) — burst cost like Self-Burst; ticks for duration then cooldown |
+| entity_burst | 5 Focus (flat) — effectively free; regens faster than you spend |
+| self_burst | 20 Focus (flat) — meaningful burst cost |
+| self_channeled_tick | 12 Focus/sec (drain while held) — expensive over time, requires management |
+| self_duration_tick | 15 Focus (flat, on activation) — burst cost like self_burst; ticks for duration then cooldown |
 
 **Starting values (placeholder — owned by Balancer):**
 
@@ -404,9 +404,9 @@ All types scale with elapsed time — speed and HP increase per minute. Spawn ra
 
 **Always navigate.** Enemies use navmesh pathfinding at all times — they never walk into walls or get stuck on corners. Competent movement is non-negotiable for horde feel; a skeleton bumping into a pillar reads as broken, not charming.
 
-**No separation (v1).** Enemies do not avoid each other. The blob is intentional — 30 skeletons converging on the same point is the visual threat mass that Self-Burst and Self-Channeled-Tick are designed to answer. Spreading enemies out would make horde skills feel weaker and the threat more diffuse. Light natural spreading from collision is sufficient. Revisit post-v1 if playtesting reveals a problem.
+**No separation (v1).** Enemies do not avoid each other. The blob is intentional — 30 skeletons converging on the same point is the visual threat mass that self_burst and self_channeled_tick are designed to answer. Spreading enemies out would make horde skills feel weaker and the threat more diffuse. Light natural spreading from collision is sufficient. Revisit post-v1 if playtesting reveals a problem.
 
-**Chokepoints are a feature.** Map corridors and doorways are intentional tactical geometry. Enemies funneling through a doorway is a core fun moment — position at the mouth of a corridor, pop a Self-Burst or Self-Duration-Tick, clear the flood. This falls out of correct pathfinding for free; no extra design work needed. Map design should treat chokepoints as a first-class tool, not an obstacle routing problem.
+**Chokepoints are a feature.** Map corridors and doorways are intentional tactical geometry. Enemies funneling through a doorway is a core fun moment — position at the mouth of a corridor, pop a self_burst or self_duration_tick, clear the flood. This falls out of correct pathfinding for free; no extra design work needed. Map design should treat chokepoints as a first-class tool, not an obstacle routing problem.
 
 ### Enemy Spawning
 
@@ -425,10 +425,10 @@ EnemyPoolEntry:
   EnemyType: string       // e.g. "skeleton", "archer_skeleton"
   Count: int              // drives spawn ratio (weight in the pool)
   Modifiers:
-    ArmorBonus: int       // e.g. +5, +10
-    HpBonus: int          // future
-    SpeedBonus: int       // future
-    DamageBonus: int      // future
+	ArmorBonus: int       // e.g. +5, +10
+	HpBonus: int          // future
+	SpeedBonus: int       // future
+	DamageBonus: int      // future
 ```
 
 The spawner draws randomly from the pool weighted by `Count`. Modifiers are applied to the enemy instance at spawn time on top of base stats. v1: one entry, `skeleton`, count 1, all modifiers zero.

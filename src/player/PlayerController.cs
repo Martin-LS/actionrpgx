@@ -30,6 +30,9 @@ public partial class PlayerController : CharacterBody3D
     private static readonly PackedScene TargetIndicatorScene =
         GD.Load<PackedScene>("res://src/vfx/target_indicator.tscn");
 
+    private static readonly PackedScene SwingVfxScene =
+        GD.Load<PackedScene>("res://PolyBlocks/EffectBlocks/assets/impacts/impact_5.tscn");
+
     private Node3D? _targetIndicator;
     private Node3D? _aimReticle;
 
@@ -103,7 +106,7 @@ public partial class PlayerController : CharacterBody3D
             RecalculateEffectiveRange();
             weaponController?.SetPreferredDelivery(weapon?.PreferredDelivery ?? "Melee");
 
-            for (int i = 0; i < 3 && i < c.SlottedSkillInstanceIds.Count; i++)
+            for (int i = 0; i < 5 && i < c.SlottedSkillInstanceIds.Count; i++)
             {
                 var instanceId = c.SlottedSkillInstanceIds[i];
                 if (string.IsNullOrEmpty(instanceId)) continue;
@@ -423,19 +426,31 @@ public partial class PlayerController : CharacterBody3D
 
     public override void _UnhandledInput(InputEvent @event)
     {
-        if (@event is not InputEventKey key || key.Echo) return;
         var wc = GetNodeOrNull<Weapon.WeaponController>("Weapon");
-        if (key.Pressed)
+        if (@event is InputEventKey key && !key.Echo)
         {
-            if      (key.Keycode == Key.Key1) wc?.TryFireSlot(0);
-            else if (key.Keycode == Key.Key2) wc?.TryFireSlot(1);
-            else if (key.Keycode == Key.Key3) wc?.TryFireSlot(2);
+            if (key.Pressed)
+            {
+                if      (key.Keycode == Key.Q) wc?.TryFireSlot(0);
+                else if (key.Keycode == Key.E) wc?.TryFireSlot(1);
+                else if (key.Keycode == Key.R) wc?.TryFireSlot(2);
+                else if (key.Keycode == Key.F) wc?.TryFireSlot(3);
+            }
+            else
+            {
+                if      (key.Keycode == Key.Q) wc?.ReleaseSlot(0);
+                else if (key.Keycode == Key.E) wc?.ReleaseSlot(1);
+                else if (key.Keycode == Key.R) wc?.ReleaseSlot(2);
+                else if (key.Keycode == Key.F) wc?.ReleaseSlot(3);
+            }
         }
-        else
+        else if (@event is InputEventMouseButton mouse)
         {
-            if      (key.Keycode == Key.Key1) wc?.ReleaseSlot(0);
-            else if (key.Keycode == Key.Key2) wc?.ReleaseSlot(1);
-            else if (key.Keycode == Key.Key3) wc?.ReleaseSlot(2);
+            if (mouse.ButtonIndex == MouseButton.Right)
+            {
+                if (mouse.Pressed) wc?.TryFireSlot(4);
+                else               wc?.ReleaseSlot(4);
+            }
         }
     }
 
@@ -567,6 +582,31 @@ public partial class PlayerController : CharacterBody3D
             _animTree.Set("parameters/right_ts/scale", MeleeAnimLength / cooldown);
         }
         _animTree.Set(param, (int)AnimationNodeOneShot.OneShotRequest.Fire);
+
+        if (delivery == "Melee")
+        {
+            try
+            {
+                var vfx = SwingVfxScene.Instantiate<GpuParticles3D>();
+                vfx.Amount = 12;
+                vfx.OneShot = true;
+                if (vfx.ProcessMaterial is ParticleProcessMaterial ppm)
+                {
+                    var mat = (ParticleProcessMaterial)ppm.Duplicate();
+                    mat.ScaleMin = 35f;
+                    mat.ScaleMax = 55f;
+                    vfx.ProcessMaterial = mat;
+                }
+                GetTree().Root.AddChild(vfx);
+                vfx.GlobalPosition = GlobalPosition + new Vector3(0f, 20f, 0f);
+                vfx.Call("activate_effects");
+                GetTree().CreateTimer(2.0).Timeout += vfx.QueueFree;
+            }
+            catch (System.Exception e)
+            {
+                GD.PrintErr($"Failed to spawn melee swing VFX: {e.Message}");
+            }
+        }
     }
 
     private static int FindBone(Skeleton3D skeleton, string name)

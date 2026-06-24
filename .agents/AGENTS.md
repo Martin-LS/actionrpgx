@@ -25,3 +25,9 @@ At the start of every session: read [docs/index.md](file:///C:/work/my/github/ac
 - **Always prefer using `ast-grep` (`sg`)** over standard `ripgrep` (`rg`) or the built-in `grep_search` tool when searching, traversing, or analyzing codebase source code.
 - You do not need to wait for explicit user instructions to use `ast-grep` when performing code-related work; utilize it automatically as your default tool for code analysis.
 - For all non-code searches (e.g., scanning documentation, markdown guides, log files, or raw text configuration files), you may fall back to standard `ripgrep` (`rg` or `grep_search`).
+
+## AI Operational Guidelines
+
+- **Do not apply any changes or edits to files without explicit user approval.**
+- Always propose a plan and discuss the issues/changes first.
+- When resolving a list of tasks or issues, proceed strictly **one-by-one** (propose/discuss, wait for approval, implement, repeat).

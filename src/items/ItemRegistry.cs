@@ -17,7 +17,7 @@ public static class ItemRegistry
                 DamageBonus: BalanceConfig.Weapons.SwordDamageBonus) { Tags = new[] { "Melee" } },
             ["bow_t1"]   = new("bow_t1",   "Bow",   ItemSlot.Weapon,
                 IconPath: "res://assets/icons/items/war_band.png",
-                WeaponRange: BalanceConfig.Weapons.BowRange, PreferredDelivery: "Range",
+                WeaponRange: BalanceConfig.Weapons.BowRange, PreferredDelivery: "Ranged",
                 BaseDamage: BalanceConfig.Weapons.BowBaseDamage, BaseDamageType: DamageType.Physical,
                 CritChanceBonus: BalanceConfig.Weapons.BowCritBonus) { Tags = new[] { "Range" } },
             ["wand_t1"]  = new("wand_t1",  "Wand",  ItemSlot.Weapon,

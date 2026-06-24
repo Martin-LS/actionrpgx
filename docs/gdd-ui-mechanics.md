@@ -7,6 +7,8 @@
 
 **Reusable components — the core pattern.** Skills and Augments share one design pattern: a component that shows a Craft button and a list of owned items, reused in both the inventory tab and inside slot interactions. The component's event handlers differ by context (inventory vs. slot), but the visual is identical — styling changes propagate everywhere automatically.
 
+* **Re-roll functionality:** The `[ Re-roll ]` buttons shown on skills, gear, and augments throughout the Modify panels are **disabled / deferred to v2** for the v1 milestone (as randomized stats and re-rolling costs are out of scope for v1).
+
 ---
 
 ### Skills Inventory Tab
@@ -26,7 +28,7 @@
 ### Skill Modify Panel
 
 ```
-[ Skill Name ]  [ Upgrade ]  [ Re-roll ]  [ Remove ]   ← Remove only when skill is slotted
+[ Skill Name ]  [ Upgrade ]  [ Re-roll (v2) ]  [ Remove ]   ← Remove only when skill is slotted
 ─────────────────────────────────────────────────────
 [ A1 ]   │  < context-sensitive right panel >
 [ A2 ]   │
@@ -37,7 +39,7 @@
 - **Empty slot** → right panel shows the Augments component (same as Augments inventory tab; different handlers):
   - Craft button → crafts augment + auto-slots it → right panel transitions to filled-slot view
   - Click an owned augment → slots it → right panel transitions to filled-slot view
-- **Filled slot** → right panel shows: augment name, **Upgrade**, **Re-roll**, **Remove**
+- **Filled slot** → right panel shows: augment name, **Upgrade**, **Re-roll (v2)**, **Remove**
   - Remove → unslots augment (returns to augments inventory) → right panel returns to empty-slot view
 
 ---
@@ -51,7 +53,7 @@
 
 ### Skill Augment Modify Panel (from inventory)
 
-Augment name + **Upgrade** + **Re-roll** (no Remove). Same visual as the filled-slot view in the Skill Modify Panel.
+Augment name + **Upgrade** + **Re-roll (v2)** (no Remove). Same visual as the filled-slot view in the Skill Modify Panel.
 
 ---
 
@@ -64,7 +66,7 @@ Augment name + **Upgrade** + **Re-roll** (no Remove). Same visual as the filled-
 
 ### Equipment Augment Modify Panel (from inventory)
 
-Augment name + **Upgrade** + **Re-roll** (no Remove). Same visual as the filled-slot view in the Equipment Modify Panel.
+Augment name + **Upgrade** + **Re-roll (v2)** (no Remove). Same visual as the filled-slot view in the Equipment Modify Panel.
 
 ---
 
@@ -96,7 +98,7 @@ Augment name + **Upgrade** + **Re-roll** (no Remove). Same visual as the filled-
 ### Equipment Modify Panel
 
 ```
-[ Item Name ]  [ Upgrade ]  [ Re-roll ]  [ Remove ]   ← Remove only when item is equipped
+[ Item Name ]  [ Upgrade ]  [ Re-roll (v2) ]  [ Remove ]   ← Remove only when item is equipped
 ─────────────────────────────────────────────────────
 [ A1 ]   │  < context-sensitive right panel >
 [ A2 ]   │
@@ -107,5 +109,5 @@ Augment name + **Upgrade** + **Re-roll** (no Remove). Same visual as the filled-
 - **Empty slot** → right panel shows the Equipment Augments component (same as Equipment Augments inventory tab; different handlers):
   - Craft button → crafts Equipment Augment + auto-slots it → right panel transitions to filled-slot view
   - Click an owned Equipment Augment → slots it → right panel transitions to filled-slot view
-- **Filled slot** → right panel shows: augment name, **Upgrade**, **Re-roll**, **Remove**
+- **Filled slot** → right panel shows: augment name, **Upgrade**, **Re-roll (v2)**, **Remove**
   - Remove → unslots augment (returns to Equipment Augments inventory) → right panel returns to empty-slot view

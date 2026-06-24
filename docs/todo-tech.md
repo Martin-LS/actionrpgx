@@ -4,16 +4,7 @@ Code, systems, UI, and art tasks only. Design decisions live in the GDD files.
 
 ---
 
-## 🤖 Gemini Tasks
 
-Self-contained tasks with enough context to action without broader codebase knowledge.
-
-- [ ] **Swing VFX** — `src/player/PlayerController.cs`, `OnSkillFired(int slotIndex, float cooldown, string delivery)`: when `delivery == "Melee"`, load and instantiate `res://src/vfx/impact_5.tscn`, cast to `GpuParticles3D`, set position to `GlobalPosition + new Vector3(0, 20, 0)`, set `Amount = 12` and `OneShot = true`, then add as child of the scene root (`GetTree().Root.AddChild`). The particle scale (min/max 35–55) lives on the process material — check `ProcessMaterial` cast to `ParticleProcessMaterial` and set `ScaleMin`/`ScaleMax` there. Context: hit VFX (`entity_burst_vfx.tscn`) already fires at the target from `WeaponController.HitMelee()` — do not touch it.
-- [ ] **Armour attachment offsets** — Blender MCP (`mcp__blender__execute_blender_code`): `.blend` sources are `assets/models/equipment/armour_light.blend`, `armour_medium.blend`, `armour_heavy.blend`; exported GLBs are `hat_light/medium/heavy.glb` and `body_light/medium/heavy.glb`. Player skeleton is `assets/models/characters/player.blend`. Problem: armour pieces float or clip against the character — adjust bone attachment offsets on Head and Chest bones to sit flush. Re-export each GLB after adjusting.
-- [ ] **Weapon rotation** — Blender MCP: source is `assets/models/equipment/weapon_sword.blend`, export target is `weapon_sword.glb`. Problem: sword blade faces the wrong direction in-game. Rotate the blade mesh ~90° on the Y or Z axis so the cutting edge faces forward (away from the player along -Z in world space). Re-export as GLB.
-- [ ] **Cyclone animation** — Blender MCP: source is `assets/models/characters/player.blend`, export target is `assets/models/characters/player.glb`. Problem: the cyclone/spin animation clip only rotates part of the body — it should be a full-body spin. Find the animation clip (likely named "cyclone" or "spin"), extend the Z-axis rotation keyframes to include the Hips bone so the whole body rotates. Bake and re-export the GLB.
-
----
 
 ## Tech Spec Gaps — GDD designed, no technical spec written yet
 
@@ -49,7 +40,15 @@ These were found by cross-checking tech spec against live code. Each entry is a 
 
 ### Skill Augments
 
-- [ ] **SkillAugmentInstance.TriggerChance has no gameplay effect** *(v2+, not in scope)* — Value is stored and serialized. Critical Strike uses hardcoded `BalanceConfig.SkillAugments.CritChance`; Slow uses `EotData.ApplyChance`. Per-instance proc % wiring deferred until v2 balance pass.
+- [ ] **AugmentInstance.TriggerChance (Skill and Equipment) has no gameplay effect** *(v2+, not in scope)* — Value is stored and serialized. Critical Strike uses hardcoded `BalanceConfig.SkillAugments.CritChance`; Slow uses `EotData.ApplyChance`; Equipment Augments trigger at 100% or static rates. Per-instance proc % wiring deferred until v2 balance pass.
+
+### Equipment Augments
+
+- [ ] **Equipment Augments scope mismatch** — GDD (`gdd-augments.md`) states that Equipment Augments are out of scope for v1 (v2+ only). However, the technical specification (`technical-systems.md`) and codebase fully implement them in v1 (with runtime logic, recipes, and registry entries for `retaliation`, `fortify`, `dash_reflex`, `ghost_step`, and `mending`). Clarify if GDD should be updated to bring them into v1 scope, or if they should be disabled.
+
+### Skill Tags
+
+- [ ] **Skill tags taxonomy mismatch** — GDD (`gdd-skills.md`) states that skill tags (other than `AoE`) are deferred post-v1. However, the codebase (`SkillRegistry.cs` and `WeaponController.cs`) defines and relies on `Melee` and `Range` tags to dynamically resolve weapon-adaptive skill delivery type (Melee swing vs. Ranged projectile). Decide whether to update GDD to allow these tags for delivery logic, or restructure the code to resolve delivery type without tags.
 
 ### Aura SkillType
 
@@ -71,6 +70,3 @@ These were found by cross-checking tech spec against live code. Each entry is a 
 > **Not in scope.**
 
 - [ ] Hollow Dark Forest assets — floor tile, tree trunk wall, wall corner (Blender); replace placeholder box geometry in DungeonGenerator
-- [ ] Armour models — attachment offsets need tuning against current character proportions *(🤖 Gemini — use Blender MCP `mcp__blender__execute_blender_code`; open `assets/models/equipment/`, adjust bone attachment offsets on chest/head pieces against the player skeleton in `assets/models/characters/player.glb`)*
-- [ ] Weapon rotation fine-tuning — sword blade orientation may need a Blender tweak *(🤖 Gemini — use Blender MCP; open `assets/models/equipment/weapon_sword.glb`, rotate blade mesh so edge faces forward along -Z; export in place)*
-- [ ] Cyclone animation — needs full-body spin; current partial blend looks wrong *(🤖 Gemini — use Blender MCP; open the player `.blend`, find the cyclone/spin animation clip, extend rotation to full-body on the Hips bone, bake and re-export `assets/models/characters/player.glb`)*

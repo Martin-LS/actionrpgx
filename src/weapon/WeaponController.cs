@@ -108,7 +108,7 @@ public partial class WeaponController : Node
         public List<Node3D> ActiveZones;
     }
 
-    private readonly SkillSlot[] _slots = new SkillSlot[3];
+    private readonly SkillSlot[] _slots = new SkillSlot[5];
     private float  _range             = 200f;
     private string _preferredDelivery = "Melee";
 
@@ -118,7 +118,7 @@ public partial class WeaponController : Node
     public void SetSlot(int slotIndex, SkillData skill,
         List<string>? eotIds = null, bool hasMagicDamage = false, float critChanceBonus = 0f)
     {
-        if (slotIndex < 0 || slotIndex >= 3) return;
+        if (slotIndex < 0 || slotIndex >= 5) return;
         _slots[slotIndex].Skill            = skill;
         _slots[slotIndex].CooldownTimer    = 0f;
         var inherent = skill.InherentEotIds ?? System.Array.Empty<string>();
@@ -136,27 +136,27 @@ public partial class WeaponController : Node
 
     public void SetSlotAutoActivate(int slotIndex, bool autoActivate)
     {
-        if (slotIndex < 0 || slotIndex >= 3) return;
+        if (slotIndex < 0 || slotIndex >= 5) return;
         _slots[slotIndex].AutoActivate = autoActivate;
     }
 
     public bool HasAnyPositionSkill()
     {
-        for (int i = 0; i < 3; i++)
+        for (int i = 0; i < 5; i++)
             if (_slots[i].Skill?.TargetingShape == SkillTargetingShape.Position) return true;
         return false;
     }
 
     public void ReduceCooldowns(float amount)
     {
-        for (int i = 0; i < 3; i++)
+        for (int i = 0; i < 5; i++)
             _slots[i].CooldownTimer = Mathf.Max(0f, _slots[i].CooldownTimer - amount);
     }
 
     public override void _PhysicsProcess(double delta)
     {
         float dt = (float)delta;
-        for (int i = 0; i < 3; i++)
+        for (int i = 0; i < 5; i++)
         {
             if (_slots[i].Skill == null) continue;
 
@@ -196,7 +196,7 @@ public partial class WeaponController : Node
 
     private bool IsAnySlotChanneling()
     {
-        for (int i = 0; i < 3; i++)
+        for (int i = 0; i < 5; i++)
             if (_slots[i].Skill?.Type == SkillType.Channeled && _slots[i].IsChanneling)
                 return true;
         return false;
@@ -313,14 +313,14 @@ public partial class WeaponController : Node
 
     public void ReleaseSlot(int slotIndex)
     {
-        if (slotIndex < 0 || slotIndex >= 3) return;
+        if (slotIndex < 0 || slotIndex >= 5) return;
         if (_slots[slotIndex].Skill?.Type == SkillType.Channeled)
             _slots[slotIndex].IsChanneling = false;
     }
 
     public void TryFireSlot(int slotIndex)
     {
-        if (slotIndex < 0 || slotIndex >= 3) return;
+        if (slotIndex < 0 || slotIndex >= 5) return;
         ref var slot = ref _slots[slotIndex];
         if (slot.Skill == null) return;
 
@@ -423,7 +423,7 @@ public partial class WeaponController : Node
         // Weapon-adaptive: no delivery tag → inherit weapon's PreferredDelivery
         bool  isMelee   = hasMelee || (!hasRange && _preferredDelivery == "Melee");
         string delivery = isMelee ? "Melee"
-            : (_preferredDelivery == "RangeMagic" ? "RangeMagic" : "Range");
+            : (_preferredDelivery == "RangeMagic" ? "RangeMagic" : "Ranged");
         var   dmgType   = isMagic ? Items.DamageType.Magic : Items.DamageType.Physical;
         float baseDmg   = isMagic ? _magicDamage : _physicalDamage;
 

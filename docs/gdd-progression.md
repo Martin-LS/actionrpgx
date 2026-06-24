@@ -40,7 +40,7 @@ Characters can equip up to 4 gear items (one per gear slot) and 5 skill items. A
 
 5 skill slots shown on the HUD and used during a run. All 5 are available from the start — no unlock progression. Any archetype can equip any skill in any slot — fully freeform, no restrictions.
 
-v1 starter skill: **Entity-Burst** in slot 1 (physical type, 1.0× multiplier), slots 2–5 empty. All archetypes start with plain Entity-Burst — no augments socketed. Weapon drives the delivery animation; skill defines the damage type.
+v1 starter skill: **entity_burst** in slot 1 (physical type, 1.0× multiplier), slots 2–5 empty. All archetypes start with plain entity_burst — no augments socketed. Weapon drives the delivery animation; skill defines the damage type.
 
 Skill items are crafted (Craft New — accessible from an empty skill slot, left-click → Craft New; not yet implemented in v1) and equipped from the **Skills inventory tab**. Default keybindings: Q E R F + one mouse button for slots 1–5. Rebindable.
 
@@ -134,11 +134,11 @@ Each character starts with one item per slot, matched to their archetype:
 
 | Archetype | Weapon         | Hat            | Body           | Ring          | Skill slot 1 (of 5) |
 |-----------|----------------|----------------|----------------|---------------|---------------------|
-| Warrior   | Sword (tier 1) | Heavy (tier 1) | Heavy (tier 1) | Ring (tier 1) | Entity-Burst (no augment) |
-| Rogue     | Bow (tier 1)   | Light (tier 1) | Light (tier 1) | Ring (tier 1) | Entity-Burst (no augment) |
-| Mage      | Wand (tier 1)  | Medium (tier 1)| Medium (tier 1)| Ring (tier 1) | Entity-Burst (no augment) |
+| Warrior   | Sword (tier 1) | Heavy (tier 1) | Heavy (tier 1) | Ring (tier 1) | entity_burst (no augment) |
+| Rogue     | Bow (tier 1)   | Medium (tier 1) | Medium (tier 1) | Ring (tier 1) | entity_burst (no augment) |
+| Mage      | Wand (tier 1)  | Medium (tier 1)| Medium (tier 1)| Ring (tier 1) | entity_burst (no augment) |
 
-All archetypes start with Entity-Burst — physical type, 1.0× multiplier, no augments. Weapon drives the delivery animation. Crit is a Bow identity bonus, not a Rogue identity; magic damage affinity is a Wand identity, not a Mage identity.
+All archetypes start with entity_burst — physical type, 1.0× multiplier, no augments. Weapon drives the delivery animation. Crit is a Bow identity bonus, not a Rogue identity; magic damage affinity is a Wand identity, not a Mage identity.
 
 Specific item names and exact stat values are TBD.
 

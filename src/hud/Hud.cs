@@ -22,7 +22,7 @@ public partial class Hud : CanvasLayer
         public float          Cooldown;
         public float          Elapsed;
     }
-    private readonly SkillCell[] _skillCells = new SkillCell[3];
+    private readonly SkillCell[] _skillCells = new SkillCell[5];
 
     public override void _Ready()
     {
@@ -90,7 +90,7 @@ public partial class Hud : CanvasLayer
         skillBar.OffsetBottom    = -20f;
         skillBar.OffsetTop       = -90f;
 
-        for (int i = 0; i < 1; i++) // v1: 1 slot; array holds 3 for future expansion
+        for (int i = 0; i < 5; i++)
         {
             var bar = new ProgressBar
             {

@@ -16,7 +16,7 @@
 
 There is no Passive skill type on the skill bar. Everything in a skill slot requires player input to fire. Persistent stat buffs and background effects belong on Equipment Augments (e.g. Mending, Retaliation) — not skill slots. Skills like War Cry stay on the skill bar because they are intentional activations with cooldowns, not background passives.
 
-**Named skills are clones of prototypes — no runtime template system.** When a named skill (e.g. Strike) is created from a prototype (e.g. Entity-Burst), it is a complete standalone definition. All values are copied at authoring time; the prototype has no runtime relationship to the named skill after that. Changes to a prototype never cascade to existing named skills or crafted instances. The `BasedOn` field on `SkillData` records which prototype a named skill was cloned from — documentation only, no runtime behaviour. This keeps item instances stable and predictable: a crafted Strike is never changed by a prototype balance update without the designer explicitly editing Strike's definition.
+**Named skills are clones of prototypes — no runtime template system.** When a named skill (e.g. Strike) is created from a prototype (e.g. entity_burst), it is a complete standalone definition. All values are copied at authoring time; the prototype has no runtime relationship to the named skill after that. Changes to a prototype never cascade to existing named skills or crafted instances. The `BasedOn` field on `SkillData` records which prototype a named skill was cloned from — documentation only, no runtime behaviour. This keeps item instances stable and predictable: a crafted Strike is never changed by a prototype balance update without the designer explicitly editing Strike's definition.
 
 **Skill tags — not in v1 (except AoE).** Skills do not carry tags in v1 as a general system. The one exception is the `AoE` tag — it is introduced now because the modifier math for area scaling needs a hook, and the tag defines eligibility cleanly. All other tags are post-v1. Tags are additive (enabling synergies) not restrictive — the no-gate philosophy holds; any augment can socket into any skill regardless of tags.
 
@@ -37,17 +37,17 @@ Example: base 250 units + 100% AoE → 250 × √2 ≈ 354 units. Each additiona
 
 | Skill | AoE coverage |
 |---|---|
-| Self-Channeled-Tick | All enemies within radius of player |
-| Self-Duration-Tick | All enemies within radius of player |
-| Self-Burst | All enemies within radius of player |
-| Fixed-Zone-Tick | All enemies within zone radius |
-| Fixed-Zone-Burst | All enemies within zone radius at detonation |
-| Windup-Burst | All enemies within zone radius at detonation |
-| Tracked-Tick | Tracked enemy + all enemies within radius around them |
-| Stackable-Zone | All enemies within zone radius |
-| Triggered-Zone-Burst | All enemies within zone radius at detonation |
+| self_channeled_tick | All enemies within radius of player |
+| self_duration_tick | All enemies within radius of player |
+| self_burst | All enemies within radius of player |
+| fixed_zone_tick | All enemies within zone radius |
+| fixed_zone_burst | All enemies within zone radius at detonation |
+| windup_burst | All enemies within zone radius at detonation |
+| tracked_tick | Tracked enemy + all enemies within radius around them |
+| stackable_zone | All enemies within zone radius |
+| triggered_zone_burst | All enemies within zone radius at detonation |
 
-Entity-Burst and Entity-Debuff are single-target — no AoE tag.
+entity_burst and entity_debuff are single-target — no AoE tag.
 
 #### Skill Prototypes
 
@@ -57,21 +57,21 @@ All 11 prototypes are craftable. The `EngineProof` kind is retained in code for 
 
 | Prototype | Targeting | Damage pattern | Skill type |
 |---|---|---|---|
-| Entity-Burst | Entity | Burst | Active |
-| Self-Channeled-Tick | Self | Tick | Channeled |
-| Self-Duration-Tick | Self | Tick | Active |
-| Self-Burst | Self | Burst | Active |
-| Fixed-Zone-Tick | Position | Tick | Active |
-| Fixed-Zone-Burst | Position | Burst | Active |
-| Windup-Burst | Position | Burst | Active |
-| Tracked-Tick | Entity | Tick | Active |
-| Entity-Debuff | Entity | None | Active |
-| Stackable-Zone | Position | Tick | Active |
-| Triggered-Zone-Burst | Position | Burst | Active |
+| entity_burst | Entity | Burst | Active |
+| self_channeled_tick | Self | Tick | Channeled |
+| self_duration_tick | Self | Tick | Active |
+| self_burst | Self | Burst | Active |
+| fixed_zone_tick | Position | Tick | Active |
+| fixed_zone_burst | Position | Burst | Active |
+| windup_burst | Position | Burst | Active |
+| tracked_tick | Entity | Tick | Active |
+| entity_debuff | Entity | None | Active |
+| stackable_zone | Position | Tick | Active |
+| triggered_zone_burst | Position | Burst | Active |
 
-> **Tech note — renames, not new skills:** Entity-Burst, Self-Channeled-Tick, Self-Duration-Tick, and Self-Burst are renames of the existing Strike, Cyclone, Damage Aura, and Nova implementations. Rename in code and data — do not create new skill objects. v2 will create the real named versions (Strike, Cyclone, etc.) derived from these prototypes.
+> **Tech note — renames, not new skills:** entity_burst, self_channeled_tick, self_duration_tick, and self_burst are renames of the existing Strike, Cyclone, Damage Aura, and Nova implementations. Rename in code and data — do not create new skill objects. v2 will create the real named versions (Strike, Cyclone, etc.) derived from these prototypes.
 
-All archetypes start with plain Entity-Burst in slot 1, no augments pre-socketed.
+All archetypes start with plain entity_burst in slot 1, no augments pre-socketed.
 
 **Universal skill properties** — every skill in the game has these fields:
 
@@ -91,11 +91,11 @@ All archetypes start with plain Entity-Burst in slot 1, no augments pre-socketed
 
 **Future field — Dispellable (not in v1):** whether a zone or effect can be removed before its duration expires — by an enemy cleanse ability, a player counter-skill, or a future mechanic. Not added until something in the game actually reads it. Note here so the axis is not forgotten when designing elite enemies or player utility skills.
 
-#### Entity-Burst
+#### entity_burst
 
 *(Renamed from Strike. Do not create a new skill — rename the existing implementation.)*
 
-The universal starter prototype. Hits the locked target using whatever the character has equipped — a sword swing, an arrow, a wand bolt. All archetypes start with plain Entity-Burst, no augments pre-socketed. As players acquire new skills, Entity-Burst slots get replaced. Entity-Burst can still be kept in any slot intentionally.
+The universal starter prototype. Hits the locked target using whatever the character has equipped — a sword swing, an arrow, a wand bolt. All archetypes start with plain entity_burst, no augments pre-socketed. As players acquire new skills, entity_burst slots get replaced. entity_burst can still be kept in any slot intentionally.
 
 | Property | Value |
 |---|---|
@@ -111,11 +111,11 @@ The universal starter prototype. Hits the locked target using whatever the chara
 | EoTs | None |
 | Acquire | Free — slot 1 pre-filled at character creation |
 
-#### Self-Channeled-Tick
+#### self_channeled_tick
 
 *(Renamed from Cyclone. Do not create a new skill — rename the existing implementation.)*
 
-Spin continuously in place, hitting all enemies within melee range on each tick. A Channeled skill — hold to spin, release to stop. Drains Focus while held, stops automatically at 0 Focus. Lower damage per hit than Entity-Burst; the value is continuous multi-target coverage.
+Spin continuously in place, hitting all enemies within melee range on each tick. A Channeled skill — hold to spin, release to stop. Drains Focus while held, stops automatically at 0 Focus. Lower damage per hit than entity_burst; the value is continuous multi-target coverage.
 
 | Property | Value |
 |---|---|
@@ -132,9 +132,9 @@ Spin continuously in place, hitting all enemies within melee range on each tick.
 | Tick rate | 4 hits/sec |
 | Acquire | Craft |
 
-> **Balancer note:** At 4 ticks/sec with no per-skill damage multiplier, single-target DPS is ~3.2× Entity-Burst (which fires at 1.25 hits/sec). The compensating levers are tick rate and Focus drain — lower tick rate until single-target DPS sits at the intended ratio vs Entity-Burst, accepting that AoE coverage is the skill's actual advantage.
+> **Balancer note:** At 4 ticks/sec with no per-skill damage multiplier, single-target DPS is ~3.2× entity_burst (which fires at 1.25 hits/sec). The compensating levers are tick rate and Focus drain — lower tick rate until single-target DPS sits at the intended ratio vs entity_burst, accepting that AoE coverage is the skill's actual advantage.
 
-#### Self-Duration-Tick
+#### self_duration_tick
 
 *(Renamed from Damage Aura. Do not create a new skill — rename the existing implementation.)*
 
@@ -158,7 +158,7 @@ Activate once — pulses magic damage to all nearby enemies repeatedly for a few
 | Range | Short radius around player |
 | Acquire | Craft |
 
-#### Self-Burst
+#### self_burst
 
 *(Renamed from Nova. Do not create a new skill — rename the existing implementation.)*
 
@@ -184,7 +184,7 @@ An instant explosion centered on the player — hits all enemies within a medium
 
 All values (damage, cooldown, radius, tick rate, duration) are TBD — owned by the Balancer.
 
-**Fixed-Zone-Tick**
+**fixed_zone_tick**
 
 | Property | Value |
 |---|---|
@@ -201,11 +201,11 @@ All values (damage, cooldown, radius, tick rate, duration) are TBD — owned by 
 | Type | Active |
 | Damage type | Magic |
 
-**Fixed-Zone-Burst**
+**fixed_zone_burst**
 
 | Property | Value |
 |---|---|
-| Description | Proves Position targeting with a single burst hit. A remote instant explosion — Self-Burst placed at a chosen location. |
+| Description | Proves Position targeting with a single burst hit. A remote instant explosion — self_burst placed at a chosen location. |
 | Good for | Skills that detonate a single explosion at a chosen spot — remote instant damage with no lingering effect. |
 | Kind | Prototype |
 | Targeting shape | Position |
@@ -217,7 +217,7 @@ All values (damage, cooldown, radius, tick rate, duration) are TBD — owned by 
 | Type | Active |
 | Damage type | Magic |
 
-**Windup-Burst**
+**windup_burst**
 
 | Property | Value |
 |---|---|
@@ -233,7 +233,7 @@ All values (damage, cooldown, radius, tick rate, duration) are TBD — owned by 
 | Type | Active |
 | Damage type | Magic |
 
-**Tracked-Tick**
+**tracked_tick**
 
 | Property | Value |
 |---|---|
@@ -251,7 +251,7 @@ All values (damage, cooldown, radius, tick rate, duration) are TBD — owned by 
 | Damage type | Magic |
 | AoE | Hits tracked enemy + all enemies within radius around them |
 
-**Entity-Debuff**
+**entity_debuff**
 
 | Property | Value |
 |---|---|
@@ -268,7 +268,7 @@ All values (damage, cooldown, radius, tick rate, duration) are TBD — owned by 
 | Damage type | Magic (N/A) |
 | Effect | Slow (placeholder) |
 
-**Stackable-Zone**
+**stackable_zone**
 
 | Property | Value |
 |---|---|
@@ -288,7 +288,7 @@ All values (damage, cooldown, radius, tick rate, duration) are TBD — owned by 
 | Type | Active |
 | Damage type | Magic |
 
-**Triggered-Zone-Burst**
+**triggered_zone_burst**
 
 | Property | Value |
 |---|---|
@@ -309,6 +309,6 @@ All values (damage, cooldown, radius, tick rate, duration) are TBD — owned by 
 
 ---
 
-**Weapon is the root of the damage number.** Each weapon has a base damage value that increases with tier. The skill defines the damage type — Entity-Burst is physical (placeholder); future named skills define their own type. The weapon's identity bonus (flat % damage or crit) applies universally to all skills regardless of damage type — no skill-type gate. Archetype damage output scales through primary stat growth (see Archetype Stat Multipliers in `gdd-mechanics.md`), not an archetype-level multiplier table.
+**Weapon is the root of the damage number.** Each weapon has a base damage value that increases with tier. The skill defines the damage type — entity_burst is physical (placeholder); future named skills define their own type. The weapon's identity bonus (flat % damage or crit) applies universally to all skills regardless of damage type — no skill-type gate. Archetype damage output scales through primary stat growth (see Archetype Stat Multipliers in `gdd-mechanics.md`), not an archetype-level multiplier table.
 
 **Skills do not carry a per-skill damage multiplier.** Every skill draws from the same damage number: `weapon base × stat block`. A tick skill and a burst skill deal the same raw damage per hit — the design difference is delivery: tick rate, cooldown, AoE, and Focus cost. DPS balance between skills is the Balancer's domain, owned through tick rate and cooldown tuning. There is no `DamageMultiplier` field on a skill.

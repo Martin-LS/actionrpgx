@@ -141,7 +141,7 @@ At fire time: `critChance = _globalCritChance + slot.CritChanceBonus`. If `critC
 
 `SkillSlot.HasCriticalStrike (bool)` is replaced by `SkillSlot.CritChanceBonus (float)` — the aggregated float from that skill's augments. This removes the bool flag and makes adding future crit-granting skill augments a parameter change, not a new flag.
 
-**Slot state:** `_slots[3]` — internal array of 3 slot states (design target: 5; code expansion pending):
+**Slot state:** `_slots[5]` — internal array of 5 slot states:
 ```
 { SkillData Skill, float CooldownTimer, List<string> EotIds,
   bool HasMagicDamage, Items.DamageType EffectiveDamageType,
@@ -269,7 +269,7 @@ emit ShieldChanged(_currentFocusShield, _maxFocusShield)
 
 ## Skill Bar (HUD)
 
-An `HBoxContainer` anchored **bottom-center** of the HUD. **1 cell visible in v1** (code array has 3 cells; design target is 5 cells — HUD redesign for 5 slots is pending).
+An `HBoxContainer` anchored **bottom-center** of the HUD. **5 cells visible in v1** (mapped to Q E R F + Right Click).
 
 Each cell contains:
 - Skill icon (placeholder if slot empty)
@@ -278,7 +278,7 @@ Each cell contains:
 
 `Hud._Ready()` wires `WeaponController.SkillFired` → `OnSkillFired(int slotIndex, float cooldown)`. On fire: set the matching cell's bar to 0, show grey overlay, begin filling. Filling is handled in `_Process` (bar value increments by `delta / cooldown` each frame). When bar reaches 1.0: hide grey overlay, stop incrementing.
 
-The skill bar is the visual feedback loop for the skill cadence — 3 independent timers give the player a read on all active slots whether firing automatically or triggered manually.
+The skill bar is the visual feedback loop for the skill cadence — 5 independent timers give the player a read on all active slots whether firing automatically or triggered manually.
 
 ---
 

@@ -21,7 +21,7 @@ public class CharacterData
     // Skills are not moved out of inventory when slotted — same instance can fill multiple slots.
     public List<string> SlottedSkillInstanceIds { get; set; } = new();
 
-    public List<bool> SlotAutoActivate { get; set; } = new() { true, true, true };
+    public List<bool> SlotAutoActivate { get; set; } = new() { true, true, true, true, true };
 
     public StatBlock BuildStatBlock()
     {
