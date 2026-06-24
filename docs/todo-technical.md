@@ -60,9 +60,9 @@ These were found by cross-checking tech spec against live code. Each entry is a 
 
 ### Aura SkillType
 
-- [ ] **Aura Focus reservation system unimplemented** *(v1 — spec before implementing)* — Needs spec written first: how AuraActive/AuraReserved live on SkillSlot, how `_totalReserved` accumulates, how `ReserveFocus()`/`UnreserveFocus()` interact with `GetAvailableFocus()`, and the toggle-firing guard in WeaponController. The `self_aura` prototype (see GDD) cannot fully ship until this is in place.
+- [x] **Aura Focus reservation system unimplemented** *(v1 — spec before implementing)* — Needs spec written first: how AuraActive/AuraReserved live on SkillSlot, how `_totalReserved` accumulates, how `ReserveFocus()`/`UnreserveFocus()` interact with `GetAvailableFocus()`, and the toggle-firing guard in WeaponController. The `self_aura` prototype (see GDD) cannot fully ship until this is in place.
 - [x] **Reclassify and rename `self_aura_tick` → `self_aura` in SkillRegistry.cs** — Done: renamed, reclassified to `Prototype`, dedicated `BalanceConfig.Skills.SelfAura*` and `BalanceConfig.Focus.SelfAuraFocusReservation` entries added. `SkillType.Active` left as placeholder pending Aura reservation spec.
-- [ ] **Test `self_aura` is craftable and fires** *(v1 — limited test, pending reservation spec)* — Verify `self_aura` appears in the craft list, can be crafted, slotted, and fires a damage tick on activation. Full toggle/reservation behaviour cannot be tested until the Aura Focus reservation system is implemented — this test only confirms the registry entry and basic Active firing are wired correctly.
+- [x] **Test `self_aura` is craftable and fires** *(v1)* — Reservation system implemented: `SkillType.Aura` added to enum, `recipe_self_aura` added to RecipeRegistry, `AuraActive`/`AuraReserved` on SkillSlot, `ReserveFocus`/`UnreserveFocus` on PlayerController, toggle wired in `TryFireSlot`, `ProcessAuraSlot`/`FireAuraTick` in WeaponController. Build verified clean.
 
 ### Skill Cooldowns
 

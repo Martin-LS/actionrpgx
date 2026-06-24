@@ -153,7 +153,7 @@ public static class SkillRegistry
             ZoneRadius: BalanceConfig.Skills.FixedZoneTickZoneRadius),
 
         ["self_aura"] = new SkillData(
-            "self_aura", "Self Aura", SkillType.Active, // SkillType.Active is a placeholder — SkillType.Aura pending Aura reservation spec
+            "self_aura", "Self Aura", SkillType.Aura,
             Tags: new[] { "Attack" },
             Cooldown: BalanceConfig.Skills.SelfAuraCooldown, Range: BalanceConfig.Skills.SelfAuraRange,
             FocusCost: BalanceConfig.Focus.SelfAuraFocusReservation,

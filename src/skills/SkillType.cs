@@ -1,3 +1,3 @@
 namespace ActionRpgX.Skills;
 
-public enum SkillType { Active, Channeled, Passive }
+public enum SkillType { Active, Channeled, Aura, Passive }

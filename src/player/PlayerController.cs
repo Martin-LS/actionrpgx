@@ -56,6 +56,7 @@ public partial class PlayerController : CharacterBody3D
     public Vector3          TargetPosition { get; private set; }
 
     private float _focusRegen;
+    private float _totalReserved;
     private float _currentFocusShield;
     private float _maxFocusShield;
 
@@ -812,7 +813,7 @@ public partial class PlayerController : CharacterBody3D
         return xtn;
     }
 
-    public float GetAvailableFocus() => CurrentFocus;
+    public float GetAvailableFocus() => Mathf.Max(0f, CurrentFocus - _totalReserved);
 
     public bool TrySpendFocus(float amount)
     {
@@ -820,6 +821,18 @@ public partial class PlayerController : CharacterBody3D
         CurrentFocus -= amount;
         EmitSignal(SignalName.FocusChanged, GetAvailableFocus(), MaxFocus);
         return true;
+    }
+
+    public void ReserveFocus(float amount)
+    {
+        _totalReserved += amount;
+        EmitSignal(SignalName.FocusChanged, GetAvailableFocus(), MaxFocus);
+    }
+
+    public void UnreserveFocus(float amount)
+    {
+        _totalReserved = Mathf.Max(0f, _totalReserved - amount);
+        EmitSignal(SignalName.FocusChanged, GetAvailableFocus(), MaxFocus);
     }
 
     private void ApplyWeaponDamage(Weapon.WeaponController? wc, Items.ItemData? weapon)

@@ -106,6 +106,8 @@ public partial class WeaponController : Node
         public bool         IsChanneling;
         public float        DurationTimer;
         public List<Node3D> ActiveZones;
+        public bool         AuraActive;
+        public float        AuraReserved;
     }
 
     private readonly SkillSlot[] _slots = new SkillSlot[5];
@@ -132,6 +134,8 @@ public partial class WeaponController : Node
         _slots[slotIndex].IsChanneling  = false;
         _slots[slotIndex].DurationTimer = 0f;
         _slots[slotIndex].ActiveZones   = new List<Node3D>();
+        _slots[slotIndex].AuraActive    = false;
+        _slots[slotIndex].AuraReserved  = 0f;
     }
 
     public void SetSlotAutoActivate(int slotIndex, bool autoActivate)
@@ -168,6 +172,13 @@ public partial class WeaponController : Node
 
             if (_slots[i].CooldownTimer > 0f)
                 _slots[i].CooldownTimer -= dt;
+
+            if (_slots[i].Skill!.Type == SkillType.Aura)
+            {
+                if (_slots[i].AuraActive)
+                    ProcessAuraSlot(i, dt);
+                continue;
+            }
 
             bool active = (_slots[i].AutoActivate && _slots[i].Skill!.Type != SkillType.Channeled) ||
                           (_slots[i].Skill!.Type == SkillType.Channeled && _slots[i].IsChanneling);
@@ -290,6 +301,39 @@ public partial class WeaponController : Node
         _slots[i].CooldownTimer = _slots[i].Skill!.Cooldown;
     }
 
+    private void ProcessAuraSlot(int i, float dt)
+    {
+        if (_slots[i].CooldownTimer > 0f) return;
+        FireAuraTick(i);
+        _slots[i].CooldownTimer = _slots[i].Skill!.Cooldown;
+    }
+
+    private void FireAuraTick(int slotIndex)
+    {
+        ref var slot   = ref _slots[slotIndex];
+        var     origin = GetParent<Node3D>().GlobalPosition;
+
+        bool  isMagic = slot.HasMagicDamage || slot.EffectiveDamageType == Items.DamageType.Magic;
+        var   dmgType = isMagic ? Items.DamageType.Magic : Items.DamageType.Physical;
+        float baseDmg = isMagic ? _magicDamage : _physicalDamage;
+
+        float critChance = _globalCritChance + slot.CritChanceBonus;
+        float critMult   = 1.0f;
+        if (critChance > 0f && GD.Randf() < critChance)
+            critMult = _critMultiplier;
+        baseDmg *= critMult;
+
+        foreach (var node in GetTree().GetNodesInGroup("enemies"))
+        {
+            if (node is not Enemies.EnemyController enemy || enemy.IsQueuedForDeletion()) continue;
+            if (origin.DistanceTo(enemy.GlobalPosition) > slot.Skill!.Range) continue;
+            enemy.TakeDamage(baseDmg, dmgType, critMult > 1f);
+            ApplyEots(enemy, slot.EotIds, critMult);
+        }
+
+        EmitSignal(SignalName.SkillFired, slotIndex, slot.Skill!.Cooldown, "SelfBurst");
+    }
+
     private void FireSelfChanneledTick(int slotIndex)
     {
         ref var slot   = ref _slots[slotIndex];
@@ -342,6 +386,26 @@ public partial class WeaponController : Node
         if (slotIndex < 0 || slotIndex >= 5) return;
         ref var slot = ref _slots[slotIndex];
         if (slot.Skill == null) return;
+
+        if (slot.Skill.Type == SkillType.Aura)
+        {
+            if (slot.AuraActive)
+            {
+                _player?.UnreserveFocus(slot.AuraReserved);
+                _slots[slotIndex].AuraActive  = false;
+                _slots[slotIndex].AuraReserved = 0f;
+            }
+            else
+            {
+                float reserve = slot.Skill.FocusCost;
+                if (_player == null || _player.GetAvailableFocus() < reserve) return;
+                _player.ReserveFocus(reserve);
+                _slots[slotIndex].AuraActive   = true;
+                _slots[slotIndex].AuraReserved = reserve;
+                _slots[slotIndex].CooldownTimer = 0f;
+            }
+            return;
+        }
 
         if (slot.CooldownTimer > 0f) return;
 

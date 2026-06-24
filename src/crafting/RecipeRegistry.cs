@@ -32,6 +32,7 @@ public static class RecipeRegistry
         ["recipe_windup_burst"]     = new("recipe_windup_burst",     "windup_burst",     RecipeType.Skill, new() { ["crafting_common"] = 1 }),
         ["recipe_fixed_zone_burst"] = new("recipe_fixed_zone_burst", "fixed_zone_burst", RecipeType.Skill, new() { ["crafting_common"] = 1 }),
         ["recipe_fixed_zone_tick"]  = new("recipe_fixed_zone_tick",  "fixed_zone_tick",  RecipeType.Skill, new() { ["crafting_common"] = 1 }),
+        ["recipe_self_aura"]        = new("recipe_self_aura",        "self_aura",        RecipeType.Skill, new() { ["crafting_common"] = 1 }),
 
         // Skill Augment recipes — v1 generics only
         ["recipe_slow"]            = new("recipe_slow",            "slow",            RecipeType.SkillAugment, new() { ["crafting_common"] = 1 }),
