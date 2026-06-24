@@ -267,17 +267,14 @@ size_flags_horizontal = 3
 size_flags_vertical = 3
 metadata/_tab_index = 0
 
-[node name="InventoryScroll" type="ScrollContainer" parent="VBox/TabContainer/Loadout/LoadoutSplit/InventoryPanel/InventoryVBox/InventoryTabs/Equipment" unique_id=1706032712]
+[node name="EquipmentListScroll" type="ScrollContainer" parent="VBox/TabContainer/Loadout/LoadoutSplit/InventoryPanel/InventoryVBox/InventoryTabs/Equipment" unique_id=1655823198]
 layout_mode = 2
 size_flags_vertical = 3
-horizontal_scroll_mode = 0
 
-[node name="InventoryGrid" type="GridContainer" parent="VBox/TabContainer/Loadout/LoadoutSplit/InventoryPanel/InventoryVBox/InventoryTabs/Equipment/InventoryScroll" unique_id=1706032713]
+[node name="EquipmentListArea" type="VBoxContainer" parent="VBox/TabContainer/Loadout/LoadoutSplit/InventoryPanel/InventoryVBox/InventoryTabs/Equipment/EquipmentListScroll" unique_id=912739788]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/h_separation = 4
-theme_override_constants/v_separation = 4
-columns = 5
+theme_override_constants/separation = 4
 
 [node name="Skills" type="VBoxContainer" parent="VBox/TabContainer/Loadout/LoadoutSplit/InventoryPanel/InventoryVBox/InventoryTabs" unique_id=1706032807]
 visible = false

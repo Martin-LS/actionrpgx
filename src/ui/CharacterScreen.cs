@@ -9,10 +9,10 @@ namespace ActionRpgX.Ui;
 
 public partial class CharacterScreen : Control
 {
-    private Label         _inventoryInfo = null!;
-    private GridContainer _inventoryGrid = null!;
-    private GridContainer _skillsGrid    = null!;
-    private GridContainer _augmentsGrid  = null!;
+    private Label         _inventoryInfo     = null!;
+    private VBoxContainer _equipmentListArea = null!;
+    private GridContainer _skillsGrid        = null!;
+    private GridContainer _augmentsGrid      = null!;
 
     private Label  _nameLabel  = null!;
     private Label  _typeLabel  = null!;
@@ -26,8 +26,9 @@ public partial class CharacterScreen : Control
 
     private Character.CharacterManager _manager = null!;
 
-    private Button _skillTabCraftBtn = null!;
-    private Button _augTabCraftBtn   = null!;
+    private Button       _skillTabCraftBtn = null!;
+    private Button       _augTabCraftBtn   = null!;
+    private TabContainer _inventoryTabs    = null!;
 
     private const string CharViewBase = "VBox/TabContainer/Loadout/LoadoutSplit/CharacterView";
     private const string InvBase      = "VBox/TabContainer/Loadout/LoadoutSplit/InventoryPanel/InventoryVBox";
@@ -42,10 +43,11 @@ public partial class CharacterScreen : Control
             return;
         }
 
-        _inventoryInfo = GetNode<Label>         ($"{InvBase}/InventoryInfo");
-        _inventoryGrid = GetNode<GridContainer> ($"{InvBase}/InventoryTabs/Equipment/InventoryScroll/InventoryGrid");
-        _skillsGrid    = GetNode<GridContainer> ($"{InvBase}/InventoryTabs/Skills/SkillsScroll/SkillsGrid");
-        _augmentsGrid  = GetNode<GridContainer> ($"{InvBase}/InventoryTabs/Augments/AugmentsScroll/AugmentsGrid");
+        _inventoryInfo    = GetNode<Label>         ($"{InvBase}/InventoryInfo");
+        _equipmentListArea = GetNode<VBoxContainer>($"{InvBase}/InventoryTabs/Equipment/EquipmentListScroll/EquipmentListArea");
+        _skillsGrid        = GetNode<GridContainer>($"{InvBase}/InventoryTabs/Skills/SkillsScroll/SkillsGrid");
+        _augmentsGrid      = GetNode<GridContainer>($"{InvBase}/InventoryTabs/Augments/AugmentsScroll/AugmentsGrid");
+        _inventoryTabs = GetNode<TabContainer>($"{InvBase}/InventoryTabs");
 
         _nameLabel  = GetNode<Label> ($"{CharViewBase}/HSplit/InfoVBox/NameLabel");
         _typeLabel  = GetNode<Label> ($"{CharViewBase}/HSplit/InfoVBox/TypeLabel");
@@ -101,7 +103,7 @@ public partial class CharacterScreen : Control
 
     private void Refresh()
     {
-        RefreshInventory();
+        ShowEquipmentOwnedList();
         RefreshSkillsInventory();
         RefreshAugmentsInventory();
         RefreshCharacter();
@@ -189,26 +191,38 @@ public partial class CharacterScreen : Control
         ClearTierStyle(btn);
     }
 
-    // ── Inventory grids ───────────────────────────────────────────────────────
+    // ── Equipment inventory component (in-place state machine) ───────────────
 
-    private void RefreshInventory()
+    private void ShowEquipmentOwnedList()
     {
         var profile = _manager.Profile;
         int sa = profile.OwnedSkillAugmentInstances.Count;
         int ea = profile.OwnedEquipmentAugmentInstances.Count;
         _inventoryInfo.Text = $"Gear: {profile.OwnedGearInstances.Count}/50  Skills: {profile.OwnedSkillInstances.Count}/50  S.Augs: {sa}/50  E.Augs: {ea}/50  Coins: {profile.CoinBank}  Common: {profile.GetMaterial("crafting_common")}";
 
-        foreach (Node child in _inventoryGrid.GetChildren())
+        foreach (Node child in _equipmentListArea.GetChildren())
             child.QueueFree();
+
+        var craftBtn = MakeModifyButton("Craft Equipment  [1 Common]", false);
+        craftBtn.Pressed += ShowEquipmentTypeStep;
+        _equipmentListArea.AddChild(craftBtn);
+
+        var grid = new GridContainer { Columns = 5 };
+        grid.AddThemeConstantOverride("h_separation", 4);
+        grid.AddThemeConstantOverride("v_separation", 4);
+        _equipmentListArea.AddChild(grid);
+
+        var c     = _manager.SelectedCharacter;
+        var owned = profile.OwnedGearInstances;
 
         for (int i = 0; i < Character.ProfileData.MaxInventory; i++)
         {
             var btn = new TooltipButton { CustomMinimumSize = new Vector2(72, 72) };
 
-            if (i < profile.OwnedGearInstances.Count)
+            if (i < owned.Count)
             {
-                var instance = profile.OwnedGearInstances[i];
-                var item     = instance.Definition;
+                var inst = owned[i];
+                var item = inst.Definition;
                 if (item != null)
                 {
                     if (!string.IsNullOrEmpty(item.IconPath))
@@ -221,12 +235,21 @@ public partial class CharacterScreen : Control
                         btn.Text = item.Name;
                         btn.AddThemeFontSizeOverride("font_size", 10);
                     }
-                    btn.TooltipText = BuildGearTooltip(item, instance.Tier);
-                    ApplyTierStyle(btn, instance.Tier);
-                    var capturedInst = instance;
-                    var capturedItem = item;
-                    var capturedBtn  = btn;
-                    btn.GuiInput += (e) => OnInventoryGearInput(e, capturedInst, capturedItem, capturedBtn);
+                    btn.TooltipText = BuildGearTooltip(item, inst.Tier);
+                    ApplyTierStyle(btn, inst.Tier);
+                    var capturedInst = inst;
+                    btn.GuiInput += (e) =>
+                    {
+                        if (e is not InputEventMouseButton mb || !mb.Pressed) return;
+                        if (mb.ButtonIndex == MouseButton.Left)
+                            ShowGearModifyPanel(capturedInst);
+                        else if (mb.ButtonIndex == MouseButton.Right && c != null)
+                        {
+                            _manager.EquipItem(c.Id, item.Slot, capturedInst.Id);
+                            ShowEquipmentOwnedList();
+                            RefreshCharacter();
+                        }
+                    };
                 }
             }
             else
@@ -235,7 +258,56 @@ public partial class CharacterScreen : Control
                 btn.Disabled = true;
             }
 
-            _inventoryGrid.AddChild(btn);
+            grid.AddChild(btn);
+        }
+    }
+
+    private void ShowEquipmentTypeStep()
+    {
+        foreach (Node child in _equipmentListArea.GetChildren())
+            child.QueueFree();
+
+        var backBtn = MakeModifyButton("← Back", false);
+        backBtn.Pressed += ShowEquipmentOwnedList;
+        _equipmentListArea.AddChild(backBtn);
+        _equipmentListArea.AddChild(new HSeparator());
+
+        foreach (var slot in new[] { ItemSlot.Weapon, ItemSlot.Hat, ItemSlot.Body, ItemSlot.Ring })
+        {
+            var captured = slot;
+            var btn = MakeModifyButton(slot.ToString(), false);
+            btn.Pressed += () => ShowEquipmentSubtypeStep(captured);
+            _equipmentListArea.AddChild(btn);
+        }
+    }
+
+    private void ShowEquipmentSubtypeStep(ItemSlot slot)
+    {
+        foreach (Node child in _equipmentListArea.GetChildren())
+            child.QueueFree();
+
+        var backBtn = MakeModifyButton("← Back", false);
+        backBtn.Pressed += ShowEquipmentTypeStep;
+        _equipmentListArea.AddChild(backBtn);
+        _equipmentListArea.AddChild(new HSeparator());
+
+        int  common  = _manager.Profile.GetMaterial("crafting_common");
+        bool invFull = _manager.Profile.OwnedGearInstances.Count >= Character.ProfileData.MaxInventory;
+
+        var statusLbl = new Label { Text = invFull ? "Inventory full" : $"Common material: {common}" };
+        statusLbl.AddThemeColorOverride("font_color", new Color("#8AA0AE"));
+        _equipmentListArea.AddChild(statusLbl);
+
+        foreach (var recipe in RecipeRegistry.ForType(RecipeType.Gear))
+        {
+            var itemDef = ItemRegistry.Get(recipe.OutputItemId);
+            if (itemDef == null || itemDef.Slot != slot) continue;
+            int  cost     = recipe.MaterialCosts.TryGetValue("crafting_common", out var mc) ? mc : 1;
+            bool canCraft = !invFull && common >= cost;
+            var  btn      = MakeModifyButton($"{itemDef.Name}  —  {cost} Common", !canCraft);
+            string rid    = recipe.Id;
+            btn.Pressed  += () => { _manager.CraftGearItem(rid); ShowEquipmentOwnedList(); };
+            _equipmentListArea.AddChild(btn);
         }
     }
 
@@ -362,8 +434,14 @@ public partial class CharacterScreen : Control
             if (occupied)
                 ShowEquippedItemPopup(slot, btn);
             else
-                ShowEmptyGearSlotMenu(slot, btn);
+                OpenEquipmentTabFiltered(slot);
         }
+    }
+
+    private void OpenEquipmentTabFiltered(ItemSlot slot)
+    {
+        _inventoryTabs.CurrentTab = 0; // Equipment is tab index 0
+        ShowEquipmentOwnedList();
     }
 
     private void OnSkillSlotInput(InputEvent e, int slotIndex)
@@ -484,60 +562,6 @@ public partial class CharacterScreen : Control
         ShowPopupAt(popup, anchor);
     }
 
-    private void ShowEmptyGearSlotMenu(ItemSlot slot, Button anchor)
-    {
-        var popup = NewStyledPopup();
-        popup.AddItem("Craft New",            0);
-        popup.AddItem("Equip from Inventory", 1);
-        popup.IdPressed += (long id) =>
-        {
-            if      (id == 0) ShowCraftGearForSlotPanel(slot);
-            else if (id == 1) OpenPicker(slot);
-        };
-        ShowPopupAt(popup, anchor);
-    }
-
-    private void ShowCraftGearForSlotPanel(ItemSlot slot)
-    {
-        var overlay = MakeModalOverlay();
-        var panel   = MakeModifyPanel();
-        var vbox    = new VBoxContainer();
-        vbox.AddThemeConstantOverride("separation", 8);
-        panel.AddChild(vbox);
-        overlay.AddChild(panel);
-        AddChild(overlay);
-
-        vbox.AddChild(MakeModifyHeader($"Craft {slot}", () => CloseOverlay(overlay)));
-        vbox.AddChild(new HSeparator());
-
-        int  common  = _manager.Profile.GetMaterial("crafting_common");
-        bool invFull = _manager.Profile.OwnedGearInstances.Count >= Character.ProfileData.MaxInventory;
-
-        var statusLbl = new Label { Text = invFull ? "Inventory full" : $"Common material: {common}" };
-        statusLbl.AddThemeColorOverride("font_color", new Color("#8AA0AE"));
-        vbox.AddChild(statusLbl);
-
-        bool any = false;
-        foreach (var recipe in RecipeRegistry.ForType(RecipeType.Gear))
-        {
-            var itemDef = ItemRegistry.Get(recipe.OutputItemId);
-            if (itemDef == null || itemDef.Slot != slot) continue;
-            any = true;
-            int  cost     = recipe.MaterialCosts.TryGetValue("crafting_common", out var mc) ? mc : 1;
-            bool canCraft = !invFull && common >= cost;
-            var  btn      = MakeModifyButton($"{itemDef.Name}  —  {cost} Common", !canCraft);
-            string rid    = recipe.Id;
-            btn.Pressed  += () => { _manager.CraftGearItem(rid); CloseOverlay(overlay); Refresh(); };
-            vbox.AddChild(btn);
-        }
-
-        if (!any)
-        {
-            var lbl = new Label { Text = "No recipes available for this slot" };
-            lbl.AddThemeColorOverride("font_color", new Color("#4A5560"));
-            vbox.AddChild(lbl);
-        }
-    }
 
     private void ShowCraftEquipmentPopup()
     {
@@ -619,14 +643,6 @@ public partial class CharacterScreen : Control
         var rect = anchor.GetGlobalRect();
         popup.Position = new Vector2I((int)rect.Position.X, (int)(rect.Position.Y + rect.Size.Y));
         popup.Popup();
-    }
-
-    private void OpenPicker(ItemSlot slot)
-    {
-        var pickerScene = GD.Load<PackedScene>("res://src/ui/item_picker_panel.tscn");
-        var picker      = pickerScene.Instantiate<ItemPickerPanel>();
-        picker.Init(_manager, _manager.SelectedCharacter!, slot, () => Refresh());
-        AddChild(picker);
     }
 
     // ── Modify panel ─────────────────────────────────────────────────────────

@@ -72,25 +72,35 @@ Augment name + **Upgrade** + **Re-roll (v2)** (no Remove). Same visual as the fi
 
 ### Equipment Inventory Tab
 
-- **Slot type selector** — four buttons at top (Weapon / Hat / Body / Ring); no type selected by default
-- Once a type is selected:
-  - Lists all unslotted gear of that type
-  - **Craft button** → switches view to craftable subtypes:
-    - Weapon → Sword / Bow / Wand
-    - Hat → Heavy / Medium / Light
-    - Body → Heavy / Medium / Light
-    - Ring → Ring
-    - Click a subtype → crafts it (1 material) → adds to inventory → returns to owned list
-  - **Left-click an owned item** → opens Equipment Modify Panel (no Remove — it's unequipped)
-  - **Right-click an owned item** → equips to first empty valid slot for that type
-- **Right-click a filled equipment slot** → unequips; item returns to inventory
+Reusable component: a VBoxContainer whose content changes in-place through three states.
+
+**Default state:**
+- **Craft button** at top → switches component to type-pick state
+- Separator + "Owned Gear" section label
+- Lists all unslotted gear (font slightly smaller than Craft button to distinguish)
+  - **Left-click** → opens Equipment Modify Panel
+  - **Right-click** → equips to first empty valid slot for that type
+- Empty: shows "None owned"
+
+**Type-pick state:**
+- ← Back button → returns to owned list
+- Four buttons: Weapon / Hat / Body / Ring → switches component to subtype-pick state for that slot
+
+**Subtype-pick state:**
+- ← Back button → returns to type-pick state
+- Material count / inventory-full status label
+- One button per craftable subtype for the chosen slot:
+  - Weapon → Sword / Bow / Wand
+  - Hat → Heavy / Medium / Light
+  - Body → Heavy / Medium / Light
+  - Ring → Ring
+  - Click a subtype → crafts it (1 material) → returns to owned list
 
 ### Equipment Slot (character loadout)
 
-- **Empty equipment slot** → opens the Equipment component pre-filtered to that slot's type (slot type selector step skipped)
-  - Craft button → crafts item + auto-equips it → opens Equipment Modify Panel
-  - **Left-click an owned item** → equips it → opens Equipment Modify Panel
-  - **Right-click an owned item** → equips it (quick path, panel does not open)
+*(Separate spec — not yet implemented.)*
+
+- **Empty equipment slot** → opens the Equipment component (same VBoxContainer, different context)
 - **Filled equipment slot**:
   - **Left-click** → opens Equipment Modify Panel directly
   - **Right-click** → unequips; item returns to inventory
