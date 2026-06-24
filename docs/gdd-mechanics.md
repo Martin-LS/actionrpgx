@@ -47,6 +47,7 @@ Skills drive all combat. Each skill has a **type**:
 |---|---|---|
 | Active | Fires on manual activation or auto-activate on cooldown. | Flat cost per activation |
 | Channeled | Hold button to run, release to stop. Drains Focus continuously while held. Stops automatically at 0 Focus. Auto-cast holds the button indefinitely — will empty the Focus bar if left unchecked. Player responsibility. | Per-second drain while held |
+| Aura | Toggle on — reserves a flat amount of Focus and begins pulsing its effect on every tick. Toggle off — unreserves Focus immediately. Does not auto-deactivate at 0 Focus; the reservation is committed at toggle time. | Flat amount reserved from Max Focus while active (not spent — locked until toggled off) |
 
 The **skill bar** on the run HUD shows the slotted skill, its cooldown state, and whether auto-activate is enabled.
 
@@ -179,7 +180,9 @@ Focus is the universal skill resource. All archetypes spend Focus to fire skills
 
 **Regeneration:** Passive regen over time at a steady rate. Always recovering — no kill-based acceleration.
 
-**At 0 Focus:** Skills cannot fire. Cooldowns still count down; auto-activate waits until enough Focus regens to cover the cost. Channeled skills stop automatically when Focus hits 0.
+**Aura reservation:** Active Auras lock a flat amount of Focus permanently while toggled on. The available pool — the amount other skills can spend — is `CurrentFocus − reserved`. Auras do not auto-deactivate at 0 Focus; their reservation is committed at toggle time and held until toggled off.
+
+**At 0 Focus:** Skills cannot fire. Cooldowns still count down; auto-activate waits until enough Focus regens to cover the cost. Channeled skills stop automatically when Focus hits 0. Auras are unaffected — their cost is already reserved, not re-spent each tick.
 
 **Channeled skill tag:** Skills tagged `Channeled` drain Focus continuously while the button is held. Releasing the button stops the skill immediately. If Focus hits 0 the skill stops automatically regardless of input. Auto-cast holds the button indefinitely — player responsibility to not auto-cast a skill that drains their entire Focus bar.
 
@@ -191,6 +194,7 @@ Focus is the universal skill resource. All archetypes spend Focus to fire skills
 | self_burst | 20 Focus (flat) — meaningful burst cost |
 | self_channeled_tick | 12 Focus/sec (drain while held) — expensive over time, requires management |
 | self_duration_tick | 15 Focus (flat, on activation) — burst cost like self_burst; ticks for duration then cooldown |
+| self_aura | 15 Focus (reserved) — locks 15 Focus from the available pool while active; no per-tick cost |
 
 **Starting values (placeholder — owned by Balancer):**
 
