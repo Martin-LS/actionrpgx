@@ -49,8 +49,6 @@ These were found by cross-checking tech spec against live code. Each entry is a 
 
 ### Inventory Systems
 
-- [ ] **Slotted Skills Inventory Cap mismatch** — Slotted skills remain inside `OwnedSkillInstances` and continue to count toward the 50-item inventory cap, unlike equipped gear which is moved out of `OwnedGearInstances`.
-
 ---
 
 ## Systems / Features

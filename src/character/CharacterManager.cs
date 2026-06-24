@@ -105,6 +105,17 @@ public partial class CharacterManager : Node
         Save();
     }
 
+    // ── Skill slot helpers ────────────────────────────────────────────────────
+
+    private int CountSlottedSkills()
+    {
+        var ids = new System.Collections.Generic.HashSet<string>();
+        foreach (var c in _characters)
+            foreach (var id in c.SlottedSkillInstanceIds)
+                if (!string.IsNullOrEmpty(id)) ids.Add(id);
+        return ids.Count;
+    }
+
     // ── Instance lookups ──────────────────────────────────────────────────────
 
     public GearItemInstance? FindGearInstance(string? id)
@@ -219,7 +230,8 @@ public partial class CharacterManager : Node
             if (Profile.GetMaterial(matId) < qty)
                 return CraftResult.InsufficientMaterials;
 
-        if (Profile.OwnedSkillInstances.Count >= ProfileData.MaxInventory)
+        int unslotted = Profile.OwnedSkillInstances.Count - CountSlottedSkills();
+        if (unslotted >= ProfileData.MaxInventory)
             return CraftResult.InventoryFull;
 
         foreach (var (matId, qty) in recipe.MaterialCosts)
@@ -244,12 +256,16 @@ public partial class CharacterManager : Node
         Save();
     }
 
-    public void UnequipSkillSlot(string charId, int slotIndex)
+    public bool UnequipSkillSlot(string charId, int slotIndex)
     {
         var c = _characters.FirstOrDefault(x => x.Id == charId);
-        if (c == null || slotIndex >= c.SlottedSkillInstanceIds.Count) return;
+        if (c == null || slotIndex >= c.SlottedSkillInstanceIds.Count) return false;
+        if (string.IsNullOrEmpty(c.SlottedSkillInstanceIds[slotIndex])) return false;
+        int unslotted = Profile.OwnedSkillInstances.Count - CountSlottedSkills();
+        if (unslotted >= ProfileData.MaxInventory) return false;
         c.SlottedSkillInstanceIds[slotIndex] = "";
         Save();
+        return true;
     }
 
     public void DeleteSkillItem(string instanceId)
