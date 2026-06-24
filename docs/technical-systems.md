@@ -428,6 +428,75 @@ Structure (built in `ShowGearModifyPanel` / `ShowSkillModifyPanel`):
 
 Augment compatibility filter (gear): `EquipmentAugmentData.RequiredTags` empty OR intersects `ItemData.Tags`. No tag gate for skill augments (any augment can socket into any skill in v1).
 
+### Equipment Inventory Tab — slot-type selector
+
+**State**
+
+`CharacterScreen` gains one field:
+
+```
+ItemSlot? _activeEquipmentFilter = null  // null = no type selected
+```
+
+**Tab layout**
+
+The Equipment tab replaces the flat 50-item `_inventoryGrid` with two layers:
+
+1. **Type selector row** — `HBoxContainer` of four `Button`s: Weapon / Hat / Body / Ring.
+   - Active button gets a distinct tint (Bright Flame `#E88A28`) to show selection.
+   - Each button's `Pressed` handler sets `_activeEquipmentFilter` and calls `RebuildEquipmentList()`.
+
+2. **List area** — `VBoxContainer _equipmentListArea` beneath the selector.
+   - Rebuilt every time `_activeEquipmentFilter` changes, or on `Refresh()`.
+   - When `_activeEquipmentFilter` is null: list area shows nothing (type selector alone is visible).
+
+**`RebuildEquipmentList()`**
+
+Called from `Refresh()` and from selector button handlers. Reads `_activeEquipmentFilter`.
+
+```
+if _activeEquipmentFilter == null → clear _equipmentListArea, return
+
+slot = _activeEquipmentFilter.Value
+items = Profile.OwnedGearInstances
+        .Where(inst => inst.Definition?.Slot == slot)
+        .ToList()
+
+_equipmentListArea:
+  [Craft button]  → ShowEquipmentCraftPopup(slot)
+  foreach item in items:
+    row button (name + tier label, tooltip: BuildGearTooltip)
+    GuiInput:
+      Left-click  → ShowGearModifyPanel(inst, itemDef)
+      Right-click → EquipItem(charId, slot, inst.Id); RebuildEquipmentList()
+  if items.Count == 0: show "None owned — craft one" label
+```
+
+**`ShowEquipmentCraftPopup(ItemSlot slot)`**
+
+Shows a `PopupMenu` with the subtypes for that slot:
+
+| Slot | Subtypes → recipe IDs |
+|---|---|
+| Weapon | Sword → `recipe_sword_t1`, Bow → `recipe_bow_t1`, Wand → `recipe_wand_t1` |
+| Hat | Heavy → `recipe_heavy_hat_t1`, Medium → `recipe_medium_hat_t1`, Light → `recipe_light_hat_t1` |
+| Body | Heavy → `recipe_heavy_body_t1`, Medium → `recipe_medium_body_t1`, Light → `recipe_light_body_t1` |
+| Ring | Ring → `recipe_ring_t1` |
+
+On selection: `CraftGearItem(recipeId)`. On `InventoryFull`: flash a red error label in `_equipmentListArea` (auto-hides after 3s). On `Success`: `RebuildEquipmentList()` (list refreshes in place; tab stays open).
+
+**Loadout slot interaction (extending `OnGearSlotInput`)**
+
+- **Empty slot — left-click**: switch `TabContainer` to Equipment tab; set `_activeEquipmentFilter = slot`; call `RebuildEquipmentList()` (skips the selector step, opens pre-filtered to that slot's type).
+- **Filled slot — left-click**: `ShowGearModifyPanel(instance, itemDef)` — no change from current.
+- **Filled slot — right-click**: `UnequipItem(charId, slot)`. If returns `false` (inventory full): `Refresh()` shows unchanged state.
+
+**What the current implementation replaces**
+
+- The flat `_inventoryGrid` in `RefreshInventory()` is replaced by the selector + `_equipmentListArea` layout.
+- `OpenPicker(slot)` / `ItemPickerPanel` flow is removed; the Equipment tab pre-filtered to the slot type takes over.
+- `ShowCraftGearForSlotPanel(slot)` is replaced by `ShowEquipmentCraftPopup(slot)` inside the tab (no modal overlay for gear crafting).
+
 ### Equipment Augment Runtime Effects
 
 Equipment augments are seeded into `PlayerController._activeAugments (HashSet<string>)` at run start from all equipped gear's `SocketedEquipmentAugmentIds`. Effects are dispatched by `DefinitionId` string — no subclassing.
