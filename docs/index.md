@@ -9,7 +9,6 @@ Quick reference for every doc in this folder. Load this first each session to kn
 | File | When to read |
 |------|--------------|
 | [todo-technical.md](todo-technical.md) | Every session — check what's pending, tick off anything completed |
-| [project-rules.md](project-rules.md) | Before any design or architectural decision, before any bug fix — scope rules, handedness, bone rotations, UI theming, animation constraints |
 
 ---
 
