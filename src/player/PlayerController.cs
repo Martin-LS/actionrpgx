@@ -531,6 +531,8 @@ public partial class PlayerController : CharacterBody3D
 
             MaxHealth     = (int)_statBlock.Get(Stats.StatId.MaxHp);
             CurrentHealth = Mathf.Min(CurrentHealth + 5f, MaxHealth);
+            MaxFocus      = _statBlock.Get(Stats.StatId.MaxFocus);
+            _focusRegen   = _statBlock.Get(Stats.StatId.FocusRegen);
             EmitSignal(SignalName.LeveledUp, Level);
         }
         EmitSignal(SignalName.XpChanged, CurrentXp, XpToNextLevel);
@@ -714,7 +716,7 @@ public partial class PlayerController : CharacterBody3D
         float magicDmg   = Mathf.Max(1f, weaponBase * _statBlock.Get(Stats.StatId.MagicDamage));
 
         wc.SetDamage(physDmg, magicDmg);
-        wc.SetGlobalCritChance(weapon.CritChanceBonus);
-        wc.SetCritMultiplier(BalanceConfig.SkillAugments.CritMultiplier);
+        wc.SetGlobalCritChance(_statBlock.Get(Stats.StatId.CritChance) + weapon.CritChanceBonus);
+        wc.SetCritMultiplier(_statBlock.Get(Stats.StatId.CritDamage));
     }
 }

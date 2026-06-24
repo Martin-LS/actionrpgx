@@ -64,6 +64,15 @@ public class CharacterData
             block.AddModifier(new StatModifier(StatId.MaxHp, ModifierType.FlatAdd,
                 strGain * PrimaryStatConversions.StrToMaxHp, ModifierSource.Level));
 
+        float intGain = intStat - gains.IntBase;
+        if (intGain > 0f)
+        {
+            block.AddModifier(new StatModifier(StatId.MaxFocus,   ModifierType.FlatAdd,
+                intGain * PrimaryStatConversions.IntToMaxFocus,   ModifierSource.Level));
+            block.AddModifier(new StatModifier(StatId.FocusRegen, ModifierType.FlatAdd,
+                intGain * PrimaryStatConversions.IntToFocusRegen, ModifierSource.Level));
+        }
+
         block.SetBase(StatId.CritChance, dex * PrimaryStatConversions.DexToCritChance);
         block.SetBase(StatId.CritDamage, str * PrimaryStatConversions.StrToCritDamage);
         block.SetBase(StatId.Evasion,    dex * PrimaryStatConversions.DexToEvasion);

@@ -24,7 +24,7 @@ Godot 4.6, C#, Forward Plus renderer. Game world is 3D (CharacterBody3D, XZ move
 | Stretch mode        | `canvas_items`                | Scales UI and world together; crisp at integer multiples of 720p.  |
 | UI theme            | Custom Iron & Slate theme (`res://assets/ui/game_theme.tres`) | Hand-built `Theme` resource set via `gui/theme/custom`. Covers PanelContainer/TabContainer/Panel panel styleboxes (gold `#D4A017` border, Iron Black bg), Button states (normal/hover/pressed/disabled/focus), Label/LineEdit/PopupMenu/Tooltip styles. Default font: Exo 2. No per-scene theme overrides — all Control nodes inherit automatically. |
 | Fonts               | Exo 2 (UI default), Cinzel (headings/titles), EB Garamond (body/lore), Almendra, Cinzel Decorative, Inter — all at `res://assets/fonts/` | Downloaded from Google Fonts as woff2; imported by Godot. Exo 2 set as `theme.default_font`. Bold variant (`Exo_2_2.woff2`) used for tooltip titles. |
-| Floor               | Procedural connector-tile map (`DungeonGenerator.cs`) | 7–11 rooms (400×400 world units each) connected by corridors (90 wide, 160 long). Each room and corridor is a flat `BoxMesh` + matching `CollisionShape3D`. Invisible wall boxes on all room sides with corridor gap openings. Placeholder obstacle props (stumps, boulders, logs) scattered per non-spawn room. Player spawns at room 0 centre. After all geometry is placed, navmesh is baked synchronously using `NavigationServer3D.ParseSourceGeometryData` with DungeonMap as the explicit scan root, then `MapReady` is emitted deferred. |
+| Floor               | Procedural connector-tile map (`DungeonGenerator.cs`) | 4–6 rooms (400×400 world units each) connected by corridors (90 wide, 160 long). Each room and corridor is a flat `BoxMesh` + matching `CollisionShape3D`. Invisible wall boxes on all room sides with corridor gap openings. Placeholder obstacle props (stumps, boulders, logs) scattered per non-spawn room. Player spawns at room 0 centre. After all geometry is placed, navmesh is baked synchronously using `NavigationServer3D.ParseSourceGeometryData` with DungeonMap as the explicit scan root, then `MapReady` is emitted deferred. |
 | Pickup visuals      | Colored `BoxMesh` (10×10×10) | XP Shard = green, coin = yellow, health = red. Opaque to all systems. |
 
 ---
@@ -169,6 +169,7 @@ Main (Node)
 │   └── NavigationRegion3D    ← added at runtime after synchronous navmesh bake; baked mesh covers all rooms/corridors/obstacles
 ├── WorldEnvironment
 ├── Hud (CanvasLayer)          ← health bar, Focus bar (blue), Focus Shield bar (light blue, all archetypes), XP bar, level, coin counter, run timer, skill bar
+├── WorldHud (Node2D)          ← world-space overlay: health bars + floating damage numbers (see Core Systems)
 ├── EnemySpawner (Node)
 ├── RunSession (Node)          ← tracks elapsed time; emits RunEnded(won, level, elapsed)
 ├── RunEndOverlay (CanvasLayer)← shown on RunEnded; returns to character_screen.tscn
@@ -187,6 +188,14 @@ Main (Node)
 
 **Attack range indicator:** `PlayerController._Ready()` creates a `TorusMesh` ring (`MeshInstance3D`) at the player's feet — `OuterRadius` = effective weapon range, cyan `#00CCFF` at 50% alpha, unshaded, no depth test. Visible by default when running from the editor; hidden in exported builds. Toggled via `DevOverlay.RangeToggle`.
 
+**Target indicator:** Small torus spawned from `res://src/vfx/target_indicator.tscn`, added to scene root (not as a player child). Follows `LockedTarget.GlobalPosition` at Y=1. Visible only while a valid locked target exists.
+
+**Aim reticle:** White torus (`OuterRadius=12, InnerRadius=8`) spawned programmatically, added to scene root. Tracks `TargetPosition` (cursor world projection) at Y=0.5. Visible only when at least one Position-targeting skill is slotted (`WeaponController.HasAnyPositionSkill()`).
+
+**`LockedTarget` selection:** `PlayerController.UpdateLockedTarget()` runs every `_PhysicsProcess`. It selects the enemy whose `GlobalPosition` is closest to `TargetPosition` (the cursor's world-plane projection) — not the enemy closest to the player. This is cursor-driven, not proximity-driven.
+
+**Range buff bonus:** `PlayerController` has `AddRangeBuffBonus(float tiles)` / `RemoveRangeBuffBonus(float tiles)` which accumulate a flat tile bonus (`_rangeBuffBonus`) added into `RecalculateEffectiveRange()`. Intended for active buff skills (e.g. Shout). Added on buff apply; removed on buff expire.
+
 ---
 
 ## Core Systems
@@ -202,6 +211,7 @@ Main (Node)
 | XpShard           | XP Shard pickup — auto-collected on contact                  | `res://src/xp/`           | ✅ done |
 | EoT               | Effect over Time — apply, tick, expire on enemies            | `res://src/eot/`          | ✅ done |
 | Hud               | Health bar, Focus bar (blue, below health), Focus Shield bar (light blue, below Focus — all archetypes), XP bar, level, coin counter, run timer | `res://src/hud/`          | ✅ done |
+| WorldHud          | World-space overlay (`Node2D`). Projects 3D world positions to screen. Renders: (1) health bars above all enemies and the player (50×7px, 2s linger after death); (2) floating damage numbers — Bone White `#E8DCC8` for physical, Ice Shimmer `#B8D8E8` for magic, Gold `#D4A017` for crits — with D3-style scale-pop, rise, and fade animation. Connects to `PlayerController.DamageTaken` and `EnemyController.DamageTaken`. | `res://src/hud/`          | ✅ done |
 | RunSession        | Run timer, win/lose detection, emits RunEnded signal         | `res://src/run/`          | ✅ done |
 | UpgradePicker     | (removed from scene — code kept dormant)                     | `res://src/ui/`           | ❌ removed |
 | AccountScreen     | Account hub: character roster, crafting tab; navigates to CharacterScreen on select | `res://src/ui/` | ✅ done |
@@ -286,7 +296,7 @@ No manual bool flags — state is always read from tree parameters.
 
 ### Facing During Attack
 
-While a OneShot is active: character rotates to face nearest enemy even while moving. While moving, not attacking: faces movement direction. While idle: faces nearest enemy.
+While a OneShot is active: character rotates to face the cursor's world-plane projection (TargetPosition) even while moving. While moving, not attacking: faces movement direction. While idle, not attacking: faces the cursor world position (not nearest enemy — the cursor drives facing at all times when not moving).
 
 ### Weapon Attachment
 
@@ -318,13 +328,15 @@ Systems communicate via signals only — no direct cross-system method calls.
 | `HealthChanged(float)`      | Player         | HUD (formats to int for display), GameManager |
 | `PlayerDied`                | Player         | RunSession (end run)             |
 | `PlayerHit`                 | Player         | Hud — triggers red screen flash (alpha 0.3 → 0 over 0.15s, real-time tween) |
+| `DamageTaken(float effectiveDamage, bool isMagic)` | PlayerController | WorldHud (spawns floating damage number above player) |
 | `LeveledUp(int)`            | Player         | Hud (level display)              |
-| `SkillFired(int slotIndex, float cooldown, string delivery)` | WeaponController | Hud skill bar (resets cooldown overlay); PlayerController (triggers attack animation via delivery string: "Melee" → shot_right, "Ranged" → shot_left) |
+| `XpChanged(int currentXp, int xpToNextLevel)` | PlayerController | Hud (XP bar value + max) |
+| `SkillFired(int slotIndex, float cooldown, string delivery)` | WeaponController | Hud skill bar (resets cooldown overlay); PlayerController (triggers attack animation via delivery string: "Melee"/"RangeMagic"/other → shot_right, "Ranged" → shot_left) |
 | `Died(position)`            | Enemy          | (reserved — not yet wired)       |
+| `DamageTaken(float effectiveDamage, bool isMagic, bool isCrit)` | EnemyController | WorldHud (spawns floating damage number above enemy; maintains a "dead bar" linger for 2s after death) |
 | `CoinChanged(int)`          | RunSession     | Hud (coin counter)               |
 | `MapReady`                  | DungeonGenerator | EnemySpawner (start wave timer); EnemyController pre-placed instances (unlock idle→chase transition) |
-| `RunTimerExpired`           | RunSession     | EnemySpawner (spawn boss)        |
-| `RunEnded(result)`          | RunSession     | CharacterManager (flush coins/XP/level via `RecordRunCompletion`) |
+| `RunEnded(bool won, int levelReached, float elapsed)` | RunSession | RunEndOverlay (show results, flush run to character) |
 | `FocusChanged(float current, float max)` | PlayerController | HUD (Focus bar) |
 | `ShieldChanged(float current, float max)` | PlayerController | HUD (Focus Shield bar — all archetypes) |
 
