@@ -6,7 +6,7 @@
 
 Top-down action RPG in the vein of Diablo and Path of Exile — deliberate, build-driven combat with deep skill and item systems. **Fully craft-driven:** items, skills, and maps are all obtained through crafting. Enemies drop only crafting materials; there are no direct item drops. The crafting system is the progression engine. Godot 4.6, C#, Forward Plus renderer. 3D world with custom voxel-art style characters, perspective camera.
 
-At the start of every session: first run the **Consistency Check** below, then read `docs/index.md` to orient, then read `docs/todo-technical.md` per the **Session-Start Todo Behaviour** section below. Read `docs/technical-tips.md` before any 3D asset, animation, or bone work. Read `docs/color-scheme.md` before any visual, UI, VFX, or material work.
+At the start of every session: first run the **Consistency Check** below, then read `docs/index.md` to orient, then read `docs/technical-todo.md` per the **Session-Start Todo Behaviour** section below. Read `docs/technical-tips.md` before any 3D asset, animation, or bone work. Read `docs/color-scheme.md` before any visual, UI, VFX, or material work.
 
 ---
 
@@ -69,7 +69,7 @@ All UI styling goes through `assets/ui/game_theme.tres`.
 
 ## Session-Start Todo Behaviour
 
-When reading `docs/todo-technical.md` at session start:
+When reading `docs/technical-todo.md` at session start:
 1. **Report** any items already ticked off / marked done — list them and flag for cleanup. Do not edit the file.
 2. **List** a few open items for situational awareness.
 3. **Recommend** one open item to tackle next — only if the recommendation is obvious from the todo text alone, with no code or doc scanning required. If not obvious, skip the recommendation entirely.

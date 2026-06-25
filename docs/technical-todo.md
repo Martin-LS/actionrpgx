@@ -19,6 +19,8 @@ Items where the GDD defines the design but no corresponding technical specificat
 
 ## Systems / Features
 
+- [x] Spec and implement re-roll for v1 (all random).
+
 > **Not in scope.**
 
 - [ ] Map selection screen — currently one hardcoded arena; no selection or variety

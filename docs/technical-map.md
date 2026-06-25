@@ -1,6 +1,6 @@
 # Technical Design Document — Map Generation
 
-> Part of the technical docs. See also `gdd-map.md` for design intent, biomes, and chunk types.
+> Part of the technical docs. See also `design-map.md` for design intent, biomes, and chunk types.
 > This doc covers the runtime architecture: data flow, generator algorithm, file locations, and extension points.
 
 ---

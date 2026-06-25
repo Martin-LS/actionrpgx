@@ -1,6 +1,6 @@
 # Game Design Document — UI & HUD
 
-> Part of the GDD. Interaction flows and component patterns: `gdd-ui-mechanics.md`. Item tiers, gear slot roles, stat tables: `gdd-progression.md`. Combat and run structure: `gdd-mechanics.md`.
+> Part of the design docs. Interaction flows and component patterns: `design-ui-mechanics.md`. Item tiers, gear slot roles, stat tables: `design-progression.md`. Combat and run structure: `design-mechanics.md`.
 > Living document — details will evolve as the game is playtested.
 
 ## HUD (In-Run)
@@ -12,8 +12,8 @@
 - **Skill bar** — bottom-center of the HUD. Contains 5 skill slots (Q E R F + mouse) and a dedicated Dodge cooldown indicator on the far right:
   - Skill slots: Show equipped skills with independent cooldown states (greyed out and fills from bottom during cooldown). Empty slots are visually empty.
   - Dodge indicator: Positioned to the right of the skill slots, separated by a visual gap. Re-uses the skill slot design (filling from bottom as the 1-second cooldown recovers) and is labeled "Space" to denote its activation keybind.
-- **Floating HP bar** — above both player and enemies (see Hit Feedback in `gdd-mechanics.md` for colours and visibility rules)
-- **Damage numbers** — float upward from the hit point on every hit, colour-coded by damage type and crit (see Hit Feedback in `gdd-mechanics.md`)
+- **Floating HP bar** — above both player and enemies (see Hit Feedback in `design-mechanics.md` for colours and visibility rules)
+- **Damage numbers** — float upward from the hit point on every hit, colour-coded by damage type and crit (see Hit Feedback in `design-mechanics.md`)
 - [TBD] Minimap
 
 ---
@@ -47,7 +47,7 @@ Full management hub for the selected character. Two tabs: **Loadout** (default) 
 
 Both tabs are always visible; empty tabs are not locked or greyed out.
 
-See `gdd-ui-mechanics.md` for all click/interaction flows within the Character Screen.
+See `design-ui-mechanics.md` for all click/interaction flows within the Character Screen.
 
 ### Run Results Overlay
 

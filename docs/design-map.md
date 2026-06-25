@@ -1,6 +1,6 @@
 # Game Design Document — Maps
 
-> Part of the GDD. See also `gdd-mechanics.md` for run structure, enemies, and map attributes.
+> Part of the design docs. See also `design-mechanics.md` for run structure, enemies, and map attributes.
 > Living document — details will evolve as the generator and chunk library are built out.
 
 ---

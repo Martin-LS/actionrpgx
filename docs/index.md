@@ -8,7 +8,7 @@ Quick reference for every doc in this folder. Load this first each session to kn
 
 | File | When to read |
 |------|--------------|
-| [todo-technical.md](todo-technical.md) | Every session — check what's pending, tick off anything completed |
+| [technical-todo.md](technical-todo.md) | Every session — check what's pending, tick off anything completed |
 
 ---
 
@@ -25,13 +25,13 @@ Quick reference for every doc in this folder. Load this first each session to kn
 
 | File | Contents |
 |------|----------|
-| [gdd-mechanics.md](gdd-mechanics.md) | Core loop, combat, archetypes, enemies, focus system, damage types, run structure, hit feedback |
-| [gdd-skills.md](gdd-skills.md) | Skill design rules, all 11 skill prototypes, AoE and targeting rules, delivery types |
-| [gdd-augments.md](gdd-augments.md) | Skill Augments and Equipment Augments — v1 augment list, trigger system, resolution order, prototypes |
-| [gdd-progression.md](gdd-progression.md) | Meta-progression, gear slots (Weapon/Hat/Body/Ring/Skills), item tiers, currencies, inventory tabs |
-| [gdd-map.md](gdd-map.md) | Map design — biomes, chunk types, procedural assembly, map attributes |
-| [gdd-ui.md](gdd-ui.md) | Screen layouts and HUD — screen hierarchy, Loadout tab layout, HUD elements, pause menu |
-| [gdd-ui-mechanics.md](gdd-ui-mechanics.md) | Interaction model — all click flows for Skills, Augments, and Equipment tabs/slots/modify panels |
+| [design-mechanics.md](design-mechanics.md) | Core loop, combat, archetypes, enemies, focus system, damage types, run structure, hit feedback |
+| [design-skills.md](design-skills.md) | Skill design rules, all 11 skill prototypes, AoE and targeting rules, delivery types |
+| [design-augments.md](design-augments.md) | Skill Augments and Equipment Augments — v1 augment list, trigger system, resolution order, prototypes |
+| [design-progression.md](design-progression.md) | Meta-progression, gear slots (Weapon/Hat/Body/Ring/Skills), item tiers, currencies, inventory tabs |
+| [design-map.md](design-map.md) | Map design — biomes, chunk types, procedural assembly, map attributes |
+| [design-ui.md](design-ui.md) | Screen layouts and HUD — screen hierarchy, Loadout tab layout, HUD elements, pause menu |
+| [design-ui-mechanics.md](design-ui-mechanics.md) | Interaction model — all click flows for Skills, Augments, and Equipment tabs/slots/modify panels |
 
 ---
 
@@ -50,6 +50,6 @@ Quick reference for every doc in this folder. Load this first each session to kn
 
 | File | Contents |
 |------|----------|
-| [game-design-direction.md](game-design-direction.md) | Parked design discussions — open but unresolved ideas; resolved items are removed and moved to GDD |
-| [gd-ideas.md](gd-ideas.md) | Uncommitted design concepts parking lot — nothing here is scheduled or spec'd |
+| [design-directions.md](design-directions.md) | Parked design discussions — open but unresolved ideas; resolved items are removed and moved to design docs |
+| [design-ideas.md](design-ideas.md) | Uncommitted design concepts parking lot — nothing here is scheduled or spec'd |
 | [ref-poe2-skills.md](ref-poe2-skills.md) | PoE2 skill reference table — design inspiration only, adapt concepts not names |

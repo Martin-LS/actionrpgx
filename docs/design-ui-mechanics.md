@@ -1,13 +1,13 @@
 # Game Design Document — UI Interaction Mechanics
 
-> Part of the GDD. Screen layouts and HUD: `gdd-ui.md`. Item tiers, gear slot roles, stat tables: `gdd-progression.md`.
+> Part of the design docs. Screen layouts and HUD: `design-ui.md`. Item tiers, gear slot roles, stat tables: `design-progression.md`.
 > Living document — details will evolve as the game is playtested.
 
 ## Character Screen — Interaction Model
 
 **Reusable components — the core pattern.** Skills and Augments share one design pattern: a component that shows a Craft button and a list of owned items, reused in both the inventory tab and inside slot interactions. The component's event handlers differ by context (inventory vs. slot), but the visual is identical — styling changes propagate everywhere automatically.
 
-* **Re-roll functionality:** The `[ Re-roll ]` buttons shown on skills, gear, and augments throughout the Modify panels are **disabled / deferred to v2** for the v1 milestone (as randomized stats and re-rolling costs are out of scope for v1).
+* **Re-roll functionality:** The `[ Re-roll ]` buttons shown on skills and augments throughout the Modify panels are active for v1. Re-rolling costs 1 Common material and rolls a random new trigger chance in the range `[10 * Tier, 30 * Tier]` percentage.
 * **Delete rule:** Items can only be permanently deleted while **unequipped / unslotted / unsocketed**. Equipped gear, slotted skills, and socketed augments cannot be deleted directly — they must first be detached (returned to inventory), then deleted from the inventory view. This applies universally across all item types.
 * **Un-Socket / Un-Equip button visibility:** The **Un-Socket** button (skills and all augments) and **Un-Equip** button (gear) only appear in a Modify panel when the item is actually attached to a slot. When a Modify panel is opened from the inventory or from an empty slot context, these buttons are not shown.
 
@@ -30,7 +30,7 @@
 ### Skill Modify Panel
 
 ```
-[ Skill Name ]  [ Upgrade ]  [ Re-roll (v2) ]  [ Un-Socket ]   ← Un-Socket only when skill is slotted
+[ Skill Name ]  [ Upgrade ]  [ Re-roll ]  [ Un-Socket ]   ← Un-Socket only when skill is slotted
 ─────────────────────────────────────────────────────
 [ A1 ]   │  < context-sensitive right panel >
 [ A2 ]   │
@@ -41,7 +41,7 @@
 - **Empty slot** → right panel shows the Augments component (same as Augments inventory tab; different handlers):
   - Craft button → crafts augment + auto-slots it → right panel transitions to filled-slot view
   - Click an owned augment → slots it → right panel transitions to filled-slot view
-- **Filled slot** → right panel shows: augment name, **Upgrade**, **Re-roll (v2)**, **Un-Socket**
+- **Filled slot** → right panel shows: augment name, **Upgrade**, **Re-roll**, **Un-Socket**
   - Un-Socket → removes augment from slot (returns to augments inventory) → right panel returns to empty-slot view
 
 ---
@@ -55,7 +55,7 @@
 
 ### Skill Augment Modify Panel (from inventory)
 
-Augment name + **Upgrade** + **Re-roll (v2)** (no Remove). Same visual as the filled-slot view in the Skill Modify Panel.
+Augment name + **Upgrade** + **Re-roll** (no Remove). Same visual as the filled-slot view in the Skill Modify Panel.
 
 ---
 
@@ -68,7 +68,7 @@ Augment name + **Upgrade** + **Re-roll (v2)** (no Remove). Same visual as the fi
 
 ### Equipment Augment Modify Panel (from inventory)
 
-Augment name + **Upgrade** + **Re-roll (v2)** (no Remove). Same visual as the filled-slot view in the Equipment Modify Panel.
+Augment name + **Upgrade** + **Re-roll** (no Remove). Same visual as the filled-slot view in the Equipment Modify Panel.
 
 ---
 
@@ -110,7 +110,7 @@ Reusable component: a VBoxContainer whose content changes in-place through three
 ### Equipment Modify Panel
 
 ```
-[ Item Name ]  [ Upgrade ]  [ Re-roll (v2) ]  [ Un-Equip ]   ← Un-Equip only when gear is equipped to a character slot
+[ Item Name ]  [ Upgrade ]  [ Re-roll ]  [ Un-Equip ]   ← Un-Equip only when gear is equipped to a character slot
 ─────────────────────────────────────────────────────
 [ A1 ]   │  < context-sensitive right panel >
 [ A2 ]   │
@@ -121,5 +121,5 @@ Reusable component: a VBoxContainer whose content changes in-place through three
 - **Empty slot** → right panel shows the Equipment Augments component (same as Equipment Augments inventory tab; different handlers):
   - Craft button → crafts Equipment Augment + auto-sockets it → right panel transitions to filled-slot view
   - Click an owned Equipment Augment → sockets it → right panel transitions to filled-slot view
-- **Filled slot** → right panel shows: augment name, **Upgrade**, **Re-roll (v2)**, **Un-Socket**
+- **Filled slot** → right panel shows: augment name, **Upgrade**, **Re-roll**, **Un-Socket**
   - Un-Socket → removes augment from slot (returns to Equipment Augments inventory) → right panel returns to empty-slot view

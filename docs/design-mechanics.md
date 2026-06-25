@@ -1,6 +1,6 @@
 # Game Design Document — Mechanics & Characters
 
-> Part of the GDD. See also `gdd-skills.md` for skill design, skill prototypes, and AoE rules. See `gdd-augments.md` for Skill Augments, Equipment Augments, and augment prototypes. See `gdd-progression.md` for meta-progression, gear, crafting, and UI.
+> Part of the design docs. See also `design-skills.md` for skill design, skill prototypes, and AoE rules. See `design-augments.md` for Skill Augments, Equipment Augments, and augment prototypes. See `design-progression.md` for meta-progression, gear, crafting, and UI.
 > Living document — details will evolve as the game is playtested.
 
 ## Overview
@@ -137,7 +137,7 @@ Idle and run animations are shared across all weapon types in v1.
 
 ### Hit Feedback
 
-**Design reference: Diablo 4.** No character animation or action interrupt on hit — the player stays in full control through all damage. There is no stagger system, no hit-recovery stat, no flinch animation. Defensive build variance comes entirely from Equipment Augments (see `gdd-progression.md`).
+**Design reference: Diablo 4.** No character animation or action interrupt on hit — the player stays in full control through all damage. There is no stagger system, no hit-recovery stat, no flinch animation. Defensive build variance comes entirely from Equipment Augments (see `design-progression.md`).
 
 Danger is communicated through health/shield depletion, not through action interruption. This keeps horde combat fluid regardless of difficulty.
 
@@ -172,7 +172,7 @@ Both player-received and enemy-received hits produce damage numbers. There is no
 
 ### Skills
 
-> Skill design rules, targeting shapes, AoE rules, skill prototypes, and damage model are in `docs/gdd-skills.md`.
+> Skill design rules, targeting shapes, AoE rules, skill prototypes, and damage model are in `docs/design-skills.md`.
 
 ### Focus
 
@@ -376,7 +376,7 @@ Drop rarity for crafting materials scales with tier — the more exotic the item
 
 ## Maps
 
-> Map design, procedural generation, biomes, chunks, and obstacle props are documented in `docs/gdd-map.md`.
+> Map design, procedural generation, biomes, chunks, and obstacle props are documented in `docs/design-map.md`.
 
 Maps are the arenas where runs take place. Each map has a **Map Level** attribute that scales kill XP — killing an enemy grants `1 XP × map level` directly, on top of any XP Shard the enemy drops.
 

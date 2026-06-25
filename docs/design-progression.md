@@ -1,6 +1,6 @@
 # Game Design Document — Meta-Progression, Gear & UI
 
-> Part of the GDD. See also `gdd-mechanics.md` for combat, characters, and run structure. See `gdd-skills.md` for skill design and prototypes. See `gdd-augments.md` for all augment design, prototypes, and augment resolution. See `gdd-ui.md` for screen layouts and HUD. See `gdd-ui-mechanics.md` for interaction flows.
+> Part of the design docs. See also `design-mechanics.md` for combat, characters, and run structure. See `design-skills.md` for skill design and prototypes. See `design-augments.md` for all augment design, prototypes, and augment resolution. See `design-ui.md` for screen layouts and HUD. See `design-ui-mechanics.md` for interaction flows.
 > Living document — details will evolve as the game is playtested.
 
 ## Meta-Progression (Between Runs)
@@ -46,7 +46,7 @@ Skill items are crafted (Craft New — accessible from an empty skill slot, left
 
 #### Skill Augments
 
-> Skill Augment design, v1 augment list, trigger system, and augment resolution order are in `docs/gdd-augments.md`.
+> Skill Augment design, v1 augment list, trigger system, and augment resolution order are in `docs/design-augments.md`.
 
 **Skill Augment slots per tier:**
 
@@ -62,7 +62,7 @@ Armour pieces (Hat and Body) carry a **category tag** (`Heavy`, `Medium`, `Light
 
 #### Equipment Augments
 
-> Equipment Augment design, v1 augment list, and trigger system are in `docs/gdd-augments.md`.
+> Equipment Augment design, v1 augment list, and trigger system are in `docs/design-augments.md`.
 
 **Equipment Augment slots per tier:**
 
@@ -76,7 +76,7 @@ Armour pieces (Hat and Body) carry a **category tag** (`Heavy`, `Medium`, `Light
 
 Weapons do two things: provide the **base damage number** for all skill damage calculations, and set **Weapon Range**. No weapon gates any skill — every skill fires regardless of what is equipped.
 
-**Weapon is the root of the damage number.** The skill defines the damage type and multiplier on top of the weapon's base. Upgrading weapon tier is the primary way to increase damage output. Each weapon type has a **passive identity bonus** that applies when the equipped skill's damage type matches the weapon's associated type — rewarding matched builds without restricting those who don't.
+**Weapon is the root of the damage number.** The skill defines the damage type and multiplier on top of the weapon's base. Upgrading weapon tier is the primary way to increase damage output. Each weapon type has a **passive identity bonus** that applies globally to all skills and damage types — rewarding all builds while maintaining distinct weapon playstyles.
 
 **Delivery is fixed per weapon type.** The weapon always drives the attack animation — a Sword always swings, a Bow always shoots, a Wand always fires a bolt. Skills do not override delivery.
 
@@ -181,4 +181,4 @@ Crafting materials are the primary run reward — the only meaningful thing enem
 
 ## UI & HUD
 
-See `gdd-ui.md` for screen layouts and HUD, and `gdd-ui-mechanics.md` for interaction flows.
+See `design-ui.md` for screen layouts and HUD, and `design-ui-mechanics.md` for interaction flows.

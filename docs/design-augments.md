@@ -1,6 +1,6 @@
 # Game Design Document — Augments
 
-> Part of the GDD. See `gdd-progression.md` for gear slots, currencies, and UI. See `gdd-skills.md` for skill prototypes and targeting. See `gdd-mechanics.md` for EoT mechanics and damage pipeline.
+> Part of the design docs. See `design-progression.md` for gear slots, currencies, and UI. See `design-skills.md` for skill prototypes and targeting. See `design-mechanics.md` for EoT mechanics and damage pipeline.
 > Living document — details will evolve as the game is playtested.
 
 ---
@@ -55,7 +55,7 @@ Skill Augments are crafted (Craft New entry point TBD — not yet implemented; p
 
 ## Equipment Tags
 
-Armour pieces (Hat and Body) carry a **category tag** that identifies their type. The tag drives the stat profile described in Hat & Body (see `gdd-progression.md`). No augment gating — any augment can socket into any equipment item regardless of category.
+Armour pieces (Hat and Body) carry a **category tag** that identifies their type. The tag drives the stat profile described in Hat & Body (see `design-progression.md`). No augment gating — any augment can socket into any equipment item regardless of category.
 
 | Armour | Tag |
 |---|---|

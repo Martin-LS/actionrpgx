@@ -1,6 +1,6 @@
 # Game Design Document — Skills
 
-> Part of the GDD. See `gdd-mechanics.md` for combat, characters, focus, damage types, and run structure. See `gdd-augments.md` for Skill Augments, Equipment Augments, and augment prototypes.
+> Part of the design docs. See `design-mechanics.md` for combat, characters, focus, damage types, and run structure. See `design-augments.md` for Skill Augments, Equipment Augments, and augment prototypes.
 > Living document — details will evolve as the game is playtested.
 
 ---
@@ -27,7 +27,7 @@ All other tags (e.g. `Attack`, `Burst`, `Debuff`) are post-v1. Tags are additive
 
 #### Area of Effect (AoE)
 
-Any skill that damages all enemies within a radius carries the `AoE` tag. The radius is a **skill property** — a fixed constant per skill owned by the Balancer. Weapon range has no influence on AoE radius (see Range resolution table in `gdd-mechanics.md`).
+Any skill that damages all enemies within a radius carries the `AoE` tag. The radius is a **skill property** — a fixed constant per skill owned by the Balancer. Weapon range has no influence on AoE radius (see Range resolution table in `design-mechanics.md`).
 
 **AoE modifier math (PoE / Last Epoch convention):**
 Modifiers increase *area*, not radius directly. The effective radius is:
@@ -85,7 +85,7 @@ All archetypes start with plain entity_burst in slot 1, no augments pre-socketed
 |---|---|
 | Description | What this skill is designed to prove or do (v1: mechanic proof; future: named skill flavour) |
 | Kind | `Normal` = real named skill (post-v1). `Prototype` = all v1 skills are this kind — craftable. `EngineProof` = reserved for future use, nothing currently marked as such. |
-| Targeting shape | Self / Position / Entity — how the skill resolves its target (see Targeting in `gdd-mechanics.md`) |
+| Targeting shape | Self / Position / Entity — how the skill resolves its target (see Targeting in `design-mechanics.md`) |
 | Wind-up | Seconds of delay before effect lands; 0 = instant |
 | Damage pattern | Burst (single hit) / Tick (over duration) / None (debuff or utility only) |
 | Stack limit | Max simultaneous active instances; configurable per skill; — = not a zone skill |
@@ -336,6 +336,6 @@ The effect the aura produces (damage AoE, player buff, enemy debuff AoE) is defi
 
 ---
 
-**Weapon is the root of the damage number.** Each weapon has a base damage value that increases with tier. The skill defines the damage type — entity_burst is physical (placeholder); future named skills define their own type. The weapon's identity bonus (flat % damage or crit) applies universally to all skills regardless of damage type — no skill-type gate. Archetype damage output scales through primary stat growth (see Archetype Stat Multipliers in `gdd-mechanics.md`), not an archetype-level multiplier table.
+**Weapon is the root of the damage number.** Each weapon has a base damage value that increases with tier. The skill defines the damage type — entity_burst is physical (placeholder); future named skills define their own type. The weapon's identity bonus (flat % damage or crit) applies universally to all skills regardless of damage type — no skill-type gate. Archetype damage output scales through primary stat growth (see Archetype Stat Multipliers in `design-mechanics.md`), not an archetype-level multiplier table.
 
 **Skills do not carry a per-skill damage multiplier.** Every skill draws from the same damage number: `weapon base × stat block`. A tick skill and a burst skill deal the same raw damage per hit — the design difference is delivery: tick rate, cooldown, AoE, and Focus cost. DPS balance between skills is the Balancer's domain, owned through tick rate and cooldown tuning. There is no `DamageMultiplier` field on a skill.
