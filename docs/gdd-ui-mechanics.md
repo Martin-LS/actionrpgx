@@ -8,6 +8,8 @@
 **Reusable components — the core pattern.** Skills and Augments share one design pattern: a component that shows a Craft button and a list of owned items, reused in both the inventory tab and inside slot interactions. The component's event handlers differ by context (inventory vs. slot), but the visual is identical — styling changes propagate everywhere automatically.
 
 * **Re-roll functionality:** The `[ Re-roll ]` buttons shown on skills, gear, and augments throughout the Modify panels are **disabled / deferred to v2** for the v1 milestone (as randomized stats and re-rolling costs are out of scope for v1).
+* **Delete rule:** Items can only be permanently deleted while **unequipped / unslotted / unsocketed**. Equipped gear, slotted skills, and socketed augments cannot be deleted directly — they must first be detached (returned to inventory), then deleted from the inventory view. This applies universally across all item types.
+* **Un-Socket / Un-Equip button visibility:** The **Un-Socket** button (skills and all augments) and **Un-Equip** button (gear) only appear in a Modify panel when the item is actually attached to a slot. When a Modify panel is opened from the inventory or from an empty slot context, these buttons are not shown.
 
 ---
 
@@ -28,7 +30,7 @@
 ### Skill Modify Panel
 
 ```
-[ Skill Name ]  [ Upgrade ]  [ Re-roll (v2) ]  [ Remove ]   ← Remove only when skill is slotted
+[ Skill Name ]  [ Upgrade ]  [ Re-roll (v2) ]  [ Un-Socket ]   ← Un-Socket only when skill is slotted
 ─────────────────────────────────────────────────────
 [ A1 ]   │  < context-sensitive right panel >
 [ A2 ]   │
@@ -39,8 +41,8 @@
 - **Empty slot** → right panel shows the Augments component (same as Augments inventory tab; different handlers):
   - Craft button → crafts augment + auto-slots it → right panel transitions to filled-slot view
   - Click an owned augment → slots it → right panel transitions to filled-slot view
-- **Filled slot** → right panel shows: augment name, **Upgrade**, **Re-roll (v2)**, **Remove**
-  - Remove → unslots augment (returns to augments inventory) → right panel returns to empty-slot view
+- **Filled slot** → right panel shows: augment name, **Upgrade**, **Re-roll (v2)**, **Un-Socket**
+  - Un-Socket → removes augment from slot (returns to augments inventory) → right panel returns to empty-slot view
 
 ---
 
@@ -98,17 +100,17 @@ Reusable component: a VBoxContainer whose content changes in-place through three
 
 ### Equipment Slot (character loadout)
 
-*(Separate spec — not yet implemented.)*
-
-- **Empty equipment slot** → opens the Equipment component (same VBoxContainer, different context)
+- **Empty equipment slot** → opens the Equipment component overlay (same VBoxContainer as the inventory tab; different handlers):
+  - **Craft button** → skips type-pick step (slot type already known from context); jumps straight to subtype list for that slot type → craft (1 material) → auto-equips to the clicked slot → opens Equipment Modify Panel with **Un-Equip** visible
+  - **Click an owned gear item** → list filtered to matching slot type only → equip to the clicked slot → opens Equipment Modify Panel with **Un-Equip** visible
 - **Filled equipment slot**:
-  - **Left-click** → opens Equipment Modify Panel directly
-  - **Right-click** → unequips; item returns to inventory
+  - **Left-click** → opens Equipment Modify Panel directly (with **Un-Equip** visible)
+  - **Right-click** → un-equips; item returns to inventory (blocked if inventory full)
 
 ### Equipment Modify Panel
 
 ```
-[ Item Name ]  [ Upgrade ]  [ Re-roll (v2) ]  [ Remove ]   ← Remove only when item is equipped
+[ Item Name ]  [ Upgrade ]  [ Re-roll (v2) ]  [ Un-Equip ]   ← Un-Equip only when gear is equipped to a character slot
 ─────────────────────────────────────────────────────
 [ A1 ]   │  < context-sensitive right panel >
 [ A2 ]   │
@@ -117,7 +119,7 @@ Reusable component: a VBoxContainer whose content changes in-place through three
 
 **Augment slot selected (left column):**
 - **Empty slot** → right panel shows the Equipment Augments component (same as Equipment Augments inventory tab; different handlers):
-  - Craft button → crafts Equipment Augment + auto-slots it → right panel transitions to filled-slot view
-  - Click an owned Equipment Augment → slots it → right panel transitions to filled-slot view
-- **Filled slot** → right panel shows: augment name, **Upgrade**, **Re-roll (v2)**, **Remove**
-  - Remove → unslots augment (returns to Equipment Augments inventory) → right panel returns to empty-slot view
+  - Craft button → crafts Equipment Augment + auto-sockets it → right panel transitions to filled-slot view
+  - Click an owned Equipment Augment → sockets it → right panel transitions to filled-slot view
+- **Filled slot** → right panel shows: augment name, **Upgrade**, **Re-roll (v2)**, **Un-Socket**
+  - Un-Socket → removes augment from slot (returns to Equipment Augments inventory) → right panel returns to empty-slot view

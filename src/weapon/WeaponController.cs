@@ -111,7 +111,7 @@ public partial class WeaponController : Node
     {
         public SkillData?   Skill;
         public float        CooldownTimer;
-        public List<string> EotIds;
+        public List<(string Id, float Chance)> Eots;
         public bool         HasMagicDamage;
         public Items.DamageType EffectiveDamageType;
         public float        CritChanceBonus;
@@ -131,15 +131,19 @@ public partial class WeaponController : Node
     public void SetPreferredDelivery(string delivery)      => _preferredDelivery = delivery;
 
     public void SetSlot(int slotIndex, SkillData skill,
-        List<string>? eotIds = null, bool hasMagicDamage = false, float critChanceBonus = 0f)
+        List<(string Id, float Chance)>? augmentEots = null, bool hasMagicDamage = false, float critChanceBonus = 0f)
     {
         if (slotIndex < 0 || slotIndex >= 5) return;
         _slots[slotIndex].Skill            = skill;
         _slots[slotIndex].CooldownTimer    = 0f;
-        var inherent = skill.InherentEotIds ?? System.Array.Empty<string>();
-        var merged   = new List<string>(inherent);
-        if (eotIds != null) merged.AddRange(eotIds);
-        _slots[slotIndex].EotIds           = merged;
+        var eots = new List<(string Id, float Chance)>();
+        foreach (var id in skill.InherentEotIds ?? System.Array.Empty<string>())
+        {
+            var eot = EotRegistry.Get(id);
+            eots.Add((id, eot?.ApplyChance ?? 1f));
+        }
+        if (augmentEots != null) eots.AddRange(augmentEots);
+        _slots[slotIndex].Eots             = eots;
         _slots[slotIndex].HasMagicDamage   = hasMagicDamage;
         _slots[slotIndex].EffectiveDamageType = hasMagicDamage ? Items.DamageType.Magic : skill.DamageType;
         _slots[slotIndex].CritChanceBonus  = critChanceBonus;
@@ -341,7 +345,7 @@ public partial class WeaponController : Node
             if (node is not Enemies.EnemyController enemy || enemy.IsQueuedForDeletion()) continue;
             if (origin.DistanceTo(enemy.GlobalPosition) > slot.Skill!.Range) continue;
             enemy.TakeDamage(baseDmg, dmgType, critMult > 1f);
-            ApplyEots(enemy, slot.EotIds, critMult);
+            ApplyEots(enemy, slot.Eots, critMult);
         }
 
         EmitSignal(SignalName.SkillFired, slotIndex, slot.Skill!.Cooldown, "AuraTick");
@@ -368,7 +372,7 @@ public partial class WeaponController : Node
             if (node is not Enemies.EnemyController enemy || enemy.IsQueuedForDeletion()) continue;
             if (origin.DistanceTo(enemy.GlobalPosition) > slot.Skill!.Range) continue;
             enemy.TakeDamage(baseDmg, dmgType, critMult > 1f);
-            ApplyEots(enemy, slot.EotIds, critMult);
+            ApplyEots(enemy, slot.Eots, critMult);
             hit = true;
         }
 
@@ -479,11 +483,10 @@ public partial class WeaponController : Node
 
         if (slot.Skill!.DamagePattern == SkillDamagePattern.None)
         {
-            // Pure debuff: apply inherent EoTs at 100% chance (no probability roll)
-            foreach (var eotId in slot.EotIds)
+            foreach (var (eotId, chance) in slot.Eots)
             {
                 var eot = EotRegistry.Get(eotId);
-                if (eot != null) target.ApplyEot(eot, 1.0f);
+                if (eot != null && GD.Randf() < chance) target.ApplyEot(eot, 1.0f);
             }
             EmitSignal(SignalName.SkillFired, slotIndex, slot.Skill.Cooldown, "Debuff");
             return;
@@ -508,7 +511,7 @@ public partial class WeaponController : Node
                 Radius         = radius,
                 Duration       = slot.Skill.Duration,
                 TickInterval   = BalanceConfig.Skills.TrackedTickRate,
-                EotIds         = slot.EotIds,
+                EotIds         = slot.Eots,
                 CritMultiplier = ttCrit,
             };
             GetTree().Root.AddChild(zone);
@@ -537,7 +540,7 @@ public partial class WeaponController : Node
         {
             float windupDelay = slot.Skill!.Cooldown * BalanceConfig.Skills.MeleeWindupFraction;
             GetTree().CreateTimer(windupDelay).Timeout +=
-                () => { if (!target.IsQueuedForDeletion()) HitMelee(target, baseDmg, dmgType, slot.EotIds, critMultiplier); };
+                () => { if (!target.IsQueuedForDeletion()) HitMelee(target, baseDmg, dmgType, slot.Eots, critMultiplier); };
         }
         else
         {
@@ -546,7 +549,7 @@ public partial class WeaponController : Node
             var direction = new Vector3(diff.X, 0f, diff.Z).Normalized();
 
             var projectile = ProjectileScene.Instantiate<Projectile>();
-            projectile.Initialize(direction, baseDmg, dmgType, slot.EotIds, false, false, critMultiplier);
+            projectile.Initialize(direction, baseDmg, dmgType, slot.Eots, false, false, critMultiplier);
             GetTree().Root.AddChild(projectile);
             projectile.GlobalPosition = new Vector3(origin.X, target.GlobalPosition.Y, origin.Z);
         }
@@ -574,7 +577,7 @@ public partial class WeaponController : Node
             if (node is not Enemies.EnemyController enemy || enemy.IsQueuedForDeletion()) continue;
             if (origin.DistanceTo(enemy.GlobalPosition) > slot.Skill!.Range) continue;
             enemy.TakeDamage(baseDmg, dmgType, critMult > 1f);
-            ApplyEots(enemy, slot.EotIds, critMult);
+            ApplyEots(enemy, slot.Eots, critMult);
         }
 
         EmitSignal(SignalName.SkillFired, slotIndex, slot.Skill!.Cooldown, "SelfBurst");
@@ -612,7 +615,7 @@ public partial class WeaponController : Node
                 TriggerRadius = slot.Skill.TriggerRadius,
                 Duration      = slot.Skill.Duration,
                 ArmTime       = slot.Skill.ArmTime,
-                EotIds        = slot.EotIds,
+                EotIds        = slot.Eots,
                 CritMultiplier = critMult,
             };
             GetTree().Root.AddChild(trap);
@@ -642,7 +645,7 @@ public partial class WeaponController : Node
                 float            capCrit   = critMult;
                 bool             capIsCrit = isCrit;
                 float            capRadius = radius;
-                var              capEots   = slot.EotIds;
+                var              capEots   = slot.Eots;
                 Vector3          capPos    = worldPos;
                 float            capWindUp = slot.Skill.WindUp;
 
@@ -669,7 +672,7 @@ public partial class WeaponController : Node
                     if (node is not Enemies.EnemyController enemy || enemy.IsQueuedForDeletion()) continue;
                     if (worldPos.DistanceTo(enemy.GlobalPosition) > radius) continue;
                     enemy.TakeDamage(baseDmg, dmgType, isCrit);
-                    ApplyEots(enemy, slot.EotIds, critMult);
+                    ApplyEots(enemy, slot.Eots, critMult);
                 }
                 SpawnZoneBurstVfx(worldPos);
             }
@@ -704,7 +707,7 @@ public partial class WeaponController : Node
                     Radius         = radius,
                     Duration       = slot.Skill!.Duration,
                     TickInterval   = BalanceConfig.Skills.StackableZoneRate,
-                    EotIds         = slot.EotIds,
+                    EotIds         = slot.Eots,
                     CritMultiplier = critMult,
                 };
                 GetTree().Root.AddChild(zone);
@@ -720,7 +723,7 @@ public partial class WeaponController : Node
                     Radius         = radius,
                     Duration       = slot.Skill!.Duration,
                     TickInterval   = BalanceConfig.Skills.FixedZoneTickRate,
-                    EotIds         = slot.EotIds,
+                    EotIds         = slot.Eots,
                     CritMultiplier = critMult,
                 };
                 GetTree().Root.AddChild(zone);
@@ -733,12 +736,12 @@ public partial class WeaponController : Node
     }
 
     private void HitMelee(Enemies.EnemyController target, float damage, Items.DamageType dmgType,
-        List<string> eotIds, float critMultiplier)
+        List<(string Id, float Chance)> eots, float critMultiplier)
     {
         bool   isCrit  = critMultiplier > 1f;
         var    hitPos  = target.GlobalPosition;
         target.TakeDamage(damage, dmgType, isCrit);
-        ApplyEots(target, eotIds, critMultiplier);
+        ApplyEots(target, eots, critMultiplier);
         SpawnHitVfx(hitPos);
         var hitFx = EntityBurstVfxScene.Instantiate<Node3D>();
         GetTree().Root.AddChild(hitFx);
@@ -747,12 +750,12 @@ public partial class WeaponController : Node
         GetTree().CreateTimer(0.6).Timeout += hitFx.QueueFree;
     }
 
-    private void ApplyEots(Enemies.EnemyController enemy, List<string> eotIds, float critMultiplier)
+    private void ApplyEots(Enemies.EnemyController enemy, List<(string Id, float Chance)> eots, float critMultiplier)
     {
-        foreach (var eotId in eotIds)
+        foreach (var (eotId, chance) in eots)
         {
             var eot = EotRegistry.Get(eotId);
-            if (eot != null && GD.Randf() < eot.ApplyChance)
+            if (eot != null && GD.Randf() < chance)
                 enemy.ApplyEot(eot, critMultiplier);
         }
     }

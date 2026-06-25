@@ -13,7 +13,7 @@ public partial class TriggerZone : Node3D
     public float            TriggerRadius;
     public float            Duration;
     public float            ArmTime;
-    public List<string>     EotIds         = new();
+    public List<(string Id, float Chance)> EotIds = new();
     public float            CritMultiplier = 1f;
 
     private float                _elapsed;
@@ -76,10 +76,10 @@ public partial class TriggerZone : Node3D
             if (node is not EnemyController enemy || enemy.IsQueuedForDeletion()) continue;
             if (GlobalPosition.DistanceTo(enemy.GlobalPosition) > BlastRadius) continue;
             enemy.TakeDamage(Damage, DmgType, isCrit);
-            foreach (var eotId in EotIds)
+            foreach (var (eotId, chance) in EotIds)
             {
                 var eot = EotRegistry.Get(eotId);
-                if (eot != null && GD.Randf() < eot.ApplyChance)
+                if (eot != null && GD.Randf() < chance)
                     enemy.ApplyEot(eot, CritMultiplier);
             }
         }

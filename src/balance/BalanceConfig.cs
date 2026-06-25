@@ -223,7 +223,6 @@ public static class BalanceConfig
 
     public static class SkillAugments
     {
-        public const float CritChance     = 0.15f; // TBD — Balancer
         public const float CritMultiplier = 1.5f;  // TBD — Balancer
     }
 }

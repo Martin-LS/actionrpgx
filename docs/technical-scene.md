@@ -122,17 +122,19 @@ CharacterScreen (Control)
         └── Sigils tab ← empty; reserved for future sigil system
 ```
 **Slot interaction model (CharacterScreen.cs):**
-- **Right-click** a filled inventory item → equip to first empty valid slot; if all slots occupied, swap with slot 1 (old item returns to inventory)
-- **Right-click** a filled equipped slot → unequip; item returns to inventory (blocked if inventory full)
-- **Left-click** a filled item (inventory or equipped) → `PopupMenu`: **Modify**, **Delete**
-- **Left-click** an empty gear slot → `ItemPickerPanel` (filtered to slot type)
-- **Left-click** an empty skill slot → `SkillPickerPanel`
-- **Modify** opens a dark modal overlay (`ColorRect` full-screen + centred `PanelContainer`) showing: item name/tier, Upgrade button (costs 1 Common; disabled at max tier or insufficient materials), and augment socket row. Socket buttons: empty → popup from `OwnedCompatibleAugmentInstances`; filled → click to remove augment (returns to inventory).
+- **Right-click** a filled inventory item → equip/slot to first empty valid slot
+- **Right-click** a filled equipped/slotted slot → un-equip/un-socket; item returns to inventory (blocked if inventory full)
+- **Left-click** a filled inventory item → opens Modify panel (no Un-Socket / Un-Equip — item is not attached)
+- **Left-click** a filled equipped/slotted slot → opens Modify panel with **Un-Equip** (gear) or **Un-Socket** (skill) button at top
+- **Left-click** an empty gear slot → opens Equipment component overlay filtered to that slot type; craft skips type-pick step and jumps to subtype list; crafting or selecting auto-equips and opens Equipment Modify Panel
+- **Left-click** an empty skill slot → opens Skill component overlay; craft auto-slots and opens Skill Modify Panel
+- **Delete** is only available from the inventory view for **unequipped / unslotted / unsocketed** items — never from inside a Modify panel for an attached item
+- Modify panels use a two-column layout: left column = augment slot buttons; right panel = context-sensitive (empty slot → pick/craft augment; filled slot → **Upgrade**, **Re-roll (v2)**, **Un-Socket** to remove augment)
 
-**Inventory grids:** 50 slots per tab (5 cols, scrollable), all always visible. Empty slots are dimmed. Augment buttons (Skill Augments / Equipment Augments tabs) open a Delete popup — augments are socketed into items via the Modify panel, not directly equipped. Capacity: `ProfileData.MaxInventory = 50` — counts only unequipped/unsocketed items. If `SelectedCharacter` is null on `_Ready`, redirects to `account_screen.tscn`.
+**Inventory grids:** 50 slots per tab (5 cols, scrollable), all always visible. Empty slots are dimmed. Items in the Skill Augments / Equipment Augments tabs can be permanently deleted only while unslotted/unsocketed — augments are socketed into items via the Modify panel. Capacity: `ProfileData.MaxInventory = 50` — counts only unequipped/unsocketed items. If `SelectedCharacter` is null on `_Ready`, redirects to `account_screen.tscn`.
 
 ### `src/ui/item_picker_panel.tscn`
-Modal overlay opened from gear slot buttons **when the slot is empty** (left-click). Occupied slots use a left-click PopupMenu (Modify / Delete) instead — ItemPickerPanel is never opened for an occupied slot.
+Modal overlay opened from gear slot buttons **when the slot is empty** (left-click). Occupied gear slots open the Equipment Modify Panel directly (with **Un-Equip** button). `ItemPickerPanel` is never opened for an occupied slot.
 ```
 ItemPickerPanel (Control, full-screen)
 ├── Dim (ColorRect, semi-transparent black)
@@ -145,7 +147,7 @@ ItemPickerPanel (Control, full-screen)
 ```
 
 ### `src/ui/skill_picker_panel.tscn`
-Modal overlay opened from skill slot buttons **when the slot is empty** (left-click). Occupied skill slots use a left-click PopupMenu (Modify / Delete) instead.
+Modal overlay opened from skill slot buttons **when the slot is empty** (left-click). Occupied skill slots open the Skill Modify Panel directly (with **Un-Socket** button).
 ```
 SkillPickerPanel (Control, full-screen)
 ├── Dim (ColorRect, semi-transparent black)

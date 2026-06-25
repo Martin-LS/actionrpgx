@@ -73,9 +73,11 @@ public class CharacterData
                 intGain * PrimaryStatConversions.IntToFocusRegen, ModifierSource.Level));
         }
 
-        block.SetBase(StatId.CritChance, dex * PrimaryStatConversions.DexToCritChance);
-        block.SetBase(StatId.CritDamage, 1.5f + str * PrimaryStatConversions.StrToCritDamage);
-        block.SetBase(StatId.Evasion,    dex * PrimaryStatConversions.DexToEvasion);
+        block.SetBase(StatId.CritChance,          dex     * PrimaryStatConversions.DexToCritChance);
+        block.SetBase(StatId.CritDamage,          1.5f + str * PrimaryStatConversions.StrToCritDamage);
+        block.SetBase(StatId.Evasion,             dex     * PrimaryStatConversions.DexToEvasion);
+        block.SetBase(StatId.PhysicalResistance,  str     * PrimaryStatConversions.StrToPhysResistance);
+        block.SetBase(StatId.MagicResistance,     intStat * PrimaryStatConversions.IntToMagResistance);
 
         // Item contributions — flat bonuses, no archetype/level scaling.
         foreach (var (_, instance) in EquippedGear)

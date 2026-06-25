@@ -12,7 +12,8 @@ public partial class CharacterScreen : Control
     private Label         _inventoryInfo     = null!;
     private VBoxContainer _equipmentListArea = null!;
     private GridContainer _skillsGrid        = null!;
-    private GridContainer _augmentsGrid      = null!;
+    private GridContainer _skillAugsGrid     = null!;
+    private GridContainer _equipAugsGrid     = null!;
 
     private Label  _nameLabel  = null!;
     private Label  _typeLabel  = null!;
@@ -26,9 +27,10 @@ public partial class CharacterScreen : Control
 
     private Character.CharacterManager _manager = null!;
 
-    private Button       _skillTabCraftBtn = null!;
-    private Button       _augTabCraftBtn   = null!;
-    private TabContainer _inventoryTabs    = null!;
+    private Button       _skillTabCraftBtn    = null!;
+    private Button       _skillAugTabCraftBtn = null!;
+    private Button       _equipAugTabCraftBtn = null!;
+    private TabContainer _inventoryTabs       = null!;
 
     private const string CharViewBase = "VBox/TabContainer/Loadout/LoadoutSplit/CharacterView";
     private const string InvBase      = "VBox/TabContainer/Loadout/LoadoutSplit/InventoryPanel/InventoryVBox";
@@ -46,7 +48,8 @@ public partial class CharacterScreen : Control
         _inventoryInfo    = GetNode<Label>         ($"{InvBase}/InventoryInfo");
         _equipmentListArea = GetNode<VBoxContainer>($"{InvBase}/InventoryTabs/Equipment/EquipmentListScroll/EquipmentListArea");
         _skillsGrid        = GetNode<GridContainer>($"{InvBase}/InventoryTabs/Skills/SkillsScroll/SkillsGrid");
-        _augmentsGrid      = GetNode<GridContainer>($"{InvBase}/InventoryTabs/Augments/AugmentsScroll/AugmentsGrid");
+        _skillAugsGrid     = GetNode<GridContainer>($"{InvBase}/InventoryTabs/SkillAugs/SkillAugsScroll/SkillAugsGrid");
+        _equipAugsGrid     = GetNode<GridContainer>($"{InvBase}/InventoryTabs/EquipAugs/EquipAugsScroll/EquipAugsGrid");
         _inventoryTabs = GetNode<TabContainer>($"{InvBase}/InventoryTabs");
 
         _nameLabel  = GetNode<Label> ($"{CharViewBase}/HSplit/InfoVBox/NameLabel");
@@ -80,11 +83,17 @@ public partial class CharacterScreen : Control
         skillsTab.MoveChild(_skillTabCraftBtn, 0);
         _skillTabCraftBtn.Pressed += ShowCraftSkillToInventoryOverlay;
 
-        var augmentsTab = GetNode<VBoxContainer>($"{InvBase}/InventoryTabs/Augments");
-        _augTabCraftBtn = MakeModifyButton("Craft Augment  [1 Common]", false);
-        augmentsTab.AddChild(_augTabCraftBtn);
-        augmentsTab.MoveChild(_augTabCraftBtn, 0);
-        _augTabCraftBtn.Pressed += ShowCraftAugmentToInventoryOverlay;
+        var skillAugsTab = GetNode<VBoxContainer>($"{InvBase}/InventoryTabs/SkillAugs");
+        _skillAugTabCraftBtn = MakeModifyButton("Craft Augment  [1 Common]", false);
+        skillAugsTab.AddChild(_skillAugTabCraftBtn);
+        skillAugsTab.MoveChild(_skillAugTabCraftBtn, 0);
+        _skillAugTabCraftBtn.Pressed += ShowCraftAugmentToInventoryOverlay;
+
+        var equipAugsTab = GetNode<VBoxContainer>($"{InvBase}/InventoryTabs/EquipAugs");
+        _equipAugTabCraftBtn = MakeModifyButton("Craft Equip Augment  [1 Common]", false);
+        equipAugsTab.AddChild(_equipAugTabCraftBtn);
+        equipAugsTab.MoveChild(_equipAugTabCraftBtn, 0);
+        _equipAugTabCraftBtn.Pressed += ShowCraftEquipAugToInventoryOverlay;
 
         GetNode<Button>($"{CharViewBase}/Buttons/StartRunButton").Pressed += () =>
         {
@@ -105,12 +114,14 @@ public partial class CharacterScreen : Control
     {
         ShowEquipmentOwnedList();
         RefreshSkillsInventory();
-        RefreshAugmentsInventory();
+        RefreshSkillAugsInventory();
+        RefreshEquipAugsInventory();
         RefreshCharacter();
 
         int common = _manager.Profile.GetMaterial("crafting_common");
-        _skillTabCraftBtn.Disabled = common < 1 || _manager.Profile.OwnedSkillInstances.Count >= Character.ProfileData.MaxInventory;
-        _augTabCraftBtn.Disabled   = common < 1 || _manager.Profile.OwnedSkillAugmentInstances.Count >= Character.ProfileData.MaxInventory;
+        _skillTabCraftBtn.Disabled    = common < 1 || _manager.Profile.OwnedSkillInstances.Count >= Character.ProfileData.MaxInventory;
+        _skillAugTabCraftBtn.Disabled = common < 1 || _manager.Profile.OwnedSkillAugmentInstances.Count >= Character.ProfileData.MaxInventory;
+        _equipAugTabCraftBtn.Disabled = common < 1 || _manager.Profile.OwnedEquipmentAugmentInstances.Count >= Character.ProfileData.MaxInventory;
     }
 
     // ── Character panel ───────────────────────────────────────────────────────
@@ -424,22 +435,21 @@ public partial class CharacterScreen : Control
         }
     }
 
-    private void RefreshAugmentsInventory()
+    private void RefreshSkillAugsInventory()
     {
-        foreach (Node child in _augmentsGrid.GetChildren())
+        foreach (Node child in _skillAugsGrid.GetChildren())
             child.QueueFree();
 
-        var skillAugs = _manager.Profile.OwnedSkillAugmentInstances;
-        var equipAugs = _manager.Profile.OwnedEquipmentAugmentInstances;
-        int total     = System.Math.Max(skillAugs.Count + equipAugs.Count, Character.ProfileData.MaxInventory);
+        var items = _manager.Profile.OwnedSkillAugmentInstances;
+        int total = System.Math.Max(items.Count, Character.ProfileData.MaxInventory);
 
         for (int i = 0; i < total; i++)
         {
             var btn = new TooltipButton { CustomMinimumSize = new Vector2(72, 72) };
 
-            if (i < skillAugs.Count)
+            if (i < items.Count)
             {
-                var inst = skillAugs[i];
+                var inst = items[i];
                 var def  = inst.Definition;
                 if (def != null)
                 {
@@ -450,9 +460,31 @@ public partial class CharacterScreen : Control
                     btn.Pressed += () => ShowAugmentModifyPanel(capturedInst);
                 }
             }
-            else if (i < skillAugs.Count + equipAugs.Count)
+            else
             {
-                var inst = equipAugs[i - skillAugs.Count];
+                btn.Modulate = new Color(1f, 1f, 1f, 0.3f);
+                btn.Disabled = true;
+            }
+
+            _skillAugsGrid.AddChild(btn);
+        }
+    }
+
+    private void RefreshEquipAugsInventory()
+    {
+        foreach (Node child in _equipAugsGrid.GetChildren())
+            child.QueueFree();
+
+        var items = _manager.Profile.OwnedEquipmentAugmentInstances;
+        int total = System.Math.Max(items.Count, Character.ProfileData.MaxInventory);
+
+        for (int i = 0; i < total; i++)
+        {
+            var btn = new TooltipButton { CustomMinimumSize = new Vector2(72, 72) };
+
+            if (i < items.Count)
+            {
+                var inst = items[i];
                 var def  = inst.Definition;
                 if (def != null)
                 {
@@ -460,8 +492,7 @@ public partial class CharacterScreen : Control
                     btn.TooltipText = $"[Equip] {def.Name}";
                     btn.AddThemeFontSizeOverride("font_size", 10);
                     var capturedInst = inst;
-                    var capturedBtn  = btn;
-                    btn.Pressed += () => ShowEquipmentAugmentInventoryPopup(capturedInst, capturedBtn);
+                    btn.Pressed += () => ShowEquipmentAugmentModifyPanel(capturedInst);
                 }
             }
             else
@@ -470,7 +501,7 @@ public partial class CharacterScreen : Control
                 btn.Disabled = true;
             }
 
-            _augmentsGrid.AddChild(btn);
+            _equipAugsGrid.AddChild(btn);
         }
     }
 
@@ -1359,6 +1390,38 @@ public partial class CharacterScreen : Control
                 Refresh();
                 ShowSkillModifyPanel(skill, charSlotIndex);
             };
+            vbox.AddChild(btn);
+        }
+    }
+
+    private void ShowCraftEquipAugToInventoryOverlay()
+    {
+        var overlay = MakeModalOverlay();
+        var panel   = MakeModifyPanel();
+        var vbox    = new VBoxContainer();
+        vbox.AddThemeConstantOverride("separation", 8);
+        panel.AddChild(vbox);
+        overlay.AddChild(panel);
+        AddChild(overlay);
+
+        vbox.AddChild(MakeModifyHeader("Craft Equipment Augment", () => CloseOverlay(overlay)));
+        vbox.AddChild(new HSeparator());
+
+        int common   = _manager.Profile.GetMaterial("crafting_common");
+        bool invFull = _manager.Profile.OwnedEquipmentAugmentInstances.Count >= Character.ProfileData.MaxInventory;
+        var statusLbl = new Label { Text = invFull ? "Inventory full" : $"Common material: {common}" };
+        statusLbl.AddThemeColorOverride("font_color", new Color("#8AA0AE"));
+        vbox.AddChild(statusLbl);
+
+        foreach (var recipe in RecipeRegistry.ForType(RecipeType.EquipmentAugment))
+        {
+            var augDef = EquipmentAugmentRegistry.Get(recipe.OutputItemId);
+            if (augDef == null) continue;
+            int cost  = recipe.MaterialCosts.TryGetValue("crafting_common", out var mc) ? mc : 1;
+            bool can  = !invFull && common >= cost;
+            var btn   = MakeModifyButton($"{augDef.Name}  —  {cost} Common", !can);
+            string rid = recipe.Id;
+            btn.Pressed += () => { _manager.CraftEquipmentAugmentItem(rid); CloseOverlay(overlay); Refresh(); };
             vbox.AddChild(btn);
         }
     }

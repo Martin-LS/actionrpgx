@@ -19,16 +19,16 @@ public partial class Projectile : Area3D
     private Vector3               _direction;
     private float                 _traveled;
     private float                 _critMultiplier = 1.0f;
-    private List<string>          _eotIds   = new();
+    private List<(string Id, float Chance)> _eotIds = new();
     private readonly HashSet<ulong> _hitIds = new();
 
     public void Initialize(Vector3 direction, float damage, Items.DamageType type = Items.DamageType.Physical,
-        List<string>? eotIds = null, bool hasSplash = false, bool hasPierce = false, float critMultiplier = 1.0f)
+        List<(string Id, float Chance)>? eots = null, bool hasSplash = false, bool hasPierce = false, float critMultiplier = 1.0f)
     {
         _direction      = direction.Normalized();
         Damage          = damage;
         DamageType      = type;
-        _eotIds         = eotIds ?? new List<string>();
+        _eotIds         = eots ?? new();
         HasSplash       = hasSplash;
         HasPierce       = hasPierce;
         _critMultiplier = critMultiplier;
@@ -106,10 +106,10 @@ public partial class Projectile : Area3D
 
     private void ApplyEots(Enemies.EnemyController enemy)
     {
-        foreach (var eotId in _eotIds)
+        foreach (var (eotId, chance) in _eotIds)
         {
             var eot = EotRegistry.Get(eotId);
-            if (eot != null && GD.Randf() < eot.ApplyChance)
+            if (eot != null && GD.Randf() < chance)
                 enemy.ApplyEot(eot, _critMultiplier);
         }
     }

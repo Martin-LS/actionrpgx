@@ -8,7 +8,7 @@ public static class PrimaryStatConversions
     // Str → derived stats
     public const float StrToPhysDamageMultiplier = 0.075f;
     public const float StrToMaxHp                = 2f;
-    public const float StrToPhysResistance       = 0f;
+    public const float StrToPhysResistance       = 0.002f;
     public const float StrToCritDamage           = 0.01f;
 
     // Dex → derived stats
@@ -18,6 +18,6 @@ public static class PrimaryStatConversions
     // Int → derived stats
     public const float IntToMagDamageMultiplier = 0.075f;
     public const float IntToMaxFocus            = 2f;
-    public const float IntToMagResistance       = 0f;
+    public const float IntToMagResistance       = 0.002f;
     public const float IntToFocusRegen          = 0.1f;
 }

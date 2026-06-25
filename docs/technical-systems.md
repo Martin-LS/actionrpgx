@@ -165,6 +165,328 @@ Emits: `SkillFired(int slotIndex, float cooldown, string delivery)` — consumed
 
 ---
 
+## Runtime Targeting Resolver
+
+### Ownership
+
+| Component | Responsibility |
+|---|---|
+| `PlayerController` | Owns `TargetPosition` and `LockedTarget`; projects cursor to world each frame; runs auto-pick each frame |
+| `WeaponController` | Reads both at fire time; owns `ClampToSkillRange` and `FindNearestEnemy` |
+
+No separate resolver class — targeting is split across these two classes by ownership boundary.
+
+### Cursor-to-World Projection
+
+Runs every `_PhysicsProcess` in `PlayerController`. Projects the cursor through the camera onto the Y = 0 ground plane:
+
+```csharp
+var rayFrom = camera.ProjectRayOrigin(mousePos);
+var rayDir  = camera.ProjectRayNormal(mousePos);
+if (Mathf.Abs(rayDir.Y) > 0.001f)
+{
+    float t = -rayFrom.Y / rayDir.Y;
+    TargetPosition = rayFrom + rayDir * t;
+}
+```
+
+`TargetPosition` (Vector3, Y ≈ 0) is updated in place every frame. On keyboard/controller input there is no cursor — `TargetPosition` is not used for Self targeting, and Entity targeting uses `LockedTarget` directly.
+
+### Auto-Pick — LockedTarget (Entity Skills)
+
+`UpdateLockedTarget()` runs every `_PhysicsProcess`, immediately after `TargetPosition` is updated:
+
+```
+Scan all enemies in "enemies" group.
+Pick the one with minimum DistanceTo(TargetPosition).
+Assign to LockedTarget.
+```
+
+Properties:
+- **Nearest to cursor, not to player.** Enemy closest to the cursor world position wins regardless of player distance.
+- **No range cap on selection.** Range enforcement is deferred to fire time — a visually-targeted enemy is always marked even when out of range, which lets AutoActivate fire the moment the player closes the gap without extra input.
+- **Updates every frame.** `LockedTarget` always reflects the frame-current best candidate at the moment any skill fires.
+
+### Shape Resolution at Fire Time
+
+#### Self
+
+- **Fire guard:** `FindNearestEnemy(skill.Range) != null` — at least one enemy must be within `skill.Range` of the player's position. Blocked if none.
+- **Damage resolution:** all enemies within `skill.Range` of player `GlobalPosition` are hit.
+- **Range source:** `skill.Range` only — weapon range never feeds Self radius.
+- `TargetPosition` and `LockedTarget` are not read.
+
+#### Position
+
+- **Target position:** `ClampToSkillRange(player.GlobalPosition, player.TargetPosition, skill.Range)`.
+- **No enemy required.** Always fires if Focus is available — no additional fire guard.
+- **`ClampToSkillRange`** (static, `WeaponController`):
+  ```
+  flat = (target.X − origin.X, 0, target.Z − origin.Z)
+  dist = flat.Length()
+  if dist ≤ range or dist < 0.001 → return target (unclamped)
+  else → return origin + flat/dist × range
+  ```
+  Clamp is horizontal-only.
+- `skill.Range` = cast range (how far the landing point can be from the player). `skill.ZoneRadius` = damage radius at the landing site. The two are independent.
+
+#### Entity
+
+- **Target:** `player.LockedTarget` (nearest to cursor — see Auto-Pick above).
+- **Fire guard:** `LockedTarget != null` and not `IsQueuedForDeletion()`.
+- **Range check at fire time:** `origin.DistanceTo(target.GlobalPosition) > maxRange` → blocked. `maxRange = skill.Range > 0f ? skill.Range : _range` (`_range` = effective weapon range set by `SetRange`).
+- **Damage resolution (burst/debuff):** hits locked target directly.
+- **TrackedTick variant** (Entity + Tick + `ZoneTracksEntity == true`): spawns a `TrackedTick` zone at the target's position that follows them. Damage radius = `skill.ZoneRadius > 0f ? skill.ZoneRadius : _range`.
+
+### Channeled — Self-equivalent
+
+Uses `FindNearestEnemy(skill.Range)` as fire guard (same as Self), not `LockedTarget`. `IsChanneling` must be true — set by `TryFireSlot` key-press, cleared by `ReleaseSlot` key-release. AutoActivate does **not** auto-start channeling; Channeled slots always require manual key input.
+
+### Aura — Self-equivalent
+
+`FireAuraTick` hits all enemies within `slot.Skill.Range` of player origin each tick — same spatial logic as Self. Toggle on/off via `TryFireSlot`.
+
+### AutoActivate vs. Manual TryFireSlot
+
+Both paths call the same `FireAt` / `FireAtPosition` / `FireSelfBurst` methods with identical targeting resolution. AutoActivate fires from `_PhysicsProcess` when cooldown expires; manual fires on key-press. Channeled and Aura slots are excluded from AutoActivate.
+
+### Summary
+
+| Shape | Fire Guard | Target Origin | Range Enforcement |
+|---|---|---|---|
+| Self | `FindNearestEnemy(skill.Range) != null` | Player `GlobalPosition` | `skill.Range` |
+| Position | Focus only | `ClampToSkillRange(player, cursor, skill.Range)` | `skill.Range` (cast); `skill.ZoneRadius` (blast) |
+| Entity | `LockedTarget != null` + in range | Nearest enemy to cursor | `skill.Range` if set, else weapon `_range` |
+
+---
+
+## Zone Skill Lifecycle
+
+### Zone Types
+
+| Class | Prototype | StackLimit | Pattern |
+|---|---|---|---|
+| `FixedZoneTick` | `fixed_zone_tick` | 1 | Static ticking zone |
+| `StackableZone` | `stackable_zone` | 3 | Static ticking zone, FIFO stack |
+| `TrackedTick` | `tracked_tick` | 1 | Ticking zone that follows a target entity |
+| `TriggerZone` | `triggered_zone_burst` | 3 | Dormant trap, bursts on proximity |
+
+`fixed_zone_burst` and `windup_burst` are not zone nodes — they deal damage directly in `WeaponController.FireAtPosition` and have no persistent lifecycle.
+
+### Spawn
+
+All four types are spawned by `WeaponController.FireAtPosition` (Position skills) or `FireAt` (TrackedTick, Entity skill). Each is added to the scene root (`GetTree().Root.AddChild`), not parented to the player or weapon. `GlobalPosition` is set after `AddChild` so `_Ready()` sees the final parameters.
+
+### TrackedTick — Entity Follow
+
+Every `_Process` frame, if `Target != null && IsInstanceValid(Target) && !Target.IsQueuedForDeletion()`:
+```
+GlobalPosition = (Target.GlobalPosition.X, 10f, Target.GlobalPosition.Z)
+```
+When the target dies or becomes invalid the zone stops moving and stays at its last position. Ticking continues until duration expires.
+
+### Tick (FixedZoneTick, StackableZone, TrackedTick)
+
+All three zones tick identically:
+- `_nextTick` counts down; resets to `TickInterval` on fire.
+- First tick fires after one full `TickInterval` from spawn — not on spawn itself.
+- Each tick scans the `"enemies"` group and hits all within `Radius` of the zone's current `GlobalPosition`.
+
+### Proximity Detection — TriggerZone
+
+After `ArmTime` seconds, `_armed` flips to `true` (visual colour also changes). Each `_Process` frame while armed:
+
+```
+scan "enemies" group
+if any enemy.GlobalPosition within TriggerRadius → Burst()
+```
+
+`Burst()` hits all enemies within `BlastRadius` (independent of `TriggerRadius`) then calls `QueueFree()`. Single-fire — one trigger per zone instance. `TriggerCount` field on `SkillData` exists but the current node is hardcoded to single-fire.
+
+**Two radii are distinct:**
+- `TriggerRadius` — proximity detection and visual indicator size.
+- `BlastRadius` — damage footprint on detonation. Can differ from `TriggerRadius`.
+
+### Stack Cap and Eviction
+
+Enforced by `WeaponController` at fire time, not by the zone node itself.
+
+| StackLimit | Behaviour |
+|---|---|
+| 1 | No eviction. Zone self-destructs via duration. If recast before duration expires, both zones coexist briefly — the old one runs to its natural end. `slot.ActiveZones` is not used. |
+| > 1 | `slot.ActiveZones` is maintained by the slot. Before each spawn: dead/invalid entries are purged. If `count >= StackLimit`, index 0 (oldest, FIFO) is `QueueFree()`'d and removed. New zone is appended. |
+
+`slot.ActiveZones` is only populated for zones with `StackLimit > 1` (StackableZone and TriggerZone).
+
+### Expiry
+
+All zones: `Duration > 0 && _elapsed >= Duration` → `QueueFree()`. `Duration = 0` means permanent — lives until evicted by the stack cap or the run scene unloads. TriggerZone also expires on duration if never triggered, and self-destructs immediately after firing.
+
+---
+
+## AoE Radius Modifier Pipeline
+
+### Scope
+
+Applies to all skills with the `AoE` tag — currently `self_channeled_tick`, `self_duration_tick`, `self_burst`, `tracked_tick`, `fixed_zone_tick`, `fixed_zone_burst`, `windup_burst`, `stackable_zone`, `triggered_zone_burst`. Single-target skills (`entity_burst`, `entity_debuff`) and `self_aura` carry no `AoE` tag and are unaffected.
+
+### Formula
+
+```
+effectiveRadius = baseRadius × sqrt(1 + totalAoePct)
+```
+
+`totalAoePct` is a fraction (e.g. `0.5f` = 50% increased area). When `totalAoePct == 0` (v1 state) the formula reduces to `effectiveRadius = baseRadius` — identical to current behaviour, no change.
+
+### Radius Source by Targeting Shape
+
+| Targeting shape | Base radius expression |
+|---|---|
+| Self (`self_channeled_tick`, `self_duration_tick`, `self_burst`) | `skill.Range` |
+| Position / Entity with zone (`tracked_tick`, all Position skills) | `skill.ZoneRadius > 0f ? skill.ZoneRadius : _range` |
+
+`skill.Range` is the Self damage footprint; `skill.ZoneRadius` is the blast/damage radius at a landing site. The modifier applies to whichever is the actual damage footprint.
+
+### Accumulation
+
+Two pools, summed at fire time — same pattern as crit chance:
+
+| Pool | Source | How set |
+|---|---|---|
+| `slot.AoEPctBonus` (float, per-slot) | Skill Augments on that skill slot | `WeaponController.SetSlot(..., float aoeBonus = 0f)` — resolved from augments at run start |
+| `_globalAoePctBonus` (float, `WeaponController`) | Gear affixes | `WeaponController.SetGlobalAoePctBonus(float)` — called once at run start from `PlayerController`, same cadence as `SetGlobalCritChance` |
+
+```
+totalAoePct = slot.AoEPctBonus + _globalAoePctBonus
+```
+
+Resolved fresh at fire time (not baked into the slot), consistent with how crit chance is computed.
+
+### Application Point
+
+In `WeaponController`, at every call site that reads a damage radius, replace the raw radius with:
+
+```csharp
+float baseRadius = /* skill.Range  —or—  skill.ZoneRadius > 0f ? skill.ZoneRadius : _range */;
+bool isAoe = System.Array.Exists(slot.Skill!.Tags, t => t == "AoE");
+float totalAoePct = slot.AoEPctBonus + _globalAoePctBonus;
+float effectiveRadius = isAoe && totalAoePct > 0f
+    ? baseRadius * Mathf.Sqrt(1f + totalAoePct)
+    : baseRadius;
+```
+
+Affected call sites: `FireSelfBurst`, `FireSelfChanneledTick`, `FireAuraTick`, and all radius reads inside `FireAtPosition`.
+
+### v1 State
+
+No Skill Augments or gear affixes provide AoE bonus in v1. `slot.AoEPctBonus = 0f` and `_globalAoePctBonus = 0f` for all slots. The `SetSlot` parameter and `SetGlobalAoePctBonus` method are added as scaffolding with zero values — the formula always produces `baseRadius × 1.0` and has no gameplay effect until AoE sources are introduced post-v1.
+
+---
+
+## Proximity Cluster System
+
+### Purpose
+
+Groups idle pre-placed enemies into clusters so that when the player aggros any member, the entire cluster wakes simultaneously — the standard ARPG "pull the whole pack" mechanic. Wave-spawned enemies are never part of a cluster.
+
+### State Machine Extension
+
+Adds a third state to `EnemyController`:
+
+| State | Who starts here | Behaviour |
+|---|---|---|
+| `Dormant` | Pre-placed enemies at spawn | Zero velocity, no aggro checks, no processing |
+| `Idle` | Pre-placed enemies after `MapReady`; never wave-spawned | Zero velocity; checks per-enemy aggro radius each frame |
+| `Chasing` | Wave-spawned enemies at spawn; all enemies after aggro | Active pursuit — current behaviour |
+
+Wave-spawned enemies: `_state = EnemyState.Chasing` on spawn (unchanged). Pre-placed enemies: `_state = EnemyState.Dormant` on spawn, transition to `Idle` on `MapReady`.
+
+### Cluster ID
+
+`EnemyController` gets a new field:
+
+```csharp
+public int ClusterId { get; set; } = -1;  // -1 = no cluster (wave-spawned)
+```
+
+Set by `DungeonGenerator` after computing clusters. Wave-spawned enemies leave it at `-1` and skip all cluster logic.
+
+### Cluster Computation
+
+**Owner:** `DungeonGenerator`, run once after all pre-placed enemies are spawned.
+
+**Algorithm:** BFS connected-components over enemies as a point graph.
+
+```
+enemies = list of all pre-placed EnemyController nodes
+nextClusterId = 0
+
+for each unvisited enemy in enemies:
+    assign nextClusterId to this enemy
+    queue = [enemy]
+    while queue not empty:
+        current = dequeue
+        for each other unvisited enemy:
+            if current.GlobalPosition.DistanceTo(other.GlobalPosition)
+               <= ClusterProximityRadiusTiles * TileSize:
+                assign nextClusterId to other
+                enqueue other
+    nextClusterId++
+```
+
+`ClusterProximityRadiusTiles` = `BalanceConfig.Enemies.ClusterProximityRadiusTiles` (currently `4f`). Enemies farther apart than this form separate clusters.
+
+**Recomputation:** Once at map load only. Cluster assignments are static for the run — enemy deaths do not trigger recomputation and do not split clusters.
+
+### Dormant→Idle on MapReady
+
+After cluster computation completes, `DungeonGenerator` transitions all pre-placed enemies from `Dormant` to `Idle`:
+
+```csharp
+foreach (var enemy in prePlacedEnemies)
+    enemy.SetState(EnemyState.Idle);
+```
+
+### Cluster Wake-Up (Idle→Chasing)
+
+In `EnemyController._PhysicsProcess`, Idle branch: when `distToPlayer <= _aggroDist`, before transitioning self to `Chasing`, broadcast to all cluster-mates:
+
+```csharp
+_state = EnemyState.Chasing;
+if (ClusterId >= 0)
+{
+    foreach (var node in GetTree().GetNodesInGroup("enemies"))
+    {
+        if (node is EnemyController other
+            && other != this
+            && other.ClusterId == ClusterId
+            && other._state == EnemyState.Idle)
+        {
+            other._state = EnemyState.Chasing;
+        }
+    }
+}
+```
+
+Only `Idle` cluster-mates are woken — `Dormant` ones (if `MapReady` has not fired yet) and already-`Chasing` ones are skipped.
+
+### LostPlayerDistance Split
+
+`BalanceConfig.Enemies.LostPlayerDistanceTiles` will be split into two constants when pre-placed enemies are implemented:
+
+| Constant | Value | Used by |
+|---|---|---|
+| `WaveSpawnLostPlayerTiles` | 30f (current) | Wave-spawned enemies |
+| `PrePlacedLostPlayerTiles` | 6–10f (TBD, Balancer) | Pre-placed enemies |
+
+Pre-placed enemies have a much shorter leash — they stop chasing and return to `Idle` once the player moves beyond `PrePlacedLostPlayerTiles`.
+
+### v1 State
+
+No pre-placed enemies exist in v1. `ClusterProximityRadiusTiles` is defined in `BalanceConfig` as scaffolding. The three-state machine, `ClusterId` field, BFS computation, and `SetState` method are added when pre-placed enemy spawning is implemented.
+
+---
+
 ## Focus (Skill Resource)
 
 All archetypes spend Focus to fire skills. `PlayerController` owns the pool; `WeaponController` deducts or reserves on fire.

@@ -15,7 +15,7 @@ At the start of every session: first run the **Consistency Check** below, then r
 - **Do not apply any changes or edits to files without explicit user approval.**
 - Always propose a plan and discuss the issues/changes first.
 - When resolving a list of tasks or issues, proceed strictly **one-by-one** (propose/discuss, wait for approval, implement, repeat).
-- When waiting for user approval, format the approval prompt in gold text: <span style="color:gold">e.g. "Waiting for your approval to proceed."</span>
+- When waiting for user approval, format the approval prompt in bold: **e.g. "Waiting for your approval to proceed."**
 
 ### 1. Scope Rules
 
@@ -103,11 +103,14 @@ When reading `docs/todo-technical.md` at session start:
 
 ## Consistency Check
 
-On session start, read `CLAUDE.md` and compare its **Project Rules** and **Session-Start Todo Behaviour** sections against the equivalent sections in this file.
+On session start, run the consistency script to check for differences and update the HUD:
+```powershell
+pwsh -File C:/work/my/github/actionrpgx/.claude/check_consistency.ps1
+```
 
 If any inconsistency is found, report it before doing anything else using this format:
 
-> **[INCONSISTENCY]** <span style="color:red">Section: _[section name]_ — [describe the difference].</span>
+\e[31m[INCONSISTENCY] Section: [section name] — [describe the difference].\e[0m
 
 Do not proceed with any session-start tasks until the user has acknowledged the inconsistency.
 

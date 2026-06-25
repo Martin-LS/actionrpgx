@@ -295,19 +295,38 @@ theme_override_constants/h_separation = 4
 theme_override_constants/v_separation = 4
 columns = 5
 
-[node name="Augments" type="VBoxContainer" parent="VBox/TabContainer/Loadout/LoadoutSplit/InventoryPanel/InventoryVBox/InventoryTabs" unique_id=1706032810]
+[node name="SkillAugs" type="VBoxContainer" parent="VBox/TabContainer/Loadout/LoadoutSplit/InventoryPanel/InventoryVBox/InventoryTabs" unique_id=1706032810]
 visible = false
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 metadata/_tab_index = 2
 
-[node name="AugmentsScroll" type="ScrollContainer" parent="VBox/TabContainer/Loadout/LoadoutSplit/InventoryPanel/InventoryVBox/InventoryTabs/Augments" unique_id=1706032811]
+[node name="SkillAugsScroll" type="ScrollContainer" parent="VBox/TabContainer/Loadout/LoadoutSplit/InventoryPanel/InventoryVBox/InventoryTabs/SkillAugs" unique_id=1706032811]
 layout_mode = 2
 size_flags_vertical = 3
 horizontal_scroll_mode = 0
 
-[node name="AugmentsGrid" type="GridContainer" parent="VBox/TabContainer/Loadout/LoadoutSplit/InventoryPanel/InventoryVBox/InventoryTabs/Augments/AugmentsScroll" unique_id=1706032812]
+[node name="SkillAugsGrid" type="GridContainer" parent="VBox/TabContainer/Loadout/LoadoutSplit/InventoryPanel/InventoryVBox/InventoryTabs/SkillAugs/SkillAugsScroll" unique_id=1706032812]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/h_separation = 4
+theme_override_constants/v_separation = 4
+columns = 5
+
+[node name="EquipAugs" type="VBoxContainer" parent="VBox/TabContainer/Loadout/LoadoutSplit/InventoryPanel/InventoryVBox/InventoryTabs" unique_id=998168956]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+metadata/_tab_index = 3
+
+[node name="EquipAugsScroll" type="ScrollContainer" parent="VBox/TabContainer/Loadout/LoadoutSplit/InventoryPanel/InventoryVBox/InventoryTabs/EquipAugs" unique_id=1556749175]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="EquipAugsGrid" type="GridContainer" parent="VBox/TabContainer/Loadout/LoadoutSplit/InventoryPanel/InventoryVBox/InventoryTabs/EquipAugs/EquipAugsScroll" unique_id=756004694]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/h_separation = 4

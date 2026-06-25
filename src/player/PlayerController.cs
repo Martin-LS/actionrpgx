@@ -24,6 +24,7 @@ public partial class PlayerController : CharacterBody3D
     public float DamageReduction    { get; private set; }
     public float PhysicalResistance { get; private set; }
     public float MagicResistance    { get; private set; }
+    private float _evasion;
     public float EffectiveRange     { get; private set; }
 
     private float _rangeBuffBonus; // flat tile bonus from active range buffs (e.g. Shout)
@@ -66,7 +67,7 @@ public partial class PlayerController : CharacterBody3D
     private MeshInstance3D? _rangeIndicator;
 
     // Equipment augment state
-    private readonly HashSet<string> _activeAugments = new();
+    private readonly Dictionary<string, float> _activeAugmentChances = new();
     private bool  _fortifyActive;
     private float _dashReflexTimer;
     private float _ghostStepTimer;
@@ -92,6 +93,7 @@ public partial class PlayerController : CharacterBody3D
             Speed              = _statBlock.Get(Stats.StatId.Speed);
             PhysicalResistance = _statBlock.Get(Stats.StatId.PhysicalResistance);
             MagicResistance    = _statBlock.Get(Stats.StatId.MagicResistance);
+            _evasion           = _statBlock.Get(Stats.StatId.Evasion);
             MaxFocus           = _statBlock.Get(Stats.StatId.MaxFocus);
             _focusRegen        = _statBlock.Get(Stats.StatId.FocusRegen);
             CurrentFocus       = MaxFocus;
@@ -122,7 +124,7 @@ public partial class PlayerController : CharacterBody3D
                 var skill    = instance?.Definition;
                 if (skill == null) continue;
 
-                var eotIds   = new List<string>();
+                var augmentEots   = new List<(string Id, float Chance)>();
                 bool  hasMagicDamage = false;
                 float critChanceBonus = 0f;
                 if (instance != null)
@@ -131,19 +133,19 @@ public partial class PlayerController : CharacterBody3D
                     foreach (var augInst in activeAugments)
                     {
                         if (augInst.DefinitionId == "magic_damage")    hasMagicDamage = true;
-                        if (augInst.DefinitionId == "critical_strike") critChanceBonus += BalanceConfig.SkillAugments.CritChance;
+                        if (augInst.DefinitionId == "critical_strike") critChanceBonus += augInst.TriggerChance / 100f;
                         var eotId = augInst.Definition?.EotId;
-                        if (eotId != null) eotIds.Add(eotId);
+                        if (eotId != null) augmentEots.Add((eotId, augInst.TriggerChance / 100f));
                     }
                 }
 
-                weaponController?.SetSlot(i, skill, eotIds, hasMagicDamage, critChanceBonus);
+                weaponController?.SetSlot(i, skill, augmentEots, hasMagicDamage, critChanceBonus);
                 bool autoActivate = i < c.SlotAutoActivate.Count ? c.SlotAutoActivate[i] : true;
                 weaponController?.SetSlotAutoActivate(i, autoActivate);
             }
 
             // Seed equipment augments from all equipped gear
-            _activeAugments.Clear();
+            _activeAugmentChances.Clear();
             foreach (var kvp in c.EquippedGear)
             {
                 foreach (var augInstId in kvp.Value.SocketedEquipmentAugmentIds)
@@ -151,7 +153,7 @@ public partial class PlayerController : CharacterBody3D
                     if (string.IsNullOrEmpty(augInstId)) continue;
                     var augInst = manager.FindEquipmentAugmentInstance(augInstId);
                     if (augInst?.DefinitionId != null)
-                        _activeAugments.Add(augInst.DefinitionId);
+                        _activeAugmentChances[augInst.DefinitionId] = augInst.TriggerChance / 100f;
                 }
             }
         }
@@ -449,7 +451,7 @@ public partial class PlayerController : CharacterBody3D
         if (_dashReflexTimer > 0f) _dashReflexTimer -= dt;
         if (_ghostStepTimer  > 0f) _ghostStepTimer  -= dt;
 
-        if (_activeAugments.Contains("mending"))
+        if (_activeAugmentChances.ContainsKey("mending"))
         {
             _mendingTimer -= dt;
             if (_mendingTimer <= 0f)
@@ -533,14 +535,15 @@ public partial class PlayerController : CharacterBody3D
     {
         if (GodMode) return;
         if (_isDodging) return; // Invulnerability frames during dodge roll
+        if (_evasion > 0f && GD.Randf() < _evasion) return;
         float effective = rawAmount * (1f - DamageReduction);
         if (type == Items.DamageType.Physical)
             effective *= (1f - PhysicalResistance);
         else if (type == Items.DamageType.Magic)
             effective *= (1f - MagicResistance);
 
-        // Fortify: if active, reduce this hit; always refresh for next hit
-        if (_activeAugments.Contains("fortify"))
+        // Fortify: if active, reduce this hit; refresh for next hit
+        if (_activeAugmentChances.TryGetValue("fortify", out float fortifyChance) && GD.Randf() < fortifyChance)
         {
             if (_fortifyActive) effective *= 0.5f;
             _fortifyActive = true;
@@ -571,15 +574,16 @@ public partial class PlayerController : CharacterBody3D
         }
 
         // Retaliation: deal damage back to attacker
-        if (_activeAugments.Contains("retaliation") && attacker is Enemies.EnemyController ec)
+        if (_activeAugmentChances.TryGetValue("retaliation", out float retChance) && GD.Randf() < retChance
+            && attacker is Enemies.EnemyController ec)
             ec.TakeDamage(5f, Items.DamageType.Physical);
 
         // Dash Reflex: brief speed boost on hit
-        if (_activeAugments.Contains("dash_reflex"))
+        if (_activeAugmentChances.TryGetValue("dash_reflex", out float dashChance) && GD.Randf() < dashChance)
             _dashReflexTimer = 1.0f;
 
-        // Ghost Step: arm kill-heal window
-        if (_activeAugments.Contains("ghost_step"))
+        // Ghost Step: arm kill-heal window unconditionally; roll chance fires on kill
+        if (_activeAugmentChances.ContainsKey("ghost_step"))
             _ghostStepTimer = 2.0f;
 
         if (CurrentHealth == 0f)
@@ -589,7 +593,7 @@ public partial class PlayerController : CharacterBody3D
     public void OnEnemyKilled()
     {
         // Ghost Step: heal if killed within 2s of being hit
-        if (_activeAugments.Contains("ghost_step") && _ghostStepTimer > 0f)
+        if (_activeAugmentChances.TryGetValue("ghost_step", out float ghostChance) && _ghostStepTimer > 0f && GD.Randf() < ghostChance)
             Heal(10);
     }
 
@@ -615,6 +619,7 @@ public partial class PlayerController : CharacterBody3D
                 Speed              = _statBlock.Get(Stats.StatId.Speed);
                 PhysicalResistance = _statBlock.Get(Stats.StatId.PhysicalResistance);
                 MagicResistance    = _statBlock.Get(Stats.StatId.MagicResistance);
+                _evasion           = _statBlock.Get(Stats.StatId.Evasion);
                 var wc     = GetNodeOrNull<Weapon.WeaponController>("Weapon");
                 var weapon = GetEquippedItem(_charData, Items.ItemSlot.Weapon);
                 ApplyWeaponDamage(wc, weapon);
