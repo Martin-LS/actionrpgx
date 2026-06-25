@@ -501,7 +501,7 @@ public partial class WeaponController : Node
             float ttCrit   = 1.0f;
             if (ttCritChance > 0f && GD.Randf() < ttCritChance)
                 ttCrit = _critMultiplier;
-            float radius = slot.Skill.ZoneRadius > 0f ? slot.Skill.ZoneRadius : _range;
+            float radius = slot.Skill.ZoneRadius > 0f ? slot.Skill.ZoneRadius : 54f;
 
             var zone = new TrackedTick
             {
@@ -606,7 +606,7 @@ public partial class WeaponController : Node
                 slot.ActiveZones.RemoveAt(0);
             }
 
-            float blastRadius = slot.Skill.ZoneRadius > 0f ? slot.Skill.ZoneRadius : _range;
+            float blastRadius = slot.Skill.ZoneRadius > 0f ? slot.Skill.ZoneRadius : 54f;
             var trap = new TriggerZone
             {
                 Damage        = baseDmg,
@@ -634,7 +634,7 @@ public partial class WeaponController : Node
                 critMult = _critMultiplier;
             baseDmg *= critMult;
 
-            float radius = slot.Skill!.ZoneRadius > 0f ? slot.Skill!.ZoneRadius : _range;
+            float radius = slot.Skill!.ZoneRadius > 0f ? slot.Skill!.ZoneRadius : 54f;
             bool  isCrit = critMult > 1f;
 
             if (slot.Skill.WindUp > 0f)
@@ -689,7 +689,7 @@ public partial class WeaponController : Node
                 critMult = _critMultiplier;
             baseDmg *= critMult;
 
-            float radius = slot.Skill!.ZoneRadius > 0f ? slot.Skill!.ZoneRadius : _range;
+            float radius = slot.Skill!.ZoneRadius > 0f ? slot.Skill!.ZoneRadius : 54f;
 
             if (slot.Skill.StackLimit > 1)
             {

@@ -218,7 +218,7 @@ public static class BalanceConfig
     {
         public const float Duration = 0.35f; // seconds
         public const float Cooldown = 1.0f;  // seconds
-        public const float SpeedMultiplier = 2.0f; // speed multiplier during dodge
+        public const float Speed    = 160f;  // fixed speed during dodge
     }
 
     public static class SkillAugments

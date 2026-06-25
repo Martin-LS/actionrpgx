@@ -227,7 +227,8 @@ Every character has a dodge roll available at all times.
 - **Direction:** Current movement input direction (WASD). If standing still (no input), rolls in the current character facing direction.
 - **I-frames:** Grants full invincibility frames (immunity to all damage) for the duration of the roll (0.35 seconds).
 - **Cooldown:** 1.0 second, starting immediately when the dodge begins.
-- **Speed Boost:** Overrides movement velocity with a 2.0x speed multiplier during the roll.
+- **Speed:** Overrides movement velocity with a fixed speed of 160 units during the roll (independent of character stats, gear modifiers, or temporary speed buffs/slows) to guarantee a consistent distance of 56 units (approx. 1.5 tiles) over the 0.35-second duration, in line with modern ARPG standards.
+- **Enemy Phasing:** Bypasses collision with enemies during the roll, allowing the player to pass/phase through them without being body-blocked. Wall and obstacle collisions remain active.
 - **Skill Cancellation:** Instantly interrupts and cancels any active or channeled skill animation/cast on activation.
 
 ---

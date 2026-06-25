@@ -119,7 +119,7 @@ public partial class CharacterScreen : Control
         RefreshCharacter();
 
         int common = _manager.Profile.GetMaterial("crafting_common");
-        _skillTabCraftBtn.Disabled    = common < 1 || _manager.Profile.OwnedSkillInstances.Count >= Character.ProfileData.MaxInventory;
+        _skillTabCraftBtn.Disabled    = common < 1 || _manager.GetUnslottedSkillCount() >= Character.ProfileData.MaxInventory;
         _skillAugTabCraftBtn.Disabled = common < 1 || _manager.Profile.OwnedSkillAugmentInstances.Count >= Character.ProfileData.MaxInventory;
         _equipAugTabCraftBtn.Disabled = common < 1 || _manager.Profile.OwnedEquipmentAugmentInstances.Count >= Character.ProfileData.MaxInventory;
     }
@@ -209,7 +209,7 @@ public partial class CharacterScreen : Control
         var profile = _manager.Profile;
         int sa = profile.OwnedSkillAugmentInstances.Count;
         int ea = profile.OwnedEquipmentAugmentInstances.Count;
-        _inventoryInfo.Text = $"Gear: {profile.OwnedGearInstances.Count}/50  Skills: {profile.OwnedSkillInstances.Count}/50  S.Augs: {sa}/50  E.Augs: {ea}/50  Coins: {profile.CoinBank}  Common: {profile.GetMaterial("crafting_common")}";
+        _inventoryInfo.Text = $"Gear: {profile.OwnedGearInstances.Count}/50  Skills: {_manager.GetUnslottedSkillCount()}/50  S.Augs: {sa}/50  E.Augs: {ea}/50  Coins: {profile.CoinBank}  Common: {profile.GetMaterial("crafting_common")}";
 
         foreach (Node child in _equipmentListArea.GetChildren())
             child.QueueFree();
@@ -654,7 +654,7 @@ public partial class CharacterScreen : Control
         vbox.AddChild(new HSeparator());
 
         int common   = _manager.Profile.GetMaterial("crafting_common");
-        bool invFull = _manager.Profile.OwnedSkillInstances.Count >= Character.ProfileData.MaxInventory;
+        bool invFull = _manager.GetUnslottedSkillCount() >= Character.ProfileData.MaxInventory;
 
         var statusLbl = new Label { Text = invFull ? "Inventory full" : $"Common material: {common}" };
         statusLbl.AddThemeColorOverride("font_color", new Color("#8AA0AE"));
@@ -935,8 +935,9 @@ public partial class CharacterScreen : Control
         upBtn.Pressed += () => { _manager.UpgradeEquipmentAugment(aug.Id); rebuild(); Refresh(); };
         container.AddChild(upBtn);
 
-        var rrBtn = MakeModifyButton("Re-roll Trigger %  [1 Common]", true);
-        rrBtn.TooltipText = "Re-roll (v2+)";
+        bool canReroll = common >= 1;
+        var rrBtn = MakeModifyButton("Re-roll Trigger %  [1 Common]", !canReroll);
+        rrBtn.Pressed += () => { _manager.RerollEquipmentAugment(aug.Id); rebuild(); Refresh(); };
         container.AddChild(rrBtn);
 
         var unSocketBtn = MakeModifyButton("Un-Socket", false);
@@ -1011,7 +1012,7 @@ public partial class CharacterScreen : Control
         vbox.AddChild(new HSeparator());
 
         int common   = _manager.Profile.GetMaterial("crafting_common");
-        bool invFull = _manager.Profile.OwnedSkillInstances.Count >= Character.ProfileData.MaxInventory;
+        bool invFull = _manager.GetUnslottedSkillCount() >= Character.ProfileData.MaxInventory;
         var craftBtn = MakeModifyButton("Craft Skill  [1 Common]", invFull || common < 1);
         craftBtn.Pressed += () => ShowCraftSkillSubtype(vbox, slotIndex, overlay);
         vbox.AddChild(craftBtn);
@@ -1065,7 +1066,7 @@ public partial class CharacterScreen : Control
         vbox.AddChild(new HSeparator());
 
         int common   = _manager.Profile.GetMaterial("crafting_common");
-        bool invFull = _manager.Profile.OwnedSkillInstances.Count >= Character.ProfileData.MaxInventory;
+        bool invFull = _manager.GetUnslottedSkillCount() >= Character.ProfileData.MaxInventory;
         var statusLbl = new Label { Text = invFull ? "Inventory full" : $"Common material: {common}" };
         statusLbl.AddThemeColorOverride("font_color", new Color("#8AA0AE"));
         vbox.AddChild(statusLbl);

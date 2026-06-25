@@ -79,7 +79,7 @@ public partial class DungeonGenerator : Node3D
             }
         }
 
-        SpawnPosition = new Vector3(0f, 1f, 0f);
+        SpawnPosition = new Vector3(0f, 0f, 0f);
 
         var floorBody = new StaticBody3D();
         var wallBody  = new StaticBody3D();

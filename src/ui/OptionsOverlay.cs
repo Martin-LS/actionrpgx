@@ -11,6 +11,12 @@ public partial class OptionsOverlay : CanvasLayer
     private Control _menuControl = null!;
     private VBoxContainer _buttonList = null!;
 
+    private const string DebugSettingsPath = "user://debug_settings.json";
+    public bool RangeIndicatorEnabled { get; private set; } = false;
+    public bool GodModeEnabled { get; private set; } = false;
+    public bool TargetIndicatorEnabled { get; private set; } = true;
+    public bool DebugCollisionsEnabled { get; private set; } = false;
+
     public override void _Ready()
     {
         _globalButton = GetNode<Button>("GlobalButton");
@@ -22,6 +28,7 @@ public partial class OptionsOverlay : CanvasLayer
 
         _globalButton.Pressed += () => Toggle();
         UpdateGlobalButtonVisibility();
+        LoadDebugSettings();
     }
 
     public override void _Process(double delta)
@@ -112,6 +119,37 @@ public partial class OptionsOverlay : CanvasLayer
         }
     }
 
+    private void LoadDebugSettings()
+    {
+        if (!FileAccess.FileExists(DebugSettingsPath)) return;
+        using var file = FileAccess.Open(DebugSettingsPath, FileAccess.ModeFlags.Read);
+        if (file == null) return;
+
+        var text = file.GetAsText();
+        var parsed = Json.ParseString(text);
+        if (parsed.Obj is Godot.Collections.Dictionary dict)
+        {
+            RangeIndicatorEnabled = dict.ContainsKey("rangeIndicator") && System.Convert.ToBoolean(dict["rangeIndicator"].Obj);
+            GodModeEnabled = dict.ContainsKey("godMode") && System.Convert.ToBoolean(dict["godMode"].Obj);
+            TargetIndicatorEnabled = !dict.ContainsKey("targetIndicator") || System.Convert.ToBoolean(dict["targetIndicator"].Obj);
+            DebugCollisionsEnabled = dict.ContainsKey("debugCollisions") && System.Convert.ToBoolean(dict["debugCollisions"].Obj);
+            GetTree().DebugCollisionsHint = DebugCollisionsEnabled;
+        }
+    }
+
+    private void SaveDebugSettings()
+    {
+        var dict = new Godot.Collections.Dictionary
+        {
+            ["rangeIndicator"] = RangeIndicatorEnabled,
+            ["godMode"] = GodModeEnabled,
+            ["targetIndicator"] = TargetIndicatorEnabled,
+            ["debugCollisions"] = DebugCollisionsEnabled
+        };
+        using var file = FileAccess.Open(DebugSettingsPath, FileAccess.ModeFlags.Write);
+        file?.StoreString(Json.Stringify(dict));
+    }
+
     private void RebuildDebugMenu()
     {
         ClearButtonList();
@@ -135,15 +173,47 @@ public partial class OptionsOverlay : CanvasLayer
             {
                 CheckBox rangeToggle = new CheckBox();
                 rangeToggle.Text = "Range Indicator";
-                rangeToggle.ButtonPressed = player.RangeIndicatorVisible;
-                rangeToggle.Toggled += on => player.SetRangeIndicatorVisible(on);
+                rangeToggle.ButtonPressed = RangeIndicatorEnabled;
+                rangeToggle.Toggled += on =>
+                {
+                    RangeIndicatorEnabled = on;
+                    player.SetRangeIndicatorVisible(on);
+                    SaveDebugSettings();
+                };
                 _buttonList.AddChild(rangeToggle);
+
+                CheckBox targetToggle = new CheckBox();
+                targetToggle.Text = "Target Indicator";
+                targetToggle.ButtonPressed = TargetIndicatorEnabled;
+                targetToggle.Toggled += on =>
+                {
+                    TargetIndicatorEnabled = on;
+                    player.SetTargetIndicatorVisible(on);
+                    SaveDebugSettings();
+                };
+                _buttonList.AddChild(targetToggle);
 
                 CheckBox godToggle = new CheckBox();
                 godToggle.Text = "God Mode";
-                godToggle.ButtonPressed = player.GodMode;
-                godToggle.Toggled += on => player.GodMode = on;
+                godToggle.ButtonPressed = GodModeEnabled;
+                godToggle.Toggled += on =>
+                {
+                    GodModeEnabled = on;
+                    player.GodMode = on;
+                    SaveDebugSettings();
+                };
                 _buttonList.AddChild(godToggle);
+
+                CheckBox collisionToggle = new CheckBox();
+                collisionToggle.Text = "Show Collision Shapes";
+                collisionToggle.ButtonPressed = DebugCollisionsEnabled;
+                collisionToggle.Toggled += on =>
+                {
+                    DebugCollisionsEnabled = on;
+                    ToggleDebugCollisions(on);
+                    SaveDebugSettings();
+                };
+                _buttonList.AddChild(collisionToggle);
             }
 
             if (weapon != null)
@@ -167,7 +237,17 @@ public partial class OptionsOverlay : CanvasLayer
 
                     CheckBox cb = new CheckBox();
                     cb.ButtonPressed = weapon.GetSlotAutoActivate(slotIndex);
-                    cb.Toggled += on => weapon.SetSlotAutoActivate(slotIndex, on);
+                    cb.Toggled += on =>
+                    {
+                        weapon.SetSlotAutoActivate(slotIndex, on);
+                        var manager = GetNode<CharacterManager>("/root/CharacterManager");
+                        var c = manager.SelectedCharacter;
+                        if (c != null && slotIndex < c.SlotAutoActivate.Count)
+                        {
+                            c.SlotAutoActivate[slotIndex] = on;
+                            manager.Save();
+                        }
+                    };
                     col.AddChild(cb);
 
                     row.AddChild(col);
@@ -186,6 +266,26 @@ public partial class OptionsOverlay : CanvasLayer
             manager.Profile?.AddMaterial("crafting_common", 500);
         };
         _buttonList.AddChild(addMatsBtn);
+    }
+
+    private void ToggleDebugCollisions(bool on)
+    {
+        GetTree().DebugCollisionsHint = on;
+        UpdateDebugCollisionsRecursive(GetTree().Root);
+    }
+
+    private void UpdateDebugCollisionsRecursive(Node node)
+    {
+        if (node is CollisionShape3D shape)
+        {
+            bool original = shape.Disabled;
+            shape.Disabled = !original;
+            shape.Disabled = original;
+        }
+        foreach (Node child in node.GetChildren())
+        {
+            UpdateDebugCollisionsRecursive(child);
+        }
     }
 
     private void ClearButtonList()

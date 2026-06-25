@@ -116,6 +116,12 @@ public partial class CharacterManager : Node
         return ids.Count;
     }
 
+    public int GetUnslottedSkillCount()
+    {
+        return Profile.OwnedSkillInstances.Count - CountSlottedSkills();
+    }
+
+
     // ── Instance lookups ──────────────────────────────────────────────────────
 
     public GearItemInstance? FindGearInstance(string? id)
@@ -575,7 +581,7 @@ public partial class CharacterManager : Node
         TriggerChance = d.ContainsKey("triggerChance") ? System.Convert.ToInt32(d["triggerChance"].Obj) : 15,
     };
 
-    private void Save()
+    public void Save()
     {
         var gearArr = new Godot.Collections.Array();
         foreach (var g in Profile.OwnedGearInstances)             gearArr.Add(GearInstToDict(g));

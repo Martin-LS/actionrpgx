@@ -9,6 +9,8 @@ public partial class HealthPickup : Area3D
     public override void _Ready()
     {
         BodyEntered += OnBodyEntered;
+        CollisionLayer = 0; // Pickups don't need a collision layer
+        CollisionMask = 2;  // Only detect Player (2)
         AddChild(new MeshInstance3D
         {
             Mesh             = new BoxMesh { Size = new Vector3(10f, 10f, 10f) },

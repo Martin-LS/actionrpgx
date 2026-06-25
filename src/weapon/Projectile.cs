@@ -37,6 +37,8 @@ public partial class Projectile : Area3D
     public override void _Ready()
     {
         BodyEntered += OnBodyEntered;
+        CollisionLayer = 0; // Projectiles don't need a collision layer
+        CollisionMask = 4;  // Only detect Enemies (4)
         AddChild(new MeshInstance3D
         {
             Mesh = new SphereMesh { Radius = 5f, Height = 10f },

@@ -129,7 +129,7 @@ CharacterScreen (Control)
 - **Left-click** an empty gear slot → opens Equipment component overlay filtered to that slot type; craft skips type-pick step and jumps to subtype list; crafting or selecting auto-equips and opens Equipment Modify Panel
 - **Left-click** an empty skill slot → opens Skill component overlay; craft auto-slots and opens Skill Modify Panel
 - **Delete** is only available from the inventory view for **unequipped / unslotted / unsocketed** items — never from inside a Modify panel for an attached item
-- Modify panels use a two-column layout: left column = augment slot buttons; right panel = context-sensitive (empty slot → pick/craft augment; filled slot → **Upgrade**, **Re-roll (v2)**, **Un-Socket** to remove augment)
+- Modify panels use a two-column layout: left column = augment slot buttons; right panel = context-sensitive (empty slot → pick/craft augment; filled slot → **Upgrade**, **Re-roll**, **Un-Socket** to remove augment)
 
 **Inventory grids:** 50 slots per tab (5 cols, scrollable), all always visible. Empty slots are dimmed. Items in the Skill Augments / Equipment Augments tabs can be permanently deleted only while unslotted/unsocketed — augments are socketed into items via the Modify panel. Capacity: `ProfileData.MaxInventory = 50` — counts only unequipped/unsocketed items. If `SelectedCharacter` is null on `_Ready`, redirects to `account_screen.tscn`.
 

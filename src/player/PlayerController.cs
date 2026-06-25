@@ -183,8 +183,14 @@ public partial class PlayerController : CharacterBody3D
         _mendingTimer = 3.0f;
 
         GlobalPosition = Vector3.Zero;
+        var col = GetNodeOrNull<CollisionShape3D>("CollisionShape");
+        if (col != null)
+            col.Position = new Vector3(0f, 16f, 0f);
+        AxisLockLinearY = false;
         CurrentHealth  = MaxHealth;
         AddToGroup("player");
+        CollisionLayer = 2; // Player Layer
+        CollisionMask = 5;  // Collide with World (1) and Enemies (4)
 
         var visuals = new Node3D();
         visuals.Scale = new Vector3(9f, 9f, 9f);
@@ -261,7 +267,17 @@ public partial class PlayerController : CharacterBody3D
         float indicatorRadius = EffectiveRange > 0f ? EffectiveRange : 1.5f * GameScale.TileSize;
         _rangeIndicator = CreateRangeIndicator(indicatorRadius);
         AddChild(_rangeIndicator);
-        _rangeIndicator.Visible = false;
+
+        var optionsOverlay = GetNodeOrNull<Godot1.Ui.OptionsOverlay>("/root/OptionsOverlay");
+        if (optionsOverlay != null)
+        {
+            GodMode = optionsOverlay.GodModeEnabled;
+            _rangeIndicator.Visible = optionsOverlay.RangeIndicatorEnabled;
+        }
+        else
+        {
+            _rangeIndicator.Visible = false;
+        }
 
         if (TargetIndicatorScene != null)
         {
@@ -281,6 +297,17 @@ public partial class PlayerController : CharacterBody3D
     {
         if (_rangeIndicator != null)
             _rangeIndicator.Visible = visible;
+    }
+
+    public void SetTargetIndicatorVisible(bool visible)
+    {
+        if (_targetIndicator != null)
+            _targetIndicator.Visible = visible && LockedTarget != null && GodotObject.IsInstanceValid(LockedTarget);
+        if (_aimReticle != null)
+        {
+            var wc = GetNodeOrNull<Weapon.WeaponController>("Weapon");
+            _aimReticle.Visible = visible && (wc?.HasAnyPositionSkill() ?? false);
+        }
     }
 
     public void RecalculateEffectiveRange()
@@ -310,34 +337,35 @@ public partial class PlayerController : CharacterBody3D
     private static Node3D CreateAimReticle()
     {
         var root  = new Node3D();
-        var torus = new TorusMesh { OuterRadius = 12f, InnerRadius = 8f, Rings = 32, RingSegments = 8 };
+        var torus = new TorusMesh { OuterRadius = 12f, InnerRadius = 11.8f, Rings = 32, RingSegments = 8 };
         var mat   = new StandardMaterial3D
         {
             ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded,
             AlbedoColor = new Color(1f, 1f, 1f, 0.9f),
         };
         var mesh = new MeshInstance3D { Mesh = torus, MaterialOverride = mat };
-        mesh.RotateX(Mathf.Pi / 2f);
         root.AddChild(mesh);
         return root;
     }
 
     private static MeshInstance3D CreateRangeIndicator(float radius)
     {
-        const float tubeRadius = 1.5f;
-        var torus = new TorusMesh { OuterRadius = radius - tubeRadius, InnerRadius = tubeRadius, Rings = 64, RingSegments = 8 };
+        const float thickness = 0.2f;
+        var torus = new TorusMesh { OuterRadius = radius, InnerRadius = radius - thickness, Rings = 64, RingSegments = 8 };
         var mat = new StandardMaterial3D
         {
             ShadingMode  = BaseMaterial3D.ShadingModeEnum.Unshaded,
             Transparency = BaseMaterial3D.TransparencyEnum.Alpha,
-            AlbedoColor  = new Color(0f, 0.8f, 1f, 0.5f),
+            AlbedoColor  = new Color(1f, 0f, 0f, 0.8f),
             NoDepthTest  = true,
         };
-        return new MeshInstance3D { Mesh = torus, MaterialOverride = mat, Position = new Vector3(0f, 0.5f, 0f) };
+        return new MeshInstance3D { Mesh = torus, MaterialOverride = mat, Position = new Vector3(0f, 0.05f, 0f) };
     }
 
     public override void _PhysicsProcess(double delta)
     {
+        GlobalPosition = new Vector3(GlobalPosition.X, 0f, GlobalPosition.Z);
+
         if (_moveSm == null)
         {
             var at = GetNodeOrNull<AnimationTree>("AnimationTree");
@@ -354,6 +382,8 @@ public partial class PlayerController : CharacterBody3D
             if (_dodgeTimer <= 0f)
             {
                 _isDodging = false;
+                CollisionLayer = 2; // Restore player layer
+                CollisionMask = 5; // Restore normal collision mask
             }
         }
         if (_dodgeCooldownTimer > 0f)
@@ -367,7 +397,7 @@ public partial class PlayerController : CharacterBody3D
 
         if (_isDodging)
         {
-            float moveSpeed = Speed * BalanceConfig.Dodge.SpeedMultiplier;
+            float moveSpeed = BalanceConfig.Dodge.Speed;
             Velocity = _dodgeDirection * moveSpeed;
         }
         else
@@ -395,19 +425,23 @@ public partial class PlayerController : CharacterBody3D
 
         if (_targetIndicator != null)
         {
-            bool hasTarget = LockedTarget != null && GodotObject.IsInstanceValid(LockedTarget);
+            var optionsOverlay = GetNodeOrNull<Godot1.Ui.OptionsOverlay>("/root/OptionsOverlay");
+            bool enabled = optionsOverlay?.TargetIndicatorEnabled ?? true;
+            bool hasTarget = enabled && LockedTarget != null && GodotObject.IsInstanceValid(LockedTarget);
             _targetIndicator.Visible = hasTarget;
             if (hasTarget)
-                _targetIndicator.GlobalPosition = new Vector3(LockedTarget!.GlobalPosition.X, 1f, LockedTarget!.GlobalPosition.Z);
+                _targetIndicator.GlobalPosition = new Vector3(LockedTarget!.GlobalPosition.X, 0.05f, LockedTarget!.GlobalPosition.Z);
         }
 
         if (_aimReticle != null)
         {
+            var optionsOverlay = GetNodeOrNull<Godot1.Ui.OptionsOverlay>("/root/OptionsOverlay");
+            bool enabled = optionsOverlay?.TargetIndicatorEnabled ?? true;
             var wc = GetNodeOrNull<Weapon.WeaponController>("Weapon");
-            bool show = wc?.HasAnyPositionSkill() ?? false;
+            bool show = enabled && (wc?.HasAnyPositionSkill() ?? false);
             _aimReticle.Visible = show;
             if (show)
-                _aimReticle.GlobalPosition = new Vector3(TargetPosition.X, 0.5f, TargetPosition.Z);
+                _aimReticle.GlobalPosition = new Vector3(TargetPosition.X, 0.05f, TargetPosition.Z);
         }
 
         bool inAttack = _animTree != null &&
@@ -526,6 +560,8 @@ public partial class PlayerController : CharacterBody3D
         }
 
         _isDodging = true;
+        CollisionLayer = 0; // Temporarily remove player from physical layer so enemies don't detect/push away
+        CollisionMask = 1; // Ignore enemy layer (phase through), keep world collision
         _dodgeTimer = BalanceConfig.Dodge.Duration;
         _dodgeCooldownTimer = BalanceConfig.Dodge.Cooldown;
         EmitSignal(SignalName.DodgeFired, BalanceConfig.Dodge.Cooldown);

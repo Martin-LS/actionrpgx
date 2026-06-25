@@ -47,10 +47,18 @@ public partial class EnemyController : CharacterBody3D
 
     public override void _Ready()
     {
+        GlobalPosition = new Vector3(GlobalPosition.X, 0f, GlobalPosition.Z);
+        var col = GetNodeOrNull<CollisionShape3D>("CollisionShape");
+        if (col != null)
+            col.Position = new Vector3(0f, 14f, 0f);
+        AxisLockLinearY = false;
+
         _currentHealth = MaxHealth;
         _baseSpeed     = Speed;
         _player = GetTree().GetFirstNodeInGroup("player") as CharacterBody3D;
         AddToGroup("enemies");
+        CollisionLayer = 4; // Enemy Layer
+        CollisionMask = 7;  // Collide with World (1), Player (2), other Enemies (4)
 
         _navAgent = new NavigationAgent3D
         {
@@ -108,6 +116,8 @@ public partial class EnemyController : CharacterBody3D
 
     public override void _PhysicsProcess(double delta)
     {
+        GlobalPosition = new Vector3(GlobalPosition.X, 0f, GlobalPosition.Z);
+
         if (_smPlayback == null)
         {
             var at = GetNodeOrNull<AnimationTree>("AnimationTree");
