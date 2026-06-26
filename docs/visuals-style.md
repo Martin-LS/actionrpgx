@@ -1,6 +1,8 @@
-# Iron & Slate — Color Scheme Reference
+# Iron & Slate — Visual Style & Color Reference
 
-> Color system for a voxel-geometry ARPG (Diablo/PoE style). All colors are hardcoded hex. Use this file as a reference when generating materials, textures, UI elements, lighting, VFX, or any visual asset.
+> **Design spec** — the canonical reference for what this game looks and feels like. Covers construction rules, geometry spec, shading, color palettes, VFX style, and silhouette principles. Read this before designing or commissioning any visual asset.
+> For the build pipeline (Blender workflow, export settings, rig spec, animation clips, asset libraries) see `docs/technical-assets.md`.
+
 
 ---
 
@@ -11,6 +13,109 @@
 - The environment should never fight with the UI; muted world = readable HUD
 - Voxel geometry carries visual interest through **material variation**, not color saturation
 - Players should be trained to react to **gold** as a signal (rare loot, level-up, key events)
+
+---
+
+## Geometry & Construction Spec
+
+### Units
+
+| Name | Size | Usage |
+|---|---|---|
+| Base unit | 0.05 m | Snap grid — all dimensions are multiples of this |
+| Atomic cube | 0.10 m (2 base units) | Single construction block for characters and props |
+| Environment block | 0.50 m (10 base units) | Walls, floors, terrain — 5× atomic, same snap grid |
+
+### 3D Models (Characters, Enemies, Props)
+
+- Every model is a **voxel sculpture** — built entirely from identical **0.10 m atomic cubes**, no stretching or non-uniform scaling of individual blocks.
+- There is no block budget per body part. Use however many cubes are needed to produce a recognisable, well-proportioned shape for that part (e.g. a head is not one box — it is composed of enough cubes to read as a believable but blocky head).
+- **Face shading**: each cube face is a single flat solid color — no textures, no edge lines, no noise. Three tones per material: shadow face, base face, highlight face (see Material Palette below).
+- **Body part gaps**: all body parts (head, torso, upper arm, lower arm, hand, upper leg, lower leg, foot) are separated by a **0.05 m gap** at rest pose. Gaps are always visible — this is a deliberate design signal, not a technical artifact.
+- **Silhouette rule**: every enemy class must have a distinct silhouette archetype (e.g. demons wide and low, undead tall and thin) AND a distinct accent color (see Enemy Color Coding). Both signals are required — either alone is insufficient for fast threat reads.
+
+### VFX Particles
+
+- All particle effects (fire, lightning, poison, blood, magic, etc.) use **3D world-space cubes** — the same axis-aligned cube geometry as models, not flat camera-facing quads.
+- Particles are **lit by the scene** (receive ambient and dynamic light) and are **self-emissive** at their defined hex color. The emission ensures readability in darkness; scene lighting adds warmth and depth on top.
+- **Particle size range**: 0.05 m – 0.20 m. Each effect chooses freely within this range (e.g. fine sparks at 0.05 m, large explosion chunks at 0.20 m).
+- **Particle motion**: axis-aligned only — no rotation. Particles never spin. Visual life comes from velocity, trajectory, and scale-fade (shrinking as they expire).
+- Per-effect color, count, emission rate, lifetime, and size within range are defined by each individual effect. The rules above are non-negotiable across all effects.
+
+### Post-Processing
+
+None. No outlines, no cel-shading pass, no edge detection. Pure geometry and Forward Plus scene lighting only.
+
+---
+
+## Asset Visual Rules
+
+### Shading & Materials
+
+| Property | Rule |
+|---|---|
+| Construction | Atomic cubes only (0.10 m) — no cylinders, spheres, or smooth surfaces |
+| Shading | Flat-shaded. No normal maps. |
+| Textures | None — solid flat-colour materials only, one material per body region |
+| Lighting response | Flat materials respond to scene lighting (not emission). Exception: VFX particles are self-emissive (see Geometry & Construction Spec above) |
+
+### Style Philosophy
+
+Simple is the goal — not a compromise. Resist adding extra detail, surface variation, or complexity. If a shape can be made from fewer cubes, use fewer. The style works because it is consistent and readable, not because any single asset is impressive up close.
+
+**When in doubt: fewer pieces, flatter, blockier.**
+
+### Asset Type Silhouette Rules
+
+| Asset type | Key rules |
+|---|---|
+| Humanoid character | Follow Proportions table. Exaggerate head-to-body ratio (chibi-leaning) |
+| Non-humanoid enemy | Exaggerate one feature for readability (big head, wide body, long arms) |
+| Tree / plant | Trunk = tall thin column of cubes. Canopy = 1–3 offset cube clusters. No leaf mesh |
+| Rock / boulder | 1–3 overlapping cube groups at slightly different offsets. Bevel gives shape |
+| Barrel / crate / chest | Box-dominant. Inset cube cluster for lid/panel detail. One or two accent colour strips |
+| Building / wall | Modular cube sections. Windows = inset darker cube cluster. No arches or curves |
+| Weapon / item | Keep very simple — tiny on screen. 2–4 cubes max |
+
+---
+
+## Character Proportions
+
+All measurements are relative to **head bounding-box width = 1 reference unit**. Each body part is a bounding box filled with 0.10 m atomic cubes — never a single stretched box. Body part gaps are always 0.05 m (see Geometry & Construction Spec).
+
+| Body Part | Width | Height | Depth |
+|---|---|---|---|
+| Head | 1.0 | 1.0 | 1.0 |
+| Torso | 1.0 | 1.2 | 0.6 |
+| Upper arm | 0.25 | 0.55 | 0.25 |
+| Lower arm | 0.22 | 0.45 | 0.22 |
+| Hand | 0.22 | 0.2 | 0.22 |
+| Upper leg | 0.35 | 0.55 | 0.35 |
+| Lower leg | 0.3 | 0.5 | 0.3 |
+| Foot | 0.35 | 0.2 | 0.5 (longer forward) |
+
+Head-to-body ratio: head ≈ 1.0 units, total height ≈ 4.0 units (chibi-leaning — readable from the elevated camera).
+
+---
+
+## Faces & Hair
+
+### Faces
+
+Faces are built onto the front of the head using a small inset darker-coloured cube cluster (or a flat plane mesh pressed into the surface).
+
+| Feature | Shape | Colour |
+|---|---|---|
+| Face area | Slightly lighter rectangle on front of head, inset 0.05 | Skin tone + 10% lighter |
+| Eyes | Two small square boxes (0.1 × 0.1 × 0.05), side by side | Near-black (`#1a1a1a`) |
+| Mouth | Optional — thin rectangle below eyes | Near-black, or omit |
+| No nose | — | — |
+
+### Hair
+
+Hair is a voxel cluster: multiple small cubes (0.15–0.2 reference unit) arranged to fill a volume sitting on top of and overhanging the head. Hair is not rigged — parent as a static mesh to the head bone.
+
+Volume sits ~0.05 above head top, overhangs sides by ~0.1, overhangs back by ~0.2.
 
 ---
 
