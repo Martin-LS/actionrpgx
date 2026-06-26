@@ -27,8 +27,11 @@ public partial class EnemyController : CharacterBody3D
     public float MagicResistance    = 0f;
     public string ModelPath = "res://assets/models/characters/enemy_generic.glb";
 
-    private enum EnemyState { Idle, Chasing }
-    private EnemyState _state = EnemyState.Chasing; // wave-spawned always start chasing
+    private enum EnemyState { Dormant, Idle, Chasing }
+    private EnemyState _state = EnemyState.Dormant;
+
+    public int ClusterId { get; set; } = -1;
+    public void SetIdle() => _state = EnemyState.Idle;
 
     private static readonly float _lostDist  = BalanceConfig.Enemies.LostPlayerDistanceTiles   * GameScale.TileSize;
     private static readonly float _aggroDist = BalanceConfig.Enemies.EnemyAggroRadiusTiles      * GameScale.TileSize;
@@ -47,7 +50,6 @@ public partial class EnemyController : CharacterBody3D
 
     public override void _Ready()
     {
-        GlobalPosition = new Vector3(GlobalPosition.X, 0f, GlobalPosition.Z);
         var col = GetNodeOrNull<CollisionShape3D>("CollisionShape");
         if (col != null)
             col.Position = new Vector3(0f, 14f, 0f);
@@ -116,6 +118,8 @@ public partial class EnemyController : CharacterBody3D
 
     public override void _PhysicsProcess(double delta)
     {
+        if (_state == EnemyState.Dormant) return;
+
         GlobalPosition = new Vector3(GlobalPosition.X, 0f, GlobalPosition.Z);
 
         if (_smPlayback == null)
@@ -136,7 +140,7 @@ public partial class EnemyController : CharacterBody3D
                 MoveAndSlide();
                 _smPlayback?.Travel("idle");
                 if (distToPlayer <= _aggroDist)
-                    _state = EnemyState.Chasing;
+                    WakeCluster();
                 break;
 
             case EnemyState.Chasing:
@@ -150,6 +154,19 @@ public partial class EnemyController : CharacterBody3D
         }
 
         TickEots((float)delta);
+    }
+
+    private void WakeCluster()
+    {
+        _state = EnemyState.Chasing;
+        if (ClusterId < 0) return;
+        foreach (var node in GetTree().GetNodesInGroup("enemies"))
+        {
+            if (node is EnemyController other && other != this
+                && other.ClusterId == ClusterId
+                && other._state == EnemyState.Idle)
+                other._state = EnemyState.Chasing;
+        }
     }
 
     private void ChasePlayer(float delta, float distToPlayer)
@@ -170,6 +187,16 @@ public partial class EnemyController : CharacterBody3D
                 Velocity = direction * Speed;
                 MoveAndSlide();
 
+                if (direction.LengthSquared() > 0.01f)
+                    LookAt(GlobalPosition + direction, Godot.Vector3.Up);
+            }
+            else if (distToPlayer > BalanceConfig.Enemies.MeleeContactRange)
+            {
+                // Fallback: no navmesh path — move directly toward player
+                var diff      = _player!.GlobalPosition - GlobalPosition;
+                var direction = new Godot.Vector3(diff.X, 0f, diff.Z).Normalized();
+                Velocity = direction * Speed;
+                MoveAndSlide();
                 if (direction.LengthSquared() > 0.01f)
                     LookAt(GlobalPosition + direction, Godot.Vector3.Up);
             }
@@ -321,7 +348,7 @@ public partial class EnemyController : CharacterBody3D
 
         if (GD.Randf() < BalanceConfig.Drops.CraftingChance)
         {
-            var session = GetParent().GetNodeOrNull<Run.RunSession>("RunSession");
+            var session = GetTree().GetFirstNodeInGroup("run_session") as Run.RunSession;
             session?.AddCraftingCurrency1(1);
         }
 

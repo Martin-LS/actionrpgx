@@ -11,12 +11,15 @@ public class MapData
     public int      Level      { get; init; }
     public int      ChunkCount { get; init; }
 
-    // Wave-spawn pool: what enemy variants can appear on this map.
-    // Spawner draws randomly weighted by Count. v1: single skeleton entry.
+    // Enemy pool: what variants can appear on this map.
+    // DungeonGenerator draws randomly weighted by Count. v1: single skeleton entry.
     public List<EnemyPoolEntry> EnemyPool { get; init; } = new()
     {
         new EnemyPoolEntry { EnemyType = "skeleton", Count = 1 }
     };
+
+    public int MinEnemiesPerRoom { get; init; } = 2;
+    public int MaxEnemiesPerRoom { get; init; } = 4;
 
     public static MapData GenerateRandom(int level = 1)
     {

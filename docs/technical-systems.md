@@ -387,7 +387,7 @@ No Skill Augments or gear affixes provide AoE bonus in v1. `slot.AoEPctBonus = 0
 
 ### Purpose
 
-Groups idle pre-placed enemies into clusters so that when the player aggros any member, the entire cluster wakes simultaneously — the standard ARPG "pull the whole pack" mechanic. Wave-spawned enemies are never part of a cluster.
+Groups idle pre-placed enemies into clusters so that when the player aggros any member, the entire cluster wakes simultaneously — the standard ARPG "pull the whole pack" mechanic.
 
 ### State Machine Extension
 
@@ -395,11 +395,11 @@ Adds a third state to `EnemyController`:
 
 | State | Who starts here | Behaviour |
 |---|---|---|
-| `Dormant` | Pre-placed enemies at spawn | Zero velocity, no aggro checks, no processing |
-| `Idle` | Pre-placed enemies after `MapReady`; never wave-spawned | Zero velocity; checks per-enemy aggro radius each frame |
-| `Chasing` | Wave-spawned enemies at spawn; all enemies after aggro | Active pursuit — current behaviour |
+| `Dormant` | All enemies at placement time (before `MapReady`) | Zero velocity, no aggro checks, no processing |
+| `Idle` | All enemies after `MapReady` | Zero velocity; checks per-enemy aggro radius each frame |
+| `Chasing` | All enemies after aggro trigger | Active pursuit via navmesh |
 
-Wave-spawned enemies: `_state = EnemyState.Chasing` on spawn (unchanged). Pre-placed enemies: `_state = EnemyState.Dormant` on spawn, transition to `Idle` on `MapReady`.
+All enemies start `Dormant` when placed by `DungeonGenerator`. On `MapReady`, all transition to `Idle` and begin aggro checks.
 
 ### Cluster ID
 
@@ -409,7 +409,7 @@ Wave-spawned enemies: `_state = EnemyState.Chasing` on spawn (unchanged). Pre-pl
 public int ClusterId { get; set; } = -1;  // -1 = no cluster (wave-spawned)
 ```
 
-Set by `DungeonGenerator` after computing clusters. Wave-spawned enemies leave it at `-1` and skip all cluster logic.
+Set by `DungeonGenerator` after computing clusters. `-1` means no cluster (isolated enemy).
 
 ### Cluster Computation
 
@@ -470,20 +470,15 @@ if (ClusterId >= 0)
 
 Only `Idle` cluster-mates are woken — `Dormant` ones (if `MapReady` has not fired yet) and already-`Chasing` ones are skipped.
 
-### LostPlayerDistance Split
+### LostPlayerDistance
 
-`BalanceConfig.Enemies.LostPlayerDistanceTiles` will be split into two constants when pre-placed enemies are implemented:
+`BalanceConfig.Enemies.LostPlayerDistanceTiles` controls the chase leash for pre-placed enemies. When the player moves beyond this distance, the enemy returns to `Idle` and re-runs proximity scanning to rejoin or form a cluster.
 
-| Constant | Value | Used by |
-|---|---|---|
-| `WaveSpawnLostPlayerTiles` | 30f (current) | Wave-spawned enemies |
-| `PrePlacedLostPlayerTiles` | 6–10f (TBD, Balancer) | Pre-placed enemies |
-
-Pre-placed enemies have a much shorter leash — they stop chasing and return to `Idle` once the player moves beyond `PrePlacedLostPlayerTiles`.
+v1 value: 30 tiles. Balancer will tune this down (6–10 tiles is the ARPG design intent) once pre-placed placement and feel are validated.
 
 ### v1 State
 
-No pre-placed enemies exist in v1. `ClusterProximityRadiusTiles` is defined in `BalanceConfig` as scaffolding. The three-state machine, `ClusterId` field, BFS computation, and `SetState` method are added when pre-placed enemy spawning is implemented.
+Pre-placed enemy placement is **implemented in v1**. `DungeonGenerator` places 2–4 enemies per room from `MapData.EnemyPool`. The three-state machine (`Dormant` → `Idle` → `Chasing`), `ClusterId`, BFS cluster computation, and cluster wake-up broadcast are all part of the v1 implementation.
 
 ---
 
@@ -1099,18 +1094,13 @@ Base archetype stats (the `base.*` values) are applied directly at level 1 — n
 
 ---
 
-## Enemy Spawner — Wave Scaling
+## Enemy Types
 
-Time-driven, no fixed waves. `EnemySpawner` recalculates each spawn:
-- **Spawn rate** — starts immediately at t=0; interval = `InitialInterval / (1 + minutes * 0.5)`, clamped to `MinInterval = 0.3s`
-- **Spawn position** — random floor tile from `DungeonGenerator.FloorPositions` at least `SpawnRadius * 0.5` world units from the player; falls back to a ring spawn if no dungeon is present
-- **Enemy types** — v1: single type only (`Skeleton`). Pool will expand in future milestones.
+| Type     | Speed | HP  | Damage | Physical Resist | Model                        |
+|----------|-------|-----|--------|-----------------|------------------------------|
+| Skeleton | 42    | 100 | 5      | 10%             | `kaykit_enemy_skeleton.glb`  |
 
-| Type     | Speed | HP | Damage | Physical Resist | Model                        |
-|----------|-------|----|--------|-----------------|------------------------------|
-| Skeleton | 42    | 2  | 5      | 10%             | `kaykit_enemy_skeleton.glb`  |
-
-All types receive a time-scaling bonus on top: `Speed += 5 * minutes`, `MaxHealth += 3 * (int)minutes`.
+v1: single type only. Pool will expand in future milestones.
 
 ---
 

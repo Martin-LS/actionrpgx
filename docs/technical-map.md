@@ -39,7 +39,9 @@ DungeonGenerator._Ready()
 | `Biome` | `MapBiome` | Determines visual theme and future asset library |
 | `Level` | `int` | Map difficulty; feeds into XP scaling and future modifiers |
 | `ChunkCount` | `int` | Number of rooms to generate (v1: 4–6) |
-| `EnemyPool` | `List<EnemyPoolEntry>` | Typed pool of enemy variants with count + stat modifiers; drawn by EnemySpawner |
+| `EnemyPool` | `List<EnemyPoolEntry>` | Typed pool of enemy variants with count + stat modifiers; drawn by `DungeonGenerator` when populating rooms |
+| `MinEnemiesPerRoom` | `int` | Minimum enemies placed per room (v1 default: 2) |
+| `MaxEnemiesPerRoom` | `int` | Maximum enemies placed per room (v1 default: 4) |
 
 `MapData.GenerateRandom(level)` creates a new instance with a random seed via `System.Random` (not Godot's RNG, so it works before the scene is loaded).
 
@@ -55,7 +57,7 @@ Static class with a single `Pending` property. Bridges the scene change — set 
 
 `Node3D` placed in `main.tscn`. Builds the entire map in `_Ready()`. Exposes:
 - `SpawnPosition` — world position of the player spawn point (centre of room 0)
-- `GetSpawnPointNear(reference, minDist)` — returns a random room centre at least `minDist` away; used by `EnemySpawner`
+- `GetFloorPositionsInRoom(roomIndex)` — returns floor tile world positions for a given room; used by enemy placement
 
 ---
 
@@ -128,7 +130,7 @@ NavigationMesh (AgentRadius=16, AgentHeight=50, CellSize=4, parsed_geometry_type
 → NavigationServer3D.BakeFromSourceGeometryData(navMesh, sourceData)
 → NavigationRegion3D assigned baked mesh, added as child of DungeonMap
 → CallDeferred(EmitSignal(MapReady))
-    // deferred so EnemySpawner._Ready() connects before the signal fires
+    // deferred so all _Ready() subscribers connect before the signal fires
 ```
 
 **Why explicit root?** `NavigationRegion3D.BakeNavigationMesh()` defaults to scanning the region's own children (none — it's an empty node). Using `NavigationServer3D.ParseSourceGeometryData` with `DungeonMap` as the explicit root guarantees all geometry is included.

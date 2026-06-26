@@ -128,7 +128,7 @@ CharacterScreen (Control)
 - **Left-click** a filled equipped/slotted slot → opens Modify panel with **Un-Equip** (gear) or **Un-Socket** (skill) button at top
 - **Left-click** an empty gear slot → opens Equipment component overlay filtered to that slot type; craft skips type-pick step and jumps to subtype list; crafting or selecting auto-equips and opens Equipment Modify Panel
 - **Left-click** an empty skill slot → opens Skill component overlay; craft auto-slots and opens Skill Modify Panel
-- **Delete** is only available from the inventory view for **unequipped / unslotted / unsocketed** items — never from inside a Modify panel for an attached item
+- **Delete** is only available from the inventory view for **unequipped / unslotted / unsocketed** items — never from inside a Modify panel for an attached item. Equipment, skills, and augments can only be deleted if they are not attached/socketed.
 - Modify panels use a two-column layout: left column = augment slot buttons; right panel = context-sensitive (empty slot → pick/craft augment; filled slot → **Upgrade**, **Re-roll**, **Un-Socket** to remove augment)
 
 **Inventory grids:** 50 slots per tab (5 cols, scrollable), all always visible. Empty slots are dimmed. Items in the Skill Augments / Equipment Augments tabs can be permanently deleted only while unslotted/unsocketed — augments are socketed into items via the Modify panel. Capacity: `ProfileData.MaxInventory = 50` — counts only unequipped/unsocketed items. If `SelectedCharacter` is null on `_Ready`, redirects to `account_screen.tscn`.
@@ -172,8 +172,7 @@ Main (Node)
 ├── WorldEnvironment
 ├── Hud (CanvasLayer)          ← health bar, Focus bar (blue), Focus Shield bar (light blue, all archetypes), XP bar, level, coin counter, run timer, skill bar
 ├── WorldHud (Node2D)          ← world-space overlay: health bars + floating damage numbers (see Core Systems)
-├── EnemySpawner (Node)
-├── RunSession (Node)          ← tracks elapsed time; emits RunEnded(won, level, elapsed)
+├── RunSession (Node)          ← tracks elapsed time, enemy kill count; emits RunEnded(won, level, elapsed)
 ├── RunEndOverlay (CanvasLayer)← shown on RunEnded; returns to character_screen.tscn
 └── WorldHud (Node2D)          ← world-space overlay: health bars + floating damage numbers (see Core Systems)
 ```
@@ -197,13 +196,12 @@ Main (Node)
 | Player            | Input, movement, stat sheet, taking damage, Focus pool (CurrentFocus, regen, TrySpendFocus, ReserveFocus/UnreserveFocus, Focus Shield — all archetypes) | `res://src/player/`       | ✅ done |
 | Weapon            | Skill firing — targeting nearest enemy, cooldown management; manual activation (Q E R F + Right Click for 5 slots) and per-slot auto-activate toggle | `res://src/weapon/` | ✅ done |
 | DungeonGenerator  | Procedural map: 4–6 rooms connected by corridors, wall collision, obstacle scatter, player spawn. Bakes navmesh synchronously via NavigationServer3D with DungeonMap as explicit geometry root; emits `MapReady` (deferred) when done. | `res://src/world/` | ✅ done |
-| EnemySpawner      | Time-based wave scaling; starts on `MapReady`. Draws from `MapData.EnemyPool` (typed variants with count + stat modifiers); weighted random selection; spawns enemies at room centres beyond `SpawnRadius * 0.5` from player. | `res://src/enemies/` | ✅ done |
-| Enemy             | State machine: Chasing (wave-spawned, immediate) or Idle (pre-placed, future). `NavigationAgent3D` steers via navmesh path updated every 0.25s. Lost-player threshold: `BalanceConfig.Enemies.LostPlayerDistanceTiles` (30 tiles for wave-spawn). Taking damage, death, drops. | `res://src/enemies/` | ✅ done (proximity cluster system pending) |
+| Enemy             | State machine: Dormant → Idle (on MapReady) → Chasing (on aggro). `NavigationAgent3D` steers via navmesh path updated every 0.25s. Pack aggro via cluster wake-up broadcast. Lost-player threshold: `BalanceConfig.Enemies.LostPlayerDistanceTiles`. Taking damage, death, drops. | `res://src/enemies/` | ✅ done |
+| RunSession        | Run timer, kill counter (connects to each enemy's `Died` signal at placement), win/lose detection, emits RunEnded signal | `res://src/run/`          | ✅ done |
 | XpShard           | XP Shard pickup — auto-collected on contact                  | `res://src/xp/`           | ✅ done |
 | EoT               | Effect over Time — apply, tick, expire on enemies            | `res://src/eot/`          | ✅ done |
 | Hud               | Health bar, Focus bar (blue, below health), Focus Shield bar (light blue, below Focus — all archetypes), XP bar, level, coin counter, run timer | `res://src/hud/`          | ✅ done |
 | WorldHud          | World-space overlay (`Node2D`). Projects 3D world positions to screen. Renders: (1) health bars above all enemies and the player (50×7px, 2s linger after death); (2) floating damage numbers — Bone White `#E8DCC8` for physical, Ice Shimmer `#B8D8E8` for magic, Gold `#D4A017` for crits — with D3-style scale-pop, rise, and fade animation. Connects to `PlayerController.DamageTaken` and `EnemyController.DamageTaken`. | `res://src/hud/`          | ✅ done |
-| RunSession        | Run timer, win/lose detection, emits RunEnded signal         | `res://src/run/`          | ✅ done |
 | UpgradePicker     | (removed from scene — code kept dormant)                     | `res://src/ui/`           | ❌ removed |
 | AccountScreen     | Account hub: character roster, crafting tab; navigates to CharacterScreen on select | `res://src/ui/` | ✅ done |
 | CharacterCreate   | Dedicated create screen: name input + archetype choice       | `res://src/ui/`           | ✅ done |
@@ -324,10 +322,10 @@ Systems communicate via signals only — no direct cross-system method calls.
 | `LeveledUp(int)`            | Player         | Hud (level display)              |
 | `XpChanged(int currentXp, int xpToNextLevel)` | PlayerController | Hud (XP bar value + max) |
 | `SkillFired(int slotIndex, float cooldown, string delivery)` | WeaponController | Hud skill bar (resets cooldown overlay); PlayerController (triggers attack animation via delivery string: "Melee"/"RangeMagic"/other → shot_right, "Ranged" → shot_left) |
-| `Died(position)`            | Enemy          | (reserved — not yet wired)       |
+| `Died(position)`            | EnemyController | RunSession (kill counter → win check); PlayerController.OnEnemyKilled() (player-side effects e.g. ghost step) |
 | `DamageTaken(float effectiveDamage, bool isMagic, bool isCrit)` | EnemyController | WorldHud (spawns floating damage number above enemy; maintains a "dead bar" linger for 2s after death) |
 | `CoinChanged(int)`          | RunSession     | Hud (coin counter)               |
-| `MapReady`                  | DungeonGenerator | EnemySpawner (start wave timer); EnemyController pre-placed instances (unlock idle→chase transition) |
+| `MapReady`                  | DungeonGenerator | All pre-placed EnemyController instances (Dormant→Idle transition, begin aggro checks) |
 | `RunEnded(bool won, int levelReached, float elapsed)` | RunSession | RunEndOverlay (show results, flush run to character) |
 | `FocusChanged(float current, float max)` | PlayerController | HUD (Focus bar) |
 | `ShieldChanged(float current, float max)` | PlayerController | HUD (Focus Shield bar — all archetypes) |
@@ -336,40 +334,32 @@ Systems communicate via signals only — no direct cross-system method calls.
 
 ## Enemy Spawning Architecture
 
-### Two spawning sources
-
-| Source | When | Aggro | Cluster |
-|---|---|---|---|
-| Pre-placed (room templates) | Map load | Idle until player enters proximity | Yes — proximity cluster system |
-| Wave-spawned (EnemySpawner) | During run, after `MapReady` | Immediate on spawn | Never |
+All enemies are pre-placed by `DungeonGenerator` at map generation time. There is no wave spawner.
 
 ### Map load sequence
 
 ```
 DungeonGenerator._Ready() builds rooms, corridors, obstacles
-→ NavigationServer3D.ParseSourceGeometryData(navMesh, data, dungeonMap)  // explicit root
-→ NavigationServer3D.BakeFromSourceGeometryData(navMesh, data)           // synchronous
+→ Places 2–4 enemies per room from MapData.EnemyPool (random floor tiles, min spacing)
+→ Computes proximity clusters (BFS over placed enemies)
+→ Connects each enemy's Died signal → RunSession.OnEnemyDied()
+→ NavigationServer3D.ParseSourceGeometryData(navMesh, data, dungeonMap)
+→ NavigationServer3D.BakeFromSourceGeometryData(navMesh, data)  // synchronous
 → NavigationRegion3D added with baked mesh
-→ CallDeferred(EmitSignal(MapReady))   // deferred so all _Ready() subscribers have connected
-→ EnemySpawner.OnMapReady() → reads EnemyPool from MapData, starts wave timer
-→ (future) Pre-placed enemies unlock idle→chase transition
+→ CallDeferred(EmitSignal(MapReady))
+→ All enemies transition Dormant → Idle; aggro checks begin
 ```
 
-`MapReady` is emitted deferred (not immediately after bake) to avoid a race condition: `DungeonMap` is node 4 in `main.tscn` and `EnemySpawner` is node 8 — without deferral, the signal fires before EnemySpawner's `_Ready()` connects its handler.
+`MapReady` is emitted deferred so all `_Ready()` subscribers have connected before the signal fires.
 
 ### Proximity cluster system (runtime)
 
-Clusters are not scene nodes — they are an emergent runtime grouping of idle enemies. No authored clump objects exist.
-
-**Algorithm (runs on idle enemies only):**
-- Each idle enemy maintains a proximity radius
-- Connected components among idle enemies within that radius form a cluster
-- Recomputed on state change (enemy enters or leaves idle), not every frame
+Clusters are not scene nodes — they are an emergent runtime grouping of idle enemies computed once at map load by `DungeonGenerator`.
 
 **State machine per `EnemyController`:**
 
 ```
-Dormant (pre-MapReady, future pre-placed enemies only)
+Dormant (all enemies at placement time)
   → MapReady fires → Idle
 Idle
   → player enters aggro radius → wake self + connected cluster → Chasing

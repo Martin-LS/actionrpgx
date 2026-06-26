@@ -61,6 +61,7 @@ public partial class WorldHud : Node2D
             if (_connectedEnemies.Add(ec))
             {
                 ec.DamageTaken += (dmg, isMagic, isCrit) => OnEnemyDamageTaken(ec, dmg, isMagic, isCrit);
+                ec.Died        += pos => OnEnemyDied(ec, pos);
                 ec.TreeExited  += () => _connectedEnemies.Remove(ec);
             }
         }
@@ -120,28 +121,19 @@ public partial class WorldHud : Node2D
 
     private void OnEnemyDamageTaken(EnemyController ec, float damage, bool isMagic, bool isCrit)
     {
-        float healthAfter = Mathf.Max(0f, ec.CurrentHealth - Mathf.CeilToInt(damage));
-
-        var id = ec.GetInstanceId();
-        if (_deadBars.TryGetValue(id, out var bar))
-        {
-            bar.Timer    = DeadBar.Lifetime;
-            bar.WorldPos = ec.GlobalPosition;
-            bar.Current  = healthAfter;
-        }
-        else
-        {
-            _deadBars[id] = new DeadBar
-            {
-                WorldPos = ec.GlobalPosition,
-                Current  = healthAfter,
-                Max      = ec.MaxHealth,
-                Timer    = DeadBar.Lifetime,
-            };
-        }
-
         var sp = Project(ec.GlobalPosition);
         if (sp.HasValue) SpawnNum(sp.Value + new Vector2(0f, HeadScreenOffY), damage, isMagic, isCrit);
+    }
+
+    private void OnEnemyDied(EnemyController ec, Vector3 pos)
+    {
+        _deadBars[ec.GetInstanceId()] = new DeadBar
+        {
+            WorldPos = pos,
+            Current  = 0f,
+            Max      = ec.MaxHealth,
+            Timer    = DeadBar.Lifetime,
+        };
     }
 
     private void OnPlayerDamageTaken(float damage, bool isMagic)

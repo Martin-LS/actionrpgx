@@ -15,7 +15,7 @@ public partial class OptionsOverlay : CanvasLayer
     public bool RangeIndicatorEnabled { get; private set; } = false;
     public bool GodModeEnabled { get; private set; } = false;
     public bool TargetIndicatorEnabled { get; private set; } = true;
-    public bool DebugCollisionsEnabled { get; private set; } = false;
+
 
     public override void _Ready()
     {
@@ -132,8 +132,7 @@ public partial class OptionsOverlay : CanvasLayer
             RangeIndicatorEnabled = dict.ContainsKey("rangeIndicator") && System.Convert.ToBoolean(dict["rangeIndicator"].Obj);
             GodModeEnabled = dict.ContainsKey("godMode") && System.Convert.ToBoolean(dict["godMode"].Obj);
             TargetIndicatorEnabled = !dict.ContainsKey("targetIndicator") || System.Convert.ToBoolean(dict["targetIndicator"].Obj);
-            DebugCollisionsEnabled = dict.ContainsKey("debugCollisions") && System.Convert.ToBoolean(dict["debugCollisions"].Obj);
-            GetTree().DebugCollisionsHint = DebugCollisionsEnabled;
+
         }
     }
 
@@ -144,7 +143,7 @@ public partial class OptionsOverlay : CanvasLayer
             ["rangeIndicator"] = RangeIndicatorEnabled,
             ["godMode"] = GodModeEnabled,
             ["targetIndicator"] = TargetIndicatorEnabled,
-            ["debugCollisions"] = DebugCollisionsEnabled
+
         };
         using var file = FileAccess.Open(DebugSettingsPath, FileAccess.ModeFlags.Write);
         file?.StoreString(Json.Stringify(dict));
@@ -204,16 +203,7 @@ public partial class OptionsOverlay : CanvasLayer
                 };
                 _buttonList.AddChild(godToggle);
 
-                CheckBox collisionToggle = new CheckBox();
-                collisionToggle.Text = "Show Collision Shapes";
-                collisionToggle.ButtonPressed = DebugCollisionsEnabled;
-                collisionToggle.Toggled += on =>
-                {
-                    DebugCollisionsEnabled = on;
-                    ToggleDebugCollisions(on);
-                    SaveDebugSettings();
-                };
-                _buttonList.AddChild(collisionToggle);
+
             }
 
             if (weapon != null)
@@ -268,25 +258,7 @@ public partial class OptionsOverlay : CanvasLayer
         _buttonList.AddChild(addMatsBtn);
     }
 
-    private void ToggleDebugCollisions(bool on)
-    {
-        GetTree().DebugCollisionsHint = on;
-        UpdateDebugCollisionsRecursive(GetTree().Root);
-    }
 
-    private void UpdateDebugCollisionsRecursive(Node node)
-    {
-        if (node is CollisionShape3D shape)
-        {
-            bool original = shape.Disabled;
-            shape.Disabled = !original;
-            shape.Disabled = original;
-        }
-        foreach (Node child in node.GetChildren())
-        {
-            UpdateDebugCollisionsRecursive(child);
-        }
-    }
 
     private void ClearButtonList()
     {

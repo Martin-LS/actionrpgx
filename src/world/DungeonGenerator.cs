@@ -1,6 +1,9 @@
 using Godot;
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using ActionRpgX.Enemies;
+using ActionRpgX.Run;
 
 namespace ActionRpgX.World;
 
@@ -8,7 +11,11 @@ public partial class DungeonGenerator : Node3D
 {
     [Signal] public delegate void MapReadyEventHandler();
 
-    private readonly List<Vector3> _floorPositions = new();
+    private static readonly PackedScene EnemyScene =
+        GD.Load<PackedScene>("res://src/enemies/enemy.tscn");
+
+    private readonly List<Vector3>           _floorPositions = new();
+    private readonly List<EnemyController>   _placedEnemies  = new();
 
     private const float RoomSize       = 400f;
     private const float CorridorWidth  = 90f;
@@ -103,6 +110,12 @@ public partial class DungeonGenerator : Node3D
         }
 
         ScatterObstacles(rooms, rng);
+        PlaceEnemies(rooms, mapData, rng);
+        ComputeClusters();
+        ConnectEnemySignals();
+
+        var enemiesToAdd = _placedEnemies.ToList();
+        Callable.From(() => { foreach (var e in enemiesToAdd) AddChild(e); }).CallDeferred();
 
         var player = GetTree().GetFirstNodeInGroup("player") as Node3D;
         if (player != null)
@@ -130,8 +143,12 @@ public partial class DungeonGenerator : Node3D
         var region = new NavigationRegion3D { NavigationMesh = navMesh };
         AddChild(region);
 
-        // Deferred so EnemySpawner._Ready() has connected before the signal fires
-        Callable.From(() => EmitSignal(SignalName.MapReady)).CallDeferred();
+        // Deferred so all _Ready() subscribers have connected before the signal fires
+        Callable.From(() =>
+        {
+            foreach (var e in _placedEnemies) e.SetIdle();
+            EmitSignal(SignalName.MapReady);
+        }).CallDeferred();
     }
 
     private void AddFloorPatch(float cx, float cz, float w, float d,
@@ -300,15 +317,114 @@ public partial class DungeonGenerator : Node3D
         return list;
     }
 
-    public Vector3 GetSpawnPointNear(Vector3 reference, float minDist)
+    private void PlaceEnemies(List<(int gx, int gz)> rooms, MapData mapData, Random rng)
     {
-        if (_floorPositions.Count == 0) return reference;
-        var candidates = new List<int>();
-        for (int i = 0; i < _floorPositions.Count; i++)
-            if (_floorPositions[i].DistanceTo(reference) >= minDist)
-                candidates.Add(i);
-        if (candidates.Count > 0)
-            return _floorPositions[candidates[(int)(GD.Randi() % (uint)candidates.Count)]];
-        return _floorPositions[(int)(GD.Randi() % (uint)_floorPositions.Count)];
+        int poolTotal = 0;
+        foreach (var e in mapData.EnemyPool) poolTotal += e.Count;
+        if (poolTotal <= 0) poolTotal = 1;
+
+        const float Margin     = 60f;
+        const float MinSpacing = 80f;
+        float half = RoomSize / 2f - Margin;
+
+        foreach (var (gx, gz) in rooms)
+        {
+            if (gx == 0 && gz == 0) continue; // skip player spawn room
+
+            float cx    = gx * GridStep;
+            float cz    = gz * GridStep;
+            int   count = rng.Next(mapData.MinEnemiesPerRoom, mapData.MaxEnemiesPerRoom + 1);
+            var   spots = new List<Vector3>();
+
+            for (int i = 0; i < count; i++)
+            {
+                Vector3 pos   = Vector3.Zero;
+                bool    found = false;
+                for (int attempt = 0; attempt < 20; attempt++)
+                {
+                    float px = cx + (float)(rng.NextDouble() * 2 - 1) * half;
+                    float pz = cz + (float)(rng.NextDouble() * 2 - 1) * half;
+                    pos = new Vector3(px, 0f, pz);
+                    bool tooClose = false;
+                    foreach (var s in spots)
+                        if (s.DistanceTo(pos) < MinSpacing) { tooClose = true; break; }
+                    if (!tooClose) { found = true; break; }
+                }
+                if (!found) continue;
+
+                var entry = PickPoolEntry(mapData.EnemyPool, poolTotal, rng);
+                var enemy = EnemyScene.Instantiate<EnemyController>();
+                ApplyEnemyEntry(enemy, entry, mapData.Level);
+                enemy.Position = pos;
+                _placedEnemies.Add(enemy);
+                spots.Add(pos);
+            }
+        }
+    }
+
+    private static EnemyPoolEntry PickPoolEntry(List<EnemyPoolEntry> pool, int total, Random rng)
+    {
+        int roll = rng.Next(total);
+        int acc  = 0;
+        foreach (var e in pool)
+        {
+            acc += e.Count;
+            if (roll < acc) return e;
+        }
+        return pool[0];
+    }
+
+    private static void ApplyEnemyEntry(EnemyController enemy, EnemyPoolEntry entry, int mapLevel)
+    {
+        var data = EnemyRegistry.Get(entry.EnemyType);
+        enemy.Speed              = data.BaseSpeed + entry.SpeedBonus;
+        enemy.MaxHealth          = data.BaseHealth + entry.HpBonus;
+        enemy.ContactDamage      = data.ContactDamage + entry.DamageBonus;
+        enemy.DamageInterval     = data.DamageInterval;
+        enemy.PhysicalResistance = data.PhysicalResistance + entry.ArmorBonus * 0.01f;
+        enemy.MagicResistance    = data.MagicResistance;
+        enemy.ModelPath          = data.ModelPath;
+        enemy.MapLevel           = mapLevel;
+    }
+
+    private void ComputeClusters()
+    {
+        float radius  = BalanceConfig.Enemies.ClusterProximityRadiusTiles * GameScale.TileSize;
+        int   nextId  = 0;
+        var   visited = new HashSet<int>();
+
+        for (int i = 0; i < _placedEnemies.Count; i++)
+        {
+            if (visited.Contains(i)) continue;
+            int id    = nextId++;
+            var queue = new Queue<int>();
+            queue.Enqueue(i);
+            visited.Add(i);
+            _placedEnemies[i].ClusterId = id;
+
+            while (queue.Count > 0)
+            {
+                int cur = queue.Dequeue();
+                for (int j = 0; j < _placedEnemies.Count; j++)
+                {
+                    if (visited.Contains(j)) continue;
+                    if (_placedEnemies[cur].Position.DistanceTo(_placedEnemies[j].Position) <= radius)
+                    {
+                        visited.Add(j);
+                        _placedEnemies[j].ClusterId = id;
+                        queue.Enqueue(j);
+                    }
+                }
+            }
+        }
+    }
+
+    private void ConnectEnemySignals()
+    {
+        var session = GetParent().GetNodeOrNull<RunSession>("RunSession");
+        if (session == null) return;
+        session.SetTotalEnemies(_placedEnemies.Count);
+        foreach (var enemy in _placedEnemies)
+            enemy.Died += session.OnEnemyDied;
     }
 }

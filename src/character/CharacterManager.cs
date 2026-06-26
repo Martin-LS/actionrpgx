@@ -284,6 +284,39 @@ public partial class CharacterManager : Node
         Save();
     }
 
+    public void DeleteSkillAugmentItem(string instanceId)
+    {
+        Profile.OwnedSkillAugmentInstances.RemoveAll(a => a.Id == instanceId);
+        foreach (var s in Profile.OwnedSkillInstances)
+        {
+            for (int i = 0; i < s.SocketedSkillAugmentIds.Count; i++)
+                if (s.SocketedSkillAugmentIds[i] == instanceId)
+                    s.SocketedSkillAugmentIds[i] = "";
+        }
+        Save();
+    }
+
+    public void DeleteEquipmentAugmentItem(string instanceId)
+    {
+        Profile.OwnedEquipmentAugmentInstances.RemoveAll(a => a.Id == instanceId);
+        foreach (var g in Profile.OwnedGearInstances)
+        {
+            for (int i = 0; i < g.SocketedEquipmentAugmentIds.Count; i++)
+                if (g.SocketedEquipmentAugmentIds[i] == instanceId)
+                    g.SocketedEquipmentAugmentIds[i] = "";
+        }
+        foreach (var c in _characters)
+        {
+            foreach (var g in c.EquippedGear.Values)
+            {
+                for (int i = 0; i < g.SocketedEquipmentAugmentIds.Count; i++)
+                    if (g.SocketedEquipmentAugmentIds[i] == instanceId)
+                        g.SocketedEquipmentAugmentIds[i] = "";
+            }
+        }
+        Save();
+    }
+
     public void DeleteSkillPermanently(string charId, int slotIndex)
     {
         var c = _characters.FirstOrDefault(x => x.Id == charId);

@@ -773,6 +773,25 @@ public partial class CharacterScreen : Control
             };
             header.AddChild(unEquipBtn);
         }
+        else
+        {
+            bool hasAugment = instance.SocketedEquipmentAugmentIds.Any(id => !string.IsNullOrEmpty(id));
+            var deleteBtn = new Button
+            {
+                Text = "Delete",
+                Disabled = hasAugment,
+                TooltipText = hasAugment ? "Cannot delete equipment with socketed augments. Un-socket augments first." : "Permanently delete equipment"
+            };
+            deleteBtn.AddThemeFontOverride("font", font);
+            deleteBtn.AddThemeColorOverride("font_color", new Color("#E85050"));
+            deleteBtn.Pressed += () =>
+            {
+                _manager.DeleteGearItem(instance.Id);
+                CloseOverlay(overlay);
+                Refresh();
+            };
+            header.AddChild(deleteBtn);
+        }
 
         var closeBtn = new Button { Text = "✕" };
         closeBtn.AddThemeFontOverride("font", font);
@@ -1179,6 +1198,25 @@ public partial class CharacterScreen : Control
             };
             header.AddChild(unSocketBtn);
         }
+        else
+        {
+            bool hasAugment = instance.SocketedSkillAugmentIds.Any(id => !string.IsNullOrEmpty(id));
+            var deleteBtn = new Button
+            {
+                Text = "Delete",
+                Disabled = hasAugment,
+                TooltipText = hasAugment ? "Cannot delete skill with socketed augments. Un-socket augments first." : "Permanently delete skill"
+            };
+            deleteBtn.AddThemeFontOverride("font", font);
+            deleteBtn.AddThemeColorOverride("font_color", new Color("#E85050"));
+            deleteBtn.Pressed += () =>
+            {
+                _manager.DeleteSkillItem(instance.Id);
+                CloseOverlay(overlay);
+                Refresh();
+            };
+            header.AddChild(deleteBtn);
+        }
 
         var closeBtn = new Button { Text = "✕" };
         closeBtn.AddThemeFontOverride("font", font);
@@ -1460,6 +1498,18 @@ public partial class CharacterScreen : Control
         var rrBtn = MakeModifyButton("Re-roll Trigger %  [1 Common]", !canReroll);
         rrBtn.Pressed += () => { _manager.RerollSkillAugment(instance.Id); CloseOverlay(overlay); Refresh(); ShowAugmentModifyPanel(instance); };
         vbox.AddChild(rrBtn);
+
+        bool isSocketed = _manager.Profile.OwnedSkillInstances.Any(s => s.SocketedSkillAugmentIds.Contains(instance.Id));
+        var deleteBtn = MakeModifyButton("Delete", isSocketed);
+        deleteBtn.AddThemeColorOverride("font_color", new Color("#E85050"));
+        deleteBtn.TooltipText = isSocketed ? "Cannot delete a socketed augment. Un-socket it first." : "Permanently delete augment";
+        deleteBtn.Pressed += () =>
+        {
+            _manager.DeleteSkillAugmentItem(instance.Id);
+            CloseOverlay(overlay);
+            Refresh();
+        };
+        vbox.AddChild(deleteBtn);
     }
 
     private void ShowEquipmentAugmentModifyPanel(EquipmentAugmentInstance instance)
@@ -1495,6 +1545,19 @@ public partial class CharacterScreen : Control
         var rrBtn = MakeModifyButton("Re-roll Trigger %  [1 Common]", !canReroll);
         rrBtn.Pressed += () => { _manager.RerollEquipmentAugment(instance.Id); CloseOverlay(overlay); Refresh(); ShowEquipmentAugmentModifyPanel(instance); };
         vbox.AddChild(rrBtn);
+
+        bool isSocketed = _manager.Profile.OwnedGearInstances.Any(g => g.SocketedEquipmentAugmentIds.Contains(instance.Id))
+                       || _manager.GetAll().Any(c => c.EquippedGear.Values.Any(g => g.SocketedEquipmentAugmentIds.Contains(instance.Id)));
+        var deleteBtn = MakeModifyButton("Delete", isSocketed);
+        deleteBtn.AddThemeColorOverride("font_color", new Color("#E85050"));
+        deleteBtn.TooltipText = isSocketed ? "Cannot delete a socketed augment. Un-socket it first." : "Permanently delete augment";
+        deleteBtn.Pressed += () =>
+        {
+            _manager.DeleteEquipmentAugmentItem(instance.Id);
+            CloseOverlay(overlay);
+            Refresh();
+        };
+        vbox.AddChild(deleteBtn);
     }
 
     private void ShowCraftAugmentToInventoryOverlay()

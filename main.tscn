@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://dq3x7f2rkm8yp"]
 
 [ext_resource type="PackedScene" uid="uid://b2jv4d1ynue3q" path="res://src/player/player.tscn" id="1_0xm2m"]
-[ext_resource type="Script" uid="uid://bpey7ysst6hsh" path="res://src/enemies/EnemySpawner.cs" id="6_7mycd"]
+
 [ext_resource type="PackedScene" uid="uid://c000f6ave0x4q" path="res://src/hud/hud.tscn" id="6_272bh"]
 [ext_resource type="Script" uid="uid://clvc3ypi7ty0y" path="res://src/hud/WorldHud.cs" id="8_5vw27"]
 [ext_resource type="Script" uid="uid://drs7mknbpx3t" path="res://src/run/RunSession.cs" id="9_rsess"]
@@ -28,8 +28,6 @@ environment = SubResource("Environment_main")
 
 [node name="Hud" parent="." unique_id=420008163 instance=ExtResource("6_272bh")]
 
-[node name="EnemySpawner" type="Node" parent="." unique_id=1044822307]
-script = ExtResource("6_7mycd")
 
 [node name="RunSession" type="Node" parent="." unique_id=1263619530]
 script = ExtResource("9_rsess")

@@ -80,4 +80,3 @@ process_material = SubResource("ParticleProcessMaterial_k4qqe")
 draw_passes = 2
 draw_pass_1 = SubResource("QuadMesh_kv1vr")
 draw_pass_2 = SubResource("QuadMesh_jtoiu")
-script = ExtResource("3_24ofy")

@@ -291,6 +291,12 @@ public partial class PlayerController : CharacterBody3D
         GetTree().Root.CallDeferred(Node.MethodName.AddChild, _aimReticle);
     }
 
+    public override void _ExitTree()
+    {
+        _targetIndicator?.QueueFree();
+        _aimReticle?.QueueFree();
+    }
+
     public bool RangeIndicatorVisible => _rangeIndicator?.Visible ?? false;
 
     public void SetRangeIndicatorVisible(bool visible)
@@ -717,7 +723,7 @@ public partial class PlayerController : CharacterBody3D
                 }
                 GetTree().Root.AddChild(vfx);
                 vfx.GlobalPosition = GlobalPosition + new Vector3(0f, 20f, 0f);
-                vfx.Call("activate_effects");
+                vfx.Emitting = true;
                 GetTree().CreateTimer(2.0).Timeout += vfx.QueueFree;
             }
             catch (System.Exception e)

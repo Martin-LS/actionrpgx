@@ -83,7 +83,7 @@ public partial class Projectile : Area3D
             fx.ProcessMaterial = mat;
             GetTree().Root.AddChild(fx);
             fx.GlobalPosition = hitPos;
-            fx.Call("activate_effects");
+            fx.Emitting = true;
             GetTree().CreateTimer(2.0).Timeout += fx.QueueFree;
         }
         catch (System.Exception e)

@@ -159,7 +159,7 @@ public static class BalanceConfig
         public static class Skeleton
         {
             public const float BaseSpeed          = 42f;
-            public const int   BaseHealth         = 2;
+            public const int   BaseHealth         = 100;
             public const int   ContactDamage      = 5;
             public const float PhysicalResistance = 0.10f;
         }

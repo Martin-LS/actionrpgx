@@ -417,15 +417,11 @@ All types scale with elapsed time — speed and HP increase per minute. Spawn ra
 
 ### Enemy Spawning
 
-There are two categories of enemy presence in a run:
+All enemies in a run are **pre-placed** — `DungeonGenerator` populates each room at map generation time. There is no wave spawner or time-based respawning. Clearing a room is permanent progress.
 
-**Pre-placed enemies** — authored into room templates when the map is built. Start idle. Aggro via the proximity cluster system below.
+#### Enemy Pool
 
-**Wave-spawned enemies** — spawned dynamically during the run as part of escalating difficulty. Always aggro immediately on spawn — no idle state, no cluster membership. These are the horde.
-
-#### Enemy Pool (wave-spawned)
-
-What wave-spawned enemies can appear is defined per map by an **enemy pool** — a list of typed variants with counts and stat modifiers:
+What enemies can appear is defined per map by an **enemy pool** — a list of typed variants with counts and stat modifiers:
 
 ```
 EnemyPoolEntry:
@@ -433,14 +429,18 @@ EnemyPoolEntry:
   Count: int              // drives spawn ratio (weight in the pool)
   Modifiers:
 	ArmorBonus: int       // e.g. +5, +10
-	HpBonus: int          // future
-	SpeedBonus: int       // future
-	DamageBonus: int      // future
+	HpBonus: int
+	SpeedBonus: int
+	DamageBonus: int
 ```
 
-The spawner draws randomly from the pool weighted by `Count`. Modifiers are applied to the enemy instance at spawn time on top of base stats. v1: one entry, `skeleton`, count 1, all modifiers zero.
+`DungeonGenerator` draws randomly from the pool weighted by `Count` when placing enemies in each room. Modifiers are applied at spawn on top of base stats. v1: one entry, `skeleton`, count 1, all modifiers zero.
 
-**Map crafting hook:** when maps become craftable, the player configures the enemy pool — e.g. "warrior skeletons only" or "5× light skeleton + 10× heavy skeleton". The spawner consumes whatever the pool defines; no spawner changes needed.
+**Map crafting hook:** when maps become craftable, the player configures the enemy pool — e.g. "warrior skeletons only" or "5× light skeleton + 10× heavy skeleton". The generator consumes whatever the pool defines; no other changes needed.
+
+#### Room Population
+
+Each room receives `MinEnemiesPerRoom`–`MaxEnemiesPerRoom` enemies (defined in `MapData`; v1 default: 2–4). Enemies are placed on random floor tiles within the room with a minimum spacing between them to avoid stacking. Placement runs once at map generation; dead enemies are never replaced.
 
 #### Proximity Cluster System (pre-placed enemies)
 
@@ -461,18 +461,16 @@ Pre-placed enemies are always **idle** at map load. Clusters are not authored or
 
 > **Current value: 30 tiles (1080 world units).** Wave-spawned enemies need a threshold that exceeds their spawn distance (~560 units / ~15.5 tiles from the nearest room centre), or they switch to Idle immediately on spawn. Once pre-placed enemies are implemented, they should use a separate, smaller config value (6–10 tiles is the intended design range for pre-placed). `LostPlayerDistanceTiles` will be split into `WaveSpawnLostPlayerTiles` and `PrePlacedLostPlayerTiles` at that point.
 
-**Wave-spawned enemies** are always created in the chasing state — they never participate in clustering.
-
-**No manual clump authoring required.** Room designers place enemies; the proximity system handles grouping automatically. The only tuning lever is the proximity radius (how far apart enemies can be and still cluster together) — this can live on `MapData` to allow different maps to feel tighter or looser.
+**No manual clump authoring required.** Room population is random; the proximity system handles grouping automatically. The only tuning lever is the proximity radius (how far apart enemies can be and still cluster together) — this can live on `MapData` to allow different maps to feel tighter or looser.
 
 ---
 
 ## Win / Lose Conditions
 
-| Condition     | Outcome                                                        |
-|---------------|----------------------------------------------------------------|
-| Player HP = 0 | Run lost — level, XP, coins, and crafting materials earned still saved |
-| Timer expires | Run won — all rewards saved; [boss mechanic TBD]              |
+| Condition         | Outcome                                                        |
+|-------------------|----------------------------------------------------------------|
+| Player HP = 0     | Run lost — level, XP, coins, and crafting materials earned still saved |
+| All enemies killed | Run won — WIN dialog shown; all rewards saved; player returned to character screen |
 
 In both cases the player is returned to the character screen. There is no death penalty — every run makes the character stronger regardless of outcome.
 

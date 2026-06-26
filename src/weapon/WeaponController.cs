@@ -743,11 +743,6 @@ public partial class WeaponController : Node
         target.TakeDamage(damage, dmgType, isCrit);
         ApplyEots(target, eots, critMultiplier);
         SpawnHitVfx(hitPos);
-        var hitFx = EntityBurstVfxScene.Instantiate<Node3D>();
-        GetTree().Root.AddChild(hitFx);
-        hitFx.GlobalPosition = hitPos;
-        hitFx.GetNode<GpuParticles3D>("Particles").Emitting = true;
-        GetTree().CreateTimer(0.6).Timeout += hitFx.QueueFree;
     }
 
     private void ApplyEots(Enemies.EnemyController enemy, List<(string Id, float Chance)> eots, float critMultiplier)
@@ -771,7 +766,7 @@ public partial class WeaponController : Node
             fx.ProcessMaterial = mat;
             GetTree().Root.AddChild(fx);
             fx.GlobalPosition = hitPos;
-            fx.Call("activate_effects");
+            fx.Emitting = true;
             GetTree().CreateTimer(2.0).Timeout += fx.QueueFree;
         }
         catch (System.Exception e)

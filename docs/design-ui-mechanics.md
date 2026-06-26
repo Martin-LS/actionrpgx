@@ -8,7 +8,7 @@
 **Reusable components — the core pattern.** Skills and Augments share one design pattern: a component that shows a Craft button and a list of owned items, reused in both the inventory tab and inside slot interactions. The component's event handlers differ by context (inventory vs. slot), but the visual is identical — styling changes propagate everywhere automatically.
 
 * **Re-roll functionality:** The `[ Re-roll ]` buttons shown on skills and augments throughout the Modify panels are active for v1. Re-rolling costs 1 Common material and rolls a random new trigger chance in the range `[10 * Tier, 30 * Tier]` percentage.
-* **Delete rule:** Items can only be permanently deleted while **unequipped / unslotted / unsocketed**. Equipped gear, slotted skills, and socketed augments cannot be deleted directly — they must first be detached (returned to inventory), then deleted from the inventory view. This applies universally across all item types.
+* **Delete rule:** Items can only be permanently deleted while **unequipped / unslotted / unsocketed**. Equipped gear, slotted skills, and socketed augments cannot be deleted directly — they must first be detached (returned to inventory), then deleted from the inventory view. This applies universally across all item types. Additionally, an equipment or skill item can only be deleted if it has no augments socketed inside it.
 * **Un-Socket / Un-Equip button visibility:** The **Un-Socket** button (skills and all augments) and **Un-Equip** button (gear) only appear in a Modify panel when the item is actually attached to a slot. When a Modify panel is opened from the inventory or from an empty slot context, these buttons are not shown.
 
 ---
@@ -55,7 +55,7 @@
 
 ### Skill Augment Modify Panel (from inventory)
 
-Augment name + **Upgrade** + **Re-roll** (no Remove). Same visual as the filled-slot view in the Skill Modify Panel.
+Augment name + **Upgrade** + **Re-roll** + **Delete** (no Remove). Same visual as the filled-slot view in the Skill Modify Panel but with a Delete option when not socketed.
 
 ---
 
@@ -68,7 +68,7 @@ Augment name + **Upgrade** + **Re-roll** (no Remove). Same visual as the filled-
 
 ### Equipment Augment Modify Panel (from inventory)
 
-Augment name + **Upgrade** + **Re-roll** (no Remove). Same visual as the filled-slot view in the Equipment Modify Panel.
+Augment name + **Upgrade** + **Re-roll** + **Delete** (no Remove). Same visual as the filled-slot view in the Equipment Modify Panel but with a Delete option when not socketed.
 
 ---
 

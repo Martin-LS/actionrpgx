@@ -5,8 +5,7 @@ namespace ActionRpgX.Run;
 
 public partial class RunSession : Node
 {
-    [Export] public float RunDuration = 300f;
-    [Export] public int   MapLevel    = 1;
+    [Export] public int MapLevel = 1;
 
     [Signal] public delegate void RunEndedEventHandler(bool won, int levelReached, float elapsed);
     [Signal] public delegate void CoinChangedEventHandler(int total);
@@ -17,9 +16,12 @@ public partial class RunSession : Node
 
     private float _elapsed;
     private bool  _ended;
+    private int   _totalEnemies;
+    private int   _killedEnemies;
 
     public override void _Ready()
     {
+        AddToGroup("run_session");
         var player = GetTree().GetFirstNodeInGroup("player") as PlayerController;
         if (player != null)
             player.PlayerDied += () => EndRun(false);
@@ -29,7 +31,14 @@ public partial class RunSession : Node
     {
         if (_ended) return;
         _elapsed += (float)delta;
-        if (_elapsed >= RunDuration)
+    }
+
+    public void SetTotalEnemies(int total) => _totalEnemies = total;
+
+    public void OnEnemyDied(Vector3 _)
+    {
+        _killedEnemies++;
+        if (_totalEnemies > 0 && _killedEnemies >= _totalEnemies)
             EndRun(true);
     }
 
