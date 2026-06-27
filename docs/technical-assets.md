@@ -7,13 +7,13 @@
 
 ## Building a New Asset — Checklist
 
-Follow this for every new asset regardless of type (character, enemy, prop, tree, rock, building). Visual rules (atomic cube size, chamfer spec, silhouette rules) are in `docs/visuals-style.md`.
+Follow this for every new asset regardless of type (character, enemy, prop, tree, rock, building). Visual rules (game voxel size, silhouette rules) are in `docs/visuals-style.md`.
 
-1. **Block out with 0.10 m atomic cubes only** — place and arrange cubes to fill each body region's bounding box. No other primitive types. Each distinct body region / material zone is its own object group.
-2. **Assign one flat-colour material per region** — pick from `docs/visuals-style.md`. No textures, no gradients, no vertex colours.
+1. **Build with 0.025 m game voxels** — place individual voxels to fill each body region. No other primitive types, no bevels, no smooth surfaces. Each distinct bone region + material zone is its own named Blender object. Follow the naming convention: `{bone_lowercase}_{material_zone}` — e.g. `head_skin`, `head_hair`, `chest_cloth`, `foot_r_boot`.
+2. **Assign one flat-colour material per voxel group object** — pick from `docs/visuals-style.md`. No textures, no gradients, no vertex colours.
 3. **Shade flat** — select all objects, right-click → Shade Flat. Confirm `shade_smooth` is off.
 4. **Check silhouette from top-down** — the game camera is elevated and angled (~45° pitch). Confirm the asset reads clearly as a silhouette. Most visible faces are tops (head top, shoulder tops, roof).
-5. **Keep poly count low** — no subdivision, no loops for curvature. The cube grid provides all edge definition.
+5. **Run the pre-export merge** — see Pre-Export Merge section below. Non-destructive: the source `.blend` is unchanged.
 6. **Export** — follow the Export Settings section below.
 
 **Player `.blend` is the visual reference.** When in doubt, open `player.blend` and match what you see.
@@ -45,22 +45,22 @@ Every humanoid character uses this exact bone hierarchy and naming. Do not devia
 ```
 Root
 └── Hips
-    ├── Spine
-    │   ├── Chest
-    │   │   ├── Neck
-    │   │   │   └── Head
-    │   │   ├── UpperArm_L
-    │   │   │   └── LowerArm_L
-    │   │   │       └── Hand_L
-    │   │   └── UpperArm_R
-    │   │       └── LowerArm_R
-    │   │           └── Hand_R
-    ├── UpperLeg_L
-    │   └── LowerLeg_L
-    │       └── Foot_L
-    └── UpperLeg_R
-        └── LowerLeg_R
-            └── Foot_R
+	├── Spine
+	│   ├── Chest
+	│   │   ├── Neck
+	│   │   │   └── Head
+	│   │   ├── UpperArm_L
+	│   │   │   └── LowerArm_L
+	│   │   │       └── Hand_L
+	│   │   └── UpperArm_R
+	│   │       └── LowerArm_R
+	│   │           └── Hand_R
+	├── UpperLeg_L
+	│   └── LowerLeg_L
+	│       └── Foot_L
+	└── UpperLeg_R
+		└── LowerLeg_R
+			└── Foot_R
 ```
 
 - `Root` sits at world origin (0,0,0), Y-up
@@ -284,6 +284,77 @@ Downloaded from Mixamo. Stored at `C:\work\my\assets\Capoeira Pack\`. **Not comm
 `capoeira`, `capoeira (2)`, `capoeira (3)`
 
 Copy individual FBX files into `assets/models/characters/animations/` when bringing a clip into the project.
+
+---
+
+## Pre-Export Merge
+
+Run this via `execute_blender_code` before every GLB export. It is **non-destructive** — the source `.blend` is never modified. Individual voxels remain intact in the saved file committed to git.
+
+### What it does
+
+For each named voxel group object in the scene:
+1. Duplicate the object
+2. Join all voxels in the duplicate into one mesh
+3. Remove doubles (`merge_distance = 0.001`)
+4. Delete interior faces (faces where all edges are shared by more than two faces)
+5. Recalculate normals
+
+Export the GLB from the duplicates (`use_selection=True`), then delete them.
+
+### Naming convention
+
+Voxel group objects follow `{bone_lowercase}_{material_zone}`:
+
+| Bone | Lowercase prefix | Example objects |
+|---|---|---|
+| `Head` | `head` | `head_skin`, `head_hair`, `head_eyes` |
+| `Chest` | `chest` | `chest_cloth`, `chest_metal` |
+| `UpperArm_R` | `upperarm_r` | `upperarm_r_cloth` |
+| `LowerArm_L` | `lowerarm_l` | `lowerarm_l_skin` |
+| `Hand_R` | `hand_r` | `hand_r_skin`, `hand_r_glove` |
+| `UpperLeg_L` | `upperleg_l` | `upperleg_l_cloth` |
+| `Foot_R` | `foot_r` | `foot_r_boot` |
+
+The merge script uses the prefix to resolve which bone the merged mesh should be weighted to. All objects sharing the same bone prefix are weighted 100% to that bone — no blending.
+
+### Script template
+
+```python
+import bpy
+
+duplicates = []
+
+for obj in bpy.data.objects:
+	if obj.type != 'MESH':
+        continue
+	bpy.ops.object.select_all(action='DESELECT')
+    obj.select_set(True)
+    bpy.context.view_layer.objects.active = obj
+    bpy.ops.object.duplicate()
+    dup = bpy.context.active_object
+    duplicates.append(dup)
+    # Join voxels (single-object case is already joined; multi-child case needs select-all children first)
+	bpy.ops.object.mode_set(mode='EDIT')
+	bpy.ops.mesh.select_all(action='SELECT')
+    bpy.ops.mesh.remove_doubles(threshold=0.001)
+    bpy.ops.mesh.delete_loose()
+    bpy.ops.mesh.select_interior_faces()
+	bpy.ops.mesh.delete(type='FACE')
+    bpy.ops.mesh.normals_make_consistent(inside=False)
+	bpy.ops.object.mode_set(mode='OBJECT')
+
+# Export GLB from duplicates only
+bpy.ops.object.select_all(action='DESELECT')
+for dup in duplicates:
+    dup.select_set(True)
+
+# (then call export_scene.gltf with use_selection=True — see Export Settings below)
+
+# Cleanup
+for dup in duplicates:
+    bpy.data.objects.remove(dup, do_unlink=True)
+```
 
 ---
 

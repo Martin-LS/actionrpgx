@@ -22,16 +22,16 @@
 
 | Name | Size | Usage |
 |---|---|---|
-| Base unit | 0.05 m | Snap grid — all dimensions are multiples of this |
-| Atomic cube | 0.10 m (2 base units) | Single construction block for characters and props |
-| Environment block | 0.50 m (10 base units) | Walls, floors, terrain — 5× atomic, same snap grid |
+| Game voxel | 0.025 m | The irreducible unit — all models are constructed from this cube |
+| Environment block | 0.50 m (20 game voxels) | Walls, floors, terrain |
 
 ### 3D Models (Characters, Enemies, Props)
 
-- Every model is a **voxel sculpture** — built entirely from identical **0.10 m atomic cubes**, no stretching or non-uniform scaling of individual blocks.
-- There is no block budget per body part. Use however many cubes are needed to produce a recognisable, well-proportioned shape for that part (e.g. a head is not one box — it is composed of enough cubes to read as a believable but blocky head).
-- **Face shading**: each cube face is a single flat solid color — no textures, no edge lines, no noise. Three tones per material: shadow face, base face, highlight face (see Material Palette below).
-- **Body part gaps**: all body parts (head, torso, upper arm, lower arm, hand, upper leg, lower leg, foot) are separated by a **0.05 m gap** at rest pose. Gaps are always visible — this is a deliberate design signal, not a technical artifact.
+- Every model is a **voxel sculpture** — built entirely from **0.025 m game voxels** (cubes). No stretching, no bevels, no smooth surfaces of any kind — total prohibition across all asset types.
+- **Voxel groups**: voxels are organised into named Blender objects — one object per bone region per material zone. Naming convention: `{bone_lowercase}_{material_zone}` — e.g. `head_skin`, `head_hair`, `chest_cloth`, `foot_r_boot`.
+- **Pre-export merge**: a non-destructive script joins all voxels within each group object, removes interior faces, and exports the optimised GLB. The source `.blend` retains all individual voxels and is committed to git unmerged.
+- **Materials**: one flat base color per voxel group. Scene lighting (Forward Plus) handles shadow and highlight variation — no baked face tones, no textures.
+- **Body part gaps**: all body parts are separated by a **0.05 m (2 voxel) gap** at rest pose. Gaps are always visible — this is a deliberate design signal, not a technical artifact. *(Provisional — revisit after player model test.)*
 - **Silhouette rule**: every enemy class must have a distinct silhouette archetype (e.g. demons wide and low, undead tall and thin) AND a distinct accent color (see Enemy Color Coding). Both signals are required — either alone is insufficient for fast threat reads.
 
 ### VFX Particles
@@ -54,10 +54,10 @@ None. No outlines, no cel-shading pass, no edge detection. Pure geometry and For
 
 | Property | Rule |
 |---|---|
-| Construction | Atomic cubes only (0.10 m) — no cylinders, spheres, or smooth surfaces |
+| Construction | Game voxels only (0.025 m) — no cylinders, spheres, smooth surfaces, or bevels |
 | Shading | Flat-shaded. No normal maps. |
-| Textures | None — solid flat-colour materials only, one material per body region |
-| Lighting response | Flat materials respond to scene lighting (not emission). Exception: VFX particles are self-emissive (see Geometry & Construction Spec above) |
+| Textures | None — one solid flat-colour material per voxel group |
+| Lighting response | Flat materials respond to scene lighting (Forward Plus). Exception: VFX particles are self-emissive (see Geometry & Construction Spec above) |
 
 ### Style Philosophy
 
@@ -72,7 +72,7 @@ Simple is the goal — not a compromise. Resist adding extra detail, surface var
 | Humanoid character | Follow Proportions table. Exaggerate head-to-body ratio (chibi-leaning) |
 | Non-humanoid enemy | Exaggerate one feature for readability (big head, wide body, long arms) |
 | Tree / plant | Trunk = tall thin column of cubes. Canopy = 1–3 offset cube clusters. No leaf mesh |
-| Rock / boulder | 1–3 overlapping cube groups at slightly different offsets. Bevel gives shape |
+| Rock / boulder | 1–3 overlapping voxel groups at slightly different offsets |
 | Barrel / crate / chest | Box-dominant. Inset cube cluster for lid/panel detail. One or two accent colour strips |
 | Building / wall | Modular cube sections. Windows = inset darker cube cluster. No arches or curves |
 | Weapon / item | Keep very simple — tiny on screen. 2–4 cubes max |
@@ -81,7 +81,9 @@ Simple is the goal — not a compromise. Resist adding extra detail, surface var
 
 ## Character Proportions
 
-All measurements are relative to **head bounding-box width = 1 reference unit**. Each body part is a bounding box filled with 0.10 m atomic cubes — never a single stretched box. Body part gaps are always 0.05 m (see Geometry & Construction Spec).
+All measurements are relative to **head bounding-box width = 1 reference unit** (≈ 8 game voxels). Each body part is a bounding box filled with 0.025 m game voxels organised into voxel group objects. Body part gaps are always 0.05 m / 2 voxels (see Geometry & Construction Spec).
+
+> **Provisional** — these values will be updated after the player model is rebuilt to the new voxel spec.
 
 | Body Part | Width | Height | Depth |
 |---|---|---|---|
