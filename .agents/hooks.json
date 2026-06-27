@@ -1,0 +1,10 @@
+{
+  "check-consistency": {
+    "SessionStart": [
+      {
+        "type": "command",
+        "command": "pwsh -File C:\\work\\my\\github\\actionrpgx\\.claude\\check_consistency.ps1"
+      }
+    ]
+  }
+}

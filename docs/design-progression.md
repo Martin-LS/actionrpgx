@@ -18,7 +18,7 @@ All items — both equipment and skills — have a **tier** that represents qual
 | Uncommon | Ash Grey      | `#6B8090` | Mid tier               |
 | Rare     | Dark Gold     | `#A07810` | Highest tier (v1)      |
 
-Border colours are taken from the Loot Rarity Border column in `color-scheme.md` for consistency across inventory, loot drops, and minimap dots.
+Border colours are taken from the Loot Rarity Border column in `visuals-style.md` for consistency across inventory, loot drops, and minimap dots.
 
 Exact stat differences per tier are TBD. Higher tier also unlocks more augment slots on skill and equipment items (see Skill Augments, Equipment Augments).
 

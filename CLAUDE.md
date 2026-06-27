@@ -6,7 +6,7 @@
 
 Top-down action RPG in the vein of Diablo and Path of Exile — deliberate, build-driven combat with deep skill and item systems. **Fully craft-driven:** items, skills, and maps are all obtained through crafting. Enemies drop only crafting materials; there are no direct item drops. The crafting system is the progression engine. Godot 4.6, C#, Forward Plus renderer. 3D world with custom voxel-art style characters, perspective camera.
 
-At the start of every session: first run the **Consistency Check** below, then read `docs/index.md` to orient. Read `docs/technical-tips.md` before any 3D asset, animation, or bone work. Read `docs/color-scheme.md` before any visual, UI, VFX, or material work.
+At the start of every session: first run the **Consistency Check** below, then read `docs/index.md` to orient. Read `docs/technical-tips.md` before any 3D asset, animation, or bone work. Read `docs/visuals-style.md` before any visual, UI, VFX, or material work.
 
 ---
 
@@ -55,7 +55,7 @@ The character faces **-Y** in Blender (standard convention). Bone local X rotati
 
 All UI styling goes through `assets/ui/game_theme.tres`.
 - Use MCP theme tools (`set_theme_color`, `set_theme_stylebox`, `set_theme_font_size`, `set_theme_constant`) to modify it.
-- Read `docs/color-scheme.md` before any theme work.
+- Read `docs/visuals-style.md` before any theme work.
 - Procedural or custom solutions (C# mesh construction, hardcoded styleboxes in code) are a **last resort**. Before going that route, stop and discuss with the user to confirm there is no standard Godot themed control that achieves the same result.
 
 ### 5. Animation

@@ -16,7 +16,7 @@ Quick reference for every doc in this folder. Load this first each session to kn
 
 | File | When to read |
 |------|--------------|
-| [color-scheme.md](color-scheme.md) | Before any visual, UI, VFX, material, or lighting work — full color palette with hex values |
+| [visuals-style.md](visuals-style.md) | Before any visual, UI, VFX, material, or lighting work — full color palette with hex values |
 | [technical-tips.md](technical-tips.md) | Before any 3D asset, animation, or bone work — hard-won Blender→Godot lessons |
 
 ---

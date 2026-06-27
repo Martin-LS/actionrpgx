@@ -176,19 +176,19 @@ Use Mixamo to auto-rig a new character and download animation packs. Follow this
 10. **Export as FBX**:
    ```python
    bpy.ops.export_scene.fbx(
-       filepath=r"<project>/assets/models/characters/<name>_mixamo.fbx",
-       use_selection=True,   # export only the joined mesh, not the whole scene
-       apply_unit_scale=True,
-       apply_scale_options='FBX_SCALE_NONE',
-       bake_space_transform=False,
-       object_types={'MESH'},
-       use_mesh_modifiers=True,
-       add_leaf_bones=False,
-       path_mode='COPY',
-       embed_textures=False,
-       axis_forward='-Z',
-       axis_up='Y',
-       mesh_smooth_type='FACE',
+	   filepath=r"<project>/assets/models/characters/<name>_mixamo.fbx",
+	   use_selection=True,   # export only the joined mesh, not the whole scene
+	   apply_unit_scale=True,
+	   apply_scale_options='FBX_SCALE_NONE',
+	   bake_space_transform=False,
+	   object_types={'MESH'},
+	   use_mesh_modifiers=True,
+	   add_leaf_bones=False,
+	   path_mode='COPY',
+	   embed_textures=False,
+	   axis_forward='-Z',
+	   axis_up='Y',
+	   mesh_smooth_type='FACE',
    )
    ```
 
@@ -293,21 +293,21 @@ Run via `execute_blender_code` with these exact flags:
 
 ```python
 bpy.ops.export_scene.gltf(
-    filepath="<godot_project>/assets/models/characters/<name>.glb",
-    export_format='GLB',
-    export_apply=True,          # apply modifiers
-    export_yup=True,            # Y-up for Godot
-    export_animations=True,
-    export_nla_strips=True,     # export all NLA Actions as separate clips
-    export_frame_range=False,   # use NLA strip ranges, not scene range
-    export_skins=True,
-    export_all_influences=False,
-    export_def_bones=False,
-    export_materials='EXPORT',
-    export_normals=True,
-    use_selection=False,
-    export_cameras=False,
-    export_lights=False,
+	filepath="<godot_project>/assets/models/characters/<name>.glb",
+	export_format='GLB',
+	export_apply=True,          # apply modifiers
+	export_yup=True,            # Y-up for Godot
+	export_animations=True,
+	export_nla_strips=True,     # export all NLA Actions as separate clips
+	export_frame_range=False,   # use NLA strip ranges, not scene range
+	export_skins=True,
+	export_all_influences=False,
+	export_def_bones=False,
+	export_materials='EXPORT',
+	export_normals=True,
+	use_selection=False,
+	export_cameras=False,
+	export_lights=False,
 )
 ```
 
@@ -318,20 +318,20 @@ bpy.ops.export_scene.gltf(
 ```
 assets/
   models/
-    characters/
-      player_prototype.blend   ← canonical rigged humanoid base — duplicate this for all new humanoid chars
-      player.glb
-      player.blend
-      enemy_<type>.glb
-      enemy_<type>.blend
-    equipment/
-      weapon_<type>.glb
-      weapon_<type>.blend
-      armour_<category>.glb
-      armour_<category>.blend
-    props/
-      <name>.glb
-      <name>.blend
+	characters/
+	  player_prototype.blend   ← canonical rigged humanoid base — duplicate this for all new humanoid chars
+	  player.glb
+	  player.blend
+	  enemy_<type>.glb
+	  enemy_<type>.blend
+	equipment/
+	  weapon_<type>.glb
+	  weapon_<type>.blend
+	  armour_<category>.glb
+	  armour_<category>.blend
+	props/
+	  <name>.glb
+	  <name>.blend
 ```
 
 - One GLB per character, containing mesh + armature + all animation clips
