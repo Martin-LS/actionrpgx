@@ -22,16 +22,16 @@
 
 | Name | Size | Usage |
 |---|---|---|
-| Game voxel | 0.025 m | The irreducible unit — all models are constructed from this cube |
-| Environment block | 0.50 m (20 game voxels) | Walls, floors, terrain |
+| Game voxel | 0.05 m | The irreducible unit — all models are constructed from this cube |
+| Environment block | 0.50 m (10 game voxels) | Walls, floors, terrain |
 
 ### 3D Models (Characters, Enemies, Props)
 
-- Every model is a **voxel sculpture** — built entirely from **0.025 m game voxels** (cubes). No stretching, no bevels, no smooth surfaces of any kind — total prohibition across all asset types.
+- Every model is a **voxel sculpture** — built entirely from **0.05 m game voxels** (cubes). No stretching, no bevels, no smooth surfaces of any kind — total prohibition across all asset types.
 - **Voxel groups**: voxels are organised into named Blender objects — one object per bone region per material zone. Naming convention: `{bone_lowercase}_{material_zone}` — e.g. `head_skin`, `head_hair`, `chest_cloth`, `foot_r_boot`.
 - **Pre-export merge**: a non-destructive script joins all voxels within each group object, removes interior faces, and exports the optimised GLB. The source `.blend` retains all individual voxels and is committed to git unmerged.
 - **Materials**: one flat base color per voxel group. Scene lighting (Forward Plus) handles shadow and highlight variation — no baked face tones, no textures.
-- **Body part gaps**: all body parts are separated by a **0.05 m (2 voxel) gap** at rest pose. Gaps are always visible — this is a deliberate design signal, not a technical artifact. *(Provisional — revisit after player model test.)*
+- **Body part gaps**: all body parts are separated by a **0.10 m (2 voxel) gap** at rest pose. Gaps are always visible — this is a deliberate design signal, not a technical artifact. *(Provisional — revisit after player model test.)*
 - **Silhouette rule**: every enemy class must have a distinct silhouette archetype (e.g. demons wide and low, undead tall and thin) AND a distinct accent color (see Enemy Color Coding). Both signals are required — either alone is insufficient for fast threat reads.
 
 ### VFX Particles
@@ -54,7 +54,7 @@ None. No outlines, no cel-shading pass, no edge detection. Pure geometry and For
 
 | Property | Rule |
 |---|---|
-| Construction | Game voxels only (0.025 m) — no cylinders, spheres, smooth surfaces, or bevels |
+| Construction | Game voxels only (0.05 m) — no cylinders, spheres, smooth surfaces, or bevels |
 | Shading | Flat-shaded. No normal maps. |
 | Textures | None — one solid flat-colour material per voxel group |
 | Lighting response | Flat materials respond to scene lighting (Forward Plus). Exception: VFX particles are self-emissive (see Geometry & Construction Spec above) |
@@ -81,7 +81,7 @@ Simple is the goal — not a compromise. Resist adding extra detail, surface var
 
 ## Character Proportions
 
-All measurements are relative to **head bounding-box width = 1 reference unit** (≈ 8 game voxels). Each body part is a bounding box filled with 0.025 m game voxels organised into voxel group objects. Body part gaps are always 0.05 m / 2 voxels (see Geometry & Construction Spec).
+All measurements are relative to **head bounding-box width = 1 reference unit** (≈ 10 game voxels). Each body part is a bounding box filled with 0.05 m game voxels organised into voxel group objects. Body part gaps are always 0.10 m / 2 voxels (see Geometry & Construction Spec).
 
 > **Provisional** — these values will be updated after the player model is rebuilt to the new voxel spec.
 
