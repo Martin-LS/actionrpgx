@@ -72,22 +72,46 @@ Root
 
 ## Animation Clips
 
-> **Status: Partial — player only.** `run` (looping) and `attack` (one-shot) clips exist in `player.glb`. `AnimationPlayer` is wired in `PlayerController` — run plays while moving, attack triggers on `SkillFired`. `idle`, `walk`, `hit`, `death` are not yet authored. Enemy models have no animations. The table below is the full target spec.
+### Architecture — shared animation GLB
 
-These are the clip names the C# code will reference. Every character must have all clips that apply to their type. Names are case-sensitive.
+Animations are decoupled from character meshes. Each character GLB contains **only mesh + armature, no animations**. Animations are loaded at runtime from a separate GLB via `LoadAnimClip`.
 
-| Clip | Frames | Loop | Description |
-|---|---|---|---|
-| `idle` | 0–59 | Yes | Subtle weight shift or gentle bob — can be near-static |
-| `walk` | 60–99 | Yes | Arms swing opposite to legs, hips bob slightly |
-| `run` | 100–139 | Yes | Faster walk — exaggerate arm/leg swing |
-| `attack` | 140–179 | No | Weapon arm swings forward and returns |
-| `hit` | 180–199 | No | Brief recoil — character rocks back |
-| `death` | 200–239 | No | Falls or collapses — stays down at last frame |
+```
+assets/models/characters/humanoid_animations.glb   ← shared clips for all humanoid characters
+assets/models/characters/zombie_animations.glb     ← character-specific clips (example)
+```
 
-All animations live as named Actions in Blender's NLA editor and are exported into the GLB in one pass.
+**Rule:** animation **name** = what the action is (`idle`, `run`, `attack_r`). Animation **source file** = who performs it. A zombie idle uses the same name `idle` as the player idle — it just loads from `zombie_animations.glb` instead of `humanoid_animations.glb`. No character prefixes on clip names.
 
-Frame rate: **30 fps** (set in Blender scene before animating).
+### Clip name convention
+
+These are the clip names the C# code references. Names are case-sensitive.
+
+| Clip | Loop | Description |
+|---|---|---|
+| `idle` | Yes | Subtle weight shift or gentle bob |
+| `walk` | Yes | Arms swing opposite legs, hips bob slightly |
+| `run` | Yes | Faster walk — exaggerate arm/leg swing |
+| `attack_r` | No | Right-hand weapon swings forward and returns |
+| `attack_l` | No | Left-hand weapon (bow) swings forward and returns |
+| `attack_bow` | No | Ranged attack — draw and release |
+| `hit` | No | Brief recoil — character rocks back |
+| `death` | No | Falls or collapses — stays down at last frame |
+
+### Per-character clip requirements
+
+| Character type | Required clips |
+|---|---|
+| Player | `idle`, `run`, `attack_r`, `attack_l` |
+| Enemy (melee) | `idle`, `walk`, `attack_r`, `hit`, `death` |
+| Enemy (ranged) | `idle`, `walk`, `attack_bow`, `hit`, `death` |
+
+### Blender authoring
+
+- Frame rate: **30 fps** (set in Blender scene before animating)
+- Each clip is a named Action in Blender's NLA editor
+- The animation GLB is exported from an armature-only scene (no mesh) with all NLA strips active
+- Export with `export_animations=True, export_nla_strips=True`
 
 ---
 
@@ -389,25 +413,30 @@ bpy.ops.export_scene.gltf(
 ```
 assets/
   models/
-	characters/
-	  player_prototype.blend   ← canonical rigged humanoid base — duplicate this for all new humanoid chars
-	  player.glb
-	  player.blend
-	  enemy_<type>.glb
-	  enemy_<type>.blend
-	equipment/
-	  weapon_<type>.glb
-	  weapon_<type>.blend
-	  armour_<category>.glb
-	  armour_<category>.blend
-	props/
-	  <name>.glb
-	  <name>.blend
+    characters/
+      humanoid_animations.glb       ← shared animations for all humanoid characters (no mesh)
+      humanoid_animations.blend     ← source for the above
+      player.glb                    ← mesh + armature only, no animations
+      player.blend                  ← source (src/player.blend)
+      enemy_<type>.glb              ← mesh + armature only, no animations
+      enemy_<type>.blend
+      <type>_animations.glb         ← character-specific animations (when needed)
+    equipment/
+      weapon_<type>.glb
+      weapon_<type>.blend
+      armour_<category>.glb
+      armour_<category>.blend
+    props/
+      <name>.glb
+      <name>.blend
+    src/                            ← source-only files, ignored by Godot (.gdignore present)
 ```
 
-- One GLB per character, containing mesh + armature + all animation clips
+- Character GLBs contain **mesh + armature only** — no animation data
+- Animations live in `humanoid_animations.glb` (shared) or `<type>_animations.glb` (character-specific)
 - Blender source files (`.blend`) **are** committed alongside the GLB — they are the editable source
 - Godot import settings (`.import` files) **are** committed — configure loop flags etc. once and keep them
+- `src/` has a `.gdignore` — Godot never imports anything in that folder
 
 ---
 

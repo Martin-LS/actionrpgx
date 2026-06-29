@@ -7,10 +7,10 @@
 radius = 16.0
 
 [sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_rxibo"]
-animation = &"melee_left_atack"
+animation = &"attack_l"
 
 [sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_mf2ua"]
-animation = &"breathing_idle"
+animation = &"idle"
 
 [sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_244u8"]
 animation = &"run"
@@ -32,7 +32,7 @@ states/run/position = Vector2(200, 0)
 transitions = ["Start", "idle", SubResource("AnimationNodeStateMachineTransition_5f2sf"), "idle", "run", SubResource("AnimationNodeStateMachineTransition_jiejy"), "run", "idle", SubResource("AnimationNodeStateMachineTransition_o822w")]
 
 [sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_l271a"]
-animation = &"melee_right_atack"
+animation = &"attack_r"
 
 [sub_resource type="AnimationNodeTimeScale" id="AnimationNodeTimeScale_atk"]
 

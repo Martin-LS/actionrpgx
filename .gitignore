@@ -28,3 +28,6 @@ Thumbs.db
 # Local tooling
 .claude/
 *.csproj.old
+
+# Asset pipeline scripts (local only)
+assets/models/characters/pipeline/

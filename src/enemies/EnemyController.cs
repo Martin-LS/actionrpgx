@@ -94,18 +94,19 @@ public partial class EnemyController : CharacterBody3D
                 idle.LoopMode = Animation.LoopModeEnum.Linear;
                 lib.AddAnimation("idle", idle);
             }
-            if (!lib.HasAnimation("attack"))
+            if (!lib.HasAnimation("attack_r"))
             {
                 var atk = (Animation)walkAnim.Duplicate();
                 atk.LoopMode = Animation.LoopModeEnum.None;
-                lib.AddAnimation("attack", atk);
+                lib.AddAnimation("attack_r", atk);
             }
         }
         else
         {
-            LoadAnimClip(animPlayer, "res://assets/models/characters/kaykit_anim_general.glb",  "Idle_A",               "idle",   Animation.LoopModeEnum.Linear);
-            LoadAnimClip(animPlayer, "res://assets/models/characters/kaykit_anim_movement.glb", "Running_A",            "walk",   Animation.LoopModeEnum.Linear);
-            LoadAnimClip(animPlayer, "res://assets/models/characters/kaykit_anim_melee.glb",    "Melee_1H_Attack_Chop", "attack", Animation.LoopModeEnum.None);
+            const string HumanoidAnims = "res://assets/models/characters/humanoid_animations.glb";
+            LoadAnimClip(animPlayer, HumanoidAnims, "idle",     "idle",     Animation.LoopModeEnum.Linear);
+            LoadAnimClip(animPlayer, HumanoidAnims, "run",      "walk",     Animation.LoopModeEnum.Linear);
+            LoadAnimClip(animPlayer, HumanoidAnims, "attack_r", "attack_r", Animation.LoopModeEnum.None);
         }
 
         var animTree = GetNodeOrNull<AnimationTree>("AnimationTree");
@@ -208,7 +209,7 @@ public partial class EnemyController : CharacterBody3D
         }
 
         var animState = _smPlayback?.GetCurrentNode() ?? "";
-        if (animState != "attack")
+        if (animState != "attack_r")
             _smPlayback?.Travel("walk");
 
         _damageCooldown -= delta;
@@ -217,7 +218,7 @@ public partial class EnemyController : CharacterBody3D
             if (_player is ActionRpgX.Player.PlayerController pc)
                 pc.TakeDamage(ContactDamage, Items.DamageType.Physical, this);
             _damageCooldown = DamageInterval;
-            _smPlayback?.Travel("attack");
+            _smPlayback?.Travel("attack_r");
         }
     }
 

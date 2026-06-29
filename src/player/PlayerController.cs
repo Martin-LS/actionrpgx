@@ -208,13 +208,16 @@ public partial class PlayerController : CharacterBody3D
             playerModel.AddChild(animPlayer);
         }
 
-        if (animPlayer.HasAnimation("breathing_idle"))
-            animPlayer.GetAnimation("breathing_idle").LoopMode = Animation.LoopModeEnum.Linear;
+        const string HumanoidAnims = "res://assets/models/characters/humanoid_animations.glb";
+        LoadAnimClip(animPlayer, HumanoidAnims, "idle",     "idle",     Animation.LoopModeEnum.Linear);
+        LoadAnimClip(animPlayer, HumanoidAnims, "run",      "run",      Animation.LoopModeEnum.Linear);
+        LoadAnimClip(animPlayer, HumanoidAnims, "attack_r", "attack_r", Animation.LoopModeEnum.None);
+        LoadAnimClip(animPlayer, HumanoidAnims, "attack_l", "attack_l", Animation.LoopModeEnum.None);
+
+        // Strip root motion from run: zero X/Z on Hips position track
         if (animPlayer.HasAnimation("run"))
         {
             var runAnim = animPlayer.GetAnimation("run");
-            runAnim.LoopMode = Animation.LoopModeEnum.Linear;
-            // Strip root motion: zero X/Z on Hips position track so the animation plays in place
             for (int i = 0; i < runAnim.GetTrackCount(); i++)
             {
                 if (runAnim.TrackGetPath(i).ToString().Contains("Hips") &&
@@ -460,7 +463,7 @@ public partial class PlayerController : CharacterBody3D
             {
                 float targetYaw = Mathf.Atan2(direction.X, direction.Z);
                 _yaw = Mathf.LerpAngle(_yaw, targetYaw, Mathf.Min(1f, RotationSpeed * dt));
-                _model.Rotation = new Vector3(0f, _yaw, 0f);
+                _model.Rotation = new Vector3(0f, _yaw + Mathf.Pi, 0f);
             }
             else
             {
@@ -469,7 +472,7 @@ public partial class PlayerController : CharacterBody3D
                 {
                     float targetYaw = Mathf.Atan2(toAim.X, toAim.Z);
                     _yaw = Mathf.LerpAngle(_yaw, targetYaw, Mathf.Min(1f, RotationSpeed * dt));
-                    _model.Rotation = new Vector3(0f, _yaw, 0f);
+                    _model.Rotation = new Vector3(0f, _yaw + Mathf.Pi, 0f);
                 }
             }
 
@@ -562,7 +565,7 @@ public partial class PlayerController : CharacterBody3D
         if (_dodgeDirection.LengthSquared() > 0.01f)
         {
             _yaw = Mathf.Atan2(_dodgeDirection.X, _dodgeDirection.Z);
-            _model.Rotation = new Vector3(0f, _yaw, 0f);
+            _model.Rotation = new Vector3(0f, _yaw + Mathf.Pi, 0f);
         }
 
         _isDodging = true;
