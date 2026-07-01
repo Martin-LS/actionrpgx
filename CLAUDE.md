@@ -1,6 +1,6 @@
 # CLAUDE.md — actionrpgx
 
-@AGENTS.md
+@.agents/AGENTS.md
 
 ## Tools (Claude Specific)
 
