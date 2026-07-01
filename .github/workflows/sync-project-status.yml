@@ -1,0 +1,43 @@
+name: Sync Issue Status to Project Board
+
+on:
+  issues:
+    types: [labeled, unlabeled, closed, reopened]
+
+jobs:
+  sync-status:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Determine and set board Status
+        env:
+          GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_STATE: ${{ github.event.issue.state }}
+        run: |
+          set -e
+          PROJECT_ID="PVT_kwHOAGrAt84BcIl1"
+          STATUS_FIELD_ID="PVTSSF_lAHOAGrAt84BcIl1zhWzlEg"
+          TODO_ID="f75ad846"
+          IN_PROGRESS_ID="47fc9ee4"
+          DONE_ID="98236657"
+
+          LABELS=$(gh issue view "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --json labels --jq '[.labels[].name] | join(",")')
+
+          if [ "$ISSUE_STATE" = "closed" ]; then
+            TARGET="$DONE_ID"
+          elif echo "$LABELS" | grep -qE '(^|,)(in-progress|needs-review)(,|$)'; then
+            TARGET="$IN_PROGRESS_ID"
+          elif echo "$LABELS" | grep -qE '(^|,)finished(,|$)'; then
+            TARGET="$DONE_ID"
+          else
+            TARGET="$TODO_ID"
+          fi
+
+          ITEM_ID=$(gh project item-list 1 --owner Martin-LS --format json | jq -r --arg num "$ISSUE_NUMBER" '.items[] | select(.content.number == ($num | tonumber)) | .id')
+
+          if [ -z "$ITEM_ID" ]; then
+            echo "Issue #$ISSUE_NUMBER is not on the project board, skipping."
+            exit 0
+          fi
+
+          gh project item-edit --project-id "$PROJECT_ID" --id "$ITEM_ID" --field-id "$STATUS_FIELD_ID" --single-select-option-id "$TARGET"
