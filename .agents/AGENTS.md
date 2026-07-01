@@ -4,7 +4,7 @@
 
 Top-down action RPG in the vein of Diablo and Path of Exile — deliberate, build-driven combat with deep skill and item systems. **Fully craft-driven:** items, skills, and maps are all obtained through crafting. Enemies drop only crafting materials; there are no direct item drops. The crafting system is the progression engine. Godot 4.6, C#, Forward Plus renderer. 3D world with custom voxel-art style characters, perspective camera.
 
-At the start of every session: first run the **Consistency Check** below, then read [docs/index.md](file:///C:/work/my/github/actionrpgx/docs/index.md) to orient. Read [docs/technical-tips.md](file:///C:/work/my/github/actionrpgx/docs/technical-tips.md) before any 3D asset, animation, or bone work. Read [docs/visuals-style.md](file:///C:/work/my/github/actionrpgx/docs/visuals-style.md) before any visual, UI, VFX, or material work.
+At the start of every session: read [docs/index.md](file:///C:/work/my/github/actionrpgx/docs/index.md) to orient. Read [docs/technical-tips.md](file:///C:/work/my/github/actionrpgx/docs/technical-tips.md) before any 3D asset, animation, or bone work. Read [docs/visuals-style.md](file:///C:/work/my/github/actionrpgx/docs/visuals-style.md) before any visual, UI, VFX, or material work. Read [docs/technical-coding.md](file:///C:/work/my/github/actionrpgx/docs/technical-coding.md) before any registry/gameplay-logic work (items, recipes, skills, augments). Check `.agents/skills/` for available project skills (e.g. `worker-issues`) and follow their instructions when the matching task comes up, even if your tool's own skill-loading mechanism doesn't auto-register them.
 
 ---
 
@@ -16,6 +16,7 @@ At the start of every session: first run the **Consistency Check** below, then r
 - Always propose a plan and discuss the issues/changes first.
 - When resolving a list of tasks or issues, proceed strictly **one-by-one** (propose/discuss, wait for approval, implement, repeat).
 - When waiting for user approval, format the approval prompt in bold: **e.g. "Waiting for your approval to proceed."**
+- **If a user message contains conflicting or ambiguous instructions, stop and ask for clarification — never silently resolve it in whichever direction lets you proceed.** This applies even mid-session, even after a run of fast "yes, do it" exchanges — momentum from prior turns is never a reason to guess instead of asking.
 
 ### 1. Scope Rules
 
@@ -63,6 +64,24 @@ All UI styling goes through `assets/ui/game_theme.tres`.
 - **C# code limits**: C# code is limited to setting `animTree.AnimPlayer = animTree.GetPathTo(animPlayer)`, setting `animTree.Active = true`, and calling `Travel()` for state changes. Use `GetCurrentNode()` for state checks — no manual bool flags.
 - **Loop modes**: Set animation loop modes at runtime in C# (GLB import silently ignores `.import` subresource loop flags). Do not call `AnimationPlayer.Play()` directly when AnimationTree is active.
 
+### 6. Multi-Agent Issue Workflow
+
+- Feature/bug work is designed collaboratively and written up as a GitHub issue before implementation begins. The user routes issues to agents directly (separate clones per agent).
+- **No scope/implementer labels — routing is entirely the user's call.** Whether an issue needs Godot/Blender MCP editor access or is pure logic isn't encoded in a label; it's just readable from the issue body. If the user hands an editor-requiring issue to an agent without MCP access, the agent hits the existing MCP-only rule (Rules 3–5 / Tools sections: "if MCP is unavailable, stop and discuss with the user rather than attempting a workaround") — that's the actual guard, not a label filter.
+- **Labels** (GitHub, issues only — not PRs): Stage — `submitted` → `ready` → `in-progress` → `needs-review`, with `blocked` stackable on any stage (note the blocking issue number in the body). If review sends the work back for rework, swap `needs-review` → `changes-requested` (distinct from `ready` — it's rework, not a fresh pickup) until an agent claims it again.
+- **Board Status is synced automatically** by `.github/workflows/sync-project-status.yml` (triggers on issue label/close/reopen events): `in-progress`/`needs-review` → board "In Progress", `finished`/closed → "Done", everything else → "Todo". Agents still only need to manage labels per the handoffs below — the board follows on its own.
+- **Terminal labels — `finished` / `rejected`**: `finished` (PR merged) or `rejected` (solution or issue itself was dumped — pure rework needed, or the issue was ill-defined and should be replaced by a new one; distinct from `changes-requested`, which is incremental) can apply from *any* stage, not just at the end of the normal flow — an issue can be `rejected` the moment it's created (ill-defined), or `finished` immediately (it was already solved elsewhere). Whenever either applies, the agent removes all other labels and adds exactly one of the two. No precedence needed among the active stage labels if they're ever mistakenly stacked — that's just a sign the handoff was done wrong, go check the issue history. The one exception: if `finished` and `rejected` both end up on the same issue (a labeling mistake, since merged code can't retroactively be dumped), treat it as `rejected`. The kanban board's view is filtered to exclude both terminal labels (`-label:finished -label:rejected`), so adding either instantly drops the card off the board — no Status field to sync, no automation needed.
+- **Claiming an issue is mandatory and comes first** — before creating a branch, before reading code, before anything else. Since all agents share the one human GitHub account, ownership is transparent, not enforced by GitHub, so this step is the only signal the user gets that work has started: swap `ready` (or `changes-requested`) → `in-progress` on the issue and post a one-line comment naming itself (e.g. "Claude starting work"). This also keeps pickup lists like `worker-issues` from surfacing an issue another agent already claimed. An agent that creates a branch or touches code without having done this first is out of process — flag it.
+- **Branching (git flow)**: only after claiming, branch off `develop` as `feature/issue-<number>-<slug>` (slug = short kebab-case of the issue title), e.g. `feature/issue-1-boots-equipment-slot`. PRs target `develop`, not `main`.
+- **Label handoffs are the agent's job, not the user's.** Stage labels are mutually exclusive — always swap, never stack. There's no GitHub Action enforcing this; each agent runs the `gh issue edit` swap itself at every handoff point so the user never has to touch labels manually:
+  - Claim (start work): the implementer (whoever picks up the issue) swaps `ready` / `changes-requested` → `in-progress`.
+  - Commit & push for PR (finish work): the PR creator (same implementer) swaps `in-progress` → `needs-review`.
+  - Review sends work back: the reviewer swaps `needs-review` → `changes-requested`.
+  - Review merges the PR: whoever merges (the assigned reviewer, or the user) removes all stage labels and adds `finished`.
+  - Review rejects the solution/issue outright: whoever rejects removes all stage labels and adds `rejected`.
+- **Issue-writing discipline: keep issues lean.** Reference existing patterns instead of deriving the full solution; give acceptance criteria and touch points (which files/registries need entries), not literal code or exhaustive test cases. A spec detailed enough to fully constrain the implementation should just be implemented directly instead. This applies to pre-handoff verification too — check enough to catch an obvious scope-blocker (e.g. a hardcoded list that would make "pure logic" actually need scene work), not an exhaustive audit of every reference to the thing being changed. **This "keep it lean" discipline applies to issues only** — reference docs (`docs/technical-*.md`) are the opposite case and should be specced out properly and completely, since they're reused across every future issue rather than spent once.
+- **PR review**: the user assigns a reviewer per PR (no fixed rule) — the assigned reviewer checks scope adherence, matched intent against the issue, and that any tests are meaningful, not just green CI. Whoever completes the review (merge or reject) is also responsible for the resulting terminal label swap — see above.
+
 ---
 
 ## Tools and MCP Integration (Antigravity Specific)
@@ -88,20 +107,3 @@ All UI styling goes through `assets/ui/game_theme.tres`.
 - **Always prefer using `ast-grep` (`sg`)** over standard `ripgrep` (`rg`) or the built-in `grep_search` tool when searching, traversing, or analyzing codebase source code.
 - You do not need to wait for explicit user instructions to use `ast-grep` when performing code-related work; utilize it automatically as your default tool for code analysis.
 - For all non-code searches (e.g., scanning documentation, markdown guides, log files, or raw text configuration files), you may fall back to standard `ripgrep` (`rg` or `grep_search`).
-
----
-
-## Consistency Check
-
-On session start, run the consistency script to check for differences and update the HUD:
-```powershell
-pwsh -File C:/work/my/github/actionrpgx/.claude/check_consistency.ps1
-```
-
-If any inconsistency is found, report it before doing anything else using this format:
-
-\e[31m[INCONSISTENCY] Section: [section name] — [describe the difference].\e[0m
-
-Do not proceed with any session-start tasks until the user has acknowledged the inconsistency.
-
-**Maintenance note:** Any changes to the **Project Rules** section must use normalised formatting — backticks for file paths, no `file:///` links — so the text comparison remains mechanical.
