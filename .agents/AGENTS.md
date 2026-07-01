@@ -4,7 +4,7 @@
 
 Top-down action RPG in the vein of Diablo and Path of Exile — deliberate, build-driven combat with deep skill and item systems. **Fully craft-driven:** items, skills, and maps are all obtained through crafting. Enemies drop only crafting materials; there are no direct item drops. The crafting system is the progression engine. Godot 4.6, C#, Forward Plus renderer. 3D world with custom voxel-art style characters, perspective camera.
 
-At the start of every session: first run the **Consistency Check** below, then read [docs/index.md](file:///C:/work/my/github/actionrpgx/docs/index.md) to orient. Read [docs/technical-tips.md](file:///C:/work/my/github/actionrpgx/docs/technical-tips.md) before any 3D asset, animation, or bone work. Read [docs/visuals-style.md](file:///C:/work/my/github/actionrpgx/docs/visuals-style.md) before any visual, UI, VFX, or material work.
+At the start of every session: read [docs/index.md](file:///C:/work/my/github/actionrpgx/docs/index.md) to orient. Read [docs/technical-tips.md](file:///C:/work/my/github/actionrpgx/docs/technical-tips.md) before any 3D asset, animation, or bone work. Read [docs/visuals-style.md](file:///C:/work/my/github/actionrpgx/docs/visuals-style.md) before any visual, UI, VFX, or material work. Read [docs/technical-coding.md](file:///C:/work/my/github/actionrpgx/docs/technical-coding.md) before any registry/gameplay-logic work (items, recipes, skills, augments).
 
 ---
 
@@ -63,6 +63,15 @@ All UI styling goes through `assets/ui/game_theme.tres`.
 - **C# code limits**: C# code is limited to setting `animTree.AnimPlayer = animTree.GetPathTo(animPlayer)`, setting `animTree.Active = true`, and calling `Travel()` for state changes. Use `GetCurrentNode()` for state checks — no manual bool flags.
 - **Loop modes**: Set animation loop modes at runtime in C# (GLB import silently ignores `.import` subresource loop flags). Do not call `AnimationPlayer.Play()` directly when AnimationTree is active.
 
+### 6. Multi-Agent Issue Workflow
+
+- Feature/bug work is designed collaboratively and written up as a GitHub issue before implementation begins. The user routes issues to agents directly (separate clones per agent) — issue labels describe scope, they don't need to be self-detected.
+- **Hermes only works `scope-logic` issues** (pure C#/logic pluggable into existing scene nodes/signals: combat math, registries, crafting rules, save/load). Anything touching `.tscn`/`.tres`, nodes, AnimationTree, UI theming, or Blender/animation (Rules 3–5) is out of scope for Hermes — if a `scope-logic` issue turns out to need this, stop and flag it rather than attempting a workaround.
+- `scope-split` issues get the editor/scene wiring done first, with a separate follow-up `scope-logic` issue opened for Hermes.
+- **Labels** (GitHub, issues only — not PRs): Stage — `submitted` → `ready` → `needs-review`, with `blocked` stackable on any stage (note the blocking issue number in the body). Implementer — `agent-external` / `agent-internal`. Scope — `scope-logic` / `scope-editor` / `scope-split`.
+- **Issue-writing discipline: keep issues lean.** Reference existing patterns instead of deriving the full solution; give acceptance criteria and touch points (which files/registries need entries), not literal code or exhaustive test cases. A spec detailed enough to fully constrain the implementation should just be implemented directly instead.
+- **PR review**: the user assigns a reviewer per PR (no fixed rule) — the assigned reviewer checks scope adherence, matched intent against the issue, and that any tests are meaningful, not just green CI.
+
 ---
 
 ## Tools and MCP Integration (Antigravity Specific)
@@ -88,20 +97,3 @@ All UI styling goes through `assets/ui/game_theme.tres`.
 - **Always prefer using `ast-grep` (`sg`)** over standard `ripgrep` (`rg`) or the built-in `grep_search` tool when searching, traversing, or analyzing codebase source code.
 - You do not need to wait for explicit user instructions to use `ast-grep` when performing code-related work; utilize it automatically as your default tool for code analysis.
 - For all non-code searches (e.g., scanning documentation, markdown guides, log files, or raw text configuration files), you may fall back to standard `ripgrep` (`rg` or `grep_search`).
-
----
-
-## Consistency Check
-
-On session start, run the consistency script to check for differences and update the HUD:
-```powershell
-pwsh -File C:/work/my/github/actionrpgx/.claude/check_consistency.ps1
-```
-
-If any inconsistency is found, report it before doing anything else using this format:
-
-\e[31m[INCONSISTENCY] Section: [section name] — [describe the difference].\e[0m
-
-Do not proceed with any session-start tasks until the user has acknowledged the inconsistency.
-
-**Maintenance note:** Any changes to the **Project Rules** section must use normalised formatting — backticks for file paths, no `file:///` links — so the text comparison remains mechanical.
