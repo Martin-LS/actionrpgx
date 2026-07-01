@@ -108,8 +108,9 @@ public partial class PlayerController : CharacterBody3D
             var weapon = GetEquippedItem(c, Items.ItemSlot.Weapon);
             var hat    = GetEquippedItem(c, Items.ItemSlot.Hat);
             var body   = GetEquippedItem(c, Items.ItemSlot.Body);
+            var boots  = GetEquippedItem(c, Items.ItemSlot.Boots);
 
-            DamageReduction = (hat?.DamageReduction ?? 0f) + (body?.DamageReduction ?? 0f);
+            DamageReduction = (hat?.DamageReduction ?? 0f) + (body?.DamageReduction ?? 0f) + (boots?.DamageReduction ?? 0f);
 
             var weaponController = GetNodeOrNull<Weapon.WeaponController>("Weapon");
             ApplyWeaponDamage(weaponController, weapon);
@@ -324,9 +325,10 @@ public partial class PlayerController : CharacterBody3D
         var weapon = _charData != null ? GetEquippedItem(_charData, Items.ItemSlot.Weapon) : null;
         var hat    = _charData != null ? GetEquippedItem(_charData, Items.ItemSlot.Hat)    : null;
         var body   = _charData != null ? GetEquippedItem(_charData, Items.ItemSlot.Body)   : null;
+        var boots  = _charData != null ? GetEquippedItem(_charData, Items.ItemSlot.Boots)  : null;
 
         float weaponRange = weapon?.WeaponRange ?? 1.5f;
-        EffectiveRange = (weaponRange * (hat?.RangeMultiplier ?? 1f) * (body?.RangeMultiplier ?? 1f) + _rangeBuffBonus) * GameScale.TileSize;
+        EffectiveRange = (weaponRange * (hat?.RangeMultiplier ?? 1f) * (body?.RangeMultiplier ?? 1f) * (boots?.RangeMultiplier ?? 1f) + _rangeBuffBonus) * GameScale.TileSize;
 
         GetNodeOrNull<Weapon.WeaponController>("Weapon")?.SetRange(EffectiveRange);
     }

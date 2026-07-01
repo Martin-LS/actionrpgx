@@ -23,6 +23,7 @@ public partial class CharacterScreen : Control
     private Button _hatBtn     = null!;
     private Button _bodyBtn    = null!;
     private Button _ringBtn    = null!;
+    private Button _bootsBtn   = null!;
     private readonly Button[] _skillBtns = new Button[3];
 
     private Character.CharacterManager _manager = null!;
@@ -60,11 +61,13 @@ public partial class CharacterScreen : Control
         _hatBtn     = GetNode<Button>($"{CharViewBase}/HSplit/GearPanel/HatSlot/HatSlotButton");
         _bodyBtn    = GetNode<Button>($"{CharViewBase}/HSplit/GearPanel/BodySlot/BodySlotButton");
         _ringBtn    = GetNode<Button>($"{CharViewBase}/HSplit/GearPanel/RingSlot/RingSlotButton");
+        _bootsBtn   = GetNode<Button>($"{CharViewBase}/HSplit/GearPanel/BootsSlot/BootsSlotButton");
 
         _weaponBtn.GuiInput += (e) => OnGearSlotInput(e, ItemSlot.Weapon, _weaponBtn);
         _hatBtn.GuiInput    += (e) => OnGearSlotInput(e, ItemSlot.Hat,    _hatBtn);
         _bodyBtn.GuiInput   += (e) => OnGearSlotInput(e, ItemSlot.Body,   _bodyBtn);
         _ringBtn.GuiInput   += (e) => OnGearSlotInput(e, ItemSlot.Ring,   _ringBtn);
+        _bootsBtn.GuiInput  += (e) => OnGearSlotInput(e, ItemSlot.Boots,  _bootsBtn);
 
         for (int i = 0; i < 3; i++)
         {
@@ -134,9 +137,11 @@ public partial class CharacterScreen : Control
         c.EquippedGear.TryGetValue(ItemSlot.Weapon.ToString(), out var weaponInst);
         c.EquippedGear.TryGetValue(ItemSlot.Hat.ToString(),    out var hatInst);
         c.EquippedGear.TryGetValue(ItemSlot.Body.ToString(),   out var bodyInst);
+        c.EquippedGear.TryGetValue(ItemSlot.Boots.ToString(),  out var bootsInst);
         float effectiveRange = (weaponInst?.Definition?.WeaponRange ?? 1.5f)
                              * (hatInst?.Definition?.RangeMultiplier  ?? 1f)
-                             * (bodyInst?.Definition?.RangeMultiplier ?? 1f);
+                             * (bodyInst?.Definition?.RangeMultiplier ?? 1f)
+                             * (bootsInst?.Definition?.RangeMultiplier ?? 1f);
 
         _nameLabel.Text  = c.Name;
         _typeLabel.Text  = c.Type.ToString();
@@ -146,6 +151,7 @@ public partial class CharacterScreen : Control
         RefreshSlotButton(_weaponBtn, c, ItemSlot.Weapon, "Weapon");
         RefreshSlotButton(_hatBtn,    c, ItemSlot.Hat,    "Hat");
         RefreshSlotButton(_bodyBtn,   c, ItemSlot.Body,   "Body");
+        RefreshSlotButton(_bootsBtn,  c, ItemSlot.Boots,  "Boots");
         RefreshSlotButton(_ringBtn,   c, ItemSlot.Ring,   "Ring");
 
         for (int i = 0; i < 3; i++)
@@ -297,7 +303,7 @@ public partial class CharacterScreen : Control
         _equipmentListArea.AddChild(backBtn);
         _equipmentListArea.AddChild(new HSeparator());
 
-        foreach (var slot in new[] { ItemSlot.Weapon, ItemSlot.Hat, ItemSlot.Body, ItemSlot.Ring })
+        foreach (var slot in new[] { ItemSlot.Weapon, ItemSlot.Hat, ItemSlot.Body, ItemSlot.Boots, ItemSlot.Ring })
         {
             var captured = slot;
             var btn = MakeModifyButton(slot.ToString(), false);
