@@ -19,6 +19,9 @@ public static class RecipeRegistry
         ["recipe_medium_body_t1"]  = new("recipe_medium_body_t1",  "medium_body_t1",  RecipeType.Gear,    new() { ["crafting_common"] = 1 }),
         ["recipe_light_body_t1"]   = new("recipe_light_body_t1",   "light_body_t1",   RecipeType.Gear,    new() { ["crafting_common"] = 1 }),
         ["recipe_ring_t1"]         = new("recipe_ring_t1",         "ring_t1",         RecipeType.Gear,    new() { ["crafting_common"] = 1 }),
+        ["recipe_heavy_boots_t1"]  = new("recipe_heavy_boots_t1",  "heavy_boots_t1",  RecipeType.Gear,    new() { ["crafting_common"] = 1 }),
+        ["recipe_medium_boots_t1"] = new("recipe_medium_boots_t1", "medium_boots_t1", RecipeType.Gear,    new() { ["crafting_common"] = 1 }),
+        ["recipe_light_boots_t1"]  = new("recipe_light_boots_t1",  "light_boots_t1",  RecipeType.Gear,    new() { ["crafting_common"] = 1 }),
 
         // Skill recipes — prototype library (one added per test session)
         ["recipe_entity_burst"]        = new("recipe_entity_burst",        "entity_burst",        RecipeType.Skill, new() { ["crafting_common"] = 1 }),
