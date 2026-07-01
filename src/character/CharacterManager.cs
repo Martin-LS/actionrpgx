@@ -64,17 +64,18 @@ public partial class CharacterManager : Node
 
     private void SeedStarterGear(CharacterData c)
     {
-        var (weapon, hat, body, ring) = c.Type switch
+        var (weapon, hat, body, boots, ring) = c.Type switch
         {
-            CharacterType.Warrior => ("sword_t1", "heavy_hat_t1",  "heavy_body_t1",  "ring_t1"),
-            CharacterType.Rogue   => ("bow_t1",   "medium_hat_t1", "medium_body_t1", "ring_t1"),
-            CharacterType.Mage    => ("wand_t1",  "medium_hat_t1", "medium_body_t1", "ring_t1"),
-            _                     => ("sword_t1", "heavy_hat_t1",  "heavy_body_t1",  "ring_t1"),
+            CharacterType.Warrior => ("sword_t1", "heavy_hat_t1",  "heavy_body_t1",  "heavy_boots_t1",  "ring_t1"),
+            CharacterType.Rogue   => ("bow_t1",   "medium_hat_t1", "medium_body_t1", "medium_boots_t1", "ring_t1"),
+            CharacterType.Mage    => ("wand_t1",  "medium_hat_t1", "medium_body_t1", "medium_boots_t1", "ring_t1"),
+            _                     => ("sword_t1", "heavy_hat_t1",  "heavy_body_t1",  "heavy_boots_t1",  "ring_t1"),
         };
 
         c.EquippedGear[ItemSlot.Weapon.ToString()] = new GearItemInstance { DefinitionId = weapon };
         c.EquippedGear[ItemSlot.Hat.ToString()]    = new GearItemInstance { DefinitionId = hat };
         c.EquippedGear[ItemSlot.Body.ToString()]   = new GearItemInstance { DefinitionId = body };
+        c.EquippedGear[ItemSlot.Boots.ToString()]  = new GearItemInstance { DefinitionId = boots };
         c.EquippedGear[ItemSlot.Ring.ToString()]   = new GearItemInstance { DefinitionId = ring };
 
         var skillInst = new SkillItemInstance { DefinitionId = "entity_burst" };

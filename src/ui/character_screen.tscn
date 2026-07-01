@@ -140,6 +140,22 @@ size_flags_horizontal = 0
 text = "—"
 script = ExtResource("2_rp7wk")
 
+[node name="BootsSlot" type="VBoxContainer" parent="VBox/TabContainer/Loadout/LoadoutSplit/CharacterView/HSplit/GearPanel" unique_id=1706032774]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="BootsLabel" type="Label" parent="VBox/TabContainer/Loadout/LoadoutSplit/CharacterView/HSplit/GearPanel/BootsSlot" unique_id=1706032775]
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+text = "Boots"
+
+[node name="BootsSlotButton" type="Button" parent="VBox/TabContainer/Loadout/LoadoutSplit/CharacterView/HSplit/GearPanel/BootsSlot" unique_id=1706032776]
+custom_minimum_size = Vector2(60, 60)
+layout_mode = 2
+size_flags_horizontal = 0
+text = "—"
+script = ExtResource("2_rp7wk")
+
 [node name="RingSlot" type="VBoxContainer" parent="VBox/TabContainer/Loadout/LoadoutSplit/CharacterView/HSplit/GearPanel" unique_id=1706032769]
 layout_mode = 2
 theme_override_constants/separation = 4
