@@ -4,7 +4,7 @@
 
 Top-down action RPG in the vein of Diablo and Path of Exile — deliberate, build-driven combat with deep skill and item systems. **Fully craft-driven:** items, skills, and maps are all obtained through crafting. Enemies drop only crafting materials; there are no direct item drops. The crafting system is the progression engine. Godot 4.6, C#, Forward Plus renderer. 3D world with custom voxel-art style characters, perspective camera.
 
-At the start of every session: read [docs/index.md](file:///C:/work/my/github/actionrpgx/docs/index.md) to orient. Read [docs/technical-tips.md](file:///C:/work/my/github/actionrpgx/docs/technical-tips.md) before any 3D asset, animation, or bone work. Read [docs/visuals-style.md](file:///C:/work/my/github/actionrpgx/docs/visuals-style.md) before any visual, UI, VFX, or material work. Read [docs/technical-coding.md](file:///C:/work/my/github/actionrpgx/docs/technical-coding.md) before any registry/gameplay-logic work (items, recipes, skills, augments).
+At the start of every session: read [docs/index.md](file:///C:/work/my/github/actionrpgx/docs/index.md) to orient. Read [docs/technical-tips.md](file:///C:/work/my/github/actionrpgx/docs/technical-tips.md) before any 3D asset, animation, or bone work. Read [docs/visuals-style.md](file:///C:/work/my/github/actionrpgx/docs/visuals-style.md) before any visual, UI, VFX, or material work. Read [docs/technical-coding.md](file:///C:/work/my/github/actionrpgx/docs/technical-coding.md) before any registry/gameplay-logic work (items, recipes, skills, augments). Check `.agents/skills/` for available project skills (e.g. `worker-issues`) and follow their instructions when the matching task comes up, even if your tool's own skill-loading mechanism doesn't auto-register them.
 
 ---
 
