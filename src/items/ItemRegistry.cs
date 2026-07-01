@@ -48,6 +48,17 @@ public static class ItemRegistry
                 IconPath: "res://assets/icons/items/leather_vest.png",
                 ArmorCategory: ArmorCategory.Light,  BonusHp: BalanceConfig.Armour.LightBonusHp,  BonusSpeed: BalanceConfig.Armour.LightBonusSpeed,  DamageReduction: BalanceConfig.Armour.LightDamageReduction,  RangeMultiplier: BalanceConfig.Armour.LightRangeMultiplier)  { Tags = new[] { "Light" } },
 
+            // Boots
+            ["heavy_boots_t1"]  = new("heavy_boots_t1",  "Heavy Boots",  ItemSlot.Boots,
+                IconPath: "res://assets/icons/items/chain_mail.png",
+                ArmorCategory: ArmorCategory.Heavy,  BonusHp: BalanceConfig.Armour.HeavyBonusHp,  BonusSpeed: BalanceConfig.Armour.HeavyBonusSpeed,  DamageReduction: BalanceConfig.Armour.HeavyDamageReduction,  RangeMultiplier: BalanceConfig.Armour.HeavyRangeMultiplier)  { Tags = new[] { "Heavy" } },
+            ["medium_boots_t1"] = new("medium_boots_t1", "Medium Boots", ItemSlot.Boots,
+                IconPath: "res://assets/icons/items/mage_robe.png",
+                ArmorCategory: ArmorCategory.Medium, BonusHp: BalanceConfig.Armour.MediumBonusHp, BonusSpeed: BalanceConfig.Armour.MediumBonusSpeed, DamageReduction: BalanceConfig.Armour.MediumDamageReduction, RangeMultiplier: BalanceConfig.Armour.MediumRangeMultiplier) { Tags = new[] { "Medium" } },
+            ["light_boots_t1"]  = new("light_boots_t1",  "Light Boots",  ItemSlot.Boots,
+                IconPath: "res://assets/icons/items/leather_vest.png",
+                ArmorCategory: ArmorCategory.Light,  BonusHp: BalanceConfig.Armour.LightBonusHp,  BonusSpeed: BalanceConfig.Armour.LightBonusSpeed,  DamageReduction: BalanceConfig.Armour.LightDamageReduction,  RangeMultiplier: BalanceConfig.Armour.LightRangeMultiplier)  { Tags = new[] { "Light" } },
+
             // Rings (no tags — universal augments only)
             ["ring_t1"] = new("ring_t1", "Ring", ItemSlot.Ring,
                 IconPath: "res://assets/icons/items/swift_ring.png",
