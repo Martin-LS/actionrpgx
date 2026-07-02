@@ -1,24 +1,33 @@
-const fs = require('fs');
+const { execSync } = require('child_process');
 const path = require('path');
 
-const agentsPath = path.resolve('C:/work/my/github/actionrpgx/.agents/AGENTS.md');
-const claudePath = path.resolve('C:/work/my/github/actionrpgx/CLAUDE.md');
+let input = '';
+process.stdin.on('data', chunk => input += chunk);
+process.stdin.on('end', () => {
+  const data = JSON.parse(input);
+  const model = data.model.display_name;
+  const dir = path.basename(data.workspace.current_dir);
+  const pct = Math.floor(data.context_window?.used_percentage || 0);
 
-function extractSection(file, heading) {
-  const content = fs.readFileSync(file, 'utf8');
-  const regex = new RegExp(`###\\s+${heading}[\\s\\S]*?(?=\\n\\n###|$)`, 'i');
-  const match = content.match(regex);
-  return match ? match[0].trim() : '';
-}
+  let branch = '';
+  try {
+    branch = execSync('git branch --show-current', { encoding: 'utf8', stdio: ['pipe', 'pipe', 'ignore'] }).trim();
+    branch = branch ? ` | 🌿 ${branch}` : '';
+  } catch {}
 
-const agentsSec = extractSection(agentsPath, '0\\. AI Operational Guidelines');
-const claudeSec = extractSection(claudePath, '0\\. AI Operational Guidelines');
+  const BLUE = '\x1b[94m', GREEN = '\x1b[32m', YELLOW = '\x1b[33m', RED = '\x1b[31m', RESET = '\x1b[0m';
+  const colorFor = p => p >= 90 ? RED : p >= 70 ? YELLOW : GREEN;
+  const barColor = colorFor(pct);
 
-const result = {
-  // HUD renders a "notice" field as a line; null hides it.
-  notice: agentsSec === claudeSec
-    ? null
-    : '[AI-Optnl-Err] AI Operational Guidelines differ between AGENTS.md and CLAUDE.md'
-};
+  const filled = Math.floor(pct * 10 / 100);
+  const bar = '▓'.repeat(filled) + '░'.repeat(10 - filled);
 
-console.log(JSON.stringify(result));
+  const fiveH = data.rate_limits?.five_hour?.used_percentage;
+  const week = data.rate_limits?.seven_day?.used_percentage;
+
+  let limits = '';
+  if (fiveH != null) limits += ` | ${BLUE}5h:${RESET} ${colorFor(fiveH)}${Math.round(fiveH)}%${RESET}`;
+  if (week != null) limits += ` | ${BLUE}7d:${RESET} ${colorFor(week)}${Math.round(week)}%${RESET}`;
+
+  console.log(`${BLUE}[${model}] 📁 ${dir}${branch}${RESET} | ${barColor}${bar} ${pct}%${RESET}${limits}`);
+});
