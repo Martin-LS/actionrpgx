@@ -348,7 +348,7 @@ public partial class WeaponController : Node
             ApplyEots(enemy, slot.Eots, critMult);
         }
 
-        EmitSignal(SignalName.SkillFired, slotIndex, slot.Skill!.Cooldown, "AuraTick");
+        EmitSignal(SignalName.SkillFired, slotIndex, slot.Skill!.TickRate, "AuraTick");
     }
 
     private void FireSelfChanneledTick(int slotIndex)
@@ -377,7 +377,7 @@ public partial class WeaponController : Node
         }
 
         if (hit)
-            EmitSignal(SignalName.SkillFired, slotIndex, slot.Skill!.Cooldown, "Melee");
+            EmitSignal(SignalName.SkillFired, slotIndex, slot.Skill!.TickRate, "Melee");
     }
 
     public void ReleaseSlot(int slotIndex)

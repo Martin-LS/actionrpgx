@@ -517,12 +517,12 @@ void UnreserveFocus(float absoluteAmount) → _totalReserved = Max(0, _totalRese
 | SkillType | Guard | On fire |
 |---|---|---|
 | Active | `GetAvailableFocus() >= FocusCost` | `TrySpendFocus(FocusCost)` |
-| Channeled | `IsChanneling == true` + `GetAvailableFocus() >= FocusCost × Cooldown` | `TrySpendFocus(FocusCost × Cooldown)` per tick |
+| Channeled | `IsChanneling == true` + `GetAvailableFocus() >= FocusCost × TickRate` | `TrySpendFocus(FocusCost × TickRate)` per tick |
 | Aura (toggle on) | `GetAvailableFocus() >= FocusCost` | `ReserveFocus(FocusCost)` — no per-tick spend |
 | Aura (toggle off) | — | `UnreserveFocus(slot.AuraReserved)` |
 | Passive | — | — |
 
-Channeled `FocusCost` is drain/sec; `Cooldown` is tick interval — so `FocusCost × Cooldown` is drain per tick. Aura `FocusCost` is a flat Focus amount reserved from max Focus (absolute units, e.g., 15).
+Channeled `FocusCost` is drain/sec; `TickRate` is tick interval — so `FocusCost × TickRate` is drain per tick. Aura `FocusCost` is a flat Focus amount reserved from max Focus (absolute units, e.g., 15).
 
 Auras do **not** auto-deactivate at 0 Focus — the reservation is committed at toggle time. Active and Channeled skip the tick when insufficient Focus is available.
 

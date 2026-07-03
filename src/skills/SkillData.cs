@@ -23,8 +23,8 @@ public record SkillData(
     float                TriggerRadius     = 0f,
     float                ArmTime           = 0f,
     int                  TriggerCount      = 0,
-    string?              DebuffEotId        = null,
+    string?              DebuffEotId       = null,
     DamageType           DamageType        = DamageType.Physical,
     string?              BasedOn           = null,
-    float                TickRate           = 0f
+    float                TickRate          = 0f
 );

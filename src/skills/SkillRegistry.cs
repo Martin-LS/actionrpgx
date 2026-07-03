@@ -180,6 +180,11 @@ public static class SkillRegistry
                 throw new System.InvalidOperationException(
                     $"Skill '{skill.Id}' has DebuffEotId set ('{skill.DebuffEotId}') but DamagePattern is {skill.DamagePattern} (must be None).");
             }
+            if (skill.DamagePattern == SkillDamagePattern.Tick && skill.TickRate <= 0f)
+            {
+                throw new System.InvalidOperationException(
+                    $"Skill '{skill.Id}' has DamagePattern.Tick but TickRate is {skill.TickRate} (must be > 0).");
+            }
         }
     }
 }
