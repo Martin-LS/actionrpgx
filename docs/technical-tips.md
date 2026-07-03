@@ -55,6 +55,10 @@ private static int FindBone(Skeleton3D skeleton, string name)
 }
 ```
 
+**This also silently breaks animation retargeting.** Animations copied from a shared GLB (e.g. `humanoid_animations.glb`) target un-suffixed bone paths like `Skeleton3D:Hips`. If the model's bones imported as `Hips_2`, those tracks bind to nothing — the animation plays but drives no bones (character slides in rest pose), with no error.
+
+**Fix at the source, not with `_2` fallbacks**: name mesh objects so they never collide with bone names (e.g. prefix meshes `Mesh_`). Then bones import un-suffixed and shared animations retarget cleanly. The `FindBone` fallback above only rescues code lookups — it does nothing for animation track binding.
+
 ---
 
 ## AnimationPlayer autoplay survives `Stop()` in `_Ready()`
