@@ -28,7 +28,8 @@ public static class SkillRegistry
             Description: "Proves Channeled skill type with Self targeting. Continuous ticking damage while held; drains Focus over time.",
             Kind: SkillKind.Prototype,
             TargetingShape: SkillTargetingShape.Self,
-            DamagePattern: SkillDamagePattern.Tick),
+            DamagePattern: SkillDamagePattern.Tick,
+            TickRate: BalanceConfig.Skills.SelfChanneledTickCooldown),
 
         ["self_duration_tick"] = new SkillData(
             "self_duration_tick", "Self Duration Tick", SkillType.Active,
@@ -40,7 +41,8 @@ public static class SkillRegistry
             TargetingShape: SkillTargetingShape.Self,
             DamagePattern: SkillDamagePattern.Tick,
             Duration: BalanceConfig.Skills.SelfDurationTickDuration,
-            DamageType: DamageType.Magic),
+            DamageType: DamageType.Magic,
+            TickRate: BalanceConfig.Skills.SelfDurationTickCooldown),
 
         ["self_burst"] = new SkillData(
             "self_burst", "Self Burst", SkillType.Active,
@@ -65,7 +67,8 @@ public static class SkillRegistry
             DamagePattern: SkillDamagePattern.Tick,
             ZoneTracksEntity: true,
             Duration: BalanceConfig.Skills.TrackedTickDuration,
-            ZoneRadius: BalanceConfig.Skills.TrackedTickZoneRadius),
+            ZoneRadius: BalanceConfig.Skills.TrackedTickZoneRadius,
+            TickRate: BalanceConfig.Skills.TrackedTickRate),
 
         ["triggered_zone_burst"] = new SkillData(
             "triggered_zone_burst", "Triggered Zone Burst", SkillType.Active,
@@ -96,7 +99,8 @@ public static class SkillRegistry
             DamagePattern: SkillDamagePattern.Tick,
             StackLimit: 3,
             Duration: BalanceConfig.Skills.StackableZoneDuration,
-            ZoneRadius: BalanceConfig.Skills.StackableZoneZoneRadius),
+            ZoneRadius: BalanceConfig.Skills.StackableZoneZoneRadius,
+            TickRate: BalanceConfig.Skills.StackableZoneRate),
 
         ["entity_debuff"] = new SkillData(
             "entity_debuff", "Entity Debuff", SkillType.Active,
@@ -107,7 +111,7 @@ public static class SkillRegistry
             Kind: SkillKind.Prototype,
             TargetingShape: SkillTargetingShape.Entity,
             DamagePattern: SkillDamagePattern.None,
-            InherentEotIds: new[] { "slow" }),
+            DebuffEotId: "slow"),
 
         ["windup_burst"] = new SkillData(
             "windup_burst", "Windup Burst", SkillType.Active,
@@ -150,7 +154,8 @@ public static class SkillRegistry
             DamagePattern: SkillDamagePattern.Tick,
             StackLimit: 1,
             Duration: BalanceConfig.Skills.FixedZoneTickDuration,
-            ZoneRadius: BalanceConfig.Skills.FixedZoneTickZoneRadius),
+            ZoneRadius: BalanceConfig.Skills.FixedZoneTickZoneRadius,
+            TickRate: BalanceConfig.Skills.FixedZoneTickRate),
 
         ["self_aura"] = new SkillData(
             "self_aura", "Self Aura", SkillType.Aura,
@@ -160,8 +165,21 @@ public static class SkillRegistry
             Description: "Proves Aura toggle + Focus reservation mechanic. Toggle on → reserves Focus and pulses effect each tick. Toggle off → unreserves Focus.",
             Kind: SkillKind.Prototype,
             TargetingShape: SkillTargetingShape.Self,
-            DamagePattern: SkillDamagePattern.Tick),
+            DamagePattern: SkillDamagePattern.Tick,
+            TickRate: BalanceConfig.Skills.SelfAuraCooldown),
     };
 
     public static SkillData? Get(string id) => All.TryGetValue(id, out var s) ? s : null;
+
+    static SkillRegistry()
+    {
+        foreach (var skill in All.Values)
+        {
+            if (skill.DamagePattern != SkillDamagePattern.None && !string.IsNullOrEmpty(skill.DebuffEotId))
+            {
+                throw new System.InvalidOperationException(
+                    $"Skill '{skill.Id}' has DebuffEotId set ('{skill.DebuffEotId}') but DamagePattern is {skill.DamagePattern} (must be None).");
+            }
+        }
+    }
 }
