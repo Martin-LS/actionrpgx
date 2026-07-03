@@ -61,7 +61,7 @@ One line each; all real ARPG stats, none needed to prove our pillars:
 - **Aura effect %** — "effect of your auras" scaling stat (self_aura exists, but aura *effect scaling* is parked).
 - **Max-resist / mitigation caps** — cap-raising stats; matters only once resists have caps.
 - **Life/shield on-hit, leech gating** — recovery-on-action stats beyond FocusRegen.
-- **"-to-enemy" debuff stats** — exposure/shred style resist reduction applied to enemies.
+- **"-to-enemy" debuff stats** — exposure/shred style resist reduction and damage-taken amplification applied to enemies. *Promotion path already designed (2026-07-04, brainstorm doc): implemented as an enemy-owned EoT type ("Exposed"), delivered via existing debuff machinery — never as a skill-owned multiplier.*
 
 ---
 
