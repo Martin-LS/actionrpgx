@@ -8,7 +8,7 @@
 ### Skills
 
 **Design rule for skills:**
-- **EoTs and secondary effects (mines, traps) are added by augments, not baked into skills.** A skill's base behaviour is its damage delivery. Augments add what happens on top of that.
+- **EoTs and secondary effects (mines, traps) are added by augments, not baked into skills.** A skill's base behaviour is its damage delivery. Augments add what happens on top of that. **Narrow exception:** a debuff-pattern skill (`DamagePattern == None`, e.g. entity_debuff) carries a single `DebuffEotId` — its debuff *is* the base behaviour, not an add-on. No damage-dealing skill may ever carry an inherent EoT (see the ownership matrix in `design-stats.md`).
 
 **Skill slot vs. Equipment Augment — the dividing line:**
 - **Skill slot = things you actively trigger** (requires a button press — Active, Channeled, toggled auras, War Cries).

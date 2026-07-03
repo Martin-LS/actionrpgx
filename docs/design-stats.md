@@ -115,7 +115,7 @@ Two kinds of stat:
 | BaseDamage | **Weapon** | root of the damage number |
 | ArmorCategory, DamageReduction | **Armour** | |
 | MaxFocus, FocusRegen, Evasion, CritDamage, MagicResistance | **Character stat block** | derived from primary stats; MagicResistance has no item source |
-| EoT payload (`EotId`) | **Augment** | EoTs come from augments, never baked into skills |
+| EoT payload (`EotId`) | **Augment** | On damage-dealing skills, EoTs come exclusively from augments — never baked in. **Narrow exception (amended 2026-07-04):** a skill with `DamagePattern == None` carries a single `DebuffEotId` — the debuff *is* its base behaviour, not an add-on (e.g. entity_debuff's Slow). No damage skill may ever carry an inherent EoT. |
 
 ### B. Composed stats (fixed formula, closed contributor list)
 
@@ -142,7 +142,7 @@ Related decision: **skill tier improves budget levers only** (never hit size); p
 ### Open flags
 
 - ✅ **Damage type owner = Skill** (skill-authoritative). Weapon `BaseDamageType` is fallback/display. Mutability decided 2026-07-04 — see the DamageType matrix row.
-- ✅ **`InherentEotIds` on `SkillData`** — resolved 2026-07-04: **delete the field.** "EoTs are augment-only" stays pure; no signature-EoT carve-out. Documented escape hatch: if playtesting shows named skills feel same-y, revisit consciously (amend the matrix first). Code deletion pending as a small issue.
+- ✅ **`InherentEotIds` on `SkillData`** — resolved 2026-07-04, amended same day: **narrow, don't delete.** Initial resolution was deletion, but entity_debuff (`DamagePattern: None`) delivers its Slow through the field — a debuff-pattern skill's payload is its base behaviour, not an augment-style add-on. Final rule: replace the general `InherentEotIds` list with a single `DebuffEotId`, valid only when `DamagePattern == None`. No signature-EoT carve-out for damage skills — that escape hatch (revisit if named skills feel same-y) still requires a conscious matrix amendment. Code change tracked as a GitHub issue.
 - ⬜ **`TickRate` field** does not exist on `SkillData` yet; matrix says it must. Implementation deferred.
 - ✅ **Boots drift** — resolved 2026-07-04: **docs follow code.** Boots is a first-class armour slot; all armour-composed stats (BonusHp, BonusSpeed, DamageReduction, RangeMultiplier) draw from Hat, Body, and Boots. `design-mechanics.md` and `design-progression.md` updated.
 
