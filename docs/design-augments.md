@@ -55,13 +55,13 @@ Skill Augments are crafted (Craft New entry point TBD — not yet implemented; p
 
 ## Equipment Tags
 
-Armour pieces (Hat and Body) carry a **category tag** that identifies their type. The tag drives the stat profile described in Hat & Body (see `design-progression.md`). No augment gating — any augment can socket into any equipment item regardless of category.
+Armour pieces (Hat, Body, and Boots) carry a **category tag** that identifies their type. The tag drives the stat profile described in Hat, Body & Boots (see `design-progression.md`). No augment gating — any augment can socket into any equipment item regardless of category.
 
 | Armour | Tag |
 |---|---|
-| Hat / Body (Heavy) | `Heavy` |
-| Hat / Body (Medium) | `Medium` |
-| Hat / Body (Light) | `Light` |
+| Hat / Body / Boots (Heavy) | `Heavy` |
+| Hat / Body / Boots (Medium) | `Medium` |
+| Hat / Body / Boots (Light) | `Light` |
 
 Category is fixed per item — a Heavy hat stays Heavy regardless of tier.
 

@@ -33,14 +33,15 @@ Characters can equip up to 4 gear items (one per gear slot) and 5 skill items. A
 | Weapon    | Root of base damage; sets Weapon Range; determines visual delivery of skill animations | Tier → higher base damage + higher Weapon Range |
 | Hat       | Survival — HP, Speed, damage reduction (%) by category; Range Modifier by category | Tier → better stats within category |
 | Body      | Survival — HP, Speed, damage reduction (%) by category; Range Modifier by category | Tier → better stats within category |
+| Boots     | Survival — HP, Speed, damage reduction (%) by category; Range Modifier by category | Tier → better stats within category |
 | Ring      | Mitigation — physical resistance (%)                             | Tier → higher resistance            |
-| Skill ×5  | Active abilities used during a run. All 5 slots available from the start — no unlock progression | Tier → stronger effect + lower cooldown (cooldown is a skill attribute — no character-level attack speed stat exists) |
+| Skill ×5  | Active abilities used during a run. All 5 slots available from the start — no unlock progression | Tier → advances the skill's fixed upgrade track over its budget levers (e.g. lower cooldown or larger radius); never hit size. Cooldown is a skill attribute — no character-level attack speed stat exists |
 
 #### Skill Slots
 
 5 skill slots shown on the HUD and used during a run. All 5 are available from the start — no unlock progression. Any archetype can equip any skill in any slot — fully freeform, no restrictions.
 
-v1 starter skill: **entity_burst** in slot 1 (physical type, 1.0× multiplier), slots 2–5 empty. All archetypes start with plain entity_burst — no augments socketed. Weapon drives the delivery animation; skill defines the damage type.
+v1 starter skill: **entity_burst** in slot 1 (physical type), slots 2–5 empty. All archetypes start with plain entity_burst — no augments socketed. Weapon drives the delivery animation; skill defines the damage type.
 
 Skill items are crafted (Craft New — accessible from an empty skill slot, left-click → Craft New; not yet implemented in v1) and equipped from the **Skills inventory tab**. Default keybindings: Q E R F + one mouse button for slots 1–5. Rebindable.
 
@@ -58,7 +59,7 @@ Skill items are crafted (Craft New — accessible from an empty skill slot, left
 
 #### Equipment Tags
 
-Armour pieces (Hat and Body) carry a **category tag** (`Heavy`, `Medium`, `Light`) that drives their stat profile — see Hat & Body below. No augment gating — any augment can socket into any equipment item regardless of category. Category is fixed per item.
+Armour pieces (Hat, Body, and Boots) carry a **category tag** (`Heavy`, `Medium`, `Light`) that drives their stat profile — see Hat, Body & Boots below. No augment gating — any augment can socket into any equipment item regardless of category. Category is fixed per item.
 
 #### Equipment Augments
 
@@ -76,11 +77,11 @@ Armour pieces (Hat and Body) carry a **category tag** (`Heavy`, `Medium`, `Light
 
 Weapons do two things: provide the **base damage number** for all skill damage calculations, and set **Weapon Range**. No weapon gates any skill — every skill fires regardless of what is equipped.
 
-**Weapon is the root of the damage number.** The skill defines the damage type and multiplier on top of the weapon's base. Upgrading weapon tier is the primary way to increase damage output. Each weapon type has a **passive identity bonus** that applies globally to all skills and damage types — rewarding all builds while maintaining distinct weapon playstyles.
+**Weapon is the root of the damage number.** The skill defines the damage type on top of the weapon's base — skills carry no damage multiplier (see `design-skills.md`). Upgrading weapon tier is the primary way to increase damage output. Each weapon type has a **passive identity bonus** that applies globally to all skills and damage types — rewarding all builds while maintaining distinct weapon playstyles.
 
 **Delivery is fixed per weapon type.** The weapon always drives the attack animation — a Sword always swings, a Bow always shoots, a Wand always fires a bolt. Skills do not override delivery.
 
-**Weapon Range** is a flat number stat visible on the weapon item. Effective Range on the character sheet reflects this after armour modifiers are applied (see Hat & Body).
+**Weapon Range** is a flat number stat visible on the weapon item. Effective Range on the character sheet reflects this after armour modifiers are applied (see Hat, Body & Boots).
 
 Range values are expressed in **tiles** (the canonical internal distance unit). One tile = 36 Godot world units — this conversion lives in `GameScale.TileSize`.
 
@@ -96,9 +97,9 @@ Any character can equip any weapon.
 
 **Visuals (in-run):** Weapon is rendered on the character model.
 
-#### Hat & Body
+#### Hat, Body & Boots
 
-Hat and Body are the two armour equipment slots. Each piece has a **category** that defines its identity and its equipment tag. Category is fixed per item — crafting a higher-tier Heavy hat makes it stronger within that category, not a different category.
+Hat, Body, and Boots are the three armour equipment slots. Each piece has a **category** that defines its identity and its equipment tag. Category is fixed per item — crafting a higher-tier Heavy hat makes it stronger within that category, not a different category.
 
 Any character can equip any category in any slot. Slots are independent — a character can mix freely (e.g. Heavy hat, Light body).
 
@@ -110,17 +111,17 @@ Any character can equip any category in any slot. Slots are independent — a ch
 
 Stats above apply per piece — each slot contributes its category's stats independently.
 
-**Range Multiplier applies to all weapons.** Each armour piece multiplies Effective Range independently. Two pieces of the same category compound: e.g. two Heavy pieces at ×0.85 each → ×0.72 total. The multiplicative formula means higher base ranges are pulled down more by heavy armour than lower base ranges — a 2.5-tile bow takes a larger absolute hit from heavy armour than a 1.5-tile sword.
+**Range Multiplier applies to all weapons.** Each armour piece multiplies Effective Range independently. Pieces of the same category compound: e.g. two Heavy pieces at ×0.85 each → ×0.72; full Heavy (hat + body + boots) → ×0.85³ ≈ ×0.61. The multiplicative formula means higher base ranges are pulled down more by heavy armour than lower base ranges — a 2.5-tile bow takes a larger absolute hit from heavy armour than a 1.5-tile sword.
 
 **Effective Range** (visible on the character sheet):
-- `Weapon Range × hat Range Multiplier × body Range Multiplier` (in tiles), then × `GameScale.TileSize` → world units
+- `Weapon Range × hat Range Multiplier × body Range Multiplier × boots Range Multiplier` (in tiles), then × `GameScale.TileSize` → world units
 - Range buff bonuses (v2+) are applied after the multiplier step as a flat tile addition.
 
 Displayed as tiles in the UI.
 
 **Range buffs (v2+):** Skills may temporarily or permanently modify Effective Range mid-run. Any such buff adds a flat tile bonus on top of the multiplied baseline. Effective Range is recalculated whenever a range buff is applied or expires.
 
-**Visuals (in-run):** Hat, Body, and Weapon are rendered on the character model. Ring has no visual representation.
+**Visuals (in-run):** Hat, Body, and Weapon are rendered on the character model. Ring and Boots have no visual representation.
 
 Heavy suits close-range builds taking hits; Light suits ranged builds that kite; Medium suits mixed or flexible builds. Mixing categories (e.g. Heavy hat, Light body) produces an intermediate multiplier.
 
@@ -132,13 +133,13 @@ Rings grant **physical resistance (%)**. No category, no equipment tags — any 
 
 Each character starts with one item per slot, matched to their archetype:
 
-| Archetype | Weapon         | Hat            | Body           | Ring          | Skill slot 1 (of 5) |
-|-----------|----------------|----------------|----------------|---------------|---------------------|
-| Warrior   | Sword (tier 1) | Heavy (tier 1) | Heavy (tier 1) | Ring (tier 1) | entity_burst (no augment) |
-| Rogue     | Bow (tier 1)   | Medium (tier 1) | Medium (tier 1) | Ring (tier 1) | entity_burst (no augment) |
-| Mage      | Wand (tier 1)  | Medium (tier 1)| Medium (tier 1)| Ring (tier 1) | entity_burst (no augment) |
+| Archetype | Weapon         | Hat            | Body           | Boots          | Ring          | Skill slot 1 (of 5) |
+|-----------|----------------|----------------|----------------|----------------|---------------|---------------------|
+| Warrior   | Sword (tier 1) | Heavy (tier 1) | Heavy (tier 1) | Heavy (tier 1) | Ring (tier 1) | entity_burst (no augment) |
+| Rogue     | Bow (tier 1)   | Medium (tier 1) | Medium (tier 1) | Medium (tier 1) | Ring (tier 1) | entity_burst (no augment) |
+| Mage      | Wand (tier 1)  | Medium (tier 1)| Medium (tier 1)| Medium (tier 1)| Ring (tier 1) | entity_burst (no augment) |
 
-All archetypes start with entity_burst — physical type, 1.0× multiplier, no augments. Weapon drives the delivery animation. Crit is a Bow identity bonus, not a Rogue identity; magic damage affinity is a Wand identity, not a Mage identity.
+All archetypes start with entity_burst — physical type, no augments. Weapon drives the delivery animation. Crit is a Bow identity bonus, not a Rogue identity; magic damage affinity is a Wand identity, not a Mage identity.
 
 Specific item names and exact stat values are TBD.
 

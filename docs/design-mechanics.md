@@ -27,7 +27,7 @@ Every run makes the character permanently stronger: level and XP carry over, sta
 | Source | Effect |
 |---|---|
 | Archetype base | Shared flat value (all archetypes) |
-| Heavy armour | −% per piece (hat + body each contribute) |
+| Heavy armour | −% per piece (hat, body, and boots each contribute) |
 | Light armour | +% per piece |
 | Medium armour | No modifier |
 | Slow EoT | −% for duration |
