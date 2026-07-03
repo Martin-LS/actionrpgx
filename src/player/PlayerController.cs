@@ -465,7 +465,7 @@ public partial class PlayerController : CharacterBody3D
             {
                 float targetYaw = Mathf.Atan2(direction.X, direction.Z);
                 _yaw = Mathf.LerpAngle(_yaw, targetYaw, Mathf.Min(1f, RotationSpeed * dt));
-                _model.Rotation = new Vector3(0f, _yaw + Mathf.Pi, 0f);
+                _model.Rotation = new Vector3(0f, _yaw, 0f);
             }
             else
             {
@@ -474,7 +474,7 @@ public partial class PlayerController : CharacterBody3D
                 {
                     float targetYaw = Mathf.Atan2(toAim.X, toAim.Z);
                     _yaw = Mathf.LerpAngle(_yaw, targetYaw, Mathf.Min(1f, RotationSpeed * dt));
-                    _model.Rotation = new Vector3(0f, _yaw + Mathf.Pi, 0f);
+                    _model.Rotation = new Vector3(0f, _yaw, 0f);
                 }
             }
 
@@ -567,7 +567,7 @@ public partial class PlayerController : CharacterBody3D
         if (_dodgeDirection.LengthSquared() > 0.01f)
         {
             _yaw = Mathf.Atan2(_dodgeDirection.X, _dodgeDirection.Z);
-            _model.Rotation = new Vector3(0f, _yaw + Mathf.Pi, 0f);
+            _model.Rotation = new Vector3(0f, _yaw, 0f);
         }
 
         _isDodging = true;
