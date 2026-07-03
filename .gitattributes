@@ -1,0 +1,10 @@
+# Godot always writes its text files with LF line endings.
+# Pin them to LF so the editor and git (core.autocrlf) stop fighting —
+# without this, every editor session marks all .import files as modified.
+*.import text eol=lf
+*.tscn text eol=lf
+*.tres text eol=lf
+*.godot text eol=lf
+*.gd text eol=lf
+*.gdshader text eol=lf
+*.cfg text eol=lf
