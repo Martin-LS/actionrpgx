@@ -26,6 +26,8 @@ Quick reference for every doc in this folder. Load this first each session to kn
 | File | Contents |
 |------|----------|
 | [design-mechanics.md](design-mechanics.md) | Core loop, combat, archetypes, enemies, focus system, damage types, run structure, hit feedback |
+| [design-stats.md](design-stats.md) | **Authoritative** stats doc — six-surface model, Active-surface catalogues (character/skill/item), Stat Ownership Matrix (governing); other docs defer here |
+| [design-stats-deferred.md](design-stats-deferred.md) | Cold companion to design-stats.md — Deferred/Parked stat surfaces (enemy, map, hit model, reward, speed family, niche list); load only for push-back substance or surface promotion |
 | [design-skills.md](design-skills.md) | Skill design rules, all 11 skill prototypes, AoE and targeting rules, delivery types |
 | [design-augments.md](design-augments.md) | Skill Augments and Equipment Augments — v1 augment list, trigger system, resolution order, prototypes |
 | [design-progression.md](design-progression.md) | Meta-progression, gear slots (Weapon/Hat/Body/Ring/Skills), item tiers, currencies, inventory tabs |
@@ -50,6 +52,7 @@ Quick reference for every doc in this folder. Load this first each session to kn
 
 | File | Contents |
 |------|----------|
+| [design-skill-system-brainstorming.md](design-skill-system-brainstorming.md) | OPEN brainstorm for v2 named skills — identity system, roster, acquisition; resolved items move to design-skills.md |
 | [design-directions.md](design-directions.md) | Parked design discussions — open but unresolved ideas; resolved items are removed and moved to design docs |
 | [design-ideas.md](design-ideas.md) | Uncommitted design concepts parking lot — nothing here is scheduled or spec'd |
 | [ref-poe2-skills.md](ref-poe2-skills.md) | PoE2 skill reference table — design inspiration only, adapt concepts not names |
