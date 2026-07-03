@@ -36,7 +36,7 @@ Each character has its own palette. Record it here when authoring so future modi
 
 ## Rig — Standard Bone Set
 
-> **Base file: `assets/models/characters/player_prototype.blend`** — this is the canonical rigged humanoid source. When creating any new humanoid character (skeleton, zombie, humanoid boss, NPC, etc.), **duplicate `player_prototype.blend`** as the starting point. It already has the correct armature, bone hierarchy, weight painting, and rest pose. Do not build a new rig from scratch.
+> **Base file: `assets/models/characters/humanoid_rigged.blend`** — this is the canonical rigged humanoid source. When creating any new humanoid character (player, skeleton, zombie, humanoid boss, NPC, etc.), **duplicate `humanoid_rigged.blend`** as the starting point. It already has the correct armature, bone hierarchy, weight painting, and rest pose. Do not build a new rig from scratch.
 
 > **Status: Implemented for `player.glb`.** Enemy models are still unrigged static meshes. The spec below applies to all future humanoid characters.
 

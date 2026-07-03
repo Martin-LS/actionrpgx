@@ -3,13 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://dk38ri5aognsn"
-path="res://.godot/imported/player_prototype.blend-b83bdfcbefcbe551dd15382151eebef6.scn"
+uid="uid://c4vtos12k0455"
+path="res://.godot/imported/humanoid_rigged.blend-14ed3046b0168430c369a82ba7f62abe.scn"
 
 [deps]
 
-source_file="res://assets/models/characters/player_prototype.blend"
-dest_files=["res://.godot/imported/player_prototype.blend-b83bdfcbefcbe551dd15382151eebef6.scn"]
+source_file="res://assets/models/characters/humanoid_rigged.blend"
+dest_files=["res://.godot/imported/humanoid_rigged.blend-14ed3046b0168430c369a82ba7f62abe.scn"]
 
 [params]
 
