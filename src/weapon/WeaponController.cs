@@ -137,10 +137,10 @@ public partial class WeaponController : Node
         _slots[slotIndex].Skill            = skill;
         _slots[slotIndex].CooldownTimer    = 0f;
         var eots = new List<(string Id, float Chance)>();
-        foreach (var id in skill.InherentEotIds ?? System.Array.Empty<string>())
+        if (!string.IsNullOrEmpty(skill.DebuffEotId))
         {
-            var eot = EotRegistry.Get(id);
-            eots.Add((id, eot?.ApplyChance ?? 1f));
+            var eot = EotRegistry.Get(skill.DebuffEotId);
+            eots.Add((skill.DebuffEotId, eot?.ApplyChance ?? 1f));
         }
         if (augmentEots != null) eots.AddRange(augmentEots);
         _slots[slotIndex].Eots             = eots;
@@ -249,7 +249,7 @@ public partial class WeaponController : Node
             if (_slots[i].CooldownTimer <= 0f)
             {
                 FireSelfBurst(i);
-                _slots[i].CooldownTimer = _slots[i].Skill!.Cooldown;
+                _slots[i].CooldownTimer = _slots[i].Skill!.TickRate;
             }
             if (_selfDurationTickVfx != null) _selfDurationTickVfx.Emitting = true;
             if (_slots[i].DurationTimer <= 0f)
@@ -312,17 +312,17 @@ public partial class WeaponController : Node
     {
         if (_slots[i].CooldownTimer > 0f) return;
         if (FindNearestEnemy(_slots[i].Skill!.Range) == null) return;
-        float drain = _slots[i].Skill!.FocusCost * _slots[i].Skill!.Cooldown;
+        float drain = _slots[i].Skill!.FocusCost * _slots[i].Skill!.TickRate;
         if (_player != null && !_player.TrySpendFocus(drain)) { _slots[i].IsChanneling = false; return; }
         FireSelfChanneledTick(i);
-        _slots[i].CooldownTimer = _slots[i].Skill!.Cooldown;
+        _slots[i].CooldownTimer = _slots[i].Skill!.TickRate;
     }
 
     private void ProcessAuraSlot(int i, float dt)
     {
         if (_slots[i].CooldownTimer > 0f) return;
         FireAuraTick(i);
-        _slots[i].CooldownTimer = _slots[i].Skill!.Cooldown;
+        _slots[i].CooldownTimer = _slots[i].Skill!.TickRate;
     }
 
     private void FireAuraTick(int slotIndex)
@@ -348,7 +348,7 @@ public partial class WeaponController : Node
             ApplyEots(enemy, slot.Eots, critMult);
         }
 
-        EmitSignal(SignalName.SkillFired, slotIndex, slot.Skill!.Cooldown, "AuraTick");
+        EmitSignal(SignalName.SkillFired, slotIndex, slot.Skill!.TickRate, "AuraTick");
     }
 
     private void FireSelfChanneledTick(int slotIndex)
@@ -377,7 +377,7 @@ public partial class WeaponController : Node
         }
 
         if (hit)
-            EmitSignal(SignalName.SkillFired, slotIndex, slot.Skill!.Cooldown, "Melee");
+            EmitSignal(SignalName.SkillFired, slotIndex, slot.Skill!.TickRate, "Melee");
     }
 
     public void ReleaseSlot(int slotIndex)
@@ -510,7 +510,7 @@ public partial class WeaponController : Node
                 DmgType        = ttType,
                 Radius         = radius,
                 Duration       = slot.Skill.Duration,
-                TickInterval   = BalanceConfig.Skills.TrackedTickRate,
+                TickInterval   = slot.Skill.TickRate,
                 EotIds         = slot.Eots,
                 CritMultiplier = ttCrit,
             };
@@ -706,7 +706,7 @@ public partial class WeaponController : Node
                     DmgType        = dmgType,
                     Radius         = radius,
                     Duration       = slot.Skill!.Duration,
-                    TickInterval   = BalanceConfig.Skills.StackableZoneRate,
+                    TickInterval   = slot.Skill!.TickRate,
                     EotIds         = slot.Eots,
                     CritMultiplier = critMult,
                 };
@@ -722,7 +722,7 @@ public partial class WeaponController : Node
                     DmgType        = dmgType,
                     Radius         = radius,
                     Duration       = slot.Skill!.Duration,
-                    TickInterval   = BalanceConfig.Skills.FixedZoneTickRate,
+                    TickInterval   = slot.Skill!.TickRate,
                     EotIds         = slot.Eots,
                     CritMultiplier = critMult,
                 };
