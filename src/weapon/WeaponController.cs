@@ -53,54 +53,6 @@ public partial class WeaponController : Node
     public override void _Ready()
     {
         _player = GetParent<Player.PlayerController>();
-        for (int i = 0; i < 5; i++)
-        {
-            var slot = _slots[i];
-            if (slot.Skill == null) continue;
-            // Channeled Tick VFX
-            var vfxScene = GetSkillVfxScene(slot.Skill.VfxKey, "self_channeled_tick", SelfChanneledTickVfxScene);
-            if (vfxScene != null)
-            {
-                var vfxRoot = vfxScene.Instantiate<Node3D>();
-                var particles = vfxRoot.GetNodeOrNull<GpuParticles3D>("Whirl");
-                if (particles != null) particles.Emitting = false;
-                _selfChanneledTickVfx[i] = particles;
-                _player?.CallDeferred(Node.MethodName.AddChild, vfxRoot);
-            }
-            // Duration Tick VFX
-            vfxScene = GetSkillVfxScene(slot.Skill.VfxKey, "self_duration_tick", SelfDurationTickVfxScene);
-            if (vfxScene != null)
-            {
-                var vfxRoot = vfxScene.Instantiate<Node3D>();
-                var particles = vfxRoot.GetNodeOrNull<GpuParticles3D>("Whirl");
-                if (particles is { } durPart && durPart.ProcessMaterial is ParticleProcessMaterial durMat)
-                    durPart.ProcessMaterial = (ParticleProcessMaterial)durMat.Duplicate();
-                if (particles != null) particles.Emitting = false;
-                _selfDurationTickVfx[i] = particles;
-                _player?.CallDeferred(Node.MethodName.AddChild, vfxRoot);
-            }
-            // Burst VFX
-            vfxScene = GetSkillVfxScene(slot.Skill.VfxKey, "self_burst", SelfBurstVfxScene);
-            if (vfxScene != null)
-            {
-                var vfxRoot = vfxScene.Instantiate<Node3D>();
-                var particles = vfxRoot.GetNodeOrNull<GpuParticles3D>("Whirl");
-                if (particles is { } burstPart && burstPart.ProcessMaterial is ParticleProcessMaterial burstMat)
-                    burstPart.ProcessMaterial = (ParticleProcessMaterial)burstMat.Duplicate();
-                if (particles != null) particles.Emitting = false;
-                _selfBurstVfx[i] = particles;
-                _player?.CallDeferred(Node.MethodName.AddChild, vfxRoot);
-            }
-            // Aura VFX (if applicable)
-            if (SelfAuraVfxScene != null)
-            {
-                var vfxRoot = SelfAuraVfxScene.Instantiate<Node3D>();
-                var particles = vfxRoot.GetNodeOrNull<GpuParticles3D>("Ring");
-                if (particles != null) particles.Emitting = false;
-                _selfAuraVfx[i] = particles;
-                _player?.CallDeferred(Node.MethodName.AddChild, vfxRoot);
-            }
-        }
     }
 
     // Resolves the VFX scene for a skill slot.
@@ -116,6 +68,36 @@ public partial class WeaponController : Node
             if (scene != null) return scene;
         }
         return fallback;
+    }
+
+    private void CleanUpSlotVfx(int slotIndex)
+    {
+        if (slotIndex < 0 || slotIndex >= 5) return;
+
+        if (_selfChanneledTickVfx[slotIndex] is { } chanVfx)
+        {
+            if (GodotObject.IsInstanceValid(chanVfx))
+                chanVfx.GetParent()?.QueueFree();
+            _selfChanneledTickVfx[slotIndex] = null;
+        }
+        if (_selfDurationTickVfx[slotIndex] is { } durVfx)
+        {
+            if (GodotObject.IsInstanceValid(durVfx))
+                durVfx.GetParent()?.QueueFree();
+            _selfDurationTickVfx[slotIndex] = null;
+        }
+        if (_selfBurstVfx[slotIndex] is { } burstVfx)
+        {
+            if (GodotObject.IsInstanceValid(burstVfx))
+                burstVfx.GetParent()?.QueueFree();
+            _selfBurstVfx[slotIndex] = null;
+        }
+        if (_selfAuraVfx[slotIndex] is { } auraVfx)
+        {
+            if (GodotObject.IsInstanceValid(auraVfx))
+                auraVfx.GetParent()?.QueueFree();
+            _selfAuraVfx[slotIndex] = null;
+        }
     }
 
     public void SetDamage(float physicalDamage, float magicDamage)
@@ -154,6 +136,10 @@ public partial class WeaponController : Node
         List<(string Id, float Chance)>? augmentEots = null, bool hasMagicDamage = false, float critChanceBonus = 0f)
     {
         if (slotIndex < 0 || slotIndex >= 5) return;
+
+        // Clean up previous VFX for this slot
+        CleanUpSlotVfx(slotIndex);
+
         _slots[slotIndex].Skill            = skill;
         _slots[slotIndex].CooldownTimer    = 0f;
         var eots = new List<(string Id, float Chance)>();
@@ -173,6 +159,57 @@ public partial class WeaponController : Node
         _slots[slotIndex].ActiveZones   = new List<Node3D>();
         _slots[slotIndex].AuraActive    = false;
         _slots[slotIndex].AuraReserved  = 0f;
+
+        // Initialize new VFX for the slot
+        if (_player == null)
+            _player = GetParent<Player.PlayerController>();
+
+        if (_player != null)
+        {
+            // Channeled Tick VFX
+            var vfxScene = GetSkillVfxScene(skill.VfxKey, "self_channeled_tick", SelfChanneledTickVfxScene);
+            if (vfxScene != null)
+            {
+                var vfxRoot = vfxScene.Instantiate<Node3D>();
+                var particles = vfxRoot.GetNodeOrNull<GpuParticles3D>("Whirl");
+                if (particles != null) particles.Emitting = false;
+                _selfChanneledTickVfx[slotIndex] = particles;
+                _player.CallDeferred(Node.MethodName.AddChild, vfxRoot);
+            }
+            // Duration Tick VFX
+            vfxScene = GetSkillVfxScene(skill.VfxKey, "self_duration_tick", SelfDurationTickVfxScene);
+            if (vfxScene != null)
+            {
+                var vfxRoot = vfxScene.Instantiate<Node3D>();
+                var particles = vfxRoot.GetNodeOrNull<GpuParticles3D>("Whirl");
+                if (particles is { } durPart && durPart.ProcessMaterial is ParticleProcessMaterial durMat)
+                    durPart.ProcessMaterial = (ParticleProcessMaterial)durMat.Duplicate();
+                if (particles != null) particles.Emitting = false;
+                _selfDurationTickVfx[slotIndex] = particles;
+                _player.CallDeferred(Node.MethodName.AddChild, vfxRoot);
+            }
+            // Burst VFX
+            vfxScene = GetSkillVfxScene(skill.VfxKey, "self_burst", SelfBurstVfxScene);
+            if (vfxScene != null)
+            {
+                var vfxRoot = vfxScene.Instantiate<Node3D>();
+                var particles = vfxRoot.GetNodeOrNull<GpuParticles3D>("Whirl");
+                if (particles is { } burstPart && burstPart.ProcessMaterial is ParticleProcessMaterial burstMat)
+                    burstPart.ProcessMaterial = (ParticleProcessMaterial)burstMat.Duplicate();
+                if (particles != null) particles.Emitting = false;
+                _selfBurstVfx[slotIndex] = particles;
+                _player.CallDeferred(Node.MethodName.AddChild, vfxRoot);
+            }
+            // Aura VFX (if applicable)
+            if (SelfAuraVfxScene != null)
+            {
+                var vfxRoot = SelfAuraVfxScene.Instantiate<Node3D>();
+                var particles = vfxRoot.GetNodeOrNull<GpuParticles3D>("Ring");
+                if (particles != null) particles.Emitting = false;
+                _selfAuraVfx[slotIndex] = particles;
+                _player.CallDeferred(Node.MethodName.AddChild, vfxRoot);
+            }
+        }
     }
 
     public void SetSlotAutoActivate(int slotIndex, bool autoActivate)
@@ -770,6 +807,7 @@ public partial class WeaponController : Node
                 var              capEots   = slot.Eots;
                 Vector3          capPos    = worldPos;
                 float            capWindUp = slot.Skill.WindUp;
+                string           capVfxKey = slot.Skill.VfxKey;
 
                 var telegraph = new WindupTelegraph { Radius = capRadius, Duration = capWindUp };
                 GetTree().Root.AddChild(telegraph);
@@ -784,7 +822,7 @@ public partial class WeaponController : Node
                         enemy.TakeDamage(capDmg, capType, capIsCrit);
                         ApplyEots(enemy, capEots, capCrit);
                     }
-                    SpawnZoneBurstVfx(capPos);
+                    SpawnZoneBurstVfx(capPos, capVfxKey);
                 };
             }
             else
@@ -796,7 +834,7 @@ public partial class WeaponController : Node
                     enemy.TakeDamage(baseDmg, dmgType, isCrit);
                     ApplyEots(enemy, slot.Eots, critMult);
                 }
-                SpawnZoneBurstVfx(worldPos);
+                SpawnZoneBurstVfx(worldPos, slot.Skill.VfxKey);
             }
         }
         else if (slot.Skill!.DamagePattern == SkillDamagePattern.Tick)
@@ -850,7 +888,7 @@ public partial class WeaponController : Node
                 };
                 GetTree().Root.AddChild(zone);
                 zone.GlobalPosition = worldPos;
-                SpawnZoneTickVfx(worldPos, slot.Skill!.Duration);
+                SpawnZoneTickVfx(worldPos, slot.Skill!.Duration, slot.Skill.VfxKey);
             }
         }
 
@@ -897,10 +935,11 @@ public partial class WeaponController : Node
         }
     }
 
-    private void SpawnZoneBurstVfx(Vector3 worldPos)
+    private void SpawnZoneBurstVfx(Vector3 worldPos, string vfxKey)
     {
-        if (FixedZoneBurstVfxScene == null) return;
-        var vfx   = FixedZoneBurstVfxScene.Instantiate<Node3D>();
+        var vfxScene = GetSkillVfxScene(vfxKey, "fixed_zone_burst", FixedZoneBurstVfxScene);
+        if (vfxScene == null) return;
+        var vfx   = vfxScene.Instantiate<Node3D>();
         var whirl = vfx.GetNodeOrNull<GpuParticles3D>("Whirl");
         GetTree().Root.AddChild(vfx);
         vfx.GlobalPosition = worldPos;
@@ -908,10 +947,11 @@ public partial class WeaponController : Node
         GetTree().CreateTimer(1.5).Timeout += vfx.QueueFree;
     }
 
-    private void SpawnZoneTickVfx(Vector3 worldPos, float duration)
+    private void SpawnZoneTickVfx(Vector3 worldPos, float duration, string vfxKey)
     {
-        if (FixedZoneTickVfxScene == null) return;
-        var vfx   = FixedZoneTickVfxScene.Instantiate<Node3D>();
+        var vfxScene = GetSkillVfxScene(vfxKey, "fixed_zone_tick", FixedZoneTickVfxScene);
+        if (vfxScene == null) return;
+        var vfx   = vfxScene.Instantiate<Node3D>();
         var whirl = vfx.GetNodeOrNull<GpuParticles3D>("Whirl");
         GetTree().Root.AddChild(vfx);
         vfx.GlobalPosition = worldPos;

@@ -11,7 +11,7 @@ public static class IdentityRegistry
         ["physical"] = new IdentityData(
             Id: "physical",
             DamageType: DamageType.Physical,
-            VfxKey: ""           // physical = default stone-grey VFX (no keyed override)
+            VfxKey: "kinetic"    // physical = steel-grey particle skins (kinetic)
         ),
         ["magic"] = new IdentityData(
             Id: "magic",
