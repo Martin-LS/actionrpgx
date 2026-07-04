@@ -17,6 +17,8 @@ At the start of every session: read [docs/index.md](file:///C:/work/my/github/ac
 - When resolving a list of tasks or issues, proceed strictly **one-by-one** (propose/discuss, wait for approval, implement, repeat).
 - When waiting for user approval, format the approval prompt in bold: **e.g. "Waiting for your approval to proceed."**
 - **If a user message contains conflicting or ambiguous instructions, stop and ask for clarification — never silently resolve it in whichever direction lets you proceed.** This applies even mid-session, even after a run of fast "yes, do it" exchanges — momentum from prior turns is never a reason to guess instead of asking.
+- **Never run or query the live Godot editor without approval.** Any MCP call that launches, plays, drives, or reads the running editor/game (`play_scene`, `stop_scene`, input simulation, gameplay screenshots/recordings, test/stress runners, `get_editor_errors`, `get_output_log`, `get_scene_tree`, etc.) requires the user's explicit approval first — every time, no standing permission. Exception: `reload_project` after a `.tscn`/`.tres` edit remains automatic, since it's part of editing, not running. A request that explicitly names the editor or a run/debug action (e.g. "run the editor and check the logs") authorizes exactly that action for the current task. Vague verification requests ("verify this," "check it works") do not count as approval — if satisfying them needs the editor, stop and ask.
+- **"Done" means a clean build, nothing more.** A code change (including issue-ticket work) is complete once it builds without errors. Screenshots, play-testing, and log inspection are optional extras requiring separate approval under the rule above — never required to call work done.
 
 ### 1. Scope Rules
 
@@ -87,8 +89,7 @@ All UI styling goes through `assets/ui/game_theme.tres`.
 ## Tools and MCP Integration (Antigravity Specific)
 
 - **Godot MCP Pro** is connected — use the `call_mcp_tool` tool with `ServerName: "godot-mcp-pro"` to inspect/modify the live editor.
-- Proactively use `play_scene`, `get_game_screenshot`, `get_output_log`, and `get_editor_errors` via MCP to verify changes work before reporting done.
-- When debugging runtime behaviour (animation, physics, signals, gameplay logic): read the log file before drawing conclusions — do not guess from code alone.
+- When debugging runtime behaviour (animation, physics, signals, gameplay logic): read the log via `get_output_log`/`get_editor_errors` before drawing conclusions — do not guess from code alone. This still requires approval per Rule 0.
 - **Godot MCP Pro is the only way to do editor work.** Any task that involves creating or modifying nodes, scenes, particles, animations, materials, shaders, or any other editor resource must be done via MCP tools — never via GDScript workarounds, never by writing raw `.tscn`/`.tres` file content, never by constructing editor objects in C# `_Ready()`. If an MCP tool exists for the task, use it. If one does not exist — or if it times out or is unresponsive — stop and discuss with the user before trying another approach.
 - **After every `.tscn` or `.tres` file change, call `reload_project` via `godot-mcp-pro` immediately** so the editor picks up the change without prompting the user to reload manually.
 

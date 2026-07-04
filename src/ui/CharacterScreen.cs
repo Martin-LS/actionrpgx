@@ -666,16 +666,23 @@ public partial class CharacterScreen : Control
         statusLbl.AddThemeColorOverride("font_color", new Color("#8AA0AE"));
         vbox.AddChild(statusLbl);
 
+        var listScroll = new ScrollContainer { CustomMinimumSize = new Vector2(0f, 360f) };
+        var listVbox   = new VBoxContainer();
+        listVbox.AddThemeConstantOverride("separation", 8);
+        listScroll.AddChild(listVbox);
+        vbox.AddChild(listScroll);
+
         foreach (var recipe in RecipeRegistry.ForType(RecipeType.Skill))
         {
             var skillDef = Skills.SkillRegistry.Get(recipe.OutputItemId);
             if (skillDef == null) continue;
+            if (skillDef.Kind != Skills.SkillKind.Normal) continue;
             int cost      = recipe.MaterialCosts.TryGetValue("crafting_common", out var mc) ? mc : 1;
             bool canCraft = !invFull && common >= cost;
             var btn       = MakeModifyButton($"{skillDef.Name}  —  {cost} Common", !canCraft);
             string rid    = recipe.Id;
             btn.Pressed  += () => { _manager.CraftSkillItem(rid); CloseOverlay(overlay); Refresh(); };
-            vbox.AddChild(btn);
+            listVbox.AddChild(btn);
         }
     }
 
@@ -1096,10 +1103,17 @@ public partial class CharacterScreen : Control
         statusLbl.AddThemeColorOverride("font_color", new Color("#8AA0AE"));
         vbox.AddChild(statusLbl);
 
+        var listScroll = new ScrollContainer { CustomMinimumSize = new Vector2(0f, 360f) };
+        var listVbox   = new VBoxContainer();
+        listVbox.AddThemeConstantOverride("separation", 8);
+        listScroll.AddChild(listVbox);
+        vbox.AddChild(listScroll);
+
         foreach (var recipe in RecipeRegistry.ForType(RecipeType.Skill))
         {
             var skillDef = Skills.SkillRegistry.Get(recipe.OutputItemId);
             if (skillDef == null) continue;
+            if (skillDef.Kind != Skills.SkillKind.Normal) continue;
             int cost  = recipe.MaterialCosts.TryGetValue("crafting_common", out var mc) ? mc : 1;
             bool can  = !invFull && common >= cost;
             var btn   = MakeModifyButton($"{skillDef.Name}  —  {cost} Common", !can);
@@ -1114,7 +1128,7 @@ public partial class CharacterScreen : Control
                 Refresh();
                 ShowSkillModifyPanel(newInst, slotIndex);
             };
-            vbox.AddChild(btn);
+            listVbox.AddChild(btn);
         }
     }
 
