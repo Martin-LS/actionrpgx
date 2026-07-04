@@ -26,5 +26,6 @@ public record SkillData(
     string?              DebuffEotId       = null,
     DamageType           DamageType        = DamageType.Physical,
     string?              BasedOn           = null,
-    float                TickRate          = 0f
+    float                TickRate          = 0f,
+    string               VfxKey            = ""
 );

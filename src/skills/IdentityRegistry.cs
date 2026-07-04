@@ -11,12 +11,12 @@ public static class IdentityRegistry
         ["physical"] = new IdentityData(
             Id: "physical",
             DamageType: DamageType.Physical,
-            VfxKey: ""
+            VfxKey: "kinetic"
         ),
         ["magic"] = new IdentityData(
             Id: "magic",
             DamageType: DamageType.Magic,
-            VfxKey: ""
+            VfxKey: "magic"
         )
     };
 
