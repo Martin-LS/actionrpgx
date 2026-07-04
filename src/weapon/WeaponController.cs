@@ -277,12 +277,6 @@ public partial class WeaponController : Node
                     _selfDurationTickVfx.Emitting = true;
                 }
             }
-            else if (_selfBurstVfx != null)
-            {
-                if (_selfBurstVfx.ProcessMaterial is ParticleProcessMaterial vfxMat)
-                    vfxMat.EmissionRingRadius = _slots[i].Skill!.Range;
-                _selfBurstVfx.Emitting = true;
-            }
             FireSelfBurst(i);
             _slots[i].CooldownTimer = _slots[i].Skill!.Cooldown;
         }
@@ -442,12 +436,6 @@ public partial class WeaponController : Node
         {
             if (FindNearestEnemy(slot.Skill.Range) == null) return;
             if (_player != null && !_player.TrySpendFocus(slot.Skill.FocusCost)) return;
-            if (slot.Skill.Duration == 0f && _selfBurstVfx != null)
-            {
-                if (_selfBurstVfx.ProcessMaterial is ParticleProcessMaterial vfxMat)
-                    vfxMat.EmissionRingRadius = slot.Skill.Range;
-                _selfBurstVfx.Emitting = true;
-            }
             FireSelfBurst(slotIndex);
             slot.CooldownTimer = slot.Skill.Cooldown;
             return;
@@ -536,22 +524,63 @@ public partial class WeaponController : Node
             critMultiplier = _critMultiplier;
         baseDmg *= critMultiplier;
 
-        if (isMelee)
+        if (slot.Skill.WindUp > 0f)
         {
-            float windupDelay = slot.Skill!.Cooldown * BalanceConfig.Skills.MeleeWindupFraction;
-            GetTree().CreateTimer(windupDelay).Timeout +=
-                () => { if (!target.IsQueuedForDeletion()) HitMelee(target, baseDmg, dmgType, slot.Eots, critMultiplier); };
+            float            capWindUp  = slot.Skill.WindUp;
+            float            capDmg     = baseDmg;
+            Items.DamageType capType    = dmgType;
+            float            capCrit    = critMultiplier;
+            var              capEots    = slot.Eots;
+            bool             capIsMelee = isMelee;
+
+            float radius = slot.Skill.ZoneRadius > 0f ? slot.Skill.ZoneRadius : 36f;
+            var telegraph = new WindupTelegraph { Radius = radius, Duration = capWindUp };
+            GetTree().Root.AddChild(telegraph);
+            telegraph.GlobalPosition = new Vector3(target.GlobalPosition.X, 10.0f, target.GlobalPosition.Z);
+
+            GetTree().CreateTimer(capWindUp).Timeout += () =>
+            {
+                if (target == null || !GodotObject.IsInstanceValid(target) || target.IsQueuedForDeletion())
+                    return;
+
+                if (capIsMelee)
+                {
+                    HitMelee(target, capDmg, capType, capEots, capCrit);
+                }
+                else
+                {
+                    var playerNode = GetParent<Node3D>();
+                    if (playerNode == null || !GodotObject.IsInstanceValid(playerNode)) return;
+                    var origin    = playerNode.GlobalPosition;
+                    var diff      = target.GlobalPosition - origin;
+                    var direction = new Vector3(diff.X, 0f, diff.Z).Normalized();
+
+                    var projectile = ProjectileScene.Instantiate<Projectile>();
+                    projectile.Initialize(direction, capDmg, capType, capEots, false, false, capCrit);
+                    GetTree().Root.AddChild(projectile);
+                    projectile.GlobalPosition = new Vector3(origin.X, target.GlobalPosition.Y, origin.Z);
+                }
+            };
         }
         else
         {
-            var origin    = GetParent<Node3D>().GlobalPosition;
-            var diff      = target.GlobalPosition - origin;
-            var direction = new Vector3(diff.X, 0f, diff.Z).Normalized();
+            if (isMelee)
+            {
+                float windupDelay = slot.Skill!.Cooldown * BalanceConfig.Skills.MeleeWindupFraction;
+                GetTree().CreateTimer(windupDelay).Timeout +=
+                    () => { if (!target.IsQueuedForDeletion()) HitMelee(target, baseDmg, dmgType, slot.Eots, critMultiplier); };
+            }
+            else
+            {
+                var origin    = GetParent<Node3D>().GlobalPosition;
+                var diff      = target.GlobalPosition - origin;
+                var direction = new Vector3(diff.X, 0f, diff.Z).Normalized();
 
-            var projectile = ProjectileScene.Instantiate<Projectile>();
-            projectile.Initialize(direction, baseDmg, dmgType, slot.Eots, false, false, critMultiplier);
-            GetTree().Root.AddChild(projectile);
-            projectile.GlobalPosition = new Vector3(origin.X, target.GlobalPosition.Y, origin.Z);
+                var projectile = ProjectileScene.Instantiate<Projectile>();
+                projectile.Initialize(direction, baseDmg, dmgType, slot.Eots, false, false, critMultiplier);
+                GetTree().Root.AddChild(projectile);
+                projectile.GlobalPosition = new Vector3(origin.X, target.GlobalPosition.Y, origin.Z);
+            }
         }
 
         EmitSignal(SignalName.SkillFired, slotIndex, slot.Skill.Cooldown, delivery);
@@ -559,25 +588,79 @@ public partial class WeaponController : Node
 
     private void FireSelfBurst(int slotIndex)
     {
-        ref var slot   = ref _slots[slotIndex];
-        var     origin = GetParent<Node3D>().GlobalPosition;
+        ref var slot = ref _slots[slotIndex];
 
-        bool  isMagic = slot.HasMagicDamage || slot.EffectiveDamageType == Items.DamageType.Magic;
-        var   dmgType = isMagic ? Items.DamageType.Magic : Items.DamageType.Physical;
-        float baseDmg = isMagic ? _magicDamage : _physicalDamage;
-
-        float critChance = _globalCritChance + slot.CritChanceBonus;
-        float critMult   = 1.0f;
-        if (critChance > 0f && GD.Randf() < critChance)
-            critMult = _critMultiplier;
-        baseDmg *= critMult;
-
-        foreach (var node in GetTree().GetNodesInGroup("enemies"))
+        if (slot.Skill!.WindUp > 0f)
         {
-            if (node is not Enemies.EnemyController enemy || enemy.IsQueuedForDeletion()) continue;
-            if (origin.DistanceTo(enemy.GlobalPosition) > slot.Skill!.Range) continue;
-            enemy.TakeDamage(baseDmg, dmgType, critMult > 1f);
-            ApplyEots(enemy, slot.Eots, critMult);
+            float capWindUp = slot.Skill.WindUp;
+            var telegraph = new WindupTelegraph { Radius = slot.Skill.Range, Duration = capWindUp };
+            var playerNode = GetParent<Node3D>();
+            playerNode.AddChild(telegraph);
+            telegraph.Position = new Vector3(0f, 10f, 0f);
+
+            GetTree().CreateTimer(capWindUp).Timeout += () =>
+            {
+                var player = GetParent<Node3D>();
+                if (player == null || !GodotObject.IsInstanceValid(player)) return;
+
+                var slotData = _slots[slotIndex];
+
+                bool  isMagic = slotData.HasMagicDamage || slotData.EffectiveDamageType == Items.DamageType.Magic;
+                var   dmgType = isMagic ? Items.DamageType.Magic : Items.DamageType.Physical;
+                float baseDmg = isMagic ? _magicDamage : _physicalDamage;
+
+                float critChance = _globalCritChance + slotData.CritChanceBonus;
+                float critMult   = 1.0f;
+                if (critChance > 0f && GD.Randf() < critChance)
+                    critMult = _critMultiplier;
+                baseDmg *= critMult;
+
+                var origin = player.GlobalPosition;
+
+                foreach (var node in GetTree().GetNodesInGroup("enemies"))
+                {
+                    if (node is not Enemies.EnemyController enemy || enemy.IsQueuedForDeletion()) continue;
+                    if (origin.DistanceTo(enemy.GlobalPosition) > slotData.Skill!.Range) continue;
+                    enemy.TakeDamage(baseDmg, dmgType, critMult > 1f);
+                    ApplyEots(enemy, slotData.Eots, critMult);
+                }
+
+                if (slotData.Skill!.Duration == 0f && _selfBurstVfx != null)
+                {
+                    if (_selfBurstVfx.ProcessMaterial is ParticleProcessMaterial vfxMat)
+                        vfxMat.EmissionRingRadius = slotData.Skill.Range;
+                    _selfBurstVfx.Emitting = true;
+                }
+            };
+        }
+        else
+        {
+            var origin = GetParent<Node3D>().GlobalPosition;
+
+            bool  isMagic = slot.HasMagicDamage || slot.EffectiveDamageType == Items.DamageType.Magic;
+            var   dmgType = isMagic ? Items.DamageType.Magic : Items.DamageType.Physical;
+            float baseDmg = isMagic ? _magicDamage : _physicalDamage;
+
+            float critChance = _globalCritChance + slot.CritChanceBonus;
+            float critMult   = 1.0f;
+            if (critChance > 0f && GD.Randf() < critChance)
+                critMult = _critMultiplier;
+            baseDmg *= critMult;
+
+            foreach (var node in GetTree().GetNodesInGroup("enemies"))
+            {
+                if (node is not Enemies.EnemyController enemy || enemy.IsQueuedForDeletion()) continue;
+                if (origin.DistanceTo(enemy.GlobalPosition) > slot.Skill!.Range) continue;
+                enemy.TakeDamage(baseDmg, dmgType, critMult > 1f);
+                ApplyEots(enemy, slot.Eots, critMult);
+            }
+
+            if (slot.Skill!.Duration == 0f && _selfBurstVfx != null)
+            {
+                if (_selfBurstVfx.ProcessMaterial is ParticleProcessMaterial vfxMat)
+                    vfxMat.EmissionRingRadius = slot.Skill.Range;
+                _selfBurstVfx.Emitting = true;
+            }
         }
 
         EmitSignal(SignalName.SkillFired, slotIndex, slot.Skill!.Cooldown, "SelfBurst");
