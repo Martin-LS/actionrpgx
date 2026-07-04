@@ -37,6 +37,24 @@ public static class RecipeRegistry
         ["recipe_fixed_zone_tick"]  = new("recipe_fixed_zone_tick",  "fixed_zone_tick",  RecipeType.Skill, new() { ["crafting_common"] = 1 }),
         ["recipe_self_aura"]        = new("recipe_self_aura",        "self_aura",        RecipeType.Skill, new() { ["crafting_common"] = 1 }),
 
+        // Preset skill recipes
+        ["recipe_strike"]         = new("recipe_strike",         "strike",         RecipeType.Skill, new() { ["crafting_common"] = 1 }),
+        ["recipe_arcane_strike"]  = new("recipe_arcane_strike",  "arcane_strike",  RecipeType.Skill, new() { ["crafting_common"] = 1 }),
+        ["recipe_crushing_blow"]  = new("recipe_crushing_blow",  "crushing_blow",  RecipeType.Skill, new() { ["crafting_common"] = 1 }),
+        ["recipe_smite"]          = new("recipe_smite",          "smite",          RecipeType.Skill, new() { ["crafting_common"] = 1 }),
+        ["recipe_shockwave"]      = new("recipe_shockwave",      "shockwave",      RecipeType.Skill, new() { ["crafting_common"] = 1 }),
+        ["recipe_nova"]           = new("recipe_nova",           "nova",           RecipeType.Skill, new() { ["crafting_common"] = 1 }),
+        ["recipe_quake"]          = new("recipe_quake",          "quake",          RecipeType.Skill, new() { ["crafting_common"] = 1 }),
+        ["recipe_cataclysm"]      = new("recipe_cataclysm",      "cataclysm",      RecipeType.Skill, new() { ["crafting_common"] = 1 }),
+        ["recipe_rockfall"]       = new("recipe_rockfall",       "rockfall",       RecipeType.Skill, new() { ["crafting_common"] = 1 }),
+        ["recipe_tempest"]        = new("recipe_tempest",        "tempest",        RecipeType.Skill, new() { ["crafting_common"] = 1 }),
+        ["recipe_caltrops"]       = new("recipe_caltrops",       "caltrops",       RecipeType.Skill, new() { ["crafting_common"] = 1 }),
+        ["recipe_glyph_of_agony"] = new("recipe_glyph_of_agony", "glyph_of_agony", RecipeType.Skill, new() { ["crafting_common"] = 1 }),
+        ["recipe_cyclone"]        = new("recipe_cyclone",        "cyclone",        RecipeType.Skill, new() { ["crafting_common"] = 1 }),
+        ["recipe_arcane_cyclone"] = new("recipe_arcane_cyclone", "arcane_cyclone", RecipeType.Skill, new() { ["crafting_common"] = 1 }),
+        ["recipe_bladestorm"]     = new("recipe_bladestorm",     "bladestorm",     RecipeType.Skill, new() { ["crafting_common"] = 1 }),
+        ["recipe_maelstrom"]      = new("recipe_maelstrom",      "maelstrom",      RecipeType.Skill, new() { ["crafting_common"] = 1 }),
+
         // Skill Augment recipes — v1 generics only
         ["recipe_slow"]            = new("recipe_slow",            "slow",            RecipeType.SkillAugment, new() { ["crafting_common"] = 1 }),
         ["recipe_critical_strike"] = new("recipe_critical_strike", "critical_strike", RecipeType.SkillAugment, new() { ["crafting_common"] = 1 }),

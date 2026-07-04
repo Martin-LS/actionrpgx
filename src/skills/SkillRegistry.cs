@@ -173,6 +173,39 @@ public static class SkillRegistry
 
     static SkillRegistry()
     {
+        // Compose preset skills from PresetRegistry
+        foreach (var preset in PresetRegistry.All.Values)
+        {
+            var proto = Get(preset.PrototypeId);
+            if (proto == null)
+            {
+                throw new System.InvalidOperationException(
+                    $"Preset '{preset.Id}' references invalid prototype '{preset.PrototypeId}'.");
+            }
+            var form = FormRegistry.Get(preset.FormId);
+            if (form == null)
+            {
+                throw new System.InvalidOperationException(
+                    $"Preset '{preset.Id}' references invalid form '{preset.FormId}'.");
+            }
+            var identity = IdentityRegistry.Get(preset.IdentityId);
+            if (identity == null)
+            {
+                throw new System.InvalidOperationException(
+                    $"Preset '{preset.Id}' references invalid identity '{preset.IdentityId}'.");
+            }
+
+            if (form.Range != null && proto.TargetingShape != SkillTargetingShape.Self)
+            {
+                throw new System.InvalidOperationException(
+                    $"Preset '{preset.Id}' / Form '{form.Id}' sets Range, but its prototype '{proto.Id}' is not Self-targeting.");
+            }
+
+            var composed = SkillComposer.Compose(proto, form, identity, preset);
+            All[preset.Id] = composed;
+        }
+
+        // Run validation on all skills (including composed ones)
         foreach (var skill in All.Values)
         {
             if (skill.DamagePattern != SkillDamagePattern.None && !string.IsNullOrEmpty(skill.DebuffEotId))
