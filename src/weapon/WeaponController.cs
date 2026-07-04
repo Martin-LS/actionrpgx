@@ -39,10 +39,10 @@ public partial class WeaponController : Node
 
 
     private Player.PlayerController? _player;
-    private GpuParticles3D? _selfChanneledTickVfx;
-    private GpuParticles3D? _selfDurationTickVfx;
-    private GpuParticles3D? _selfBurstVfx;
-    private GpuParticles3D? _selfAuraVfx;
+    private GpuParticles3D?[] _selfChanneledTickVfx = new GpuParticles3D?[5];
+    private GpuParticles3D?[] _selfDurationTickVfx = new GpuParticles3D?[5];
+    private GpuParticles3D?[] _selfBurstVfx = new GpuParticles3D?[5];
+    private GpuParticles3D?[] _selfAuraVfx = new GpuParticles3D?[5];
     private bool _wasChanneling;
 
     private float      _physicalDamage  = 20f;
@@ -53,49 +53,65 @@ public partial class WeaponController : Node
     public override void _Ready()
     {
         _player = GetParent<Player.PlayerController>();
-
-        if (SelfChanneledTickVfxScene != null)
+        for (int i = 0; i < 5; i++)
         {
-            var vfxRoot = SelfChanneledTickVfxScene.Instantiate<Node3D>();
-            _selfChanneledTickVfx = vfxRoot.GetNodeOrNull<GpuParticles3D>("Whirl");
-            if (_selfChanneledTickVfx != null) _selfChanneledTickVfx.Emitting = false;
-            _player?.CallDeferred(Node.MethodName.AddChild, vfxRoot);
-        }
-
-        if (SelfDurationTickVfxScene != null)
-        {
-            var vfxRoot = SelfDurationTickVfxScene.Instantiate<Node3D>();
-            _selfDurationTickVfx = vfxRoot.GetNodeOrNull<GpuParticles3D>("Whirl");
-            if (_selfDurationTickVfx != null)
+            var slot = _slots[i];
+            if (slot.Skill == null) continue;
+            // Channeled Tick VFX
+            var vfxScene = GetSkillVfxScene(slot.Skill, SelfChanneledTickVfxScene);
+            if (vfxScene != null)
             {
-                // Duplicate material so we can set emission radius per-instance at runtime
-                if (_selfDurationTickVfx.ProcessMaterial is ParticleProcessMaterial mat)
-                    _selfDurationTickVfx.ProcessMaterial = (ParticleProcessMaterial)mat.Duplicate();
-                _selfDurationTickVfx.Emitting = false;
+                var vfxRoot = vfxScene.Instantiate<Node3D>();
+                var particles = vfxRoot.GetNodeOrNull<GpuParticles3D>("Whirl");
+                if (particles != null) particles.Emitting = false;
+                _selfChanneledTickVfx[i] = particles;
+                _player?.CallDeferred(Node.MethodName.AddChild, vfxRoot);
             }
-            _player?.CallDeferred(Node.MethodName.AddChild, vfxRoot);
-        }
-
-        if (SelfBurstVfxScene != null)
-        {
-            var vfxRoot = SelfBurstVfxScene.Instantiate<Node3D>();
-            _selfBurstVfx = vfxRoot.GetNodeOrNull<GpuParticles3D>("Whirl");
-            if (_selfBurstVfx != null)
+            // Duration Tick VFX
+            vfxScene = GetSkillVfxScene(slot.Skill, SelfDurationTickVfxScene);
+            if (vfxScene != null)
             {
-                if (_selfBurstVfx.ProcessMaterial is ParticleProcessMaterial mat)
-                    _selfBurstVfx.ProcessMaterial = (ParticleProcessMaterial)mat.Duplicate();
-                _selfBurstVfx.Emitting = false;
+                var vfxRoot = vfxScene.Instantiate<Node3D>();
+                var particles = vfxRoot.GetNodeOrNull<GpuParticles3D>("Whirl");
+                if (particles != null && particles.ProcessMaterial is ParticleProcessMaterial mat)
+                    particles.ProcessMaterial = (ParticleProcessMaterial)mat.Duplicate();
+                if (particles != null) particles.Emitting = false;
+                _selfDurationTickVfx[i] = particles;
+                _player?.CallDeferred(Node.MethodName.AddChild, vfxRoot);
             }
-            _player?.CallDeferred(Node.MethodName.AddChild, vfxRoot);
+            // Burst VFX
+            vfxScene = GetSkillVfxScene(slot.Skill, SelfBurstVfxScene);
+            if (vfxScene != null)
+            {
+                var vfxRoot = vfxScene.Instantiate<Node3D>();
+                var particles = vfxRoot.GetNodeOrNull<GpuParticles3D>("Whirl");
+                if (particles != null && particles.ProcessMaterial is ParticleProcessMaterial mat)
+                    particles.ProcessMaterial = (ParticleProcessMaterial)mat.Duplicate();
+                if (particles != null) particles.Emitting = false;
+                _selfBurstVfx[i] = particles;
+                _player?.CallDeferred(Node.MethodName.AddChild, vfxRoot);
+            }
+            // Aura VFX (if applicable)
+            if (SelfAuraVfxScene != null)
+            {
+                var vfxRoot = SelfAuraVfxScene.Instantiate<Node3D>();
+                var particles = vfxRoot.GetNodeOrNull<GpuParticles3D>("Ring");
+                if (particles != null) particles.Emitting = false;
+                _selfAuraVfx[i] = particles;
+                _player?.CallDeferred(Node.MethodName.AddChild, vfxRoot);
+            }
         }
+    }
 
-        if (SelfAuraVfxScene != null)
+    private PackedScene GetSkillVfxScene(SkillData? skill, PackedScene fallback)
+    {
+        if (skill != null && !string.IsNullOrEmpty(skill.VfxKey))
         {
-            var vfxRoot = SelfAuraVfxScene.Instantiate<Node3D>();
-            _selfAuraVfx = vfxRoot.GetNodeOrNull<GpuParticles3D>("Ring");
-            if (_selfAuraVfx != null) _selfAuraVfx.Emitting = false;
-            _player?.CallDeferred(Node.MethodName.AddChild, vfxRoot);
+            var path = $"res://src/vfx/{skill.VfxKey}_vfx.tscn";
+            var scene = GD.Load<PackedScene>(path);
+            if (scene != null) return scene;
         }
+        return fallback;
     }
 
     public void SetDamage(float physicalDamage, float magicDamage)
@@ -207,24 +223,31 @@ public partial class WeaponController : Node
                 ProcessActiveSlot(i, dt);
         }
 
-        if (_selfChanneledTickVfx != null)
+        if (IsAnySlotChanneling())
         {
-            bool channeling = IsAnySlotChanneling();
-            if (channeling != _wasChanneling)
+            for (int i = 0; i < 5; i++)
             {
-                if (!channeling)
+                var vfx = _selfChanneledTickVfx[i];
+                if (vfx == null) continue;
+                if (!_wasChanneling)
                 {
-                    _selfChanneledTickVfx.Restart();
-                    _selfChanneledTickVfx.Emitting = false;
+                    vfx.Restart();
+                    vfx.Emitting = true;
                 }
-                else
-                {
-                    _selfChanneledTickVfx.Emitting = true;
-                }
-                _wasChanneling = channeling;
+                vfx.GetParent<Node3D>().RotateY(Mathf.Tau * 1.0f * dt);
             }
-            if (channeling)
-                _selfChanneledTickVfx.GetParent<Node3D>().RotateY(Mathf.Tau * 1.0f * dt);
+            _wasChanneling = true;
+        }
+        else if (_wasChanneling)
+        {
+            for (int i = 0; i < 5; i++)
+            {
+                var vfx = _selfChanneledTickVfx[i];
+                if (vfx == null) continue;
+                vfx.Restart();
+                vfx.Emitting = false;
+            }
+            _wasChanneling = false;
         }
     }
 
@@ -251,12 +274,12 @@ public partial class WeaponController : Node
                 FireSelfBurst(i);
                 _slots[i].CooldownTimer = _slots[i].Skill!.TickRate;
             }
-            if (_selfDurationTickVfx != null) _selfDurationTickVfx.Emitting = true;
+            if (_selfDurationTickVfx[i] != null) _selfDurationTickVfx[i]!.Emitting = true;
             if (_slots[i].DurationTimer <= 0f)
             {
                 // Active phase ended — start post-duration cooldown before allowing re-cast
                 _slots[i].CooldownTimer = BalanceConfig.Skills.SelfDurationTickPostCooldown;
-                if (_selfDurationTickVfx != null) _selfDurationTickVfx.Emitting = false;
+                if (_selfDurationTickVfx[i] != null) _selfDurationTickVfx[i]!.Emitting = false;
             }
             return;
         }
@@ -270,18 +293,18 @@ public partial class WeaponController : Node
             if (_slots[i].Skill!.Duration > 0f)
             {
                 _slots[i].DurationTimer = _slots[i].Skill!.Duration;
-                if (_selfDurationTickVfx != null)
+                if (_selfDurationTickVfx[i] != null)
                 {
-                    if (_selfDurationTickVfx.ProcessMaterial is ParticleProcessMaterial vfxMat)
+                    if (_selfDurationTickVfx[i]!.ProcessMaterial is ParticleProcessMaterial vfxMat)
                         vfxMat.EmissionRingRadius = _slots[i].Skill!.Range;
-                    _selfDurationTickVfx.Emitting = true;
+                    _selfDurationTickVfx[i]!.Emitting = true;
                 }
             }
-            else if (_selfBurstVfx != null)
+            else if (_selfBurstVfx[i] != null)
             {
-                if (_selfBurstVfx.ProcessMaterial is ParticleProcessMaterial vfxMat)
-                    vfxMat.EmissionRingRadius = _slots[i].Skill!.Range;
-                _selfBurstVfx.Emitting = true;
+                if (_selfBurstVfx[i]!.ProcessMaterial is ParticleProcessMaterial mat)
+                    mat.EmissionRingRadius = _slots[i].Skill!.Range;
+                _selfBurstVfx[i]!.Emitting = true;
             }
             FireSelfBurst(i);
             _slots[i].CooldownTimer = _slots[i].Skill!.Cooldown;
@@ -411,7 +434,7 @@ public partial class WeaponController : Node
                 _player?.UnreserveFocus(slot.AuraReserved);
                 _slots[slotIndex].AuraActive  = false;
                 _slots[slotIndex].AuraReserved = 0f;
-                if (_selfAuraVfx != null) { _selfAuraVfx.Restart(); _selfAuraVfx.Emitting = false; }
+                if (_selfAuraVfx[slotIndex] != null) { _selfAuraVfx[slotIndex]!.Restart(); _selfAuraVfx[slotIndex]!.Emitting = false; }
                 EmitSignal(SignalName.AuraToggled, slotIndex, false);
             }
             else
@@ -422,7 +445,7 @@ public partial class WeaponController : Node
                 _slots[slotIndex].AuraActive   = true;
                 _slots[slotIndex].AuraReserved = reserve;
                 _slots[slotIndex].CooldownTimer = 0f;
-                if (_selfAuraVfx != null) _selfAuraVfx.Emitting = true;
+                if (_selfAuraVfx[slotIndex] != null) _selfAuraVfx[slotIndex]!.Emitting = true;
                 EmitSignal(SignalName.AuraToggled, slotIndex, true);
             }
             return;

@@ -1,0 +1,4 @@
+[gd_scene load_steps=2 format=2]
+
+[node name="MagicVfx" type="Node3D"]
+[node name="Particles" type="GPUParticles3D" parent="."]
