@@ -125,6 +125,15 @@ public partial class PlayerController : CharacterBody3D
                 var skill    = instance?.Definition;
                 if (skill == null) continue;
 
+                if (instance != null)
+                {
+                    var form = PresetRegistry.FormFor(skill.Id);
+                    if (form != null)
+                    {
+                        skill = SkillTiering.Apply(skill, form.TierTrack, instance.Tier);
+                    }
+                }
+
                 var augmentEots   = new List<(string Id, float Chance)>();
                 bool  hasMagicDamage = false;
                 float critChanceBonus = 0f;

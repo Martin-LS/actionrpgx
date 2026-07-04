@@ -1031,7 +1031,11 @@ _evasion           = statBlock.Get(Evasion)  // passive % chance to completely a
 for i in 0..2:
     instanceId = character.SlottedSkillInstanceIds[i]   // "" = skip
     if instanceId is non-empty:
-        skill            = CharacterManager.FindSkillInstance(instanceId).Definition
+        instance         = CharacterManager.FindSkillInstance(instanceId)
+        skill            = instance.Definition
+        form             = PresetRegistry.FormFor(skill.Id)
+        if form is non-empty:
+            skill        = SkillTiering.Apply(skill, form.TierTrack, instance.Tier)
         activeAugments   = AugmentResolver.Resolve(instance.SocketedSkillAugmentIds, lookup)
         slotCritChance   = sum of TriggerChance from any Critical Strike augments in activeAugments
         hasMagicDamage / eotIds  = resolved from activeAugments
