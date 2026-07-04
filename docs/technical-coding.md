@@ -26,6 +26,14 @@ Adding to `ItemRegistry` alone is not enough. To be craftable and usable end-to-
 
 There is no auto-wiring; each touch point is a manual, separate edit. Issues should say explicitly which of 3–4 apply.
 
+## Adding a preset skill (composition) — required touch points
+
+Preset skills are composed at registry init (see "Skill Composition — Wave-1 Implementation Architecture" in `technical-systems.md` — binding for all composition work). To add one:
+1. `src/skills/FormRegistry.cs` / `IdentityRegistry.cs` — only if it needs a new form or identity (values from `BalanceConfig.Forms`).
+2. `src/skills/PresetRegistry.cs` — the preset entry (id, curated name, prototype + form + identity refs).
+3. `src/crafting/RecipeRegistry.cs` — `recipe_<preset_id>`.
+`SkillRegistry` composes and validates automatically at static init — do not add composed entries to it by hand.
+
 ## Testing
 **No automated test suite currently exists in this repo.** Do not assume GdUnit4 or any other test conventions exist. If an issue requires tests, treat it as new infrastructure and say so explicitly in the issue.
 

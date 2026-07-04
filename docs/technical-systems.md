@@ -1133,3 +1133,103 @@ Other drops hardcoded in `EnemyController.Die()`:
 | Crafting currency | 20%    | Instant; calls `RunSession.AddCraftingCurrency1(1)` — no pickup scene  |
 
 > Planned: large XP Shards, weighted drop tables via `EnemyData` resource.
+
+---
+
+## Skill Composition — Wave-1 Implementation Architecture
+
+> Implements the v2 composition model (`design-skills.md`). This section is the **binding architecture** for the wave-1 issues: implementers own the finer details but must not deviate from the structures, placement, and strategies pinned here. House conventions (`technical-coding.md`) apply throughout: registry pattern, positional records, all numbers in `BalanceConfig`, snake_case ids.
+
+### Wave-1 strategy: presets are composed at registry init — NOT per-instance
+
+The 16 preset skills are composed **once, at `SkillRegistry` static init**, and registered as ordinary `SkillData` entries. Crafting a preset uses the existing recipe → skill-id flow; `SkillItemInstance` is unchanged. There is **no** per-instance composition, no `SkillData` serialization, no new instance fields. (True per-instance composition is custom-wizard-era work — do not build it now.)
+
+*Why pinned: this makes wave 1 a data feature. All committed properties survive — presets have a fixed DamageType, instances reference an immutable registry entry, and no form/identity entity exists at runtime (`design-stats.md` §5D).*
+
+### New types (one file each, `src/skills/`)
+
+```csharp
+public enum TierTrack { None, CooldownDown, RadiusUp, TickRateUp, FocusCostDown }
+
+// FormData.cs — budget-lever overrides; null = inherit the prototype's value
+public record FormData(
+    string    Id,            // "swift", "heavy", "nova", "quake", "storm", "floor", "spin", "vortex"
+    string    PrototypeId,   // which prototype this form applies to
+    TierTrack TierTrack,
+    float?    Cooldown   = null,
+    float?    FocusCost  = null,
+    float?    WindUp     = null,
+    float?    Duration   = null,
+    float?    ZoneRadius = null,
+    float?    TickRate   = null
+);
+
+// IdentityData.cs
+public record IdentityData(
+    string     Id,        // "physical", "magic"
+    DamageType DamageType,
+    string     VfxKey     // consumed by the VFX issue; "" allowed until then
+);
+
+// PresetData.cs — one entry per recipe-book skill
+public record PresetData(
+    string Id,          // the composed skill id: "strike", "smite", "rockfall", ...
+    string Name,        // curated display name: "Strike", "Glyph of Agony", ...
+    string PrototypeId,
+    string FormId,
+    string IdentityId,
+    string IconPath = ""
+);
+```
+
+Registries: `FormRegistry`, `IdentityRegistry`, `PresetRegistry` — `static class` + `Dictionary<string, T> All` + `Get`, exactly like `SkillRegistry`. **These three must not reference `SkillRegistry`** (init-order rule below). All numeric form values come from a new `BalanceConfig.Forms` nested class (`SwiftCooldown`, `StormZoneRadius`, …); form/identity/preset tables for all 8 forms, 2 identities, 16 presets are in `design-skills.md` (v2 section) — transcribe, don't invent.
+
+### Composition function
+
+```csharp
+// SkillComposer.cs — pure, single site of truth for flattening
+public static SkillData Compose(SkillData proto, FormData form, IdentityData identity, PresetData preset) =>
+    proto with {
+        Id         = preset.Id,
+        Name       = preset.Name,
+        Kind       = SkillKind.Normal,
+        BasedOn    = proto.Id,
+        DamageType = identity.DamageType,
+        IconPath   = preset.IconPath,
+        Cooldown   = form.Cooldown   ?? proto.Cooldown,
+        FocusCost  = form.FocusCost  ?? proto.FocusCost,
+        WindUp     = form.WindUp     ?? proto.WindUp,
+        Duration   = form.Duration   ?? proto.Duration,
+        ZoneRadius = form.ZoneRadius ?? proto.ZoneRadius,
+        TickRate   = form.TickRate   ?? proto.TickRate
+    };
+```
+
+**Init order (pinned to avoid static-ctor cycles):** `SkillRegistry`'s static ctor, *after* its prototype dictionary is built, iterates `PresetRegistry.All` and adds each composed entry to its own `All`. Form/Identity/Preset registries stay leaf dependencies. The existing static-ctor validation (DebuffEotId, TickRate) runs *after* composition so it covers composed entries too.
+
+### Tier tracks
+
+```csharp
+// SkillTiering.cs — the only place tier touches skill stats
+public static SkillData Apply(SkillData skill, TierTrack track, int tier);
+```
+
+- Per-tier step scalars live in `BalanceConfig.Tiers` (e.g. `TrackStepPerTier`, one placeholder const; direction per track: CooldownDown/FocusCostDown shrink, RadiusUp/TickRateUp grow). Tier 1 = unmodified.
+- **Application site:** the run-start loadout path where `SkillItemInstance` + registry `SkillData` are assembled into `WeaponController.SetSlot(...)` calls — apply `SkillTiering.Apply` there, once. Never inside `WeaponController`; never at registry init. Prototypes and any skill with `TierTrack.None` pass through unchanged. The form for a composed skill is found via `PresetRegistry` lookup by skill id (add a helper `PresetRegistry.FormFor(skillId)`).
+- Tier keeps gating augment slots via `SkillItemInstance.MaxSkillAugmentSlots` exactly as today.
+
+### WindUp on Entity and Self paths (semantics pinned)
+
+`SkillData.WindUp > 0` is currently honored only in `FireAtPosition`. Extend, reusing the existing `WindupTelegraph` node:
+
+- **Entity path (`FireAt`):** on fire, spawn the telegraph *at the target's position*, capture the target reference; after `WindUp` seconds, if the target is still alive (`!IsQueuedForDeletion`), the hit lands on the target at its **current** position — no re-range-check, no retarget. Dead target = the cast whiffs (cooldown and Focus already spent).
+- **Self path (`FireSelfBurst` cast entry):** spawn the telegraph ring centred on the player; after `WindUp` seconds the burst fires from the player's position **at detonation time** (it moves with you). Damage snapshot (crit roll, damage pools) is taken at detonation, not at cast.
+- `WindUp == 0` paths must be byte-for-byte behaviourally unchanged.
+
+### Recipes
+
+One `RecipeRegistry` entry per preset, `recipe_<preset_id>` (e.g. `recipe_strike` → output `strike`), same `RecipeType` the 12 prototypes use, cost = 1 `crafting_common` (current v1 convention; flag per `technical-coding.md`).
+
+### Explicitly out of scope for wave 1
+
+Per-instance composition, the custom wizard UI, identity token effects, `VfxKey` consumption (separate VFX issue defines the lookup), any change to `SkillItemInstance`, any new UI beyond the presets appearing in the existing craft flow.
