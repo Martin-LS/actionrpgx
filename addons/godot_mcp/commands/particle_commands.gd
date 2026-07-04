@@ -277,8 +277,8 @@ func _set_particle_color_gradient(params: Dictionary) -> Dictionary:
 		return error_invalid_params("stops array must not be empty")
 
 	var gradient := Gradient.new()
-	# Remove default points
-	while gradient.get_point_count() > 0:
+	# Remove all default points except one (since a Gradient must have at least 1 point in Godot)
+	while gradient.get_point_count() > 1:
 		gradient.remove_point(0)
 
 	for stop in stops:
@@ -286,6 +286,9 @@ func _set_particle_color_gradient(params: Dictionary) -> Dictionary:
 			var offset: float = float(stop.get("offset", 0.0))
 			var color: Color = _parse_color(str(stop.get("color", "#ffffff")))
 			gradient.add_point(offset, color)
+
+	# Remove the last remaining default point
+	gradient.remove_point(0)
 
 	var grad_tex := GradientTexture1D.new()
 	grad_tex.gradient = gradient
