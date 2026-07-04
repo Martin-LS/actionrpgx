@@ -343,7 +343,82 @@ The effect the aura produces (damage AoE, player buff, enemy debuff AoE) is defi
 **Why (rationale, confirmed 2026-07-04):**
 
 1. **Damage progression is anchored in the crafting economy.** Upgrading weapon tier is *the* way to increase damage output. In a fully craft-driven game the weapon is the damage sink for crafting investment — a per-skill multiplier would create a second, competing damage-progression axis: players would shop for the highest-multiplier skill instead of crafting a better weapon.
-2. **No skill can be ranked by a number.** With no multiplier, no skill is "the 1.3× one." Skills compete on delivery shape only — this is the design space the Budget/Identity lever framework (see `design-skill-system-brainstorming.md`) formalises.
+2. **No skill can be ranked by a number.** With no multiplier, no skill is "the 1.3× one." Skills compete on delivery shape only — this is the design space the Budget/Identity lever framework (see the v2 section below) formalises.
 3. **It collapses the balance surface.** The Balancer tunes tick rate and cooldown only — never a per-skill damage table.
 
 **Skill tier improves budget levers only (decided 2026-07-04).** A skill's tier upgrade advances a fixed per-skill upgrade track over its budget levers (e.g. cooldown down, or radius up — whatever that named skill's track is) and never touches hit size. Which lever a skill's track improves is itself an identity axis. Power parity between named clones of the same prototype is defined **at equal tier**.
+
+---
+
+## v2 — The Composition Model & Wave 1
+
+> Locked in 2026-07-04 (promoted from `design-skill-system-brainstorming.md`). Governs how player-facing skills come to exist. Open follow-ups (custom-wizard naming, forms-as-items, element-wave decisions) remain in the brainstorm doc.
+
+### Architecture: skill = prototype + form + identity
+
+A player-facing skill is a **craft-time composition** of three components, **fused and flattened at creation** into a standalone snapshot item:
+
+| Component | Owns | Composability |
+|---|---|---|
+| **Prototype** | Delivery chassis: targeting shape, damage pattern, skill type, base budget stats | The 12 internal base skills above |
+| **Form** | Budget-spend shape (where the power budget goes) + **tier track** (which budget lever tier upgrades advance) | Per-prototype (2 in wave 1; up to ~3 later) |
+| **Identity** | Damage type + VFX/audio skin + name fragment | Universal — composes with any prototype × form |
+
+Flattening at craft preserves every prior rule: instances are standalone (no runtime template link), damage type is fixed at creation, budget levers stay Balancer-owned, and the ownership matrix is untouched — the composed item is "the skill" and owns its stats (`design-stats.md`).
+
+*Justification for composition over hand-authored named skills: content scales multiplicatively (a future wave adding 3 identities yields 8 forms × 3 = 24 new skills for 3 authored components — support-gem-style network effects), while authoring scales additively; and the crafting pillar gets a native expression (assembling a skill is crafting).*
+
+**Presets-first shipping rule.** Wave 1 exposes composition only as a **preset recipe book** — "Craft: Nova" fills all three components; the player receives a finished named skill. The custom three-choice wizard is a later unlock, gated on pool size (~4+ identities), when combining feels like creating rather than menu-clicking. *Justification: at 2 forms × 2 identities every combo is an authored design either way; presets buy the architecture with zero player-visible cost and no retrofit.*
+
+### The Budget/Identity lever framework (governing)
+
+Every lever on a composed skill is one of two kinds:
+
+- **Budget levers** — cooldown, tick rate, AoE/zone radius, Focus cost/drain, wind-up. They move throughput. Across any two forms of the same prototype they must net to the same power budget **at equal tier** — "no free lunch," enforced as design discipline (exchange rates Balancer-owned, not exact math). Trading among them changes a skill's *shape*, never its power.
+- **Identity levers** — damage type, VFX/animation/sound, wind-up-as-telegraph, and *which* budget lever the tier track advances. Free: they place the skill in the build ecosystem without moving throughput.
+
+**Skill identity = prototype (delivery fantasy) × form (budget-spend shape + tier track) × identity (type + skin).**
+
+`Range` is deliberately **not** a budget lever — a long-range form (Snipe fantasy) requires consciously revisiting this line first (weapon-driven delivery makes melee-at-range visually incoherent).
+
+### Structural decisions (wave 1)
+
+- **Identities in wave 1: Physical and Magic** — a real mechanical split (Phys couples to Str builds, Magic to Int). Elements arrive as their own wave together with enemy-resist promotion (D1), where the "element whispers, augments shout" token-effect framing is the leading candidate (see brainstorm doc).
+- **Prototypes are internal skills**, not player-facing content: the authoring basis for composition, the testable proof of the base system, and the wave-1 playtest control group (if players keep crafting plain prototypes next to the presets, identity isn't earning its keep). They stay craftable through wave 1; retirement from the player pool is a full-roster-time decision.
+- **Naming: classic ARPG vocabulary with the no-false-promises guardrail**, applied to genre expectations as well as literal words (no "Whirlwind" for a stationary spin). **The guardrail extends to VFX:** visuals must not promise mechanics or elements we don't deliver — wave-1 skins are kinetic (Physical) and arcane (Magic); no elemental cosplay before elements exist.
+- **Contrast axes are varied per prototype** (one budget trade each) — tests four exchange rates instead of one, and prevents the roster reading as a fast/slow mode toggle.
+
+### Wave 1: the 8 forms
+
+| Prototype | Contrast axis | Form | Budget shape | Tier track |
+|---|---|---|---|---|
+| entity_burst | Commitment (tempo vs. Focus-efficiency — hit size is constant, so "heavy hitter" is impossible by design) | **swift** | Instant, short CD, moderate Focus — constant pressure | Cooldown ↓ |
+| | | **heavy** | Wind-up telegraph, long CD, very low Focus — deliberate, nearly free | Focus cost ↓ |
+| self_burst | Telegraph timing | **nova** | Instant burst, modest radius, short-ish CD — reactive panic button | Cooldown ↓ (quickens) |
+| | | **quake** | Delayed detonation (wind-up), long CD, big radius — "brace, then boom" | Radius ↑ (grows) |
+| fixed_zone_tick | Duration↔tick-rate | **storm** | Big radius, long duration, slow ticks, long CD — premeditated area denial | Radius ↑ |
+| | | **floor** | Small patch, short duration, fast ticks, short CD, cheap — kiting breadcrumbs | Cooldown ↓ |
+| self_channeled_tick | Radius↔drain | **spin** | Tight radius, fast ticks, low drain — aggressive grinder | Tick rate ↑ |
+| | | **vortex** | Wide radius, slower ticks, heavy drain — anchored storm; the Focus bar is the real cooldown | Drain ↓ |
+
+### Wave 1: the preset recipe book (16)
+
+| Prototype | Physical | Magic |
+|---|---|---|
+| entity_burst · swift | **Strike** | **Arcane Strike** |
+| entity_burst · heavy | **Crushing Blow** | **Smite** |
+| self_burst · nova | **Shockwave** | **Nova** |
+| self_burst · quake | **Quake** | **Cataclysm** |
+| fixed_zone_tick · storm | **Rockfall** | **Tempest** |
+| fixed_zone_tick · floor | **Caltrops** | **Glyph of Agony** |
+| self_channeled_tick · spin | **Cyclone** | **Arcane Cyclone** |
+| self_channeled_tick · vortex | **Bladestorm** | **Maelstrom** |
+
+All numeric values per form are placeholder, owned by the Balancer.
+
+### Engine prerequisites for wave 1
+
+1. **Per-skill VFX mapping** — animation/VFX is currently delivery-driven (all skills of a `SkillType` look identical; the channeled ring is hardcoded per `SkillType`). Identity skins require a per-skill (per-composition) VFX key. The self_channeled_tick forms lean hardest on this.
+2. **Composition data model + preset recipes** — prototype/form/identity as authoring data, flattened into `SkillData` snapshots at craft; recipe book entries for the 16 presets.
+3. **WindUp on Entity and Self fire paths** *(sanity check 2026-07-04)* — `SkillData.WindUp` is currently honored only in `FireAtPosition` (Position-targeted skills). The **heavy** form (entity_burst) and **quake** form (self_burst) need the wind-up telegraph + delayed-hit flow on the Entity and Self paths too; the existing `WindupTelegraph` node is reusable.
+4. **Tier tracks** *(sanity check 2026-07-04)* — `SkillItemInstance.Tier` currently gates only augment-slot count; no code applies tier to any skill stat. Implementing per-form tier tracks (cooldown ↓ / radius ↑ / etc. at tier-up) is part of the composition work.

@@ -45,6 +45,8 @@ v1 starter skill: **entity_burst** in slot 1 (physical type), slots 2–5 empty.
 
 Skill items are crafted (Craft New — accessible from an empty skill slot, left-click → Craft New; not yet implemented in v1) and equipped from the **Skills inventory tab**. Default keybindings: Q E R F + one mouse button for slots 1–5. Rebindable.
 
+**Craft New in v2 is a preset recipe book.** Player-facing skills are craft-time compositions of `prototype + form + identity` (see the v2 section in `design-skills.md`); wave 1 exposes them only as named preset recipes ("Craft: Nova" fills all three components and produces a finished, standalone skill item). The custom three-choice wizard is a later unlock, gated on component-pool size.
+
 #### Skill Augments
 
 > Skill Augment design, v1 augment list, trigger system, and augment resolution order are in `docs/design-augments.md`.

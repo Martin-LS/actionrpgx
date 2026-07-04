@@ -141,6 +141,11 @@ These are written decisions, not omissions. Adding any of them requires amending
 
 Related decision: **skill tier improves budget levers only** (never hit size); power parity between named clones is defined at equal tier — see `design-skills.md`.
 
+### D. Craft-time components are not stat surfaces
+
+Player-facing skills are craft-time compositions of `prototype + form + identity` (`design-skills.md` v2 section). **Form and identity are authoring/crafting components only: their contents flatten into skill-owned stats at creation.** At runtime there is no "form" or "identity" entity that owns a stat — the composed skill item owns everything, exactly per the matrix above. Any future design that wants a *live* stat on a form or identity (e.g. a swappable identity changing damage type post-craft) must amend this section first.
+*Justification: keeps the ownership matrix closed under the composition model — composition changes how skills are authored, not who owns stats at runtime.*
+
 ### Open flags
 
 - ✅ **Damage type owner = Skill** (skill-authoritative). Weapon `BaseDamageType` is fallback/display. Mutability decided 2026-07-04 — see the DamageType matrix row.
