@@ -215,6 +215,7 @@ Properties:
 - **Damage resolution:** all enemies within `skill.Range` of player `GlobalPosition` are hit.
 - **Range source:** `skill.Range` only — weapon range never feeds Self radius.
 - `TargetPosition` and `LockedTarget` are not read.
+- **WindUp behavior:** If `skill.WindUp > 0`, spawns a `WindupTelegraph` ring attached to the player (moves with the player); after `WindUp` seconds, the burst fires from the player's position at detonation time. Damage snapshot (crit roll, damage pools) is taken at detonation, not at cast.
 
 #### Position
 
@@ -236,6 +237,7 @@ Properties:
 - **Fire guard:** `LockedTarget != null` and not `IsQueuedForDeletion()`.
 - **Range check at fire time:** `origin.DistanceTo(target.GlobalPosition) > maxRange` → blocked. `maxRange = skill.Range > 0f ? skill.Range : _range` (`_range` = effective weapon range set by `SetRange`).
 - **Damage resolution (burst/debuff):** hits locked target directly.
+- **WindUp behavior:** If `skill.WindUp > 0`, spawns a `WindupTelegraph` at the target's position (static, centered on target's position at cast time); after `WindUp` seconds, if the target is still alive (`!IsQueuedForDeletion`), the hit lands on the target at its current position (no re-range-check, no retarget). If the target dies during windup, the cast whiffs.
 - **TrackedTick variant** (Entity + Tick + `ZoneTracksEntity == true`): spawns a `TrackedTick` zone at the target's position that follows them. Damage radius = `skill.ZoneRadius > 0f ? skill.ZoneRadius : _range`.
 
 ### Channeled — Self-equivalent
