@@ -269,4 +269,9 @@ public static class BalanceConfig
         public const float VortexTickRate = 0.35f;
         public const float VortexFocusCost = 25f;
     }
+
+    public static class Tiers
+    {
+        public const float TrackStepPerTier = 0.15f;
+    }
 }
