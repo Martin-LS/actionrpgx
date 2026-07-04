@@ -338,14 +338,12 @@ effectiveRadius = baseRadius × sqrt(1 + totalAoePct)
 
 `totalAoePct` is a fraction (e.g. `0.5f` = 50% increased area). When `totalAoePct == 0` (v1 state) the formula reduces to `effectiveRadius = baseRadius` — identical to current behaviour, no change.
 
-### Radius Source by Targeting Shape
-
 | Targeting shape | Base radius expression |
 |---|---|
-| Self (`self_channeled_tick`, `self_duration_tick`, `self_burst`) | `skill.Range` |
+| Self (`self_channeled_tick`, `self_duration_tick`, `self_burst`) | `skill.ZoneRadius > 0f ? skill.ZoneRadius : skill.Range` |
 | Position / Entity with zone (`tracked_tick`, all Position skills) | `skill.ZoneRadius > 0f ? skill.ZoneRadius : _range` |
 
-`skill.Range` is the Self damage footprint; `skill.ZoneRadius` is the blast/damage radius at a landing site. The modifier applies to whichever is the actual damage footprint.
+For Self skills, the actual damage footprint is `skill.ZoneRadius > 0f ? skill.ZoneRadius : skill.Range`. For Position/Entity zone skills, the actual damage footprint is `skill.ZoneRadius > 0f ? skill.ZoneRadius : _range`. The modifier applies to whichever is the actual damage footprint.
 
 ### Accumulation
 
