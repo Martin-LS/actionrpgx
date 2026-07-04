@@ -53,7 +53,9 @@ No stronger mechanical identity lever for now — budget-spend *rhythm* is the m
 
 ---
 
-## ACTIVE — Thread 3: Design the 8 first-wave named skills
+## Thread 3: Design the first wave — ABSORBED INTO THREAD 4 (2026-07-04)
+
+> **Composition adopted (see Thread 4): named skills are now preset recipes over `prototype + form + identity`.** This thread's artifacts survive re-labelled: the four structural answers below still govern; the contrast axes from question 2 *are* the form pairs; the roster grid becomes the **preset recipe book**; the tabled pair-1 proposal (Strike/Smite) becomes the entity_burst form pair (swift/heavy) + identity assignment. Active design work continues in Thread 4 terms: author 8 forms + 2 identities.
 
 For each sibling pair: both clones share the prototype's delivery fantasy; they must differ in **shape** (budget-spend), **element**, **tier track**, and **feel** (VFX/telegraph) — never in power at equal tier.
 
@@ -70,12 +72,16 @@ For each sibling pair: both clones share the prototype's delivery fantasy; they 
 
 ### Roster grid (to fill during discussion)
 
-| # | Prototype | Skill A | Skill B |
+**Pair pattern (decided 2026-07-04): each pair = one Physical + one Magic sibling.** Phys couples to Str builds, Magic to Int builds — real ecosystem placement with today's two types. Elements deferred to their own wave, arriving together with enemy-resist promotion (D1).
+
+| # | Prototype | Skill A (Physical) | Skill B (Magic) |
 |---|---|---|---|
-| 1 | entity_burst | — | — |
+| 1 | entity_burst | Strike *(PROPOSED)* | Smite *(PROPOSED)* |
 | 2 | self_burst | — | — |
 | 3 | fixed_zone_tick | — | — |
 | 4 | self_channeled_tick | — | — |
+
+**Pair 1 proposal (TABLED mid-discussion 2026-07-04, awaiting approval):** Strike (Physical) = instant, short CD, moderate Focus, tier track: cooldown. Smite (Magic) = wind-up telegraph, longer CD, very low Focus, tier track: focus cost. Two flags raised with it: (a) **"heavy hitter" is impossible on entity_burst** (no multiplier + no radius ⇒ the commitment axis is honestly *tempo vs. Focus-efficiency*, not big-hit-vs-small-hit); (b) **Range stays off the budget-lever list** for now — a long-range entity sibling (Snipe fantasy) would need Range made tradeable, and weapon-driven delivery makes melee-at-range visually incoherent; revisit if a ranged-identity skill wants it.
 
 ### PoE2 reference jump-off (from [ref-poe2-skills.md](ref-poe2-skills.md) — adapt concepts, not names)
 
@@ -92,10 +98,10 @@ Concepts the reference makes tempting but our rules exclude (raise consciously i
 
 ### Open questions for the discussion
 
-1. **Damage-type palette.** The game currently has exactly two damage types — Physical and Magic (`design-mechanics.md`: elemental types are future expansion). Damage type is supposed to be the strongest identity lever, but with 8 skills and 2 types it can't differentiate siblings alone. Options: (a) design the wave within Phys/Magic and lean harder on shape/VFX; (b) introduce the first elemental types (Fire/Cold/…) with this wave — which pulls in enemy resist entries, a DamageType enum extension, and per-type damage-number colours; (c) hybrid — one elemental pair as the pilot.
-2. **Sibling contrast pattern.** Do all 4 pairs use the same contrast (e.g. always heavy-slow vs. rapid-fast), or does each pair explore a different budget trade? Same pattern is cleaner to read as a system; varied patterns test more of the framework.
-3. **Naming convention.** Classic ARPG vocabulary (Strike, Cleave, Nova, Blizzard) vs. an original naming scheme. Classic names carry free player expectations — which cuts both ways.
-4. **Do prototypes stay craftable in v2**, or do named skills replace them in the crafting pool once they exist? (`design-skills.md` says all 12 prototypes are craftable in v1; v2 stance unstated.)
+1. ~~**Damage-type palette.**~~ **ANSWERED 2026-07-04: option (a)** — first wave stays within Phys/Magic; every sibling pair = one Physical + one Magic skill (see roster grid). Elements arrive as their own wave together with enemy-resist promotion. The deeper phys/magic *model* question (mono-typed vs composite hits) is a separate revisit thread below.
+2. ~~**Sibling contrast pattern.**~~ **ANSWERED 2026-07-04: varied — each pair explores a different budget trade** (tests four exchange rates instead of one; avoids the roster reading as a fast/slow mode toggle). Axes per pair: entity_burst = **commitment** (rapid poke vs. wind-up heavy); self_burst = **telegraph timing** (instant small vs. delayed huge); fixed_zone_tick = **duration↔tick-rate** (long slow storm vs. short fast trap-floor); self_channeled_tick = **radius↔drain** (tight cheap spin vs. wide expensive tempest). Accepted cost: four exchange rates for the Balancer.
+3. ~~**Naming convention.**~~ **ANSWERED 2026-07-04: classic ARPG vocabulary, with a guardrail** — names must not promise mechanics we don't deliver (no "Chain Lightning" without chaining, no "Leap Slam" without movement). Names carry the flavour; mechanics stay on-budget.
+4. ~~**Do prototypes stay craftable in v2?**~~ **ANSWERED 2026-07-04: all 12 stay craftable through the first wave — but conceptually they are *internal* skills, not player-facing content.** They exist as (a) the authoring basis named skills are cloned from, and (b) testable base skills proving the skill system works — including serving as the playtest control group for whether identity earns its keep (if players keep crafting plain fixed_zone_tick next to Blizzard/Firestorm, the identity framework isn't working). Eventual retirement from the player craft pool (likely via the `SkillKind` gate) is a full-roster-time decision, not now.
 
 ---
 
@@ -136,10 +142,61 @@ Full sweep of [ref-poe2-skills.md](ref-poe2-skills.md) against the 12 prototypes
 - **Alternative resource costs** (Dark Pact, Exsanguinate, Mana Tempest) — a Focus-cost-model variant on existing prototypes, never a new prototype.
 - **Ammo/charge economies** (Emergency Reload, Power Siphon) — presuppose resource systems with no analogue here.
 
+## ACTIVE — Thread 4: The three-component model (prototype + form + identity)
+
+*(Opened 2026-07-04, promoted from the identity-rune parked idea. If adopted, this reshapes Thread 3: named skills stop being hand-authored clones and become craft-time compositions.)*
+
+**Agreed frame (2026-07-04):** `crafted skill = prototype + form + identity`, **fused and flattened at craft time** into a standalone snapshot item (preserving: standalone instances, damage type fixed at creation, Balancer-owned budget levers, the ownership matrix).
+
+| Component | Owns | Composability |
+|---|---|---|
+| **Prototype** | Delivery chassis: targeting shape, damage pattern, skill type, base budget stats | The 12 internal base skills |
+| **Form** | Budget-spend shape (where the budget goes) + **tier track** (which lever tier advances) | Per-prototype: each prototype offers 2–3 forms (swift/heavy for bursts, storm/trap-floor for zones) |
+| **Identity** | Element (damage type) + VFX/audio skin + name fragment | Universal: composes with any prototype × form |
+
+**Element effect flavours — flagged, NOT settled (element-wave decision):** damage types will bring effect flavours (ice slows/freezes, lightning boosts crit damage, fire burns). ⚠ These are **levers dressed as flavours** — CC, crit stats, and DoTs are real power. Two rule-clean routes when elements arrive: (a) **affinity routing** — identity amplifies matching socketed augments (fire identity → Burn augments trigger more; affinity precedent exists on the Wand) — preserves "EoTs are augment-only" and identity-budget-neutrality; (b) **conscious amendment** — inherent ailments PoE-style, requiring the matrix EoT row amended *and* each ailment costed into the budget (identities stop being free). Do not bake effects into identities without picking a route.
+
+**Decisions on this thread (2026-07-04):**
+- ✅ **ADOPTED — composition is the skill architecture, shipped presets-first.** The data model is `prototype + form + identity` (fused & flattened at craft) from day one; the wave-1 crafting UI is a **recipe book of presets only** ("Craft: Blizzard" fills all three components) — the custom three-choice wizard is a later unlock, shipped when the pools are big enough that combining feels like creating (~4+ identities). This **replaces the hand-authored named-skill wave**: wave 1 = author **8 forms (2 per host prototype) + 2 identities (Physical/Magic)** → 16 craftable preset skills.
+  *Justification: at wave-1 scale (2×2) the combo picker yields nothing a player can feel — all combos are authored designs either way, and "did I create this?" is weak when your Blizzard is everyone's Blizzard. The model's payoff is multiplicative growth (the element wave's ~3 identities become ~24 new skills for 3 authored components — support-gem-style network effects) and the creation feeling arriving with pool size. Presets-first buys the architecture without a premature crafting-UI project, with zero player-visible loss at wave 1 and no retrofit later.*
+- ✅ **VFX guardrail committed** (extends the naming guardrail): visuals must not promise mechanics or elements we don't deliver. First-wave identity skins are Physical (kinetic/brutal) and Magic (arcane) themed — **no elemental cosplay**. Blizzard does not exist until ice damage does.
+- ✅ **Element effect framing — leading candidate = "the element whispers, augments make it shout" (b-lite):** every element carries a token inherent effect (flavour-grade, below build-power threshold: ice = tiny brief slow, fire = tiny burn, lightning = hair of crit damage), and augments scale it into real power. Identity-neutrality preserved by construction (every element carries one token effect of equivalent near-zero cost). Requires at element-wave time: matrix EoT row amendment ("token inherent" exception) + Balancer promise that token effects stay equivalent. Fallback: pure affinity routing (element = damage channel, all effects opt-in via augments, D3-style). **Decide at element wave, alongside enemy resists.**
+
+**Open questions on this thread:**
+- [x] ~~Does this model replace the Thread 3 hand-authored wave?~~ **Yes — adopted above.** Wave 1 = 8 forms + 2 identities → 16 preset skills.
+- [x] ~~Craft UI shape?~~ **Presets-first** (recipe book at wave 1; custom wizard later — see adoption decision).
+- [ ] Naming: presets carry curated names (the recipe book *is* the iconic-name table); still open for the later custom wizard — derived names ("Frost Storm") vs. unlockable iconic names for famous combos.
+- [ ] Are forms and identities separate craftable *items* (two D4 material sinks) or internal data only, with materials spent directly in the craft? Interacts with D4; decide before the crafting screen is built.
+- [ ] Known risk to watch: combinatorial content guarantees coverage, not soul — the blandness trap. Wave-1 presets mask it; re-check at custom-wizard time.
+
+## Parked idea — Identity runes (raised 2026-07-04, unassessed beyond first pass)
+
+**The idea:** a "rune" item carries a named skill's identity package (element + VFX skin + possibly tier track) — e.g. a Blizzard rune vs. a Firestorm rune making the same zone prototype into two different skills.
+
+First-pass assessment against committed rules:
+
+- **Weapon-hosted runes: likely dead.** Conflicts with skill-owned DamageType (matrix), and one weapon serves all 5 slots — a weapon rune would re-skin every skill at once, destroying per-skill identity. *Salvageable observation:* weapons currently have **no augment story** (defensive equipment augments make no sense on a weapon) — that gap is real and needs its own answer someday, rune-shaped or not.
+- **Skill-hosted, freely swappable: dead as stated.** Violates "damage type fixed at creation, only augments override at fire time."
+- **Skill-hosted, fused at craft time: promising.** "Craft New named skill = pick prototype + fuse identity rune" would make the rune the *recipe ingredient* that produces the standalone clone. Everything committed survives (standalone clone, type fixed at creation, budget levers Balancer-owned), and it gives the D4 economy a concrete material sink + makes the roster combinatorial (rune pool × prototypes) instead of hand-authored. Open questions if picked up: are first-wave named skills fixed recipes or free rune×prototype combos? Does a rune carry the budget-spend shape too, or only element/VFX? How does this interact with per-skill VFX mapping (rune-driven VFX would *be* that system)?
+
+Status: parked until the first-wave roster design forces the acquisition question (open question 4 territory / D4).
+
+## ~~Revisit later~~ RESOLVED same day — the Physical/Magic damage-model split (2026-07-04)
+
+Discussed and settled: **mono-typed hits + typeless weapon root confirmed as deliberate design** (D4 lineage, consciously chosen over the D2/PoE composite lineage — weapons there carry typed components and one hit checks multiple resists with conversion math). Now recorded as a Deliberate Absence in `design-stats.md` §5C, together with the companion rule it forced:
+
+- **No enemy immunities — resistances cap below 100%, ever.**
+  *Justification: the "does every enemy take at least some physical?" worry is the PoE immune-mob problem in disguise; with mono-typed hits, immunity would hard-wall mono-typed builds. Capping resists solves it without a phys-floor on every hit.*
+- **Mono-typed / typeless-weapon model.**
+  *Justification: (1) crafting anchor — one weapon number serves all builds, no Str/Int weapon fork; (2) attribute identity — phys→Str, magic→Int stays crisp only if a hit scales one channel; (3) keeps the D3 hit-event model closed (composite portions/conversion are the classic painful retrofit).*
+
+Reopens only if the element wave someday demands composite hits (not expected — elements can stay mono-typed per hit).
+
 ## Other parked threads
 
 - **Full roster beyond the first wave** — gated on the first-wave playtest verdict on the identity framework.
 - **Acquisition specifics / recipe costs** — deferred to the reward/economy surface (D4).
+- **Weapon augment design** — what sockets into a weapon? Defensive equipment augments don't fit; the slot needs its own augment family (or runes, per above). Raised 2026-07-04.
 
 ---
 
@@ -150,3 +207,4 @@ Full sweep of [ref-poe2-skills.md](ref-poe2-skills.md) against the 12 prototypes
 - **2026-07-04 (grill session)** — Thread 1 fully resolved: framework confirmed, tier rule (budget levers only, parity at equal tier), damage-type mutability, no mechanical identity lever. Thread 2 resolved: deep first wave, 2 siblings × 4 prototypes. Settled outside this doc: no-multiplier rationale documented; speed-family stance decided & promoted; Boots drift → docs follow code; multiplier drift fixed.
 - **2026-07-04 (later)** — `InherentEotIds` resolution amended: **narrow, not delete** (entity_debuff's Slow lives there) → single `DebuffEotId`, valid only when `DamagePattern == None`. Code change = issue #11. Doc cleaned and restructured for the Thread 3 discussion: resolved threads compressed into "Committed foundations", worksheet + roster grid added, 4 open questions posed (damage-type palette is the big one).
 - **2026-07-04 (PoE2 coverage)** — Added PoE2 jump-off mapping for the 4 wave hosts. Full coverage re-assessment recorded as parked thread: 15 candidate prototypes (9 delivery-shape, 6 mechanic/surface-gated). **Two-route resolution adopted** for the rule-blocked families: amplification → enemy-owned "Exposed"-style EoT (Route A); conditional damage → crit-condition augments (Route B); raw per-skill conditional multipliers stay blocked with no exception. No amendment to the no-multiplier rule.
+- **2026-07-04 (resumed session)** — Thread 3 structural questions all answered: Phys/Magic sibling pairs (elements deferred to their own wave with enemy resists); varied contrast per pair (4 axes); classic names with the no-false-promises guardrail; all 12 prototypes stay craftable but are *internal* skills (authoring basis + system proof + playtest control group). Pair 1 (Strike/Smite) proposed, then tabled. Identity-rune idea assessed (weapon-hosted dead, fused-at-craft promising) and generalised into **Thread 4: prototype + form + identity**. Same day: three-component split agreed; VFX guardrail committed (no elemental cosplay before elements exist); element effect flavours flagged as levers-not-flavours with "whisper/shout" (b-lite) as leading framing; Phys/Magic damage model settled (mono-typed hits + typeless weapon = deliberate, D4-lineage; **no-immunities rule** committed to design-stats.md §5C). **Composition ADOPTED, presets-first** — Thread 3 absorbed; wave 1 = author 8 forms + 2 identities → 16 preset skills. Next: design the 8 forms (start from the tabled Strike/Smite as entity_burst's swift/heavy forms).
