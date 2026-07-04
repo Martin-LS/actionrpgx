@@ -1,4 +1,7 @@
-[gd_scene format=3 uid="uid://kinetic_self_channeled_tick_vfx"]
+[gd_scene format=3 uid="uid://k5brib7odeqq"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_soihs"]
+vertex_color_use_as_albedo = true
 
 [sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_kinetic_self_channeled"]
 particle_flag_align_y = true
@@ -25,9 +28,10 @@ height = 5.0
 radial_segments = 4
 rings = 2
 
-[node name="SelfChanneledTickVfx" type="Node3D"]
+[node name="SelfChanneledTickVfx" type="Node3D" unique_id=1906703889]
 
-[node name="Whirl" type="GPUParticles3D" parent="."]
+[node name="Whirl" type="GPUParticles3D" parent="." unique_id=1864924853]
+material_override = SubResource("StandardMaterial3D_soihs")
 emitting = false
 amount = 48
 lifetime = 0.5

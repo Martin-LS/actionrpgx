@@ -1,4 +1,7 @@
-[gd_scene format=3 uid="uid://kinetic_self_duration_tick_vfx"]
+[gd_scene format=3 uid="uid://32qf1ftecqng"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_vbsn4"]
+vertex_color_use_as_albedo = true
 
 [sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_kinetic_self_duration"]
 emission_shape = 6
@@ -26,9 +29,10 @@ height = 2.0
 radial_segments = 4
 rings = 2
 
-[node name="SelfDurationTickVfx" type="Node3D"]
+[node name="SelfDurationTickVfx" type="Node3D" unique_id=1375833627]
 
-[node name="Whirl" type="GPUParticles3D" parent="."]
+[node name="Whirl" type="GPUParticles3D" parent="." unique_id=1144493695]
+material_override = SubResource("StandardMaterial3D_vbsn4")
 emitting = false
 amount = 120
 lifetime = 0.9

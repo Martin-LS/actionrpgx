@@ -1,4 +1,7 @@
-[gd_scene format=3 uid="uid://magic_chan_tick_vfx"]
+[gd_scene format=3 uid="uid://dqysn2n7sngnx"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_j2asp"]
+vertex_color_use_as_albedo = true
 
 [sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_magic_chan"]
 particle_flag_align_y = true
@@ -25,9 +28,10 @@ height = 5.0
 radial_segments = 4
 rings = 2
 
-[node name="MagicChanneledTickVfx" type="Node3D"]
+[node name="MagicChanneledTickVfx" type="Node3D" unique_id=487744336]
 
-[node name="Whirl" type="GPUParticles3D" parent="."]
+[node name="Whirl" type="GPUParticles3D" parent="." unique_id=476074849]
+material_override = SubResource("StandardMaterial3D_j2asp")
 emitting = false
 amount = 48
 lifetime = 0.5

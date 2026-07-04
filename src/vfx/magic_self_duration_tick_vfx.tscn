@@ -1,4 +1,7 @@
-[gd_scene format=3 uid="uid://magic_dur_tick_vfx"]
+[gd_scene format=3 uid="uid://dlwud83mr4uv6"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_6jikt"]
+vertex_color_use_as_albedo = true
 
 [sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_magic_dur"]
 emission_shape = 6
@@ -26,9 +29,10 @@ height = 2.0
 radial_segments = 4
 rings = 2
 
-[node name="MagicDurationTickVfx" type="Node3D"]
+[node name="MagicDurationTickVfx" type="Node3D" unique_id=1967942697]
 
-[node name="Whirl" type="GPUParticles3D" parent="."]
+[node name="Whirl" type="GPUParticles3D" parent="." unique_id=1612826613]
+material_override = SubResource("StandardMaterial3D_6jikt")
 emitting = false
 amount = 120
 lifetime = 0.9
