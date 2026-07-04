@@ -1161,7 +1161,8 @@ public record FormData(
     float?    WindUp     = null,
     float?    Duration   = null,
     float?    ZoneRadius = null,
-    float?    TickRate   = null
+    float?    TickRate   = null,
+    float?    Range      = null   // ONLY on forms of Self-targeting prototypes — see Range constraint below
 );
 
 // IdentityData.cs
@@ -1201,9 +1202,12 @@ public static SkillData Compose(SkillData proto, FormData form, IdentityData ide
         WindUp     = form.WindUp     ?? proto.WindUp,
         Duration   = form.Duration   ?? proto.Duration,
         ZoneRadius = form.ZoneRadius ?? proto.ZoneRadius,
-        TickRate   = form.TickRate   ?? proto.TickRate
+        TickRate   = form.TickRate   ?? proto.TickRate,
+        Range      = form.Range      ?? proto.Range
     };
 ```
+
+**Range constraint (decided 2026-07-04):** `SkillData.Range` does double duty — cast range for Position skills, **damage/aggro radius for Self skills**. A form may set `Range` **only when its prototype's `TargetingShape == Self`** — there it *is* the AoE-radius budget lever (nova/quake, spin/vortex forms). Forms of Entity/Position prototypes must leave it null: reach is off the budget-lever list (`design-skills.md` v2). Enforce in the `SkillRegistry` static-ctor validation: form with `Range != null` on a non-Self prototype → throw. Do **not** add runtime `ZoneRadius`-fallback logic for Self skills — their damage radius stays `Range`-driven (the burst VFX ring and the fire-gate both read `Range`; moving damage to `ZoneRadius` would silently desync visuals from damage).
 
 **Init order (pinned to avoid static-ctor cycles):** `SkillRegistry`'s static ctor, *after* its prototype dictionary is built, iterates `PresetRegistry.All` and adds each composed entry to its own `All`. Form/Identity/Preset registries stay leaf dependencies. The existing static-ctor validation (DebuffEotId, TickRate) runs *after* composition so it covers composed entries too.
 

@@ -379,7 +379,7 @@ Every lever on a composed skill is one of two kinds:
 
 **Skill identity = prototype (delivery fantasy) × form (budget-spend shape + tier track) × identity (type + skin).**
 
-`Range` is deliberately **not** a budget lever — a long-range form (Snipe fantasy) requires consciously revisiting this line first (weapon-driven delivery makes melee-at-range visually incoherent).
+`Range`-as-**reach** (cast range on Entity/Position skills) is deliberately **not** a budget lever — a long-range form (Snipe fantasy) requires consciously revisiting this line first (weapon-driven delivery makes melee-at-range visually incoherent). Clarified 2026-07-04: on **Self** skills the `Range` field *is* the AoE damage radius, which is a listed budget lever — Self-prototype forms (nova/quake, spin/vortex) tune their radius through it. Same field, two meanings; the constraint is per targeting shape (enforced in registry validation — see `technical-systems.md`).
 
 ### Structural decisions (wave 1)
 
