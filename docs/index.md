@@ -55,4 +55,4 @@ Quick reference for every doc in this folder. Load this first each session to kn
 | [design-skill-system-brainstorming.md](design-skill-system-brainstorming.md) | OPEN brainstorm for v2 named skills — identity system, roster, acquisition; resolved items move to design-skills.md |
 | [design-directions.md](design-directions.md) | Parked design discussions — open but unresolved ideas; resolved items are removed and moved to design docs |
 | [design-ideas.md](design-ideas.md) | Uncommitted design concepts parking lot — nothing here is scheduled or spec'd |
-| [ref-poe2-skills.md](ref-poe2-skills.md) | PoE2 skill reference table — design inspiration only, adapt concepts not names |
+| [ref-arpg-skills.md](ref-arpg-skills.md) | Cross-game ARPG skill reference — PoE2 (EA 0.5.0) + D4 (Season 14) + The Last Epoch (2024) for prototype extraction; design inspiration only, adapt concepts not names |

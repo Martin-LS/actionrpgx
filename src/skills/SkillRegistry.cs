@@ -214,38 +214,9 @@ public static class SkillRegistry
 
     static SkillRegistry()
     {
-        // Compose preset skills from PresetRegistry
-        foreach (var preset in PresetRegistry.All.Values)
-        {
-            var proto = Get(preset.PrototypeId);
-            if (proto == null)
-            {
-                throw new System.InvalidOperationException(
-                    $"Preset '{preset.Id}' references invalid prototype '{preset.PrototypeId}'.");
-            }
-            var form = FormRegistry.Get(preset.FormId);
-            if (form == null)
-            {
-                throw new System.InvalidOperationException(
-                    $"Preset '{preset.Id}' references invalid form '{preset.FormId}'.");
-            }
-            var identity = IdentityRegistry.Get(preset.IdentityId);
-            if (identity == null)
-            {
-                throw new System.InvalidOperationException(
-                    $"Preset '{preset.Id}' references invalid identity '{preset.IdentityId}'.");
-            }
-
-            if (!ValidateCombo(proto, form, identity, out var err))
-            {
-                throw new System.InvalidOperationException($"Preset '{preset.Id}' invalid combo: {err}");
-            }
-
-            var composed = SkillComposer.Compose(proto, form, identity, preset);
-            All[preset.Id] = composed;
-        }
-
-        // Run validation on all skills (including composed ones)
+        // Named skills are no longer pre-composed into the registry — the craft
+        // wizard composes them per-instance as flattened snapshots. Only the
+        // prototypes below live here. Validate them for internal consistency.
         foreach (var skill in All.Values)
         {
             if (skill.DamagePattern != SkillDamagePattern.None && !string.IsNullOrEmpty(skill.DebuffEotId))

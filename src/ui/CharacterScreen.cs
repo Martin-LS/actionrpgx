@@ -1209,8 +1209,8 @@ public partial class CharacterScreen : Control
 
         int common   = _manager.Profile.GetMaterial("crafting_common");
         bool invFull = _manager.GetUnslottedSkillCount() >= Character.ProfileData.MaxInventory;
-        var craftBtn = MakeModifyButton("Craft Skill  [1 Common]", invFull || common < 1);
-        craftBtn.Pressed += () => ShowCraftSkillSubtype(vbox, slotIndex, overlay);
+        var craftBtn = MakeModifyButton("Craft Skill  [3 Common]", invFull || common < 3);
+        craftBtn.Pressed += () => { CloseOverlay(overlay); ShowCraftSkillToInventoryOverlay(); };
         vbox.AddChild(craftBtn);
 
         var equippedIds = new System.Collections.Generic.HashSet<string>(
@@ -1250,50 +1250,6 @@ public partial class CharacterScreen : Control
                 Refresh();
                 ShowSkillModifyPanel(inst, slotIndex);
             });
-    }
-
-    private void ShowCraftSkillSubtype(VBoxContainer vbox, int slotIndex, Control overlay)
-    {
-        foreach (Node child in vbox.GetChildren()) child.QueueFree();
-
-        var backBtn = MakeModifyButton("← Back", false);
-        backBtn.Pressed += () => ShowSkillSlotDefault(vbox, slotIndex, overlay);
-        vbox.AddChild(backBtn);
-        vbox.AddChild(new HSeparator());
-
-        int common   = _manager.Profile.GetMaterial("crafting_common");
-        bool invFull = _manager.GetUnslottedSkillCount() >= Character.ProfileData.MaxInventory;
-        var statusLbl = new Label { Text = invFull ? "Inventory full" : $"Common material: {common}" };
-        statusLbl.AddThemeColorOverride("font_color", new Color("#8AA0AE"));
-        vbox.AddChild(statusLbl);
-
-        var listScroll = new ScrollContainer { CustomMinimumSize = new Vector2(0f, 360f) };
-        var listVbox   = new VBoxContainer();
-        listVbox.AddThemeConstantOverride("separation", 8);
-        listScroll.AddChild(listVbox);
-        vbox.AddChild(listScroll);
-
-        foreach (var recipe in RecipeRegistry.ForType(RecipeType.Skill))
-        {
-            var skillDef = Skills.SkillRegistry.Get(recipe.OutputItemId);
-            if (skillDef == null) continue;
-            if (skillDef.Kind != Skills.SkillKind.Normal) continue;
-            int cost  = recipe.MaterialCosts.TryGetValue("crafting_common", out var mc) ? mc : 1;
-            bool can  = !invFull && common >= cost;
-            var btn   = MakeModifyButton($"{skillDef.Name}  —  {cost} Common", !can);
-            string rid = recipe.Id;
-            btn.Pressed += () =>
-            {
-                _manager.CraftSkillItem(rid);
-                var newInst = _manager.Profile.OwnedSkillInstances[^1];
-                var c = _manager.SelectedCharacter;
-                if (c != null) _manager.EquipSkill(c.Id, slotIndex, newInst.Id);
-                CloseOverlay(overlay);
-                Refresh();
-                ShowSkillModifyPanel(newInst, slotIndex);
-            };
-            listVbox.AddChild(btn);
-        }
     }
 
     // ── Skill Modify Panel (2-column layout) ─────────────────────────────────

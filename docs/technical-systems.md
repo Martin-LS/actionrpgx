@@ -1146,6 +1146,8 @@ Other drops hardcoded in `EnemyController.Die()`:
 
 ## Skill Composition — Wave-1 Implementation Architecture
 
+> ⚠️ **Superseded (2026-07-05).** This section describes the original *presets-first, composed-at-registry-init* plan. Wave 1 actually shipped **wizard-first with per-instance flatten-at-craft snapshots** and **no preset recipe book** (issues #23–#27). The authoritative design is the "Wizard-first shipping rule" in `design-skills.md`; the details below (registry-init composition, `recipe_<preset_id>` entries, the out-of-scope list) are kept only as a historical record of the earlier plan.
+>
 > Implements the v2 composition model (`design-skills.md`). This section is the **binding architecture** for the wave-1 issues: implementers own the finer details but must not deviate from the structures, placement, and strategies pinned here. House conventions (`technical-coding.md`) apply throughout: registry pattern, positional records, all numbers in `BalanceConfig`, snake_case ids.
 
 ### Wave-1 strategy: presets are composed at registry init — NOT per-instance

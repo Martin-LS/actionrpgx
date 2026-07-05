@@ -1,10 +1,14 @@
-# PoE2 Skills Reference
+# ARPG Skill Reference
 
-Source: Fextralife / PoE2 wiki. For design inspiration only — adapt concepts, not names.
+Cross-game skill catalogue used for **prototype extraction** — we read these skills only to derive delivery shapes (targeting × damage pattern) for our own prototypes. Design inspiration only; adapt concepts, never names. One `##` section per source game.
 
 ---
 
-## Spear
+## Path of Exile 2
+
+Source: Fextralife / PoE2DB / Maxroll — Early Access **0.5.0 "Return of the Ancients"** (refreshed 2026-07-05). Skills grouped by weapon class / gem family; descriptions kept to delivery mechanics only, enough to map each onto a prototype shape.
+
+### Spear
 
 | Skill | Tags | Description |
 |---|---|---|
@@ -35,7 +39,7 @@ Source: Fextralife / PoE2 wiki. For design inspiration only — adapt concepts, 
 
 ---
 
-## Bow
+### Bow
 
 | Skill | Tags | Description |
 |---|---|---|
@@ -60,7 +64,7 @@ Source: Fextralife / PoE2 wiki. For design inspiration only — adapt concepts, 
 
 ---
 
-## Quarterstaff
+### Quarterstaff
 
 | Skill | Tags | Description |
 |---|---|---|
@@ -87,7 +91,7 @@ Source: Fextralife / PoE2 wiki. For design inspiration only — adapt concepts, 
 
 ---
 
-## Mace / Shield
+### Mace / Shield
 
 | Skill | Tags | Description |
 |---|---|---|
@@ -114,7 +118,7 @@ Source: Fextralife / PoE2 wiki. For design inspiration only — adapt concepts, 
 
 ---
 
-## Crossbow
+### Crossbow
 
 | Skill | Tags | Description |
 |---|---|---|
@@ -146,7 +150,7 @@ Source: Fextralife / PoE2 wiki. For design inspiration only — adapt concepts, 
 
 ---
 
-## Elemental Spells
+### Elemental Spells
 
 | Skill | Tags | Description |
 |---|---|---|
@@ -176,7 +180,7 @@ Source: Fextralife / PoE2 wiki. For design inspiration only — adapt concepts, 
 
 ---
 
-## Occult / Minions
+### Occult / Minions
 
 | Skill | Tags | Description |
 |---|---|---|
@@ -206,7 +210,7 @@ Source: Fextralife / PoE2 wiki. For design inspiration only — adapt concepts, 
 
 ---
 
-## Chaos / Wand / Staff
+### Chaos / Wand / Staff
 
 | Skill | Tags | Description |
 |---|---|---|
@@ -232,7 +236,7 @@ Source: Fextralife / PoE2 wiki. For design inspiration only — adapt concepts, 
 
 ---
 
-## Auras
+### Auras
 
 | Skill | Tags | Description |
 |---|---|---|
@@ -247,7 +251,7 @@ Source: Fextralife / PoE2 wiki. For design inspiration only — adapt concepts, 
 
 ---
 
-## Totems
+### Totems
 
 | Skill | Tags | Description |
 |---|---|---|
@@ -255,3 +259,299 @@ Source: Fextralife / PoE2 wiki. For design inspiration only — adapt concepts, 
 | Ancestral Warrior Totem | Totem, Physical | Summon a warrior totem that charges and slams enemies |
 | Ripwire Ballista | Totem, Lightning | Ballista totem that fires trigger-based lightning bolts |
 | Artillery Ballista | Totem, Physical | Ballista totem that lobs high-arc explosive shells at distant foes |
+
+---
+
+### Sceptre
+
+> Sceptre is the **minion / aura host weapon** (added post-launch). Most of its "skills" are the aura and minion-summon gems already catalogued under *Auras* and *Occult / Minions* above — it is the equip that grants access to them rather than a source of new delivery shapes. Listed here for completeness.
+
+| Skill | Tags | Description |
+|---|---|---|
+| Skeletal Warrior (and Skeletal family) | Minion | Summon persistent skeleton minions that fight for you (see Occult / Minions) |
+| Discipline / Malice / Purity of Fire·Ice·Lightning | Aura | Toggled reservation auras buffing allies / minions or debuffing nearby foes (see Auras) |
+| Sigil of Power | Utility | Ground rune that empowers spells cast inside it, scaling with mana spent |
+
+---
+
+### Flail
+
+> Flail is a **Strength/Intelligence radial-melee weapon** (added post-launch). A clean per-skill gem catalogue was **not retrievable** from public aggregators at refresh time (2026-07-05); its delivery shapes are expected to overlap Mace / Quarterstaff (spin, slam, nova, ground-slam shockwave) with an elemental-augment flavour. **Populate when a reliable source is available.**
+
+---
+
+### New in 0.5.0 (Kalguur / Ward wave)
+
+> Sampled from the "New 0.5" gem block. Mostly **Ward (defensive) and minion/buff** additions — few genuinely new offensive delivery shapes for prototype purposes. Descriptions are delivery-shape approximations pending per-gem confirmation.
+
+| Skill | Tags | Description (approx.) |
+|---|---|---|
+| Frostflame Nova | Spell, Cold/Fire | Expanding ring of frost-fire nova from the caster |
+| Voltaic Barrier | Lightning, Ward | Raise a temporary electric barrier/ward that shocks on contact |
+| Conductive Runes | Lightning | Place runes on the ground that trigger a lightning discharge |
+| Explosive Transmutation | Fire | Ground zone that detonates for area fire damage |
+| Frostflame / elemental Ward skills | Ward | Defensive ward layer converting/absorbing damage (mechanic, not delivery) |
+| Wardbound Minions / Eternal March | Minion | Summon minions tied to Ward / marching formation |
+| Animus Exchange / Animus Splinters | Minion, Buff | Consume/convert minion essence for buffs or resummons |
+| Remnants of Kalguur / Fragments of the Past | Buff/Chaos | Kalguuran-themed buff or lingering damage effect |
+
+---
+
+## Diablo 4
+
+Source: Fextralife wiki — **Season 14 "Death Awakening"** (released 2026). Skills grouped by class; descriptions kept to delivery mechanics only (projectile, area/nova, melee, summoned minion, debuff, buff, ground zone, channeled, etc.) for prototype extraction.
+
+### Barbarian
+
+| Skill | Category | Description |
+|---|---|---|
+| Bash / Lunging Strike / Fray / Frenzy | Basic Attacks | Melee strikes or rapid combo attacks |
+| Hammer of the Ancients | Core | Slam attack creating area nova |
+| Whirlwind | Core | Channeled area spin hitting all nearby enemies |
+| Rend | Core | Melee cleave strike with bleeding effect |
+| Double Swing | Core | Dual-wield sweep attack |
+| Upheaval | Core | Launch ground-placed projectile |
+| Ground Stomp | Defensive | Melee area stun/crowd control |
+| Rallying Cry | Shout | Buff (movement and resource generation) |
+| Iron Skin | Defensive | Self-buff barrier |
+| Challenging Shout | Shout | Debuff that taunts enemies |
+| Leap | Brawling | Movement jump with attack impact |
+| Charge | Brawling | Charging movement strike |
+| War Cry | Shout | Buff (attack speed and enemy vulnerability) |
+| Mighty Throw | Weapon Mastery | Projectile throw attack |
+| Steel Grasp | Weapon Mastery | Melee grab/control effect |
+| Death Blow | Weapon Mastery | Melee execution strike (enhanced vs low-health) |
+| Wrath of the Berserker | Ultimate | Self transformation buff |
+| Iron Maelstrom | Ultimate | Channeled area spin attack |
+| Call of the Ancients | Ultimate | Summon minions |
+
+### Sorcerer
+
+| Skill | Category | Description |
+|---|---|---|
+| Arc Lash / Fire Bolt / Frost Bolt / Spark | Basic | Projectile bolts (lightning chain, fire, frost, multi-hit) |
+| Chain Lightning | Core | Projectile that chains between up to 5 enemies |
+| Charged Bolts | Core | Projectile releasing lightning along ground |
+| Fireball | Core | Projectile exploding sphere dealing area damage |
+| Frozen Orb | Core | Projectile whirling orb with delayed explosion |
+| Ice Shards | Core | Projectile shards targeting frozen enemies |
+| Incinerate | Core | Channeled fire beam effect |
+| Flame Shield | Defensive | Self-buff protective barrier |
+| Frost Nova | Defensive | Area nova freeze effect around caster |
+| Ice Armor | Defensive | Self-buff defensive ice protection |
+| Teleport | Defensive | Movement instant displacement |
+| Hydra | Conjuration | Summoned minion serpent dealing sustained damage |
+| Ice Blades | Conjuration | Summoned blades on enemies (melee-adjacent) |
+| Lightning Spear | Conjuration | Summoned minion projectile entity |
+| Familiar | Conjuration | Summoned elemental companion |
+| Ball Lightning | Mastery | Area spawned orb with explosive potential |
+| Blizzard | Mastery | Area overhead storm following caster |
+| Firewall | Mastery | Ground zone persistent fire barrier |
+| Meteor | Mastery | Area falling projectiles from sky |
+| Deep Freeze | Ultimate | Area massive freeze effect (crowd control) |
+| Inferno | Ultimate | Area rotating fire effect |
+| Unstable Currents | Ultimate | Buff passive damage enhancement |
+
+### Necromancer
+
+| Skill | Category | Description |
+|---|---|---|
+| Bone Splinters | Basic | Projectile bone attack |
+| Decompose | Basic | Area physical attack (ground effect) |
+| Hemorrhage | Basic | Projectile blood attack |
+| Reap | Basic | Melee darkness attack |
+| Blight | Core | Area shadow attack |
+| Blood Lance | Core | Projectile blood attack |
+| Blood Surge | Core | Area blood attack from caster |
+| Bone Spear | Core | Projectile bone attack (piercing) |
+| Sever | Core | Melee physical attack |
+| Skeleton Mage | Core | Summoned minion caster |
+| Corpse Explosion | Corpse | Area corpse-based detonation |
+| Corpse Tendrils | Corpse | Area corpse-based crowd control |
+| Skeleton Warrior | Corpse | Summoned minion melee fighter |
+| Decrepify | Curse | Debuff curse (slow/weak) |
+| Iron Maiden | Curse | Debuff curse (reflects damage) |
+| Blood Mist | Macabre | Buff/mobility with defensive benefits |
+| Bone Prison | Macabre | Area crowd control (entangle) |
+| Bone Spirit | Macabre | Projectile bone attack |
+| Golem | Macabre | Summoned minion tank |
+| Army of the Dead | Ultimate | Summon multiple minions |
+| Blood Wave | Ultimate | Area blood attack (moving wave) |
+| Bone Storm | Ultimate | Area bone attack (channeled) |
+| Soulrift | Ultimate | Area shadow attack |
+
+### Druid
+
+| Skill | Category | Description |
+|---|---|---|
+| Maul / Claw | Basic | Melee strikes (shapeshifted form) |
+| Storm Strike | Basic | Melee with elemental effect |
+| Wind Shear | Basic | Projectile with crowd control |
+| Earth Spike | Basic | Projectile with environmental effect |
+| Landslide | Core | Area environmental ground effect |
+| Lightning Storm | Core | Area projectile damage (overhead) |
+| Pulverize | Core | Melee shapeshifted attack (Werebear) |
+| Shred | Core | Melee shapeshifted attack (Werewolf) |
+| Stone Burst | Core | Area environmental effect (ground) |
+| Tornado | Core | Area projectile damage (traveling vortex) |
+| Earthen Bulwark | Defensive | Buff protective barrier |
+| Cyclone Armor | Defensive | Buff with area effect around caster |
+| Blood Howl | Defensive | Buff with healing mechanic |
+| Debilitating Roar | Defensive | Debuff crowd control |
+| Ravens | Companion | Summoned companion ranged damage |
+| Poison Creeper | Companion | Summoned companion with debuff |
+| Wolves | Companion | Summoned companion melee |
+| Hurricane | Wrath | Area environmental effect (cyclone) |
+| Rabies | Wrath | Debuff spreading poison |
+| Trample | Wrath | Melee shapeshifted movement attack |
+| Boulder | Wrath | Area environmental effect (projectile) |
+| Petrify | Ultimate | Area crowd control debuff (stun) |
+| Grizzly Rage | Ultimate | Transformation buff (Werebear) |
+| Lacerate | Ultimate | Melee shapeshifted attack (Werewolf) |
+| Cataclysm | Ultimate | Area projectile with environmental effects |
+
+### Rogue
+
+| Skill | Category | Description |
+|---|---|---|
+| Blade Shift | Basic | Melee repositioning |
+| Forceful Arrow / Heartseeker | Basic | Projectile/arrow attacks |
+| Invigorating Strike | Basic | Melee with resource generation |
+| Puncture | Basic | Melee attack with bleed |
+| Barrage | Core | Multi-projectile/arrow attack |
+| Flurry | Core | Melee multi-hit rapid combo |
+| Penetrating Shot | Core | Projectile/arrow with pierce |
+| Rapid Fire | Core | Channeled multi-projectile attack |
+| Twisting Blades | Core | Melee with returning projectile effect |
+| Dance of Knives | Core | Movement-based melee attack |
+| Cold Imbuement | Imbuement | Buff weapon enhancement (chill/freeze) |
+| Poison Imbuement | Imbuement | Buff weapon enhancement (poison debuff) |
+| Shadow Imbuement | Imbuement | Buff weapon enhancement (damage boost) |
+| Caltrops | Agility | Ground zone placement (spike trap) |
+| Dash | Agility | Movement ability |
+| Shadow Step | Agility | Movement ability with evasion |
+| Concealment | Subterfuge | Buff stealth/invisibility |
+| Dark Shroud | Subterfuge | Buff defensive shadow barrier |
+| Poison Trap | Subterfuge | Trap placement with debuff |
+| Smoke Grenade | Subterfuge | Ground zone/debuff effect |
+| Death Trap | Ultimate | Trap placement (large area) |
+| Rain of Arrows | Ultimate | Ground zone (projectile barrage) |
+| Shadow Clone | Ultimate | Summon minion copy |
+
+---
+
+## The Last Epoch
+
+Source: Fextralife / Official wiki / Maxroll — **2024 Full Release**. Skills grouped by class (5 base classes with 3 masteries each); descriptions kept to delivery mechanics (melee, projectile, area, summoned minion, transformation, echo, debuff, buff, movement).
+
+### Sentinel
+
+| Skill | Mastery / Category | Description |
+|---|---|---|
+| Shield Rush | Basic | Melee shield charge attack |
+| Javelin | Basic | Projectile piercing spear throw |
+| Warpath | Core | Melee cleaving spin through enemies |
+| Rive | Core | Melee single-target strike; summons forged weapons |
+| Volatile Reversal | Core | Melee area void damage (short range) |
+| Abyssal Echoes | Core | Melee area void damage |
+| Hammer Throw | Core | Projectile thrown hammer |
+| Lunge | Core | Movement dash attack |
+| Shield Throw | Forge Guard | Projectile shield throw attack |
+| Forge Strike | Forge Guard | Melee summons forged weapons on hit |
+| Singularity | Forge Guard | Area void vortex |
+| Holy Aura | Paladin | Buff passive aura (stat enhancement when activated) |
+| Healing Hands | Paladin | Buff heals allies |
+| Sigils of Hope | Paladin | Buff applies beneficial buffs to area |
+| Rebuke | Paladin | Melee area crowd control |
+| Void Cleave | Void Knight | Melee AoE void damage |
+| Erasing Strike | Void Knight | Melee AoE void rifts |
+| Devouring Orb | Void Knight | Projectile void projectile |
+| Anomaly | Void Knight | Area void zone |
+
+### Acolyte
+
+| Skill | Mastery / Category | Description |
+|---|---|---|
+| Rip Blood | Basic | Projectile blood orb (returns to caster) |
+| Marrow Shards | Basic | Projectile bones fired from body |
+| Harvest | Basic | Melee frontal area damage |
+| Summon Skeleton | Core | Summoned minion skeleton warrior |
+| Wandering Spirits | Core | Area spirits roaming with DoT |
+| Hungering Souls | Core | Projectile five souls seeking enemies |
+| Transplant | Core | Movement creates new body, detonates old |
+| Bone Curse | Curse | Debuff curse on enemies |
+| Spirit Plague | Curse | Debuff necrotic DoT curse |
+| Infernal Shade | Curse | Debuff damage over time |
+| Summon Volatile Zombie | Necromancer | Summoned minion explosive zombie |
+| Summon Bone Golem | Necromancer | Summoned minion bone golem tank |
+| Summon Wraith | Necromancer | Summoned minion ghostly specter |
+| Lich Form | Lich | Transformation grants new skills, lifesteal |
+| Chthonic Fissure | Warlock | Ground Zone damage over time, releases seeking spirits |
+| Death Mark | Warlock | Debuff curse marking enemies |
+
+### Mage
+
+| Skill | Mastery / Category | Description |
+|---|---|---|
+| Glacier | Basic | Area waves of ice (freeze) |
+| Volcanic Orb | Basic | Projectile burning orb through enemies |
+| Lightning Blast | Basic | Projectile electrocuting bolt |
+| Snap Freeze | Basic | Debuff immobilizes enemies with chill |
+| Teleport | Mobility | Movement instant displacement |
+| Icicle Storm | Core | Area rain of ice projectiles |
+| Inferno | Core | Area rotating fire effect |
+| Flame Ward | Defensive | Buff protective fire barrier |
+| Frost Shield | Defensive | Buff protective ice barrier |
+| Meteor | Sorcerer | Area summoned meteor falling from sky |
+| Meteor Shower | Sorcerer | Area rain of meteors |
+| Shatter Strike | Spellblade | Melee AoE instantly kills frozen enemies |
+| Runic Invocation | Runemaster | Area combo-based attack (changes per rune order) |
+
+### Primalist
+
+| Skill | Mastery / Category | Description |
+|---|---|---|
+| Claw | Basic | Melee slash attack |
+| Maul | Basic | Melee heavy strike |
+| Storm Strike | Basic | Melee with elemental effect |
+| Wind Shear | Basic | Projectile with crowd control |
+| Earth Spike | Basic | Projectile environmental effect |
+| Wolf Companion | Core | Summoned minion default wolf |
+| Landslide | Core | Area ground environmental effect |
+| Lightning Storm | Core | Area overhead projectiles |
+| Pulverize | Core | Melee heavy slam |
+| Stone Burst | Core | Area environmental ground effect |
+| Tornado | Core | Area traveling vortex projectiles |
+| Summon Raptor | Beastmaster | Summoned minion fierce raptor |
+| Entangling Roots | Beastmaster | Area crowd control zone |
+| Summon Storm Totem | Shaman | Summoned totem casts lightning waves |
+| Summon Earth Totem | Shaman | Summoned totem ground effect |
+| Werebear Form | Druid | Transformation grants four new abilities |
+| Werewolf Form | Druid | Transformation grants four new abilities |
+
+### Rogue
+
+| Skill | Mastery / Category | Description |
+|---|---|---|
+| Flurry | Basic | Melee/Projectile adapts to weapon type |
+| Shift | Basic | Movement dash/reposition |
+| Smoke Bomb | Basic | Movement escape with area debuff |
+| Blade Trap | Core | Trap placement |
+| Shadow Clone | Core | Summoned minion shadow copy |
+| Shadow Cascade | Core | Projectile shadow missiles |
+| Decoy | Core | Summoned decoy (taunt minion) |
+| Dancing Strikes | Bladedancer | Melee series of dash attacks |
+| Puncture | Bladedancer | Melee bleed attack |
+| Detonating Arrow | Marksman | Projectile embeds arrow, delayed explosion |
+| Rain of Arrows | Marksman | Area ground zone projectile barrage |
+| Barrage | Marksman | Multi-projectile rapid fire |
+| Multishot | Marksman | Projectile spread shot |
+| Falcon Dive | Falconer | Movement dive attack |
+| Falconry | Falconer | Summoned falcon commands falcon attacks |
+
+### Transformation & Echo Mechanics
+
+> **Unique to Last Epoch:** Several classes feature distinctive mechanics:
+> - **Echo (Void Knight)**: Void Knight can create temporary echoes of used skills with a short delay, effectively duplicating ability effects.
+> - **Transformation (Lich / Werebear / Werewolf)**: Character shape-shifts, granting access to 4 new form-specific abilities while active.
+> - **Minion-focused**: Acolyte, Primalist, and Rogue all have deep minion-summoning options with customizable support slots.

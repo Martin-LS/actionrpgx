@@ -31,9 +31,11 @@ Working space for the **v2+ skill system questions that are still open**. The co
 
 ---
 
-## Parked thread — Prototype coverage gaps (PoE2 re-assessment, 2026-07-04)
+## Active thread — Prototype expansion candidates (PoE2 re-assessment, 2026-07-04)
 
-Full sweep of [ref-poe2-skills.md](ref-poe2-skills.md) against the 12 prototypes. Everything maps to an existing prototype, a candidate below, or a resolved/blocked family. Candidates are **not committed** — each needs its own design pass when picked up. Names follow the `targeting_pattern` convention. *(Under the composition model, each new prototype multiplies against the existing form/identity pools.)*
+> **⚠️ NOT IMPLEMENTED YET.** Pulled out of the parking lot into active discussion (2026-07-05). Every candidate below is a **discussion item, not committed design and not built** — none exists in code, none has a GitHub issue. Each still needs its own design pass and must be fully nailed down *here* before it becomes an implementation issue. Listed ≠ approved.
+
+Full sweep of [ref-arpg-skills.md](ref-arpg-skills.md) (PoE2 section) against the 12 prototypes. Everything maps to an existing prototype, a candidate below, or a resolved/blocked family. Names follow the `targeting_pattern` convention. *(Under the composition model, each new prototype multiplies against the existing form/identity pools — adding one is a whole new row of reachable combos, not a single skill.)*
 
 ### Candidates needing only a new delivery shape
 
@@ -85,4 +87,5 @@ Full sweep of [ref-poe2-skills.md](ref-poe2-skills.md) against the 12 prototypes
 - **2026-07-04 (PoE2 coverage)** — Jump-off mapping + full coverage re-assessment (15 candidate prototypes). Two-route resolution for rule-blocked families adopted.
 - **2026-07-04 (resumed session)** — Thread 3 structural questions answered (Phys/Magic pairs; varied contrast axes; classic names + VFX guardrail; prototypes = internal skills). Identity-rune idea generalised into **composition: prototype + form + identity — ADOPTED, presets-first**; Thread 3 absorbed. Damage model settled (mono-typed + typeless weapon; no-immunities rule → design-stats.md §5C). Element effects flagged levers-not-flavours; b-lite framing leading.
 - **2026-07-04 (lock-in)** — All 8 forms + 16 presets approved and **promoted to `design-skills.md` v2 section**, with matrix addendum §5D (craft-time components are not stat surfaces) and `design-progression.md` recipe-book note. This doc stripped to open threads. Next: sanity check, then formalise/ship proposal.
+- **2026-07-05** — Prototype coverage candidates **un-parked** into an active thread, explicitly flagged NOT IMPLEMENTED — surfaced for design discussion, each still needs its own pass before becoming an issue. No code or design committed by this move.
 - **2026-07-05 (grill session)** — Thread "forms & identities as items vs data" resolved: **Model C** (catalogue entries, craft wizard, cost-per-step). Two locked decisions superseded — **presets-first → wizard-first** (presets dissolve into reachable catalogue combos) and **hand-named presets → derived phrase + iconic overrides** (raw `[proto][form][identity]` placeholder in wave 1). Crafting cost formalised as a **resource bundle** over a unified currency+material registry, with a reserved (v1-empty) `Requirements` predicate seam. Confirmed the architecture also accommodates future chance-based craft outcomes *only* via tier/augment/component gambles — never raw per-skill stat boosts (would break the no-per-skill-multiplier + budget-parity rules). Promoted to `design-skills.md` + `design-progression.md`. Next: formalise/ship proposal (slice the wizard + registries + cost model into issues).
