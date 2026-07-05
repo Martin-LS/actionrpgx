@@ -551,7 +551,411 @@ Source: Fextralife / Official wiki / Maxroll — **2024 Full Release**. Skills g
 
 ### Transformation & Echo Mechanics
 
-> **Unique to Last Epoch:** Several classes feature distinctive mechanics:
-> - **Echo (Void Knight)**: Void Knight can create temporary echoes of used skills with a short delay, effectively duplicating ability effects.
-> - **Transformation (Lich / Werebear / Werewolf)**: Character shape-shifts, granting access to 4 new form-specific abilities while active.
-> - **Minion-focused**: Acolyte, Primalist, and Rogue all have deep minion-summoning options with customizable support slots.
+ > **Unique to Last Epoch:** Several classes feature distinctive mechanics:
+ > - **Echo (Void Knight)**: Void Knight can create temporary echoes of used skills with a short delay, effectively duplicating ability effects.
+ > - **Transformation (Lich / Werebear / Werewolf)**: Character shape-shifts, granting access to 4 new form-specific abilities while active.
+ > - **Minion-focused**: Acolyte, Primalist, and Rogue all have deep minion-summoning options with customizable support slots.
+
+---
+
+## Torchlight III
+
+Source: Official Torchlight III wiki / Fandom — **2021 Release**. Skills grouped by 4 classes with 3 masteries each; descriptions kept to delivery mechanics (melee, projectile, area, minion, shield, buff, debuff) for prototype extraction.
+
+### Engineer
+
+| Skill | Tags | Description |
+|---|---|---|
+| Blast Shot | Attack, Projectile | Fire a charged blast that explodes on impact |
+| Grenade | Attack, Area | Toss a grenade with delayed explosion |
+| Rocket Pod | Attack, Projectile | Rapid-fire mini rockets in a spread pattern |
+| Shield Bash | Attack, Shield | Strike with shield, stunning nearby enemies |
+| Shield Charge | Movement, Attack | Charge forward with shield, damaging enemies |
+| Turret | Summon | Deploy a stationary turret that fires at enemies |
+| Sentry | Summon | Place a defensive turret with slow-firing projectiles |
+| Overcharge | Buff | Temporarily increase weapon damage and fire rate |
+| Overload | Buff | Generate energy that powers up abilities |
+| Magnetic Field | Area | Create a field that pulls enemies toward center |
+| EMP Grenade | Attack, Area, Utility | Stuns and disables enemy abilities in area |
+| Rocket Barrage | Attack, Area | Fire multiple rockets in a wide arc |
+
+### Berserker
+
+| Skill | Tags | Description |
+|---|---|---|
+| Frenzy | Attack | Rapid melee swings building frenzy stacks |
+| Whirlwind | Attack, AoE | Spin attack hitting all nearby enemies |
+| Ground Slam | Attack, Area | Heavy melee strike creating shockwave |
+| Battle Cry | Buff | Taunt enemies and boost attack speed |
+| Rage | Buff | Build rage that powers up abilities |
+| Enrage | Buff | Enter berserk state, increasing damage |
+| Cleave | Attack | Wide swinging melee attack |
+| Pummel | Attack | Powerful single-target melee strike |
+| Stampede | Movement, Attack | Charge forward, trampling enemies |
+| Berserker Rage | Buff | Gain damage reduction while attacking |
+| Rending Slash | Attack | Melee with bleed effect over time |
+| Annihilation | Attack, AoE | Spin with extended range, hitting multiple times |
+| War Cry | Buff | Reduce incoming damage and increase threat |
+| Blood Frenzy | Buff | Gain life steal while in frenzy state |
+| Crushing Blow | Attack | Melee with armor reduction debuff |
+
+### Rogue
+
+| Skill | Tags | Description |
+|---|---|---|
+| Shadow Strike | Attack, Projectile | Throw shadow daggers that pierce enemies |
+| Poison Dart | Attack, Projectile | Fires a dart that applies poison damage over time |
+| Explosive Trap | Trap, Area | Place a trap that explodes when triggered |
+| Smoke Bomb | Utility, Movement | Create smoke screen for evasion and escape |
+| Shadow Step | Movement | Teleport behind target enemy |
+| Vanish | Utility | Become invisible for short duration |
+| Cluster Bomb | Attack, Area | Throw bombs that split into smaller explosives |
+| Poison Arrow | Attack, Projectile | Fire arrow with poison coating |
+| Grenade | Attack, Area | Toss a timed explosive |
+| Rapid Fire | Attack, Channeled | Rapid projectile barrage |
+| Burst | Attack | Quick melee combo finisher |
+| Shadow Bomb | Attack, Area | Explosive shadow orb with delayed detonation |
+| Trap Mastery | Buff | Increase trap damage and duration |
+| Evasion | Buff | Increase dodge chance temporarily |
+| Lethal Shot | Attack, Projectile | High-damage piercing shot |
+| Poison Cloud | Area | Create a lingering poison zone |
+| Caltrops | Trap | Place slowing spikes on ground |
+| Backstab | Attack | Melee from behind for bonus damage |
+| Deadly Poison | Buff | Increase poison damage and duration |
+| Assassinate | Attack | Execute low-health enemies for bonus damage |
+| Shadow Dart | Attack, Projectile | Homing shadow projectile |
+
+### Embermage
+
+| Skill | Tags | Description |
+|---|---|---|
+| Fireball | Spell, Projectile | Hurl a fireball that explodes on impact |
+| Lightning Bolt | Spell, Projectile | Cast a bolt of lightning that chains to nearby enemies |
+| Ice Shard | Spell, Projectile | Throw a shard of ice that slows enemies |
+| Flame Wave | Spell, Area | Unleash a wave of fire in a cone |
+| Blizzard | Spell, Area | Call down a storm of ice projectiles |
+| Meteor | Spell, Area | Summon a meteor that crashes down dealing massive damage |
+| Fire Nova | Spell, AoE | Expand outward in a ring of fire damage |
+| Lightning Storm | Spell, AoE | Create a storm that strikes enemies with lightning |
+| Ice Nova | Spell, AoE | Radiate a burst of freezing energy |
+| Firewall | Spell, Area | Create a wall of fire that damages passing enemies |
+| Frost Wall | Defensive, Area | Raise a barrier of ice that blocks movement |
+| Shield | Defensive | Generate a protective energy barrier |
+| Mana Shield | Defensive | Convert mana to absorb incoming damage |
+| Teleport | Movement | Instantly move to a target location |
+| Arcane Blast | Spell, Projectile | Channel a beam of pure arcane energy |
+| Chain Lightning | Spell, Projectile | Lightning that jumps between multiple targets |
+| Elemental Fusion | Buff | Combine elemental effects for enhanced damage |
+| Burn | Buff | Apply burning damage over time to enemies |
+| Freeze | Buff | Chill and slow enemies in area |
+| Shock | Buff | Increase enemy vulnerability to lightning |
+| Mana Regen | Buff | Restore mana over time |
+| Elemental Affinity | Buff | Increase elemental damage dealt |
+| Pyroclasm | Spell, Area | Large eruption of fire from the ground |
+| Thunder Ball | Spell, Projectile | Orb of lightning that bounces and explodes |
+| Glacial Spike | Spell, Projectile | Ice spike that roots enemies on impact |
+| Magma Burst | Spell, Area | Ground eruption of molten lava |
+| Static Field | Area | Create a field that shocks enemies on contact |
+| Crystal Prison | Area | Freeze enemies in ice crystals |
+| Elemental Overload | Buff | All elemental spells deal bonus damage |
+| Arcane Explosion | Spell, Area | Burst of pure magical energy in radius |
+| Mana Drain | Spell, Utility | Drain enemy mana while damaging them |
+| Energy Shield | Defensive | Absorb damage with a regenerating shield |
+| Phase Shift | Movement | Become briefly untargetable |
+| Mana Burst | Spell, Projectile | Large sphere of energy that expands outward |
+| Emberstorm | Spell, AoE | Summon a storm of fire embers |
+| Voltaic Ray | Spell, Projectile | Continuous lightning beam |
+| Glacial Wall | Defensive | Create a wall of ice that blocks projectiles |
+| Inferno Pillar | Spell, Area | Summon a column of fire that burns enemies |
+| Cryo Bomb | Spell, Area | Exploding ice bomb with slow effect |
+| Thunderclap | Spell, AoE | Concussive blast of sound and electricity |
+| Magma Flow | Spell, Area | Stream of lava that follows ground contours |
+| Elemental Convergence | Buff | All three elements enhance each other |
+| Mana Catalyst | Buff | Convert mana spent into elemental damage bonus |
+| Spell Weaving | Buff | Alternate between elements for bonus effects |
+| Arcane Cascade | Spell, AoE | Cascade of magical energy in expanding rings |
+| Pyroclastic Rage | Spell, AoE | Eruption of lava and fire in large area |
+| Tempest | Spell, AoE | Whirlwind of elemental damage |
+| Singularity | Spell, Area | Pull enemies toward center while dealing damage |
+| Cataclysm | Spell, AoE | Massive simultaneous elemental attack |
+
+---
+
+## Lost Ark
+
+Source: Official Lost Ark wiki / community resources — **2022-2024**. Skills grouped by 17 classes with 3 mastery trees each; descriptions kept to delivery mechanics (melee, projectile, area, summon, shield, buff, debuff) for prototype extraction.
+
+### Bard
+
+| Skill | Tags | Description |
+|---|---|---|
+| Sound of Courage | Buff | Raise morale, granting attack speed and crit damage to party |
+| Dashing Cry | Movement | Dash forward with sound wave that stuns enemies |
+| Lullaby | Buff | Channel a song that heals allies over time |
+| Clarion Call | Buff | AoE song that increases all party members' stats |
+| Resonance | Buff | Generate music notes that empower allies |
+
+### Sorceress
+
+| Skill | Tags | Description |
+|---|---|---|
+| Fireball | Spell, Projectile | Hurl a fireball that explodes on impact |
+| Ice Pillar | Spell, Area | Summon ice spikes that damage and slow enemies |
+| Lightning Burst | Spell, AoE | Channel lightning that releases in a cone |
+| Meteor | Spell, Area | Call down a meteor with massive AoE damage |
+| Blizzard | Spell, AoE | Create a storm of ice projectiles |
+| Flame Wave | Spell, Area | Unleash a wave of fire in a cone |
+| Chain Lightning | Spell, Projectile | Lightning that chains between multiple targets |
+| Arcane Ray | Spell, Projectile | Channel a beam of pure energy |
+
+### Gunlancer
+
+| Skill | Tags | Description |
+|---|---|---|
+| Gunlancer | Attack, Melee | Heavy melee strike with gun barrel |
+| Shield Bash | Attack, Shield | Strike with shield, stunning enemies |
+| Shield Charge | Movement, Attack | Charge forward with shield, damaging enemies |
+| Explosive Shell | Attack, Projectile | Fire a shell that explodes on impact |
+| Defensive Stance | Defensive | Enter stance that increases defense and reflects damage |
+| Adrenaline Rush | Buff | Build up explosive energy for stronger attacks |
+| Artillery Strike | Attack, Projectile | Long-range shotgun blast |
+| Barrage | Attack, Projectile | Rapid-fire shotgun spread |
+
+### Scrapper
+
+| Skill | Tags | Description |
+|---|---|---|
+| Heavy Swing | Attack, Melee | Powerful overhead melee strike |
+| Double Swing | Attack, Melee | Two rapid melee swings |
+| Whirlwind | Attack, AoE | Spin attack hitting all nearby enemies |
+| Ground Slam | Attack, AoE | Smash ground, creating shockwave |
+| Stunning Blow | Attack | Melee that stuns enemies |
+| Adrenaline | Buff | Build combo gauge for stronger attacks |
+| Combo Breaker | Attack, AoE | Finisher attack that hits multiple times |
+
+### Artillerist
+
+| Skill | Tags | Description |
+|---|---|---|
+| Rocket | Attack, Projectile | Fire a rocket that explodes on impact |
+| Mine | Attack, Trap | Place a proximity mine |
+| Sentry | Summon | Deploy a turret that fires at enemies |
+| Barrage | Attack, Projectile | Rapid-fire rocket barrage |
+| Self-Destruct | Attack | Explode yourself, damaging enemies nearby |
+| Overcharge | Buff | Charge up to increase weapon damage |
+| Energy Shield | Defensive | Generate a shield that absorbs damage |
+
+### Shadowhunter
+
+| Skill | Tags | Description |
+|---|---|---|
+| Shadow Attack | Attack, Darkness | Melee strike with shadow damage |
+| Poison Cloud | Attack, AoE | Create a poisonous area cloud |
+| Bleeding Edge | Attack, Bleed | Melee with bleed effect over time |
+| Dark Arrow | Attack, Projectile | Fire an arrow that deals shadow damage |
+| Mist Step | Movement | Briefly become invisible and move through shadows |
+| Parasite | Buff | Drain enemy life over time |
+| Death Strike | Attack, Execute | High-damage attack on low-health enemies |
+| Shadow Cage | Area | Trap enemies in a shadow prison |
+
+### Devastator
+
+| Skill | Tags | Description |
+|---|---|---|
+| Heavy Smash | Attack, Melee | Devastating overhead melee strike |
+| Ground Breaker | Attack, AoE | Slam ground, creating fissures |
+| Seismic Slam | Attack, AoE | Shockwave that damages and staggers |
+| War Cry | Buff | Taunt enemies and increase own damage |
+| Staggering Blow | Attack | Heavy strike that staggers enemies |
+| Earthquake | Attack, AoE | Create persistent ground damage zone |
+| Berserker Rage | Buff | Enter rage state, increasing damage and resistance |
+
+### Striker
+
+| Skill | Tags | Description |
+|---|---|---|
+| Lightning Strike | Attack, Lightning | Quick melee strike with lightning effect |
+| Chain Lightning | Attack, Lightning | Lightning that jumps between enemies |
+| Static Field | Attack, Area | Create a zone that shocks enemies |
+| Flash | Movement | Dash forward, dealing damage to enemies |
+| Lightning Orb | Attack, Projectile | Throw an orb that releases lightning |
+| Overload | Buff | Build up lightning energy for stronger attacks |
+| Thunderclap | Attack, AoE | Area shockwave of lightning damage |
+| Storm Surge | Attack, Lightning | Rapid lightning strikes in area |
+
+### Wardancer
+
+| Skill | Tags | Description |
+|---|---|---|
+| Wind Attack | Attack, Wind | Melee strike with wind damage |
+| Hurricane | Attack, AoE | Create a whirlwind that damages enemies |
+| Gale | Attack, Projectile | Fire a gust of wind that pushes enemies back |
+| Whirlwind Slash | Attack, AoE | Spin attack with wind blades |
+| Air Strike | Attack, Projectile | Summon wind blades that home in on enemies |
+| Wind Shield | Defensive | Create a shield of wind that blocks projectiles |
+| Soaring | Movement | Leap into the air, dealing damage on landing |
+
+### Gunslinger
+
+| Skill | Tags | Description |
+|---|---|---|
+| Dual Shot | Attack, Projectile | Fire both pistols rapidly |
+| Headshot | Attack, Projectile | Precise shot with high crit chance |
+| Rapid Fire | Attack, Projectile | Rapid-fire pistol barrage |
+| Explosive Bullet | Attack, Projectile | Shoot a bullet that explodes on impact |
+| Dodge | Movement | Roll to avoid incoming attacks |
+| Quickdraw | Buff | Increase weapon swap speed and attack speed |
+| Deadly Shot | Attack, Projectile | High-damage shot that can crit critically |
+
+### Druid
+
+| Skill | Tags | Description |
+|---|---|---|
+| Earth | Spell, Area | Create a zone of earth that damages enemies |
+| Geyser | Spell, Area | Summon a geyser that erupts periodically |
+| Oak | Summon | Summon an oak that roots and damages enemies |
+| Treant | Summon | Summon a walking tree that attacks enemies |
+| Thorn | Spell, Area | Create a thorn zone that damages and slows |
+| Nature's Blessing | Buff | Grant strength and vitality to allies |
+| Stone Skin | Defensive | Turn into stone, gaining armor and damage reduction |
+
+### Arcana
+
+| Skill | Tags | Description |
+|---|---|---|
+| Fireball | Spell, Projectile | Cast a fireball with card element |
+| Ice Wall | Spell, Defensive | Create a wall of ice that blocks enemies |
+| Lightning Bolt | Spell, Projectile | Cast a lightning bolt with card element |
+| Blizzard | Spell, AoE | Create a storm of ice cards |
+| Card Storm | Spell, AoE | Release cards in a wide area |
+| Time Stop | Buff | Slow time, reducing enemy action speed |
+| Card Draw | Buff | Draw new cards to empower spells |
+
+### Summoner
+
+| Skill | Tags | Description |
+|---|---|---|
+| Summon Imp | Summon | Call a small imp that attacks enemies |
+| Summon Succubus | Summon | Call a succubus that damages and saps life |
+| Summon Manticore | Summon | Call a manticore that fires spikes |
+| Summon Griffin | Summon | Call a griffin that dives for damage |
+| Summon Dragon | Summon | Call a dragon for massive AoE damage |
+| Pet Command | Buff | Issue commands to your summoned pets |
+| Life Tap | Spell, Utility | Sacrifice pet health to restore your own |
+| Pack Leader | Buff | Increase all pet damage and durability |
+
+### Destroyer
+
+| Skill | Tags | Description |
+|---|---|---|
+| Earthquake | Attack, AoE | Create a massive earthquake |
+| Ground Slam | Attack, AoE | Slam the ground, damaging and stunning |
+| Seismic Wave | Attack, AoE | Send a wave of destruction across the ground |
+| Stone Fist | Attack, Melee | Punch with stone-enchanced fist |
+| Mountain's Call | Buff | Gain stone-like durability and damage |
+| Boulder | Projectile | Hurl a massive boulder at enemies |
+| Crushing Blow | Attack | Heavy strike that reduces enemy armor |
+| Oblivion | Attack, AoE | Ultimate attack that devastates a wide area |
+
+### Artist
+
+| Skill | Tags | Description |
+|---|---|---|
+| Light Orb | Spell, Projectile | Fire a ball of light that damages and blinds |
+| Radiant Beam | Spell, Projectile | Channel a beam of pure light |
+| Divine Shield | Defensive | Create a shield of holy light |
+| Blessing | Buff | Grant healing and damage reduction to allies |
+| Purify | Utility | Remove debuffs from allies |
+| Light Burst | Spell, AoE | Release a wave of light in all directions |
+| Holy Nova | Spell, AoE | Radiant explosion that damages undead and heals allies |
+| Salvation | Buff | Massive group heal and temporary invincibility |
+
+### Machinist
+
+| Skill | Tags | Description |
+|---|---|---|
+| Mech Summon | Summon | Deploy a mechanical companion that attacks |
+| Rocket Launcher | Attack, Projectile | Fire rockets from your mech |
+| Gatling Gun | Attack, Projectile | Rapid-fire mechanical weapon |
+| Cannon | Attack, Projectile | Fire a powerful cannon shot |
+| Overheat | Buff | Overcharge mech weapons for increased damage |
+| Self-Destruct | Attack | Cause mech to explode, damaging enemies |
+| Repair | Utility | Repair mech and restore its health |
+
+### Reaper
+
+| Skill | Tags | Description |
+|---|---|---|
+| Death Mark | Curse | Mark enemy to increase damage they take |
+| Grim Reaper | Attack, Darkness | Swing a scythe that deals shadow damage |
+| Sunder | Attack, AoE | Slash in a wide arc with scythe |
+| Harvest | Attack, AoE | Area attack that deals bonus damage to marked targets |
+| Fear | Debuff | Cause enemies to flee in terror |
+| Shadow Step | Movement | Teleport to marked enemy |
+| Life Drain | Spell, Utility | Drain enemy health over time |
+| Doom | Curse | Apply a curse that deals damage over time |
+
+### Berserker
+
+| Skill | Tags | Description |
+|---|---|---|
+| Wild Swing | Attack, Melee | Wide swinging melee attack |
+| Frenzy | Attack | Rapid successive strikes |
+| Berserk | Buff | Enter rage state, increasing damage and attack speed |
+| Ground Pound | Attack, AoE | Slam the ground, creating shockwave |
+| Enrage | Buff | Become more dangerous as health decreases |
+| Rampage | Attack, AoE | Spinning melee attack that hits multiple times |
+| Battle Cry | Buff | Shout to increase party damage and reduce incoming damage |
+| Raging Blow | Attack | Heavy strike that builds rage |
+
+### Scrapper (Alternative)
+
+| Skill | Tags | Description |
+|---|---|---|
+| Power Slam | Attack, Melee | Heavy melee with knockback |
+| Uppercut | Attack | Rising uppercut that launches enemies |
+| Spinning Blade | Attack, AoE | Spin with blade attacks |
+| Momentum | Buff | Build momentum for stronger attacks |
+| Crushing Weight | Attack, Melee | Slow, powerful melee strike |
+| Shockwave | Attack, AoE | Create shockwave that staggers enemies |
+| Seismic Impact | Attack, Area | Ground-based area attack |
+| Adrenaline Rush | Buff | Temporary boost to speed and damage |
+
+### Spellsword
+
+| Skill | Tags | Description |
+|---|---|---|
+| Sword Beam | Attack, Projectile | Fire a beam of energy from sword |
+| Blade Flurry | Attack, Melee | Rapid sword slashes in a wide arc |
+| Arcane Blade | Attack, Magical | Strike with magic-infused sword |
+| Shield Bash | Attack, Shield | Strike with magical shield |
+| Teleport | Movement | Instantly relocate |
+| Mana Burst | Spell, AoE | Release magical energy in an explosion |
+| Spell Shield | Defensive | Create magical barrier |
+| Arcane Armor | Buff | Enchant armor with magical properties |
+
+### Inquisitor
+
+| Skill | Tags | Description |
+|---|---|---|
+| Judgment | Attack, Holy | Swing a flail that deals holy damage |
+| Divine Smite | Attack, Holy | Strike with divine energy |
+| Purge | Attack, Area | Holy attack that damages undead and demons |
+| Exorcism | Spell, Area | Expel evil from a wide area |
+| Blessed Hammer | Attack, Projectile | Throw hammers that seek enemies |
+| Sanctuary | Defensive | Create a holy zone that protects allies |
+| Crusader Strike | Attack, Holy | Powerful holy melee strike |
+| Righteous Fury | Buff | Enter divine rage, increasing holy damage |
+
+### Soul Master
+
+| Skill | Tags | Description |
+|---|---|---|
+| Soul Harvest | Attack, Darkness | Strike that absorbs enemy souls |
+| Shadow Bolt | Attack, Projectile | Fire a bolt of shadow energy |
+| Void Zone | Spell, Area | Create an area that drains life |
+| Soul Drain | Spell, Utility | Drain enemy souls for health and mana |
+| Nightmares | Spell, AoE | Summon nightmares that terrify enemies |
+| Forbidden Knowledge | Buff | Gain dark power and increased damage |
+| Death Pact | Spell, Utility | Sacrifice health for massive damage boost |
+| Eternal Darkness | Spell, AoE | Create persistent darkness that damages enemies |

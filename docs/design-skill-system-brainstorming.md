@@ -31,36 +31,40 @@ Working space for the **v2+ skill system questions that are still open**. The co
 
 ---
 
-## Active thread — Prototype expansion candidates (PoE2 re-assessment, 2026-07-04)
+## Active thread — Prototype expansion candidates (cross-game re-assessment, 2026-07-04/05)
 
 > **⚠️ NOT IMPLEMENTED YET.** Pulled out of the parking lot into active discussion (2026-07-05). Every candidate below is a **discussion item, not committed design and not built** — none exists in code, none has a GitHub issue. Each still needs its own design pass and must be fully nailed down *here* before it becomes an implementation issue. Listed ≠ approved.
 
-Full sweep of [ref-arpg-skills.md](ref-arpg-skills.md) (PoE2 section) against the 12 prototypes. Everything maps to an existing prototype, a candidate below, or a resolved/blocked family. Names follow the `targeting_pattern` convention. *(Under the composition model, each new prototype multiplies against the existing form/identity pools — adding one is a whole new row of reachable combos, not a single skill.)*
+Full sweep of [ref-arpg-skills.md](ref-arpg-skills.md) against the 12 prototypes — originally PoE2 only (2026-07-04), re-swept 2026-07-05 after the catalogue gained Diablo 4, Last Epoch, Torchlight III, and Lost Ark. Everything maps to an existing prototype, a candidate below, or a resolved/blocked family. Names follow the `targeting_pattern` convention. *(Under the composition model, each new prototype multiplies against the existing form/identity pools — adding one is a whole new row of reachable combos, not a single skill.)*
+
+**Coverage validation (2026-07-05):** every one of the 12 prototypes is heavily represented across all five games — the list is well-grounded. The re-sweep confirmed all PoE2-derived candidates with independent cross-game exemplars and surfaced **two new candidates** (entity_channeled_tick; transformation_buff). Strongest cross-game signals, by sheer catalogue frequency: the **directional shapes** (path_burst / cone_burst — the genre's single most common delivery family, and we have no Direction targeting shape at all), **self_buff_burst** (shouts/imbuements appear in every game and `design-skills.md` already promises War Cry-style skills on the bar), and **summon_minion/totem** (the largest catalogue family we don't cover).
 
 ### Candidates needing only a new delivery shape
 
-| Candidate | Covers | PoE2 exemplars |
+| Candidate | Covers | Exemplars (cross-game) |
 |---|---|---|
-| path_burst | Piercing projectile line, hits each enemy once | Frostbolt, Glacial Lance, Plasma Blast |
-| moving_zone_tick | Tick zone travelling along cast direction | Ball Lightning, Solar Orb, Twister |
-| chain_burst | Hit jumps to N nearby enemies | Arc, Lightning Arrow, Shockchain Arrow |
-| cone_burst | Directional cone AoE (first non-circular burst shape) | Ice Shot, Freezing Shards, Bone Blast |
-| wall_zone_tick | Line-shaped zone; optional collision-blocking variant | Flame Wall, Frost Wall, Bone Cage |
-| detonated_zone_burst | Place charges, detonate on second press (player-triggered; cf. enemy-triggered triggered_zone_burst) | Detonating Arrow, Unleash |
-| zone_debuff | Zone with `DamagePattern None` + `DebuffEotId` — area counterpart of entity_debuff | Cold Snap, Gas Grenade |
-| zone_buff | Placed zone buffing the player inside it | Sigil of Power, Consecrate |
-| self_buff_burst | Activation whose payload is a timed self-buff (war cry) | Seismic Cry, Infernal Cry |
+| path_burst | Piercing projectile line, hits each enemy once — also covers ground-waves (Sunder-style) and returning projectiles as variants | Frostbolt, Glacial Lance, Plasma Blast (PoE2); Bone Spear, Penetrating Shot (D4); Javelin, Shadow Cascade (LE); Lethal Shot (TL3) |
+| moving_zone_tick | Tick zone travelling along cast direction | Ball Lightning, Solar Orb, Twister (PoE2); Frozen Orb, Tornado, Blood Wave (D4); Tornado (LE) |
+| chain_burst | Hit jumps to N nearby enemies | Arc, Lightning Arrow, Shockchain Arrow (PoE2); Chain Lightning (D4/TL3/LA) |
+| cone_burst | Directional cone AoE (first non-circular burst shape) | Ice Shot, Freezing Shards, Bone Blast (PoE2); Rend (D4); Harvest (LE); Flame Wave (TL3/LA) |
+| wall_zone_tick | Line-shaped zone; optional collision-blocking variant | Flame Wall, Frost Wall, Bone Cage (PoE2); Firewall (D4); Ice Wall (LA) |
+| detonated_zone_burst | Place charges, detonate on second press (player-triggered; cf. enemy-triggered triggered_zone_burst) | Detonating Arrow, Unleash (PoE2); Detonating Arrow (LE) |
+| zone_debuff | Zone with `DamagePattern None` + `DebuffEotId` — area counterpart of entity_debuff; displacement CC (pull/knockback zones) would also live here | Cold Snap, Gas Grenade (PoE2); Smoke Grenade (D4); Magnetic Field (TL3 — pull); Shadow Cage (LA) |
+| zone_buff | Placed zone buffing the player inside it | Sigil of Power, Consecrate (PoE2); Sanctuary (LA) |
+| self_buff_burst | Activation whose payload is a timed self-buff (war cry) — Self/None mirror of entity_debuff; `design-skills.md` already names War Cry as skill-bar content | Seismic Cry, Infernal Cry (PoE2); Rallying Cry, War Cry, imbuements (D4); Battle Cry (TL3); Berserk (LA) |
+| entity_channeled_tick | **NEW 2026-07-05.** Channeled tick on the locked target (beam) — the only Channeled prototype today is Self-radial; this proves Channeled × Entity and fits weapon-adaptive delivery | Incinerate (PoE2/D4); Rapid Fire (D4); Voltaic Ray, Arcane Blast (TL3); Arcane Ray (LA) |
 
 ### Candidates gated on a new mechanic or unparking a surface
 
-| Candidate | Prerequisite | PoE2 exemplars |
+| Candidate | Prerequisite | Exemplars (cross-game) |
 |---|---|---|
-| charge_release_burst | Accumulation-state mechanic (where stacks live = matrix conversation) | Boneshatter, Gathering Storm |
-| movement_burst | Lift the "no movement skills" rule; leap/dash + burst at landing | Leap Slam, Flicker Strike |
-| movement_path_burst | Same rule lift; damage along the travel route | Shield Charge, Stampede |
-| summon_minion | Unpark minion stats (own HP/damage, targetable, own AI) | Skeletals, Raise Zombie |
-| summon_totem | Minion-lite stats (stationary, destructible, auto-attacks). A "dumb" pulse totem needs nothing — it is fixed_zone_tick with a prop | Ballistas, Ancestral Warrior Totem |
-| corpse_consume_burst | A corpse resource system (the system is the work) | Detonate Dead, Volatile Dead, Offerings |
+| charge_release_burst | Accumulation-state mechanic (where stacks live = matrix conversation) | Boneshatter, Gathering Storm (PoE2); combo/rage gauges (TL3/LA) |
+| movement_burst | Lift the "no movement skills" rule; leap/dash + burst at landing | Leap Slam, Flicker Strike (PoE2); Leap, Shadow Step (D4); Soaring (LA) |
+| movement_path_burst | Same rule lift; damage along the travel route | Shield Charge, Stampede (PoE2); Charge (D4); Lunge (LE) |
+| summon_minion | Unpark minion stats (own HP/damage, targetable, own AI) | Skeletals, Raise Zombie (PoE2); Hydra, Wolves, Golem (D4); Falconry, Wraith (LE); imps→dragons (LA) |
+| summon_totem | Minion-lite stats (stationary, destructible, auto-attacks). A "dumb" pulse totem needs nothing — it is fixed_zone_tick with a prop | Ballistas, Ancestral Warrior Totem (PoE2); Storm Totem (LE); Turret, Sentry (TL3/LA) |
+| corpse_consume_burst | A corpse resource system (the system is the work) | Detonate Dead, Volatile Dead, Offerings (PoE2); Corpse Explosion (D4) |
+| transformation_buff | **NEW 2026-07-05.** A skill-set-swap mechanic (activation replaces the skill bar with form skills for a duration) — a whole new surface, by far the largest prerequisite here | Lich Form, Werebear/Werewolf Form (LE); Grizzly Rage, Wrath of the Berserker (D4) |
 
 ### Resolved / blocked families (for the record)
 
@@ -68,8 +72,50 @@ Full sweep of [ref-arpg-skills.md](ref-arpg-skills.md) (PoE2 section) against th
 - **Conditional damage** → Route B: crit-condition augments ("always crit vs enemies below 30% HP / vs Slowed").
 - **Raw per-skill conditional multipliers** → blocked by design, no route, no exception.
 - **Alternative resource costs** → a Focus-cost-model variant on existing prototypes, never a new prototype. **Ammo/charge economies** → no analogue.
+- **Inherent-DoT skills** (bleed/poison/burn attacks — Rake, Puncture, Rabies, Poison Dart…) → already resolved by the ownership matrix: EoTs come from augments, never baked into a damage skill.
+- **Party/ally support** (Bard/Artist heals, party buffs, taunt-for-allies) → no party in this game; no analogue.
+- **Chain / pierce / fork as modifiers** → where a catalogue skill is an ordinary hit *plus* chaining (rather than chaining being the whole shape), that's augment territory — only the dedicated chain delivery (chain_burst above) is a prototype question.
 
-## Other parked threads
+### Raw extraction — form candidates (2026-07-05, unsynthesised)
+
+> **Raw material, not proposals.** Crunched from the full [ref-arpg-skills.md](ref-arpg-skills.md) catalogue: recurring *budget-spend shapes* observed across games, expressed against our form framework (budget levers: cooldown, tick rate, radius, Focus, wind-up, duration, stack count). Wave 1's 8 forms (swift/heavy, nova/quake, storm/floor, spin/vortex) already cover the genre's most common shapes — these are the shapes *beyond* them. Each needs a synthesis pass (budget-parity check, rule-compliance) before becoming a real form.
+
+| Form concept | Budget shape (where the budget goes) | Fits prototypes | Exemplars | ⚠ Flags |
+|---|---|---|---|---|
+| **salvo** | One press = N small rapid sub-hits; payload split across the volley | entity_burst | Barrage (PoE2/D4/LA), Rapid Assault (PoE2), Double Swing (D4), Ember Fusillade (PoE2), Dual Shot (LA) | Interacts with per-hit augment procs — N chances per press; Balancer parity question |
+| **echo** | Payload split into initial hit + delayed second hit at the same spot | self_burst, fixed_zone_burst, windup_burst | Earthquake (PoE2/D4), Frozen Orb delayed explosion (D4), Boneshatter-adjacent | Two timed hits from one activation — engine needs a delayed-second-hit hook |
+| **ramp** | Channeled damage/tick rate builds the longer the channel is held; drain constant | self_channeled_tick (and any future channeled) | Incinerate (PoE2/D4), Tempest Flurry (PoE2), Flameblast (PoE2) | Within-channel state only — no stored stacks between activations, so *not* gated on the charge_release mechanic |
+| **fuse** | Payload lands on a placement timer (lobbed grenade feel) instead of instantly | fixed_zone_burst | Explosive Grenade (PoE2), Grenade (TL3/LA), Cryo Bomb (TL3), Shadow Bomb (TL3) | **Overlaps windup_burst the prototype** — catalogue suggests wind-up may really be a *form axis* on zone bursts, not its own prototype; synthesis question |
+| **swarm vs singular** | Stack count ↔ per-instance payload (many small instances vs one big one) | stackable_zone, triggered_zone_burst | Cluster Grenade vs Explosive Shot (PoE2), Spearfield (PoE2), Caltrops vs Death Trap (D4) | Clean budget trade; stack limit is already a per-skill field |
+| **pylon** | Zone as a small planted emitter pulsing outward, vs uniform carpet | fixed_zone_tick | Storm Lance, Frozen Locus, Orb of Storms, Lightning Rod (PoE2); Geyser (LA) | Mostly a VFX/fantasy distinction unless the emitter is destructible (→ drifts toward summon_totem) |
+| **reserve-heavy vs reserve-light** | Focus reservation amount ↔ effect strength/radius | self_aura | Purity auras vs Malice (PoE2), Holy Aura (LE) | Straightforward budget trade on the reservation lever |
+| **fleet vs enduring** | Duration ↔ potency (short-intense vs long-weak) | self_duration_tick, tracked_tick, entity_debuff | short curses vs Doom-style slow burns (LA), Blizzard variants (D4) | Generic axis — usable as the contrast axis for prototypes that lack one |
+| **residue** | Burst that leaves a brief weak tick zone behind (budget split burst→lingering) | burst prototypes | Fangs of Frost trail, Incendiary Shot, Poisonburst Arrow (PoE2), Volcanic Fissure (PoE2) | **Likely rule-breaking** — crosses the damage-pattern boundary (Burst prototype gaining a Tick component); synthesis must rule form vs blocked |
+
+**Form-axes observed in the catalogue but blocked by existing rules (for the record):** reach/range as a form (Snipe fantasy — `Range`-as-reach is explicitly not a budget lever); hit size (no heavy-hitter by design — hit size is constant); movement forms (no-movement-skills rule); conditional-damage forms (execute thresholds → Route B augments); cross-activation charge accumulation (→ gated charge_release_burst candidate).
+
+### Raw extraction — identity candidates (2026-07-05, unsynthesised)
+
+> **Raw material, not proposals.** Damage-type families recurring across the five games, expressed against our identity framework (damage type + VFX/audio skin + name fragment + b-lite token effect). Physical and Magic/Arcane are shipped (wave 1); Fire/Cold/Lightning are the planned element wave. Everything beyond the trio raises the same synthesis question: **does it get its own enemy-resist channel, share one, or fold into an existing type as a skin?** (Identities couple to enemy-resist promotion, D1.)
+
+| Identity candidate | Status | Token inherent effect (b-lite candidate) | Skin fantasy / name fragments | Exemplars |
+|---|---|---|---|---|
+| **Physical** | ✅ shipped | — (baseline) | kinetic, steel, crushing | everywhere |
+| **Magic / Arcane** | ✅ shipped | — (baseline) | arcane, glyph, mana | Arcane Blast (TL3), Mana Burst (LA), Spellsword kit (LA) |
+| **Fire** | planned (element wave) | tiny burn DoT | flame, ember, inferno, magma | massive in all five games |
+| **Cold** | planned (element wave) | tiny brief slow | frost, glacial, ice, cryo | massive in all five games |
+| **Lightning** | planned (element wave) | hair of crit damage | storm, voltaic, arc, thunder | massive in all five games |
+| **Poison** | new candidate | tiny stacking micro-DoT (distinct from burn: stacks, slower) | venom, toxic, gas, blight | PoE2 chaos-poison family, D4 Poison Imbuement/Rabies, TL3 Rogue kit, LA Shadowhunter |
+| **Void / Shadow** | new candidate | sliver of defence-bypass (armour/shield-ignoring whisper) | void, shadow, umbral, abyssal | LE Void Knight kit, D4 Shadow/darkness, PoE2 Soulrend/Hand of Chayula, LA Soul Master |
+| **Blood** | new candidate | tiny self-life interplay (whisper of leech, or whisper of life-cost) | blood, crimson, gore | D4 Necro blood family (Blood Lance/Surge/Wave), PoE2 Exsanguinate/Reap, LE Rip Blood |
+| **Holy / Radiant** | new candidate | token unclear — heal sliver? (⚠ "bonus vs undead" would be a gate — violates no-gate philosophy) | radiant, divine, sacred, solar | LA Inquisitor/Artist/Paladin kits, PoE2 Spear of Solaris, LE Paladin |
+| **Earth / Nature** | new candidate | whisper of stagger/knockdown | stone, thorn, boulder, seismic | D4/LE Druid+Primalist kits, LA Destroyer/Druid, PoE2 slam family |
+| **Wind** | new candidate | whisper of knockback/push | gale, tempest, zephyr | LA Wardancer kit, D4 Wind Shear, PoE2 Wind Blast |
+| **Bone** | skin variant, not a type | — | bone, marrow, splinter | D4/PoE2 Necro bone families — reads as a *Physical skin*, not a new damage channel |
+
+**Mechanics residue (extracted to neither table — for the record).** A few catalogue mechanics crunch to neither a form nor an identity; noted here so they aren't silently dropped: **alternating-element strikes** (Primal Strikes, Mantra of Destruction — PoE2; Spell Weaving — TL3): cycles the damage type per use, conflicts with damage-type-fixed-at-craft; would need its own design conversation. **Fire-mode toggles** (Rapid Shot — PoE2): a stance that re-shapes an existing skill's budget — form-switching at runtime, no current analogue. **Synergy constructs** (Tempest Bell, Lightning Conduit — PoE2; Hexblast-style debuff detonation): skill A places a state that skill B pays off — cross-skill interaction surface, post-v1. **Taunt / decoy** (Challenging Shout — D4; Decoy — LE): threat redirection needs an enemy-aggro model; parked with summons. Most of these already fall under resolved/blocked families or gated candidates; none blocks the form/identity synthesis.
+
+
 
 - **Starter loadouts (preset revival, if ever)** — pre-composed skills handed to new characters. A loadout/onboarding feature over Model C data (drop pre-built skill instances into a starting inventory), *not* the old preset-recipe-book concept. Parked until onboarding is designed.
 - **"Favourite recipe" bookmark** — player QoL to save a prototype+form+identity tuple for fast re-craft. A thin saved-tuple list over Model C data. Parked until the wizard exists and the need is felt.
@@ -89,3 +135,4 @@ Full sweep of [ref-arpg-skills.md](ref-arpg-skills.md) (PoE2 section) against th
 - **2026-07-04 (lock-in)** — All 8 forms + 16 presets approved and **promoted to `design-skills.md` v2 section**, with matrix addendum §5D (craft-time components are not stat surfaces) and `design-progression.md` recipe-book note. This doc stripped to open threads. Next: sanity check, then formalise/ship proposal.
 - **2026-07-05** — Prototype coverage candidates **un-parked** into an active thread, explicitly flagged NOT IMPLEMENTED — surfaced for design discussion, each still needs its own pass before becoming an issue. No code or design committed by this move.
 - **2026-07-05 (grill session)** — Thread "forms & identities as items vs data" resolved: **Model C** (catalogue entries, craft wizard, cost-per-step). Two locked decisions superseded — **presets-first → wizard-first** (presets dissolve into reachable catalogue combos) and **hand-named presets → derived phrase + iconic overrides** (raw `[proto][form][identity]` placeholder in wave 1). Crafting cost formalised as a **resource bundle** over a unified currency+material registry, with a reserved (v1-empty) `Requirements` predicate seam. Confirmed the architecture also accommodates future chance-based craft outcomes *only* via tier/augment/component gambles — never raw per-skill stat boosts (would break the no-per-skill-multiplier + budget-parity rules). Promoted to `design-skills.md` + `design-progression.md`. Next: formalise/ship proposal (slice the wizard + registries + cost model into issues).
+- **2026-07-05 (full-catalogue sweep)** — [ref-arpg-skills.md](ref-arpg-skills.md) extended with Diablo 4, Last Epoch, Torchlight III, and Lost Ark (plus markdown repair of the pasted sections); full re-sweep against the 12 prototypes. All PoE2-derived candidates confirmed with cross-game exemplars; **two new candidates added** (entity_channeled_tick — delivery-shape only; transformation_buff — gated on a skill-set-swap mechanic); three resolved/blocked families recorded (inherent DoTs, party support, chain-as-modifier). Coverage of the existing 12 validated — every prototype is heavily represented in all five games. Follow-up same day: **raw form & identity extraction** added as two unsynthesised tables (9 form shapes beyond wave 1's 8, with rule flags; 7 identity candidates beyond the shipped pair + planned trio, each pending the resist-channel question).
