@@ -84,6 +84,8 @@ All UI styling goes through `assets/ui/game_theme.tres`.
   - Review rejects the solution/issue outright: whoever rejects removes all stage labels and adds `rejected`.
 - **Issue-writing discipline: keep issues lean.** Reference existing patterns instead of deriving the full solution; give acceptance criteria and touch points (which files/registries need entries), not literal code or exhaustive test cases. A spec detailed enough to fully constrain the implementation should just be implemented directly instead. This applies to pre-handoff verification too — check enough to catch an obvious scope-blocker (e.g. a hardcoded list that would make "pure logic" actually need scene work), not an exhaustive audit of every reference to the thing being changed. **This "keep it lean" discipline applies to issues only** — reference docs (`docs/technical-*.md`) are the opposite case and should be specced out properly and completely, since they're reused across every future issue rather than spent once.
 - **PR review**: the user assigns a reviewer per PR (no fixed rule) — the assigned reviewer checks scope adherence, matched intent against the issue, and that any tests are meaningful, not just green CI. Whoever completes the review (merge or reject) is also responsible for the resulting terminal label swap — see above.
+  - **Review Mandate**: No Pull Request may be merged without undergoing a code review first. By default, an agent must never review or merge its own Pull Request; reviews must be performed by a different peer agent or the user. Self-review and self-merge are only permitted if explicitly authorized by the user for that task.
+
 
 ### 7. Placeholder VFX — clone `effect1`, never author
 
