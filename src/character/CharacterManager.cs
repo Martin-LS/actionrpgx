@@ -249,6 +249,56 @@ public partial class CharacterManager : Node
         return CraftResult.Success;
     }
 
+    public CraftResult CraftComposedSkill(string protoId, string formId, string identityId)
+    {
+        if (Profile.GetMaterial("crafting_common") < 3)
+            return CraftResult.InsufficientMaterials;
+
+        int unslotted = Profile.OwnedSkillInstances.Count - CountSlottedSkills();
+        if (unslotted >= ProfileData.MaxInventory)
+            return CraftResult.InventoryFull;
+
+        var proto = SkillRegistry.Get(protoId);
+        var form = FormRegistry.Get(formId);
+        var identity = IdentityRegistry.Get(identityId);
+        if (proto == null || form == null || identity == null)
+            return CraftResult.InsufficientMaterials;
+
+        if (!SkillRegistry.ValidateCombo(proto, form, identity, out _))
+            return CraftResult.InsufficientMaterials;
+
+        Profile.Materials["crafting_common"] -= 3;
+
+        var generatedName = SkillNaming.GenerateName(protoId, formId, identityId);
+        var matchingPreset = PresetRegistry.All.Values.FirstOrDefault(p =>
+            p.PrototypeId == protoId &&
+            p.FormId == formId &&
+            p.IdentityId == identityId
+        );
+        string iconPath = matchingPreset?.IconPath ?? proto.IconPath;
+
+        var tempPreset = new PresetData(
+            Id: System.Guid.NewGuid().ToString(),
+            Name: generatedName,
+            PrototypeId: protoId,
+            FormId: formId,
+            IdentityId: identityId,
+            IconPath: iconPath
+        );
+
+        var composed = SkillComposer.Compose(proto, form, identity, tempPreset);
+
+        var inst = new SkillItemInstance
+        {
+            DefinitionId = protoId,
+            Snapshot = composed
+        };
+
+        Profile.OwnedSkillInstances.Add(inst);
+        Save();
+        return CraftResult.Success;
+    }
+
     public void EquipSkill(string charId, int slotIndex, string instanceId)
     {
         var c = _characters.FirstOrDefault(x => x.Id == charId);

@@ -171,6 +171,46 @@ public static class SkillRegistry
 
     public static SkillData? Get(string id) => All.TryGetValue(id, out var s) ? s : null;
 
+    public static bool ValidateCombo(SkillData proto, FormData form, IdentityData identity, out string? errorMessage)
+    {
+        errorMessage = null;
+
+        if (form.PrototypeId != proto.Id)
+        {
+            errorMessage = $"Form '{form.Id}' belongs to prototype '{form.PrototypeId}', not '{proto.Id}'.";
+            return false;
+        }
+
+        if (form.Range != null && proto.TargetingShape != SkillTargetingShape.Self)
+        {
+            errorMessage = $"Form '{form.Id}' sets Range, but its prototype '{proto.Id}' is not Self-targeting.";
+            return false;
+        }
+
+        var dummyPreset = new PresetData(
+            Id: "dummy",
+            Name: "Dummy",
+            PrototypeId: proto.Id,
+            FormId: form.Id,
+            IdentityId: identity.Id,
+            IconPath: ""
+        );
+        var composed = SkillComposer.Compose(proto, form, identity, dummyPreset);
+
+        if (composed.DamagePattern != SkillDamagePattern.None && !string.IsNullOrEmpty(composed.DebuffEotId))
+        {
+            errorMessage = $"Skill '{composed.Id}' has DebuffEotId set ('{composed.DebuffEotId}') but DamagePattern is {composed.DamagePattern} (must be None).";
+            return false;
+        }
+        if (composed.DamagePattern == SkillDamagePattern.Tick && composed.TickRate <= 0f)
+        {
+            errorMessage = $"Skill '{composed.Id}' has DamagePattern.Tick but TickRate is {composed.TickRate} (must be > 0).";
+            return false;
+        }
+
+        return true;
+    }
+
     static SkillRegistry()
     {
         // Compose preset skills from PresetRegistry
@@ -195,10 +235,9 @@ public static class SkillRegistry
                     $"Preset '{preset.Id}' references invalid identity '{preset.IdentityId}'.");
             }
 
-            if (form.Range != null && proto.TargetingShape != SkillTargetingShape.Self)
+            if (!ValidateCombo(proto, form, identity, out var err))
             {
-                throw new System.InvalidOperationException(
-                    $"Preset '{preset.Id}' / Form '{form.Id}' sets Range, but its prototype '{proto.Id}' is not Self-targeting.");
+                throw new System.InvalidOperationException($"Preset '{preset.Id}' invalid combo: {err}");
             }
 
             var composed = SkillComposer.Compose(proto, form, identity, preset);
