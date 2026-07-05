@@ -85,6 +85,15 @@ All UI styling goes through `assets/ui/game_theme.tres`.
 - **Issue-writing discipline: keep issues lean.** Reference existing patterns instead of deriving the full solution; give acceptance criteria and touch points (which files/registries need entries), not literal code or exhaustive test cases. A spec detailed enough to fully constrain the implementation should just be implemented directly instead. This applies to pre-handoff verification too — check enough to catch an obvious scope-blocker (e.g. a hardcoded list that would make "pure logic" actually need scene work), not an exhaustive audit of every reference to the thing being changed. **This "keep it lean" discipline applies to issues only** — reference docs (`docs/technical-*.md`) are the opposite case and should be specced out properly and completely, since they're reused across every future issue rather than spent once.
 - **PR review**: the user assigns a reviewer per PR (no fixed rule) — the assigned reviewer checks scope adherence, matched intent against the issue, and that any tests are meaningful, not just green CI. Whoever completes the review (merge or reject) is also responsible for the resulting terminal label swap — see above.
 
+### 7. Placeholder VFX — clone `effect1`, never author
+
+When a task requires a new `.tscn` effect, do **not** author a bespoke effect or fiddle with particles, colours, or materials in the editor. Instead: **duplicate `src/vfx/effect1.tscn` as a plain file, rename it for the feature, place it at the correct path, and wire it in — making no changes to its contents.** Call `reload_project` afterwards so the editor picks it up. The user styles the real effect themselves later.
+
+- **Why**: agents have burned 30+ minutes stuck in the MCP author-and-reload loop trying to make an effect "look right" (turn it blue, tweak emission). That work is the user's, not the agent's — the clone is a functional placeholder to unblock the feature.
+- **This is a deliberate carve-out from the Godot-MCP-only editor-resource rule:** duplicating an existing approved scene is a mechanical *file* operation, not authoring, and the whole point is to avoid the slow MCP load/reload loop. Do the copy/rename directly as files.
+- **Never** spend time trying to make the effect look a certain way. An agent grinding on VFX appearance is out of process — flag it.
+- **Exception:** the user explicitly asks you to author or modify a real effect for the task at hand.
+
 ---
 
 ## Tools and MCP Integration (Antigravity Specific)
