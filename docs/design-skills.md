@@ -519,6 +519,25 @@ A third form for **self_channeled_tick** on a new temporal axis: while channelin
 - **Power-neutral via the ramp curve.** Ramp trades early weakness for late strength — worse than spin/vortex at channel start, better after a sustained hold. The Balancer prices the curve so time-averaged DPS over a typical channel meets spin/vortex parity. It is *situational*, not a strict upgrade: it rewards long uninterrupted holds (contained rooms, stationary tanky targets) and is punished by kiting or any interrupt (dodge, reposition, target death) that resets it to base. Against a mobile horde you must chase, the flat forms win.
 - **Engine need — a within-channel hold-time accumulator** driving the current tick rate, reset on release. A bounded change to the existing channel tick loop; explicitly **not** a stored-stack/charge system (that is the gated charge_release mechanic).
 
+#### fuse (fixed_zone_burst, delayed-detonation form) — adopted 2026-07-06; dissolves windup_burst
+
+The **delayed-detonation form** of fixed_zone_burst: a lobbed bomb that lands at the target position, sits on a fuse, then detonates — vs. blast's instant explosion. It pays wind-up (an escapable telegraph) + long cooldown for a **big radius**: the Position mirror of self_burst's quake. Adds 2 reachable combos. **Ships on existing machinery** — WindUp on the Position path is already supported (prereq #3 below).
+
+| Field | Value |
+|---|---|
+| Prototype | fixed_zone_burst (third form — see blast↔echo above; blast is the shared instant baseline) |
+| Contrast axis | Detonation timing — instant (blast) vs. delayed/lobbed (fuse) |
+| Budget shape | Wind-up delay + long cooldown, traded for a large detonation radius |
+| Tier track | Radius ↑ (grows the blast) |
+| Word-map fragment | "bomb" / "charge" / "mortar" |
+
+**Structural ruling — wind-up is a form axis on burst prototypes, not a delivery chassis (2026-07-06).** `windup_burst` differs from `fixed_zone_burst` in exactly one field — `WindUp` (1.5s vs 0) — and WindUp is a budget lever. So it was never a distinct chassis; it is fixed_zone_burst with a wind-up form. The precedent already exists in wave 1: self_burst's **quake** *is* a wind-up form (nova = instant, quake = delayed), so the same concept was implemented two ways — as a form (quake) and as a prototype (windup_burst). The form way is what the composition model dictates (a chassis is a delivery shape; a delay is not one — the same reasoning that made *pylon* a skin, applied at the prototype level).
+
+- **windup_burst does not become player-facing and receives no forms of its own.** Its engine-proof job (proving the wind-up mechanic) is complete; wind-up now lives as a form (quake, fuse).
+- **Follow-up (implementation issue, not this pass):** retire `windup_burst` as an engine-proof prototype and migrate its recipe/references. The effective player-facing prototype count drops accordingly; the delay lever is preserved as the fuse form.
+
+With fuse, **fixed_zone_burst carries three forms**: **blast** (instant baseline) · **fuse** (delayed, big-radius — timing axis) · **echo** (split aftershock — granularity axis), blast as the shared hub.
+
 ### Engine prerequisites for wave 1
 
 1. **Per-skill VFX mapping** — animation/VFX is currently delivery-driven (all skills of a `SkillType` look identical; the channeled ring is hardcoded per `SkillType`). Identity skins require a per-skill (per-composition) VFX key. The self_channeled_tick forms lean hardest on this.
