@@ -64,17 +64,18 @@ public partial class CharacterManager : Node
 
     private void SeedStarterGear(CharacterData c)
     {
-        var (weapon, hat, body, ring) = c.Type switch
+        var (weapon, hat, body, boots, ring) = c.Type switch
         {
-            CharacterType.Warrior => ("sword_t1", "heavy_hat_t1",  "heavy_body_t1",  "ring_t1"),
-            CharacterType.Rogue   => ("bow_t1",   "medium_hat_t1", "medium_body_t1", "ring_t1"),
-            CharacterType.Mage    => ("wand_t1",  "medium_hat_t1", "medium_body_t1", "ring_t1"),
-            _                     => ("sword_t1", "heavy_hat_t1",  "heavy_body_t1",  "ring_t1"),
+            CharacterType.Warrior => ("sword_t1", "heavy_hat_t1",  "heavy_body_t1",  "heavy_boots_t1",  "ring_t1"),
+            CharacterType.Rogue   => ("bow_t1",   "medium_hat_t1", "medium_body_t1", "medium_boots_t1", "ring_t1"),
+            CharacterType.Mage    => ("wand_t1",  "medium_hat_t1", "medium_body_t1", "medium_boots_t1", "ring_t1"),
+            _                     => ("sword_t1", "heavy_hat_t1",  "heavy_body_t1",  "heavy_boots_t1",  "ring_t1"),
         };
 
         c.EquippedGear[ItemSlot.Weapon.ToString()] = new GearItemInstance { DefinitionId = weapon };
         c.EquippedGear[ItemSlot.Hat.ToString()]    = new GearItemInstance { DefinitionId = hat };
         c.EquippedGear[ItemSlot.Body.ToString()]   = new GearItemInstance { DefinitionId = body };
+        c.EquippedGear[ItemSlot.Boots.ToString()]  = new GearItemInstance { DefinitionId = boots };
         c.EquippedGear[ItemSlot.Ring.ToString()]   = new GearItemInstance { DefinitionId = ring };
 
         var skillInst = new SkillItemInstance { DefinitionId = "entity_burst" };
@@ -244,6 +245,56 @@ public partial class CharacterManager : Node
             Profile.Materials[matId] -= qty;
 
         Profile.OwnedSkillInstances.Add(new SkillItemInstance { DefinitionId = recipe.OutputItemId });
+        Save();
+        return CraftResult.Success;
+    }
+
+    public CraftResult CraftComposedSkill(string protoId, string formId, string identityId)
+    {
+        if (Profile.GetMaterial("crafting_common") < 3)
+            return CraftResult.InsufficientMaterials;
+
+        int unslotted = Profile.OwnedSkillInstances.Count - CountSlottedSkills();
+        if (unslotted >= ProfileData.MaxInventory)
+            return CraftResult.InventoryFull;
+
+        var proto = SkillRegistry.Get(protoId);
+        var form = FormRegistry.Get(formId);
+        var identity = IdentityRegistry.Get(identityId);
+        if (proto == null || form == null || identity == null)
+            return CraftResult.InsufficientMaterials;
+
+        if (!SkillRegistry.ValidateCombo(proto, form, identity, out _))
+            return CraftResult.InsufficientMaterials;
+
+        Profile.Materials["crafting_common"] -= 3;
+
+        var generatedName = SkillNaming.GenerateName(protoId, formId, identityId);
+        var matchingPreset = PresetRegistry.All.Values.FirstOrDefault(p =>
+            p.PrototypeId == protoId &&
+            p.FormId == formId &&
+            p.IdentityId == identityId
+        );
+        string iconPath = matchingPreset?.IconPath ?? proto.IconPath;
+
+        var tempPreset = new PresetData(
+            Id: System.Guid.NewGuid().ToString(),
+            Name: generatedName,
+            PrototypeId: protoId,
+            FormId: formId,
+            IdentityId: identityId,
+            IconPath: iconPath
+        );
+
+        var composed = SkillComposer.Compose(proto, form, identity, tempPreset);
+
+        var inst = new SkillItemInstance
+        {
+            DefinitionId = protoId,
+            Snapshot = composed
+        };
+
+        Profile.OwnedSkillInstances.Add(inst);
         Save();
         return CraftResult.Success;
     }
@@ -537,17 +588,100 @@ public partial class CharacterManager : Node
         };
     }
 
+    private static Godot.Collections.Dictionary SkillDataToDict(SkillData s)
+    {
+        var tagsArr = new Godot.Collections.Array();
+        foreach (var tag in s.Tags) tagsArr.Add(tag);
+
+        return new Godot.Collections.Dictionary
+        {
+            ["id"]               = s.Id,
+            ["name"]             = s.Name,
+            ["type"]             = s.Type.ToString(),
+            ["tags"]             = tagsArr,
+            ["cooldown"]         = s.Cooldown,
+            ["range"]            = s.Range,
+            ["focusCost"]        = s.FocusCost,
+            ["iconPath"]         = s.IconPath,
+            ["description"]      = s.Description,
+            ["kind"]             = s.Kind.ToString(),
+            ["targetingShape"]   = s.TargetingShape.ToString(),
+            ["windUp"]           = s.WindUp,
+            ["damagePattern"]    = s.DamagePattern.ToString(),
+            ["stackLimit"]       = s.StackLimit,
+            ["zoneTracksEntity"] = s.ZoneTracksEntity,
+            ["duration"]         = s.Duration,
+            ["zoneRadius"]       = s.ZoneRadius,
+            ["triggerRadius"]    = s.TriggerRadius,
+            ["armTime"]          = s.ArmTime,
+            ["triggerCount"]     = s.TriggerCount,
+            ["debuffEotId"]      = s.DebuffEotId ?? "",
+            ["damageType"]       = s.DamageType.ToString(),
+            ["vfxKey"]           = s.VfxKey,
+            ["basedOn"]          = s.BasedOn ?? "",
+            ["tickRate"]         = s.TickRate,
+        };
+    }
+
+    private static SkillData DictToSkillData(Godot.Collections.Dictionary d)
+    {
+        var tagsList = new List<string>();
+        if (d.ContainsKey("tags") && d["tags"].Obj is Godot.Collections.Array tagsArr)
+        {
+            foreach (var tag in tagsArr) tagsList.Add(tag.ToString()!);
+        }
+
+        string? debuffEotId = d.ContainsKey("debuffEotId") ? d["debuffEotId"].ToString() : null;
+        if (string.IsNullOrEmpty(debuffEotId)) debuffEotId = null;
+
+        string? basedOn = d.ContainsKey("basedOn") ? d["basedOn"].ToString() : null;
+        if (string.IsNullOrEmpty(basedOn)) basedOn = null;
+
+        return new SkillData(
+            Id:               d["id"].ToString()!,
+            Name:             d["name"].ToString()!,
+            Type:             System.Enum.Parse<SkillType>(d["type"].ToString()!),
+            Tags:             tagsList.ToArray(),
+            Cooldown:         System.Convert.ToSingle(d["cooldown"].Obj),
+            Range:            d.ContainsKey("range") ? System.Convert.ToSingle(d["range"].Obj) : 0f,
+            FocusCost:        d.ContainsKey("focusCost") ? System.Convert.ToSingle(d["focusCost"].Obj) : 0f,
+            IconPath:         d.ContainsKey("iconPath") ? d["iconPath"].ToString()! : "",
+            Description:      d.ContainsKey("description") ? d["description"].ToString()! : "",
+            Kind:             d.ContainsKey("kind") ? System.Enum.Parse<SkillKind>(d["kind"].ToString()!) : SkillKind.Normal,
+            TargetingShape:   d.ContainsKey("targetingShape") ? System.Enum.Parse<SkillTargetingShape>(d["targetingShape"].ToString()!) : SkillTargetingShape.Self,
+            WindUp:           d.ContainsKey("windUp") ? System.Convert.ToSingle(d["windUp"].Obj) : 0f,
+            DamagePattern:    d.ContainsKey("damagePattern") ? System.Enum.Parse<SkillDamagePattern>(d["damagePattern"].ToString()!) : SkillDamagePattern.Burst,
+            StackLimit:       d.ContainsKey("stackLimit") ? System.Convert.ToInt32(d["stackLimit"].Obj) : -1,
+            ZoneTracksEntity: d.ContainsKey("zoneTracksEntity") && System.Convert.ToBoolean(d["zoneTracksEntity"].Obj),
+            Duration:         d.ContainsKey("duration") ? System.Convert.ToSingle(d["duration"].Obj) : 0f,
+            ZoneRadius:       d.ContainsKey("zoneRadius") ? System.Convert.ToSingle(d["zoneRadius"].Obj) : 0f,
+            TriggerRadius:    d.ContainsKey("triggerRadius") ? System.Convert.ToSingle(d["triggerRadius"].Obj) : 0f,
+            ArmTime:          d.ContainsKey("armTime") ? System.Convert.ToSingle(d["armTime"].Obj) : 0f,
+            TriggerCount:     d.ContainsKey("triggerCount") ? System.Convert.ToInt32(d["triggerCount"].Obj) : 0,
+            DebuffEotId:      debuffEotId,
+            DamageType:       d.ContainsKey("damageType") ? System.Enum.Parse<DamageType>(d["damageType"].ToString()!) : DamageType.Physical,
+            VfxKey:           d.ContainsKey("vfxKey") ? d["vfxKey"].ToString()! : "",
+            BasedOn:          basedOn,
+            TickRate:         d.ContainsKey("tickRate") ? System.Convert.ToSingle(d["tickRate"].Obj) : 0f
+        );
+    }
+
     private static Godot.Collections.Dictionary SkillInstToDict(SkillItemInstance s)
     {
         var augArr = new Godot.Collections.Array();
         foreach (var aid in s.SocketedSkillAugmentIds) augArr.Add(aid);
-        return new Godot.Collections.Dictionary
+        var dict = new Godot.Collections.Dictionary
         {
             ["id"]                     = s.Id,
             ["defId"]                  = s.DefinitionId,
             ["tier"]                   = s.Tier,
             ["socketedSkillAugmentIds"] = augArr,
         };
+        if (s.Snapshot != null)
+        {
+            dict["snapshot"] = SkillDataToDict(s.Snapshot);
+        }
+        return dict;
     }
 
     private static Godot.Collections.Dictionary SkillAugInstToDict(SkillAugmentInstance s) => new()
@@ -589,6 +723,11 @@ public partial class CharacterManager : Node
             DefinitionId = MigrateSkillId(d["defId"].ToString()!),
             Tier         = d.ContainsKey("tier") ? System.Convert.ToInt32(d["tier"].Obj) : 1,
         };
+
+        if (d.ContainsKey("snapshot") && d["snapshot"].Obj is Godot.Collections.Dictionary snapDict)
+        {
+            inst.Snapshot = DictToSkillData(snapDict);
+        }
 
         // Read new key; fall back to old key for saves written before the Support→SkillAugment rename
         string socketKey = d.ContainsKey("socketedSkillAugmentIds") ? "socketedSkillAugmentIds" : "socketedSupportInstanceIds";

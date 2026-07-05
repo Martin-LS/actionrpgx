@@ -225,4 +225,53 @@ public static class BalanceConfig
     {
         public const float CritMultiplier = 1.5f;  // TBD — Balancer
     }
+
+    public static class Forms
+    {
+        // swift (entity_burst)
+        public const float SwiftCooldown = 0.5f;
+        public const float SwiftFocusCost = 6f;
+
+        // heavy (entity_burst)
+        public const float HeavyCooldown = 2.0f;
+        public const float HeavyFocusCost = 1.0f;
+        public const float HeavyWindUp = 0.5f;
+
+        // nova (self_burst)
+        public const float NovaCooldown = 1.2f;
+        public const float NovaRange = 100f;
+
+        // quake (self_burst)
+        public const float QuakeCooldown = 3.0f;
+        public const float QuakeWindUp = 1.0f;
+        public const float QuakeRange = 200f;
+
+        // storm (fixed_zone_tick)
+        public const float StormCooldown = 6.0f;
+        public const float StormZoneRadius = 120f;
+        public const float StormDuration = 8.0f;
+        public const float StormTickRate = 1.5f;
+
+        // floor (fixed_zone_tick)
+        public const float FloorCooldown = 2.0f;
+        public const float FloorZoneRadius = 40f;
+        public const float FloorDuration = 3.0f;
+        public const float FloorTickRate = 0.5f;
+        public const float FloorFocusCost = 10f;
+
+        // spin (self_channeled_tick)
+        public const float SpinRange = 100f;
+        public const float SpinTickRate = 0.15f;
+        public const float SpinFocusCost = 8f;
+
+        // vortex (self_channeled_tick)
+        public const float VortexRange = 200f;
+        public const float VortexTickRate = 0.35f;
+        public const float VortexFocusCost = 25f;
+    }
+
+    public static class Tiers
+    {
+        public const float TrackStepPerTier = 0.15f;
+    }
 }

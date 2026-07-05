@@ -39,10 +39,10 @@ public partial class WeaponController : Node
 
 
     private Player.PlayerController? _player;
-    private GpuParticles3D? _selfChanneledTickVfx;
-    private GpuParticles3D? _selfDurationTickVfx;
-    private GpuParticles3D? _selfBurstVfx;
-    private GpuParticles3D? _selfAuraVfx;
+    private GpuParticles3D?[] _selfChanneledTickVfx = new GpuParticles3D?[5];
+    private GpuParticles3D?[] _selfDurationTickVfx = new GpuParticles3D?[5];
+    private GpuParticles3D?[] _selfBurstVfx = new GpuParticles3D?[5];
+    private GpuParticles3D?[] _selfAuraVfx = new GpuParticles3D?[5];
     private bool _wasChanneling;
 
     private float      _physicalDamage  = 20f;
@@ -53,48 +53,50 @@ public partial class WeaponController : Node
     public override void _Ready()
     {
         _player = GetParent<Player.PlayerController>();
+    }
 
-        if (SelfChanneledTickVfxScene != null)
+    // Resolves the VFX scene for a skill slot.
+    // Tries res://src/vfx/{vfxKey}_{baseName}_vfx.tscn first; falls back to the default scene.
+    // baseName mirrors the default scene name minus the leading "res://src/vfx/" prefix and "_vfx.tscn" suffix
+    // (e.g. "self_burst", "self_channeled_tick", "self_duration_tick").
+    private static PackedScene GetSkillVfxScene(string vfxKey, string baseName, PackedScene fallback)
+    {
+        if (!string.IsNullOrEmpty(vfxKey))
         {
-            var vfxRoot = SelfChanneledTickVfxScene.Instantiate<Node3D>();
-            _selfChanneledTickVfx = vfxRoot.GetNodeOrNull<GpuParticles3D>("Whirl");
-            if (_selfChanneledTickVfx != null) _selfChanneledTickVfx.Emitting = false;
-            _player?.CallDeferred(Node.MethodName.AddChild, vfxRoot);
+            var path = $"res://src/vfx/{vfxKey}_{baseName}_vfx.tscn";
+            var scene = GD.Load<PackedScene>(path);
+            if (scene != null) return scene;
         }
+        return fallback;
+    }
 
-        if (SelfDurationTickVfxScene != null)
+    private void CleanUpSlotVfx(int slotIndex)
+    {
+        if (slotIndex < 0 || slotIndex >= 5) return;
+
+        if (_selfChanneledTickVfx[slotIndex] is { } chanVfx)
         {
-            var vfxRoot = SelfDurationTickVfxScene.Instantiate<Node3D>();
-            _selfDurationTickVfx = vfxRoot.GetNodeOrNull<GpuParticles3D>("Whirl");
-            if (_selfDurationTickVfx != null)
-            {
-                // Duplicate material so we can set emission radius per-instance at runtime
-                if (_selfDurationTickVfx.ProcessMaterial is ParticleProcessMaterial mat)
-                    _selfDurationTickVfx.ProcessMaterial = (ParticleProcessMaterial)mat.Duplicate();
-                _selfDurationTickVfx.Emitting = false;
-            }
-            _player?.CallDeferred(Node.MethodName.AddChild, vfxRoot);
+            if (GodotObject.IsInstanceValid(chanVfx))
+                chanVfx.GetParent()?.QueueFree();
+            _selfChanneledTickVfx[slotIndex] = null;
         }
-
-        if (SelfBurstVfxScene != null)
+        if (_selfDurationTickVfx[slotIndex] is { } durVfx)
         {
-            var vfxRoot = SelfBurstVfxScene.Instantiate<Node3D>();
-            _selfBurstVfx = vfxRoot.GetNodeOrNull<GpuParticles3D>("Whirl");
-            if (_selfBurstVfx != null)
-            {
-                if (_selfBurstVfx.ProcessMaterial is ParticleProcessMaterial mat)
-                    _selfBurstVfx.ProcessMaterial = (ParticleProcessMaterial)mat.Duplicate();
-                _selfBurstVfx.Emitting = false;
-            }
-            _player?.CallDeferred(Node.MethodName.AddChild, vfxRoot);
+            if (GodotObject.IsInstanceValid(durVfx))
+                durVfx.GetParent()?.QueueFree();
+            _selfDurationTickVfx[slotIndex] = null;
         }
-
-        if (SelfAuraVfxScene != null)
+        if (_selfBurstVfx[slotIndex] is { } burstVfx)
         {
-            var vfxRoot = SelfAuraVfxScene.Instantiate<Node3D>();
-            _selfAuraVfx = vfxRoot.GetNodeOrNull<GpuParticles3D>("Ring");
-            if (_selfAuraVfx != null) _selfAuraVfx.Emitting = false;
-            _player?.CallDeferred(Node.MethodName.AddChild, vfxRoot);
+            if (GodotObject.IsInstanceValid(burstVfx))
+                burstVfx.GetParent()?.QueueFree();
+            _selfBurstVfx[slotIndex] = null;
+        }
+        if (_selfAuraVfx[slotIndex] is { } auraVfx)
+        {
+            if (GodotObject.IsInstanceValid(auraVfx))
+                auraVfx.GetParent()?.QueueFree();
+            _selfAuraVfx[slotIndex] = null;
         }
     }
 
@@ -134,13 +136,17 @@ public partial class WeaponController : Node
         List<(string Id, float Chance)>? augmentEots = null, bool hasMagicDamage = false, float critChanceBonus = 0f)
     {
         if (slotIndex < 0 || slotIndex >= 5) return;
+
+        // Clean up previous VFX for this slot
+        CleanUpSlotVfx(slotIndex);
+
         _slots[slotIndex].Skill            = skill;
         _slots[slotIndex].CooldownTimer    = 0f;
         var eots = new List<(string Id, float Chance)>();
-        foreach (var id in skill.InherentEotIds ?? System.Array.Empty<string>())
+        if (!string.IsNullOrEmpty(skill.DebuffEotId))
         {
-            var eot = EotRegistry.Get(id);
-            eots.Add((id, eot?.ApplyChance ?? 1f));
+            var eot = EotRegistry.Get(skill.DebuffEotId);
+            eots.Add((skill.DebuffEotId, eot?.ApplyChance ?? 1f));
         }
         if (augmentEots != null) eots.AddRange(augmentEots);
         _slots[slotIndex].Eots             = eots;
@@ -153,6 +159,57 @@ public partial class WeaponController : Node
         _slots[slotIndex].ActiveZones   = new List<Node3D>();
         _slots[slotIndex].AuraActive    = false;
         _slots[slotIndex].AuraReserved  = 0f;
+
+        // Initialize new VFX for the slot
+        if (_player == null)
+            _player = GetParent<Player.PlayerController>();
+
+        if (_player != null)
+        {
+            // Channeled Tick VFX
+            var vfxScene = GetSkillVfxScene(skill.VfxKey, "self_channeled_tick", SelfChanneledTickVfxScene);
+            if (vfxScene != null)
+            {
+                var vfxRoot = vfxScene.Instantiate<Node3D>();
+                var particles = vfxRoot.GetNodeOrNull<GpuParticles3D>("Whirl");
+                if (particles != null) particles.Emitting = false;
+                _selfChanneledTickVfx[slotIndex] = particles;
+                _player.CallDeferred(Node.MethodName.AddChild, vfxRoot);
+            }
+            // Duration Tick VFX
+            vfxScene = GetSkillVfxScene(skill.VfxKey, "self_duration_tick", SelfDurationTickVfxScene);
+            if (vfxScene != null)
+            {
+                var vfxRoot = vfxScene.Instantiate<Node3D>();
+                var particles = vfxRoot.GetNodeOrNull<GpuParticles3D>("Whirl");
+                if (particles is { } durPart && durPart.ProcessMaterial is ParticleProcessMaterial durMat)
+                    durPart.ProcessMaterial = (ParticleProcessMaterial)durMat.Duplicate();
+                if (particles != null) particles.Emitting = false;
+                _selfDurationTickVfx[slotIndex] = particles;
+                _player.CallDeferred(Node.MethodName.AddChild, vfxRoot);
+            }
+            // Burst VFX
+            vfxScene = GetSkillVfxScene(skill.VfxKey, "self_burst", SelfBurstVfxScene);
+            if (vfxScene != null)
+            {
+                var vfxRoot = vfxScene.Instantiate<Node3D>();
+                var particles = vfxRoot.GetNodeOrNull<GpuParticles3D>("Whirl");
+                if (particles is { } burstPart && burstPart.ProcessMaterial is ParticleProcessMaterial burstMat)
+                    burstPart.ProcessMaterial = (ParticleProcessMaterial)burstMat.Duplicate();
+                if (particles != null) particles.Emitting = false;
+                _selfBurstVfx[slotIndex] = particles;
+                _player.CallDeferred(Node.MethodName.AddChild, vfxRoot);
+            }
+            // Aura VFX (if applicable)
+            if (SelfAuraVfxScene != null)
+            {
+                var vfxRoot = SelfAuraVfxScene.Instantiate<Node3D>();
+                var particles = vfxRoot.GetNodeOrNull<GpuParticles3D>("Ring");
+                if (particles != null) particles.Emitting = false;
+                _selfAuraVfx[slotIndex] = particles;
+                _player.CallDeferred(Node.MethodName.AddChild, vfxRoot);
+            }
+        }
     }
 
     public void SetSlotAutoActivate(int slotIndex, bool autoActivate)
@@ -207,24 +264,31 @@ public partial class WeaponController : Node
                 ProcessActiveSlot(i, dt);
         }
 
-        if (_selfChanneledTickVfx != null)
+        if (IsAnySlotChanneling())
         {
-            bool channeling = IsAnySlotChanneling();
-            if (channeling != _wasChanneling)
+            for (int i = 0; i < 5; i++)
             {
-                if (!channeling)
+                var vfx = _selfChanneledTickVfx[i];
+                if (vfx == null) continue;
+                if (!_wasChanneling)
                 {
-                    _selfChanneledTickVfx.Restart();
-                    _selfChanneledTickVfx.Emitting = false;
+                    vfx.Restart();
+                    vfx.Emitting = true;
                 }
-                else
-                {
-                    _selfChanneledTickVfx.Emitting = true;
-                }
-                _wasChanneling = channeling;
+                vfx.GetParent<Node3D>().RotateY(Mathf.Tau * 1.0f * dt);
             }
-            if (channeling)
-                _selfChanneledTickVfx.GetParent<Node3D>().RotateY(Mathf.Tau * 1.0f * dt);
+            _wasChanneling = true;
+        }
+        else if (_wasChanneling)
+        {
+            for (int i = 0; i < 5; i++)
+            {
+                var vfx = _selfChanneledTickVfx[i];
+                if (vfx == null) continue;
+                vfx.Restart();
+                vfx.Emitting = false;
+            }
+            _wasChanneling = false;
         }
     }
 
@@ -249,14 +313,14 @@ public partial class WeaponController : Node
             if (_slots[i].CooldownTimer <= 0f)
             {
                 FireSelfBurst(i);
-                _slots[i].CooldownTimer = _slots[i].Skill!.Cooldown;
+                _slots[i].CooldownTimer = _slots[i].Skill!.TickRate;
             }
-            if (_selfDurationTickVfx != null) _selfDurationTickVfx.Emitting = true;
+            if (_selfDurationTickVfx[i] is { } durVfx) durVfx.Emitting = true;
             if (_slots[i].DurationTimer <= 0f)
             {
                 // Active phase ended — start post-duration cooldown before allowing re-cast
                 _slots[i].CooldownTimer = BalanceConfig.Skills.SelfDurationTickPostCooldown;
-                if (_selfDurationTickVfx != null) _selfDurationTickVfx.Emitting = false;
+                if (_selfDurationTickVfx[i] is { } durVfxOff) durVfxOff.Emitting = false;
             }
             return;
         }
@@ -270,19 +334,14 @@ public partial class WeaponController : Node
             if (_slots[i].Skill!.Duration > 0f)
             {
                 _slots[i].DurationTimer = _slots[i].Skill!.Duration;
-                if (_selfDurationTickVfx != null)
+                if (_selfDurationTickVfx[i] is { } durationVfx)
                 {
-                    if (_selfDurationTickVfx.ProcessMaterial is ParticleProcessMaterial vfxMat)
+                    if (durationVfx.ProcessMaterial is ParticleProcessMaterial vfxMat)
                         vfxMat.EmissionRingRadius = _slots[i].Skill!.Range;
-                    _selfDurationTickVfx.Emitting = true;
+                    durationVfx.Emitting = true;
                 }
             }
-            else if (_selfBurstVfx != null)
-            {
-                if (_selfBurstVfx.ProcessMaterial is ParticleProcessMaterial vfxMat)
-                    vfxMat.EmissionRingRadius = _slots[i].Skill!.Range;
-                _selfBurstVfx.Emitting = true;
-            }
+            // Burst VFX is emitted inside FireSelfBurst (supports keyed skins and WindUp detonation)
             FireSelfBurst(i);
             _slots[i].CooldownTimer = _slots[i].Skill!.Cooldown;
         }
@@ -312,17 +371,17 @@ public partial class WeaponController : Node
     {
         if (_slots[i].CooldownTimer > 0f) return;
         if (FindNearestEnemy(_slots[i].Skill!.Range) == null) return;
-        float drain = _slots[i].Skill!.FocusCost * _slots[i].Skill!.Cooldown;
+        float drain = _slots[i].Skill!.FocusCost * _slots[i].Skill!.TickRate;
         if (_player != null && !_player.TrySpendFocus(drain)) { _slots[i].IsChanneling = false; return; }
         FireSelfChanneledTick(i);
-        _slots[i].CooldownTimer = _slots[i].Skill!.Cooldown;
+        _slots[i].CooldownTimer = _slots[i].Skill!.TickRate;
     }
 
     private void ProcessAuraSlot(int i, float dt)
     {
         if (_slots[i].CooldownTimer > 0f) return;
         FireAuraTick(i);
-        _slots[i].CooldownTimer = _slots[i].Skill!.Cooldown;
+        _slots[i].CooldownTimer = _slots[i].Skill!.TickRate;
     }
 
     private void FireAuraTick(int slotIndex)
@@ -348,7 +407,7 @@ public partial class WeaponController : Node
             ApplyEots(enemy, slot.Eots, critMult);
         }
 
-        EmitSignal(SignalName.SkillFired, slotIndex, slot.Skill!.Cooldown, "AuraTick");
+        EmitSignal(SignalName.SkillFired, slotIndex, slot.Skill!.TickRate, "AuraTick");
     }
 
     private void FireSelfChanneledTick(int slotIndex)
@@ -377,7 +436,7 @@ public partial class WeaponController : Node
         }
 
         if (hit)
-            EmitSignal(SignalName.SkillFired, slotIndex, slot.Skill!.Cooldown, "Melee");
+            EmitSignal(SignalName.SkillFired, slotIndex, slot.Skill!.TickRate, "Melee");
     }
 
     public void ReleaseSlot(int slotIndex)
@@ -411,7 +470,7 @@ public partial class WeaponController : Node
                 _player?.UnreserveFocus(slot.AuraReserved);
                 _slots[slotIndex].AuraActive  = false;
                 _slots[slotIndex].AuraReserved = 0f;
-                if (_selfAuraVfx != null) { _selfAuraVfx.Restart(); _selfAuraVfx.Emitting = false; }
+                if (_selfAuraVfx[slotIndex] is { } auraVfxOff) { auraVfxOff.Restart(); auraVfxOff.Emitting = false; }
                 EmitSignal(SignalName.AuraToggled, slotIndex, false);
             }
             else
@@ -422,7 +481,7 @@ public partial class WeaponController : Node
                 _slots[slotIndex].AuraActive   = true;
                 _slots[slotIndex].AuraReserved = reserve;
                 _slots[slotIndex].CooldownTimer = 0f;
-                if (_selfAuraVfx != null) _selfAuraVfx.Emitting = true;
+                if (_selfAuraVfx[slotIndex] is { } auraVfxOn) auraVfxOn.Emitting = true;
                 EmitSignal(SignalName.AuraToggled, slotIndex, true);
             }
             return;
@@ -442,12 +501,7 @@ public partial class WeaponController : Node
         {
             if (FindNearestEnemy(slot.Skill.Range) == null) return;
             if (_player != null && !_player.TrySpendFocus(slot.Skill.FocusCost)) return;
-            if (slot.Skill.Duration == 0f && _selfBurstVfx != null)
-            {
-                if (_selfBurstVfx.ProcessMaterial is ParticleProcessMaterial vfxMat)
-                    vfxMat.EmissionRingRadius = slot.Skill.Range;
-                _selfBurstVfx.Emitting = true;
-            }
+            // Burst VFX emitted inside FireSelfBurst (at detonation for WindUp skills)
             FireSelfBurst(slotIndex);
             slot.CooldownTimer = slot.Skill.Cooldown;
             return;
@@ -510,7 +564,7 @@ public partial class WeaponController : Node
                 DmgType        = ttType,
                 Radius         = radius,
                 Duration       = slot.Skill.Duration,
-                TickInterval   = BalanceConfig.Skills.TrackedTickRate,
+                TickInterval   = slot.Skill.TickRate,
                 EotIds         = slot.Eots,
                 CritMultiplier = ttCrit,
             };
@@ -536,22 +590,63 @@ public partial class WeaponController : Node
             critMultiplier = _critMultiplier;
         baseDmg *= critMultiplier;
 
-        if (isMelee)
+        if (slot.Skill.WindUp > 0f)
         {
-            float windupDelay = slot.Skill!.Cooldown * BalanceConfig.Skills.MeleeWindupFraction;
-            GetTree().CreateTimer(windupDelay).Timeout +=
-                () => { if (!target.IsQueuedForDeletion()) HitMelee(target, baseDmg, dmgType, slot.Eots, critMultiplier); };
+            float            capWindUp  = slot.Skill.WindUp;
+            float            capDmg     = baseDmg;
+            Items.DamageType capType    = dmgType;
+            float            capCrit    = critMultiplier;
+            var              capEots    = slot.Eots;
+            bool             capIsMelee = isMelee;
+
+            float radius = slot.Skill.ZoneRadius > 0f ? slot.Skill.ZoneRadius : 36f;
+            var telegraph = new WindupTelegraph { Radius = radius, Duration = capWindUp };
+            GetTree().Root.AddChild(telegraph);
+            telegraph.GlobalPosition = new Vector3(target.GlobalPosition.X, 10.0f, target.GlobalPosition.Z);
+
+            GetTree().CreateTimer(capWindUp).Timeout += () =>
+            {
+                if (target == null || !GodotObject.IsInstanceValid(target) || target.IsQueuedForDeletion())
+                    return;
+
+                if (capIsMelee)
+                {
+                    HitMelee(target, capDmg, capType, capEots, capCrit);
+                }
+                else
+                {
+                    var playerNode = GetParent<Node3D>();
+                    if (playerNode == null || !GodotObject.IsInstanceValid(playerNode)) return;
+                    var origin    = playerNode.GlobalPosition;
+                    var diff      = target.GlobalPosition - origin;
+                    var direction = new Vector3(diff.X, 0f, diff.Z).Normalized();
+
+                    var projectile = ProjectileScene.Instantiate<Projectile>();
+                    projectile.Initialize(direction, capDmg, capType, capEots, false, false, capCrit);
+                    GetTree().Root.AddChild(projectile);
+                    projectile.GlobalPosition = new Vector3(origin.X, target.GlobalPosition.Y, origin.Z);
+                }
+            };
         }
         else
         {
-            var origin    = GetParent<Node3D>().GlobalPosition;
-            var diff      = target.GlobalPosition - origin;
-            var direction = new Vector3(diff.X, 0f, diff.Z).Normalized();
+            if (isMelee)
+            {
+                float windupDelay = slot.Skill!.Cooldown * BalanceConfig.Skills.MeleeWindupFraction;
+                GetTree().CreateTimer(windupDelay).Timeout +=
+                    () => { if (!target.IsQueuedForDeletion()) HitMelee(target, baseDmg, dmgType, slot.Eots, critMultiplier); };
+            }
+            else
+            {
+                var origin    = GetParent<Node3D>().GlobalPosition;
+                var diff      = target.GlobalPosition - origin;
+                var direction = new Vector3(diff.X, 0f, diff.Z).Normalized();
 
-            var projectile = ProjectileScene.Instantiate<Projectile>();
-            projectile.Initialize(direction, baseDmg, dmgType, slot.Eots, false, false, critMultiplier);
-            GetTree().Root.AddChild(projectile);
-            projectile.GlobalPosition = new Vector3(origin.X, target.GlobalPosition.Y, origin.Z);
+                var projectile = ProjectileScene.Instantiate<Projectile>();
+                projectile.Initialize(direction, baseDmg, dmgType, slot.Eots, false, false, critMultiplier);
+                GetTree().Root.AddChild(projectile);
+                projectile.GlobalPosition = new Vector3(origin.X, target.GlobalPosition.Y, origin.Z);
+            }
         }
 
         EmitSignal(SignalName.SkillFired, slotIndex, slot.Skill.Cooldown, delivery);
@@ -559,25 +654,89 @@ public partial class WeaponController : Node
 
     private void FireSelfBurst(int slotIndex)
     {
-        ref var slot   = ref _slots[slotIndex];
-        var     origin = GetParent<Node3D>().GlobalPosition;
+        ref var slot = ref _slots[slotIndex];
 
-        bool  isMagic = slot.HasMagicDamage || slot.EffectiveDamageType == Items.DamageType.Magic;
-        var   dmgType = isMagic ? Items.DamageType.Magic : Items.DamageType.Physical;
-        float baseDmg = isMagic ? _magicDamage : _physicalDamage;
-
-        float critChance = _globalCritChance + slot.CritChanceBonus;
-        float critMult   = 1.0f;
-        if (critChance > 0f && GD.Randf() < critChance)
-            critMult = _critMultiplier;
-        baseDmg *= critMult;
-
-        foreach (var node in GetTree().GetNodesInGroup("enemies"))
+        if (slot.Skill!.WindUp > 0f)
         {
-            if (node is not Enemies.EnemyController enemy || enemy.IsQueuedForDeletion()) continue;
-            if (origin.DistanceTo(enemy.GlobalPosition) > slot.Skill!.Range) continue;
-            enemy.TakeDamage(baseDmg, dmgType, critMult > 1f);
-            ApplyEots(enemy, slot.Eots, critMult);
+            float capWindUp = slot.Skill.WindUp;
+            var telegraph = new WindupTelegraph { Radius = slot.Skill.Range, Duration = capWindUp };
+            var playerNode = GetParent<Node3D>();
+            playerNode.AddChild(telegraph);
+            telegraph.Position = new Vector3(0f, 10f, 0f);
+
+            GetTree().CreateTimer(capWindUp).Timeout += () =>
+            {
+                var player = GetParent<Node3D>();
+                if (player == null || !GodotObject.IsInstanceValid(player)) return;
+
+                var slotData = _slots[slotIndex];
+
+                bool  isMagic = slotData.HasMagicDamage || slotData.EffectiveDamageType == Items.DamageType.Magic;
+                var   dmgType = isMagic ? Items.DamageType.Magic : Items.DamageType.Physical;
+                float baseDmg = isMagic ? _magicDamage : _physicalDamage;
+
+                float critChance = _globalCritChance + slotData.CritChanceBonus;
+                float critMult   = 1.0f;
+                if (critChance > 0f && GD.Randf() < critChance)
+                    critMult = _critMultiplier;
+                baseDmg *= critMult;
+
+                var origin = player.GlobalPosition;
+
+                foreach (var node in GetTree().GetNodesInGroup("enemies"))
+                {
+                    if (node is not Enemies.EnemyController enemy || enemy.IsQueuedForDeletion()) continue;
+                    if (origin.DistanceTo(enemy.GlobalPosition) > slotData.Skill!.Range) continue;
+                    enemy.TakeDamage(baseDmg, dmgType, critMult > 1f);
+                    ApplyEots(enemy, slotData.Eots, critMult);
+                }
+
+                // Emit keyed VFX at detonation (not at cast)
+                if (slotData.Skill!.Duration == 0f)
+                {
+                    var burstVfx = _selfBurstVfx[slotIndex];
+                    if (burstVfx is { } vfx)
+                    {
+                        if (vfx.ProcessMaterial is ParticleProcessMaterial vfxMat)
+                            vfxMat.EmissionRingRadius = slotData.Skill.Range;
+                        vfx.Emitting = true;
+                    }
+                }
+            };
+        }
+        else
+        {
+            var origin = GetParent<Node3D>().GlobalPosition;
+
+            bool  isMagic = slot.HasMagicDamage || slot.EffectiveDamageType == Items.DamageType.Magic;
+            var   dmgType = isMagic ? Items.DamageType.Magic : Items.DamageType.Physical;
+            float baseDmg = isMagic ? _magicDamage : _physicalDamage;
+
+            float critChance = _globalCritChance + slot.CritChanceBonus;
+            float critMult   = 1.0f;
+            if (critChance > 0f && GD.Randf() < critChance)
+                critMult = _critMultiplier;
+            baseDmg *= critMult;
+
+            foreach (var node in GetTree().GetNodesInGroup("enemies"))
+            {
+                if (node is not Enemies.EnemyController enemy || enemy.IsQueuedForDeletion()) continue;
+                if (origin.DistanceTo(enemy.GlobalPosition) > slot.Skill!.Range) continue;
+                enemy.TakeDamage(baseDmg, dmgType, critMult > 1f);
+                ApplyEots(enemy, slot.Eots, critMult);
+            }
+
+            // Emit keyed VFX (non-WindUp path)
+            if (slot.Skill!.Duration == 0f)
+            {
+                var burstVfx = _selfBurstVfx[slotIndex];
+                if (burstVfx is { } vfx)
+                {
+                    if (vfx.ProcessMaterial is ParticleProcessMaterial vfxMat)
+                        vfxMat.EmissionRingRadius = slot.Skill.Range;
+                    vfx.Emitting = true;
+                }
+            }
         }
 
         EmitSignal(SignalName.SkillFired, slotIndex, slot.Skill!.Cooldown, "SelfBurst");
@@ -648,6 +807,7 @@ public partial class WeaponController : Node
                 var              capEots   = slot.Eots;
                 Vector3          capPos    = worldPos;
                 float            capWindUp = slot.Skill.WindUp;
+                string           capVfxKey = slot.Skill.VfxKey;
 
                 var telegraph = new WindupTelegraph { Radius = capRadius, Duration = capWindUp };
                 GetTree().Root.AddChild(telegraph);
@@ -662,7 +822,7 @@ public partial class WeaponController : Node
                         enemy.TakeDamage(capDmg, capType, capIsCrit);
                         ApplyEots(enemy, capEots, capCrit);
                     }
-                    SpawnZoneBurstVfx(capPos);
+                    SpawnZoneBurstVfx(capPos, capVfxKey);
                 };
             }
             else
@@ -674,7 +834,7 @@ public partial class WeaponController : Node
                     enemy.TakeDamage(baseDmg, dmgType, isCrit);
                     ApplyEots(enemy, slot.Eots, critMult);
                 }
-                SpawnZoneBurstVfx(worldPos);
+                SpawnZoneBurstVfx(worldPos, slot.Skill.VfxKey);
             }
         }
         else if (slot.Skill!.DamagePattern == SkillDamagePattern.Tick)
@@ -706,7 +866,7 @@ public partial class WeaponController : Node
                     DmgType        = dmgType,
                     Radius         = radius,
                     Duration       = slot.Skill!.Duration,
-                    TickInterval   = BalanceConfig.Skills.StackableZoneRate,
+                    TickInterval   = slot.Skill!.TickRate,
                     EotIds         = slot.Eots,
                     CritMultiplier = critMult,
                 };
@@ -722,13 +882,13 @@ public partial class WeaponController : Node
                     DmgType        = dmgType,
                     Radius         = radius,
                     Duration       = slot.Skill!.Duration,
-                    TickInterval   = BalanceConfig.Skills.FixedZoneTickRate,
+                    TickInterval   = slot.Skill!.TickRate,
                     EotIds         = slot.Eots,
                     CritMultiplier = critMult,
                 };
                 GetTree().Root.AddChild(zone);
                 zone.GlobalPosition = worldPos;
-                SpawnZoneTickVfx(worldPos, slot.Skill!.Duration);
+                SpawnZoneTickVfx(worldPos, slot.Skill!.Duration, slot.Skill.VfxKey);
             }
         }
 
@@ -775,10 +935,11 @@ public partial class WeaponController : Node
         }
     }
 
-    private void SpawnZoneBurstVfx(Vector3 worldPos)
+    private void SpawnZoneBurstVfx(Vector3 worldPos, string vfxKey)
     {
-        if (FixedZoneBurstVfxScene == null) return;
-        var vfx   = FixedZoneBurstVfxScene.Instantiate<Node3D>();
+        var vfxScene = GetSkillVfxScene(vfxKey, "fixed_zone_burst", FixedZoneBurstVfxScene);
+        if (vfxScene == null) return;
+        var vfx   = vfxScene.Instantiate<Node3D>();
         var whirl = vfx.GetNodeOrNull<GpuParticles3D>("Whirl");
         GetTree().Root.AddChild(vfx);
         vfx.GlobalPosition = worldPos;
@@ -786,10 +947,11 @@ public partial class WeaponController : Node
         GetTree().CreateTimer(1.5).Timeout += vfx.QueueFree;
     }
 
-    private void SpawnZoneTickVfx(Vector3 worldPos, float duration)
+    private void SpawnZoneTickVfx(Vector3 worldPos, float duration, string vfxKey)
     {
-        if (FixedZoneTickVfxScene == null) return;
-        var vfx   = FixedZoneTickVfxScene.Instantiate<Node3D>();
+        var vfxScene = GetSkillVfxScene(vfxKey, "fixed_zone_tick", FixedZoneTickVfxScene);
+        if (vfxScene == null) return;
+        var vfx   = vfxScene.Instantiate<Node3D>();
         var whirl = vfx.GetNodeOrNull<GpuParticles3D>("Whirl");
         GetTree().Root.AddChild(vfx);
         vfx.GlobalPosition = worldPos;

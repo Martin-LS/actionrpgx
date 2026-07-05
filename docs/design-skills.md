@@ -8,7 +8,7 @@
 ### Skills
 
 **Design rule for skills:**
-- **EoTs and secondary effects (mines, traps) are added by augments, not baked into skills.** A skill's base behaviour is its damage delivery. Augments add what happens on top of that.
+- **EoTs and secondary effects (mines, traps) are added by augments, not baked into skills.** A skill's base behaviour is its damage delivery. Augments add what happens on top of that. **Narrow exception:** a debuff-pattern skill (`DamagePattern == None`, e.g. entity_debuff) carries a single `DebuffEotId` — its debuff *is* the base behaviour, not an add-on. No damage-dealing skill may ever carry an inherent EoT (see the ownership matrix in `design-stats.md`).
 
 **Skill slot vs. Equipment Augment — the dividing line:**
 - **Skill slot = things you actively trigger** (requires a button press — Active, Channeled, toggled auras, War Cries).
@@ -18,12 +18,12 @@ There is no Passive skill type on the skill bar. Everything in a skill slot requ
 
 **Named skills are clones of prototypes — no runtime template system.** When a named skill (e.g. Strike) is created from a prototype (e.g. entity_burst), it is a complete standalone definition. All values are copied at authoring time; the prototype has no runtime relationship to the named skill after that. Changes to a prototype never cascade to existing named skills or crafted instances. The `BasedOn` field on `SkillData` records which prototype a named skill was cloned from — documentation only, no runtime behaviour. This keeps item instances stable and predictable: a crafted Strike is never changed by a prototype balance update without the designer explicitly editing Strike's definition.
 
-**Skill tags — limited to delivery-resolution and AoE in v1.** Skills carry two categories of tag in v1:
+**Skill tags — currently limited to delivery-resolution and AoE.** Skills carry two categories of tag:
 
 - **`AoE`** — marks skills that damage all enemies within a radius. Introduced now because the radius modifier math needs a hook. All skills that deal damage to a radius (self/zone/tracked) carry this tag.
-- **`Melee` / `Range`** — delivery-override tags used internally by `WeaponController` to determine how entity hits are resolved. A skill with `Melee` always fires a melee swing regardless of equipped weapon; a skill with `Range` always fires a ranged projectile. No delivery tag means the skill inherits the weapon's preferred delivery type (weapon-adaptive). Only `self_channeled_tick` carries `Melee` in v1 — it spins in place and must always be a melee swing.
+- **`Melee` / `Range`** — delivery-override tags used internally by `WeaponController` to determine how entity hits are resolved. A skill with `Melee` always fires a melee swing regardless of equipped weapon; a skill with `Range` always fires a ranged projectile. No delivery tag means the skill inherits the weapon's preferred delivery type (weapon-adaptive). Only `self_channeled_tick` currently carries `Melee` — it spins in place and must always be a melee swing.
 
-All other tags (e.g. `Attack`, `Burst`, `Debuff`) are post-v1. Tags are additive (enabling synergies) not restrictive — the no-gate philosophy holds; any augment can socket into any skill regardless of tags.
+All other tags (e.g. `Attack`, `Burst`, `Debuff`) are deferred. Tags are additive (enabling synergies) not restrictive — the no-gate philosophy holds; any augment can socket into any skill regardless of tags.
 
 #### Area of Effect (AoE)
 
@@ -36,9 +36,9 @@ Modifiers increase *area*, not radius directly. The effective radius is:
 
 Example: base 250 units + 100% AoE → 250 × √2 ≈ 354 units. Each additional % yields diminishing radius gains — the standard ARPG tradeoff.
 
-**Sources of AoE modifiers — post-v1, none in v1:** skill augments (e.g. "Increased Area"), gear affixes. Armour range modifiers and weapon range never feed AoE radius.
+**Sources of AoE modifiers — deferred, none yet:** skill augments (e.g. "Increased Area"), gear affixes. Armour range modifiers and weapon range never feed AoE radius.
 
-**v1 AoE skills:**
+**Current AoE skills:**
 
 | Skill | AoE coverage |
 |---|---|
@@ -56,9 +56,9 @@ entity_burst and entity_debuff are single-target — no AoE tag.
 
 #### Skill Prototypes
 
-All skills in v1 are prototypes. Prototypes are the building blocks — they prove mechanics and cover the full design space. Named skills with unique identities are post-v1 and will be derived from these prototypes.
+All authored skills are prototypes. Prototypes are the building blocks — they prove mechanics and cover the full design space. Player-facing skills are derived from them via the composition model (see The Composition Model section below).
 
-All 12 prototypes are craftable. The `EngineProof` kind is retained in code for future use but nothing in v1 is marked as such — all v1 skills are `Prototype`.
+All 12 prototypes are craftable. The `EngineProof` kind is retained in code for future use but nothing is currently marked as such — all authored skills are `Prototype`.
 
 | Prototype | Targeting | Damage pattern | Skill type |
 |---|---|---|---|
@@ -75,7 +75,7 @@ All 12 prototypes are craftable. The `EngineProof` kind is retained in code for 
 | triggered_zone_burst | Position | Burst | Active |
 | self_aura | Self | Tick | Aura |
 
-> **Tech note — renames, not new skills:** entity_burst, self_channeled_tick, self_duration_tick, and self_burst are renames of the existing Strike, Cyclone, Damage Aura, and Nova implementations. Rename in code and data — do not create new skill objects. v2 will create the real named versions (Strike, Cyclone, etc.) derived from these prototypes.
+> **Tech note — renames, not new skills:** entity_burst, self_channeled_tick, self_duration_tick, and self_burst are renames of the existing Strike, Cyclone, Damage Aura, and Nova implementations. Rename in code and data — do not create new skill objects. Player-facing versions (Strike, Cyclone, etc.) are composed from these prototypes via the craft wizard (see The Composition Model section below).
 
 All archetypes start with plain entity_burst in slot 1, no augments pre-socketed.
 
@@ -83,8 +83,8 @@ All archetypes start with plain entity_burst in slot 1, no augments pre-socketed
 
 | Property | Description |
 |---|---|
-| Description | What this skill is designed to prove or do (v1: mechanic proof; future: named skill flavour) |
-| Kind | `Normal` = real named skill (post-v1). `Prototype` = all v1 skills are this kind — craftable. `EngineProof` = reserved for future use, nothing currently marked as such. |
+| Description | What this skill is designed to prove or do (prototypes: mechanic proof; future: named skill flavour) |
+| Kind | `Normal` = real named skill (future). `Prototype` = all authored skills are this kind — craftable. `EngineProof` = reserved for future use, nothing currently marked as such. |
 | Targeting shape | Self / Position / Entity — how the skill resolves its target (see Targeting in `design-mechanics.md`) |
 | Wind-up | Seconds of delay before effect lands; 0 = instant |
 | Damage pattern | Burst (single hit) / Tick (over duration) / None (debuff or utility only) |
@@ -95,7 +95,7 @@ All archetypes start with plain entity_burst in slot 1, no augments pre-socketed
 | Arm time | Delay after placement before the trap becomes active (seconds). Prevents self-triggering. `—` = not a trap skill. |
 | Trigger | How many times the trap fires before despawning. `Single` = fires once then despawns. `—` = not a trap skill. |
 
-**Future field — Dispellable (not in v1):** whether a zone or effect can be removed before its duration expires — by an enemy cleanse ability, a player counter-skill, or a future mechanic. Not added until something in the game actually reads it. Note here so the axis is not forgotten when designing elite enemies or player utility skills.
+**Future field — Dispellable (not yet added):** whether a zone or effect can be removed before its duration expires — by an enemy cleanse ability, a player counter-skill, or a future mechanic. Not added until something in the game actually reads it. Note here so the axis is not forgotten when designing elite enemies or player utility skills.
 
 #### entity_burst
 
@@ -315,9 +315,9 @@ All values (damage, cooldown, radius, tick rate, duration) are TBD — owned by 
 
 **self_aura**
 
-Toggle on — the aura activates, reserves a flat amount of Focus (permanently reducing the available pool for other skills while active), and begins pulsing its effect on every tick. Toggle off — the aura deactivates and the reserved Focus is returned immediately. Proves the Aura toggle + Focus reservation mechanic. The only v1 prototype where a skill runs indefinitely with no player input after activation.
+Toggle on — the aura activates, reserves a flat amount of Focus (permanently reducing the available pool for other skills while active), and begins pulsing its effect on every tick. Toggle off — the aura deactivates and the reserved Focus is returned immediately. Proves the Aura toggle + Focus reservation mechanic. The only prototype where a skill runs indefinitely with no player input after activation.
 
-The effect the aura produces (damage AoE, player buff, enemy debuff AoE) is defined on each named skill cloned from this prototype in v2+. The prototype itself uses a placeholder damage tick.
+The effect the aura produces (damage AoE, player buff, enemy debuff AoE) will be defined on future composed skills derived from this prototype. The prototype itself uses a placeholder damage tick.
 
 | Property | Value |
 |---|---|
@@ -331,7 +331,7 @@ The effect the aura produces (damage AoE, player buff, enemy debuff AoE) is defi
 | Type | Aura |
 | Focus reservation | TBD (Balancer) — flat amount reserved from Max Focus while active |
 | Tick rate | TBD (Balancer) |
-| Effect | Placeholder damage tick in v1; buff, debuff, or damage AoE on named clones in v2+ |
+| Effect | Placeholder damage tick for now; buff, debuff, or damage AoE on future composed derivatives |
 | Acquire | Craft |
 
 ---
@@ -339,3 +339,96 @@ The effect the aura produces (damage AoE, player buff, enemy debuff AoE) is defi
 **Weapon is the root of the damage number.** Each weapon has a base damage value that increases with tier. The skill defines the damage type — entity_burst is physical (placeholder); future named skills define their own type. The weapon's identity bonus (flat % damage or crit) applies universally to all skills regardless of damage type — no skill-type gate. Archetype damage output scales through primary stat growth (see Archetype Stat Multipliers in `design-mechanics.md`), not an archetype-level multiplier table.
 
 **Skills do not carry a per-skill damage multiplier.** Every skill draws from the same damage number: `weapon base × stat block`. A tick skill and a burst skill deal the same raw damage per hit — the design difference is delivery: tick rate, cooldown, AoE, and Focus cost. DPS balance between skills is the Balancer's domain, owned through tick rate and cooldown tuning. There is no `DamageMultiplier` field on a skill.
+
+**Why (rationale, confirmed 2026-07-04):**
+
+1. **Damage progression is anchored in the crafting economy.** Upgrading weapon tier is *the* way to increase damage output. In a fully craft-driven game the weapon is the damage sink for crafting investment — a per-skill multiplier would create a second, competing damage-progression axis: players would shop for the highest-multiplier skill instead of crafting a better weapon.
+2. **No skill can be ranked by a number.** With no multiplier, no skill is "the 1.3× one." Skills compete on delivery shape only — this is the design space the Budget/Identity lever framework (see The Composition Model section below) formalises.
+3. **It collapses the balance surface.** The Balancer tunes tick rate and cooldown only — never a per-skill damage table.
+
+**Skill tier improves budget levers only (decided 2026-07-04).** A skill's tier upgrade advances a fixed per-skill upgrade track over its budget levers (e.g. cooldown down, or radius up — whatever that named skill's track is) and never touches hit size. Which lever a skill's track improves is itself an identity axis. Power parity between named clones of the same prototype is defined **at equal tier**.
+
+---
+
+## The Composition Model & Wave 1
+
+> Locked in 2026-07-04 (promoted from `design-skill-system-brainstorming.md`). Governs how player-facing skills come to exist. **Revised 2026-07-05:** the *presets-first* shipping rule and the *hand-named presets* naming model were superseded — see the Wizard-first and Naming rules below. Remaining open follow-ups (element-wave decisions, full-roster naming word-map authoring) stay in the brainstorm doc.
+
+### Architecture: skill = prototype + form + identity
+
+A player-facing skill is a **craft-time composition** of three components, **fused and flattened at creation** into a standalone snapshot item:
+
+| Component | Owns | Composability |
+|---|---|---|
+| **Prototype** | Delivery chassis: targeting shape, damage pattern, skill type, base budget stats | The 12 internal base skills above |
+| **Form** | Budget-spend shape (where the power budget goes) + **tier track** (which budget lever tier upgrades advance) | Per-prototype (2 in wave 1; up to ~3 later) |
+| **Identity** | Damage type + VFX/audio skin + name fragment | Universal — composes with any prototype × form |
+
+Flattening at craft preserves every prior rule: instances are standalone (no runtime template link), damage type is fixed at creation, budget levers stay Balancer-owned, and the ownership matrix is untouched — the composed item is "the skill" and owns its stats (`design-stats.md`).
+
+*Justification for composition over hand-authored named skills: content scales multiplicatively (a future wave adding 3 identities yields 8 forms × 3 = 24 new skills for 3 authored components — support-gem-style network effects), while authoring scales additively; and the crafting pillar gets a native expression (assembling a skill is crafting).*
+
+**Wizard-first shipping rule (2026-07-05, supersedes presets-first).** Wave 1 exposes composition directly as a **craft wizard**: the player picks a prototype, then a form, then an identity, paying a resource cost at each step (see the crafting cost model in `design-progression.md`), and receives the flattened skill. Forms and identities are **catalogue entries** — authoring data in per-prototype (form) and universal (identity) registries — **not inventory items**; the only item produced is the finished skill. Registries start sparse and grow as forms/identities are authored ("build as we go"); a prototype with no forms yet shows an empty list and a disabled advance button. There is **no separate preset recipe book** — the reachable skills are simply the combinations the registries currently allow (wave 1: 4 prototypes × 2 forms × 2 identities = 16 reachable combos, *emergent from the catalogue*, not hand-authored recipes).
+
+*Justification: presets were a content-authoring vehicle whose only job — shipping composition to the player — is done directly and more cheaply by the wizard over sparse registries. A curated preset recipe book serves no purpose at the current dev stage; possible future uses (starter loadouts for new characters, a "favourite recipe" bookmark) are different features that sit on top of the catalogue data and are parked until needed. The blandness and playtest-control-group concerns that motivated presets-first are accepted as playtest questions, not blockers.*
+
+**Naming (2026-07-05, supersedes hand-named presets).** A skill's name is a **derived phrase** built from a per-component word map — form→adjective, identity→adjective, prototype→noun (e.g. swift · Magic · entity_burst → "Swift Arcane Strike"). The map is ~25 entries total (one word per form/identity/prototype), so names scale for free and are self-documenting — no wiki lookup, no hundreds of hand-authored names. A thin **iconic-override table** may assign curated names to a small set of signature combos ("Cyclone", "Nova"); every other combo uses the derived phrase. Wave 1 ships the raw composite `[prototype][form][identity]` as a placeholder display string; the derived phrase and any iconic overrides are a later display-layer swap over unchanged composition data.
+
+*Justification: hand-authored per-combo names scale as prototypes × forms × identities (hundreds of names to invent) and force players to look up which combo a name refers to. Derived phrases are self-documenting and free; iconic overrides preserve soul for the combos that earn it.*
+
+### The Budget/Identity lever framework (governing)
+
+Every lever on a composed skill is one of two kinds:
+
+- **Budget levers** — cooldown, tick rate, AoE/zone radius, Focus cost/drain, wind-up. They move throughput. Across any two forms of the same prototype they must net to the same power budget **at equal tier** — "no free lunch," enforced as design discipline (exchange rates Balancer-owned, not exact math). Trading among them changes a skill's *shape*, never its power.
+- **Identity levers** — damage type, VFX/animation/sound, wind-up-as-telegraph, and *which* budget lever the tier track advances. Free: they place the skill in the build ecosystem without moving throughput.
+
+**Skill identity = prototype (delivery fantasy) × form (budget-spend shape + tier track) × identity (type + skin).**
+
+`Range`-as-**reach** (cast range on Entity/Position skills) is deliberately **not** a budget lever — a long-range form (Snipe fantasy) requires consciously revisiting this line first (weapon-driven delivery makes melee-at-range visually incoherent). Clarified 2026-07-04: on **Self** skills the `Range` field *is* the AoE damage radius, which is a listed budget lever — Self-prototype forms (nova/quake, spin/vortex) tune their radius through it. Same field, two meanings; the constraint is per targeting shape (enforced in registry validation — see `technical-systems.md`).
+
+### Structural decisions (wave 1)
+
+- **Identities in wave 1: Physical and Magic** — a real mechanical split (Phys couples to Str builds, Magic to Int). Elements arrive as their own wave together with enemy-resist promotion (D1), where the "element whispers, augments shout" token-effect framing is the leading candidate (see brainstorm doc).
+- **Prototypes are internal skills**, not player-facing content: the authoring basis for composition, the testable proof of the base system, and the wave-1 playtest control group (if players keep crafting plain prototypes next to the presets, identity isn't earning its keep). They stay craftable through wave 1; retirement from the player pool is a full-roster-time decision.
+- **Naming: classic ARPG vocabulary with the no-false-promises guardrail**, applied to genre expectations as well as literal words (no "Whirlwind" for a stationary spin). **The guardrail extends to VFX:** visuals must not promise mechanics or elements we don't deliver — wave-1 skins are kinetic (Physical) and arcane (Magic); no elemental cosplay before elements exist.
+- **Contrast axes are varied per prototype** (one budget trade each) — tests four exchange rates instead of one, and prevents the roster reading as a fast/slow mode toggle.
+
+### Wave 1: the 8 forms
+
+| Prototype | Contrast axis | Form | Budget shape | Tier track |
+|---|---|---|---|---|
+| entity_burst | Commitment (tempo vs. Focus-efficiency — hit size is constant, so "heavy hitter" is impossible by design) | **swift** | Instant, short CD, moderate Focus — constant pressure | Cooldown ↓ |
+| | | **heavy** | Wind-up telegraph, long CD, very low Focus — deliberate, nearly free | Focus cost ↓ |
+| self_burst | Telegraph timing | **nova** | Instant burst, modest radius, short-ish CD — reactive panic button | Cooldown ↓ (quickens) |
+| | | **quake** | Delayed detonation (wind-up), long CD, big radius — "brace, then boom" | Radius ↑ (grows) |
+| fixed_zone_tick | Duration↔tick-rate | **storm** | Big radius, long duration, slow ticks, long CD — premeditated area denial | Radius ↑ |
+| | | **floor** | Small patch, short duration, fast ticks, short CD, cheap — kiting breadcrumbs | Cooldown ↓ |
+| self_channeled_tick | Radius↔drain | **spin** | Tight radius, fast ticks, low drain — aggressive grinder | Tick rate ↑ |
+| | | **vortex** | Wide radius, slower ticks, heavy drain — anchored storm; the Focus bar is the real cooldown | Drain ↓ |
+
+### Wave 1: the 16 reachable combos
+
+These are the combinations the wave-1 registries allow (4 prototypes × 2 forms × 2 identities) — they **emerge from the catalogue**, they are not authored preset recipes (see the Wizard-first rule above). Names default to the derived phrase; the curated names below are **candidate iconic overrides** for the combos that deserve a signature name.
+
+| Prototype | Physical | Magic |
+|---|---|---|
+| entity_burst · swift | **Strike** | **Arcane Strike** |
+| entity_burst · heavy | **Crushing Blow** | **Smite** |
+| self_burst · nova | **Shockwave** | **Nova** |
+| self_burst · quake | **Quake** | **Cataclysm** |
+| fixed_zone_tick · storm | **Rockfall** | **Tempest** |
+| fixed_zone_tick · floor | **Caltrops** | **Glyph of Agony** |
+| self_channeled_tick · spin | **Cyclone** | **Arcane Cyclone** |
+| self_channeled_tick · vortex | **Bladestorm** | **Maelstrom** |
+
+All numeric values per form are placeholder, owned by the Balancer.
+
+### Engine prerequisites for wave 1
+
+1. **Per-skill VFX mapping** — animation/VFX is currently delivery-driven (all skills of a `SkillType` look identical; the channeled ring is hardcoded per `SkillType`). Identity skins require a per-skill (per-composition) VFX key. The self_channeled_tick forms lean hardest on this.
+2. **Composition data model + craft wizard** — prototype/form/identity as authoring data in registries (form registry per-prototype, identity registry universal), flattened into `SkillData` snapshots at craft. Craft wizard UI: prototype → form → identity, one resource cost debited per step, empty-list + disabled-advance handling for unauthored registries. No preset recipe book — reachable skills are the combinations the registries allow.
+   - **Crafting cost model** — cost is a **resource bundle** (a list of `(Resource, quantity)` entries), never a scalar. Currencies (coins) and materials share **one unified `Resource` registry** — gold is just another resource. Affordability and debit operate on the whole bundle **atomically** (check all, deduct all, or fail). One shared cost type across *all* crafting (skills, gear, augments), consumed per wizard step. Wave 1 = every entry's bundle is `[(CraftingMaterial, 1)]`. See `design-progression.md`. Recipes also reserve a **`Requirements` seam** — a list of non-consumable predicates (e.g. level/reputation gates) evaluated at an eligibility step *distinct from* cost payment; **none in wave 1** (the step always passes).
+   - **Naming** — derived-phrase word map (form/identity/prototype → one word each) + iconic-override table; wave 1 ships the raw `[prototype][form][identity]` composite as a placeholder, swapped to the derived phrase later without touching composition data.
+3. **WindUp on Entity and Self fire paths** *(sanity check 2026-07-04)* — `SkillData.WindUp` is currently honored only in `FireAtPosition` (Position-targeted skills). The **heavy** form (entity_burst) and **quake** form (self_burst) need the wind-up telegraph + delayed-hit flow on the Entity and Self paths too; the existing `WindupTelegraph` node is reusable.
+4. **Tier tracks** *(sanity check 2026-07-04)* — `SkillItemInstance.Tier` currently gates only augment-slot count; no code applies tier to any skill stat. Implementing per-form tier tracks (cooldown ↓ / radius ↑ / etc. at tier-up) is part of the composition work.

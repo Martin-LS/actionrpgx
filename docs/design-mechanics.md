@@ -20,14 +20,14 @@ Every run makes the character permanently stronger: level and XP carry over, sta
 
 ### Movement
 - Top-down, 8-directional
-- **v1:** WASD movement + Space dodge roll. No movement skills.
+- **Current:** WASD movement + Space dodge roll. No movement skills.
 
 **Move speed model — all archetypes share one base speed.** Speed is not an archetype identity stat — every archetype starts at the same base. Speed variance comes entirely from gear and effects:
 
 | Source | Effect |
 |---|---|
 | Archetype base | Shared flat value (all archetypes) |
-| Heavy armour | −% per piece (hat + body each contribute) |
+| Heavy armour | −% per piece (hat, body, and boots each contribute) |
 | Light armour | +% per piece |
 | Medium armour | No modifier |
 | Slow EoT | −% for duration |
@@ -53,9 +53,9 @@ The **skill bar** on the run HUD shows the slotted skill, its cooldown state, an
 
 **Auto-activate.** The player can toggle their skill to fire automatically on cooldown. When enabled, movement is where the player's active attention lives — positioning, dodging, kiting. Auto-activate must be DPS-equivalent to manual: a player pressing the skill key manually on cooldown gets the same output as auto-activate. It is pure convenience, not a power reduction. Auto-activate is retained in the codebase for development convenience only — all skill design assumes manual casting.
 
-**v1:** 5 skill slots. Slots can be empty — an empty slot does nothing. All slots are available from the start, no unlock progression. Each skill has its own cooldown or drain rate.
+**Current:** 5 skill slots. Slots can be empty — an empty slot does nothing. All slots are available from the start, no unlock progression. Each skill has its own cooldown or drain rate.
 
-**Attack / cast speed — no character stat; CDR lives on the weapon.** There is no global attack speed stat on the character. A skill's cooldown belongs to the skill item and is reduced by tier upgrades. The weapon's **CDR property** is the one gear-level lever — it applies globally to all skills regardless of type. Different weapon types have different base CDR values; v1 CDR is fixed per weapon type (no roll variance).
+**Attack / cast speed — no character stat; CDR lives on the weapon.** There is no global attack speed stat on the character. A skill's cooldown belongs to the skill item and is reduced by tier upgrades. The weapon's **CDR property** is the one gear-level lever — it applies globally to all skills regardless of type. Different weapon types have different base CDR values; CDR is currently fixed per weapon type (no roll variance).
 
 **Damage model.** The weapon provides the base damage number. The skill defines the damage type. Delivery (how the attack animates) is always driven by the equipped weapon — a Sword always swings, a Bow always shoots, a Wand always fires a bolt — regardless of which skill is equipped.
 
@@ -131,7 +131,7 @@ Weapons are held in different hands depending on type, which drives which animat
 
 The weapon's `AttachBone` property (future field on `WeaponData`) drives which bone the mesh attaches to at runtime. The `OnSkillFired` handler selects the animation based on the equipped weapon's hold hand, not the skill's delivery tag alone.
 
-Idle and run animations are shared across all weapon types in v1.
+Idle and run animations are currently shared across all weapon types.
 
 **Attack animation speed syncs to cooldown.** The animation playback speed is set dynamically at fire time so the clip completes in exactly one cooldown window (`scale = animLength / cooldown`). Damage lands at 35% through the cooldown (the wind-up frame) rather than instantly. As attack speed increases (shorter cooldown), the animation visibly speeds up — the same feel as Diablo's attack speed scaling.
 
@@ -239,9 +239,9 @@ Every damage source has a **damage type**. Every entity that can take damage has
 
 `effective damage = raw damage × (1 − resistance)`
 
-**v1 damage types:** Physical, Magic
+**Current damage types:** Physical, Magic
 
-**Future expansion:** Elemental types (Fire, Lightning, Frost, etc.) will be added as the system grows — the formula and resistance model extend naturally. Getting Magic right in v1 is the template: a new damage type means adding a resistance value per enemy, a DamageType enum entry, and a weapon or augment that produces it. Nothing else changes.
+**Future expansion:** Elemental types (Fire, Lightning, Frost, etc.) will be added as the system grows — the formula and resistance model extend naturally. Getting Magic right first is the template: a new damage type means adding a resistance value per enemy, a DamageType enum entry, and a weapon or augment that produces it. Nothing else changes.
 
 Resistances are always soft (never total immunity). Exact values are TBD.
 
@@ -252,7 +252,7 @@ Crit applies to the hit that applies an EoT — damage EoT ticks inherit the cri
 `Final damage (on crit) = Skill base damage × Crit Multiplier`
 
 - **CritChance** — global baseline comes from Dexterity. The Bow identity bonus adds a flat % on top. The Critical Strike skill augment adds a further per-skill bonus on top of the global chance — any archetype can invest in crit this way; Rogue builds it more naturally through Dex.
-- **CritDamage (Crit Multiplier)** — comes from Strength. Fixed at 1.5× in v1 at base; grows with Str investment.
+- **CritDamage (Crit Multiplier)** — comes from Strength. Currently fixed at 1.5× at base; grows with Str investment.
 
 ### Effects over Time (EoT)
 
@@ -277,7 +277,7 @@ The EoT type defines *what it does* when active:
 |---|---|---|
 | Slow | No | Reduces enemy movement speed |
 | Burn | Yes (Magic) | Deals Magic damage per tick |
-| Vulnerability | No | Increases damage taken by the enemy — **post-v1** (no augment or EotRegistry entry in v1) |
+| Vulnerability | No | Increases damage taken by the enemy — **deferred** (no augment or EotRegistry entry yet) |
 
 When designing new EoTs: if it deals damage per tick, set tick rate and damage per tick. If not, leave those blank. That is the only distinction.
 
@@ -400,7 +400,7 @@ Maps are the arenas where runs take place. Each map has a **Map Level** attribut
 
 | Type     | Behavior     | Physical Resist | Magic Resist | Notes                                      |
 |----------|--------------|-----------------|--------------|--------------------------------------------|
-| Skeleton | Chase player | 10%             | 0%           | v1 only enemy — bone-white voxel model     |
+| Skeleton | Chase player | 10%             | 0%           | Currently the only enemy — bone-white voxel model |
 | [TBD]    | Chase fast   | —               | —            | Future runner-type                         |
 | [TBD]    | Ranged       | —               | —            | Future ranged attacker                     |
 | [TBD]    | Boss         | —               | —            | Spawns when timer expires                  |
@@ -411,7 +411,7 @@ All types scale with elapsed time — speed and HP increase per minute. Spawn ra
 
 **Always navigate.** Enemies use navmesh pathfinding at all times — they never walk into walls or get stuck on corners. Competent movement is non-negotiable for horde feel; a skeleton bumping into a pillar reads as broken, not charming.
 
-**No separation (v1).** Enemies do not avoid each other. The blob is intentional — 30 skeletons converging on the same point is the visual threat mass that self_burst and self_channeled_tick are designed to answer. Spreading enemies out would make horde skills feel weaker and the threat more diffuse. Light natural spreading from collision is sufficient. Revisit post-v1 if playtesting reveals a problem.
+**No separation (deliberate).** Enemies do not avoid each other. The blob is intentional — 30 skeletons converging on the same point is the visual threat mass that self_burst and self_channeled_tick are designed to answer. Spreading enemies out would make horde skills feel weaker and the threat more diffuse. Light natural spreading from collision is sufficient. Revisit if playtesting reveals a problem.
 
 **Chokepoints are a feature.** Map corridors and doorways are intentional tactical geometry. Enemies funneling through a doorway is a core fun moment — position at the mouth of a corridor, pop a self_burst or self_duration_tick, clear the flood. This falls out of correct pathfinding for free; no extra design work needed. Map design should treat chokepoints as a first-class tool, not an obstacle routing problem.
 
@@ -434,13 +434,13 @@ EnemyPoolEntry:
 	DamageBonus: int
 ```
 
-`DungeonGenerator` draws randomly from the pool weighted by `Count` when placing enemies in each room. Modifiers are applied at spawn on top of base stats. v1: one entry, `skeleton`, count 1, all modifiers zero.
+`DungeonGenerator` draws randomly from the pool weighted by `Count` when placing enemies in each room. Modifiers are applied at spawn on top of base stats. Currently one entry: `skeleton`, count 1, all modifiers zero.
 
 **Map crafting hook:** when maps become craftable, the player configures the enemy pool — e.g. "warrior skeletons only" or "5× light skeleton + 10× heavy skeleton". The generator consumes whatever the pool defines; no other changes needed.
 
 #### Room Population
 
-Each room receives `MinEnemiesPerRoom`–`MaxEnemiesPerRoom` enemies (defined in `MapData`; v1 default: 2–4). Enemies are placed on random floor tiles within the room with a minimum spacing between them to avoid stacking. Placement runs once at map generation; dead enemies are never replaced.
+Each room receives `MinEnemiesPerRoom`–`MaxEnemiesPerRoom` enemies (defined in `MapData`; current default: 2–4). Enemies are placed on random floor tiles within the room with a minimum spacing between them to avoid stacking. Placement runs once at map generation; dead enemies are never replaced.
 
 #### Proximity Cluster System (pre-placed enemies)
 
@@ -490,6 +490,6 @@ All archetypes share Focus Shield as a universal defensive layer — damage hits
 
 Focus Shield is investable by any archetype through Equipment Augments (shield regen rate, shield on attack). This enables cross-archetype builds — a Warrior who invests in Max Focus and shield augments plays as a melee fighter with a magical damage buffer (Paladin-style), constrained naturally by their weapon (short range, physical damage primary).
 
-**Physical Resistance (Warrior) and Dodge (Rogue) as investable stats are post-v1.** Design when the archetype multiplier system is being expanded.
+**Physical Resistance (Warrior) and Dodge (Rogue) as investable stats are deferred.** Design when the archetype multiplier system is being expanded.
 
-**Focus Shield is v1 for all archetypes** — see Focus section under Core Mechanics.
+**Focus Shield is live for all archetypes** — see Focus section under Core Mechanics.

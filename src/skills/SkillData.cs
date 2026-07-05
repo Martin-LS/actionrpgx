@@ -23,7 +23,9 @@ public record SkillData(
     float                TriggerRadius     = 0f,
     float                ArmTime           = 0f,
     int                  TriggerCount      = 0,
-    string[]             InherentEotIds    = null!,
+    string?              DebuffEotId       = null,
     DamageType           DamageType        = DamageType.Physical,
-    string?              BasedOn           = null
+    string               VfxKey            = "",
+    string?              BasedOn           = null,
+    float                TickRate          = 0f
 );

@@ -377,7 +377,7 @@ Wave spawner draws from a typed pool per map:
 EnemyPoolEntry { EnemyType, Count, Modifiers { ArmorBonus, HpBonus, SpeedBonus, DamageBonus } }
 ```
 
-Count drives spawn weighting. Modifiers are applied to the enemy instance at spawn on top of base `EnemyData` values. v1: one entry, `skeleton`, count 1, all modifiers zero.
+Count drives spawn weighting. Modifiers are applied to the enemy instance at spawn on top of base `EnemyData` values. Currently one entry: `skeleton`, count 1, all modifiers zero.
 
 ---
 
@@ -428,7 +428,7 @@ Unified modal options interface registered globally to handle input, pausing, an
 
 ## Future Systems
 
-*(No pending future systems — Focus was promoted to v1. See `technical-systems.md § Focus (Skill Resource)` for the complete runtime spec. This section will grow as new post-v1 systems are identified.)*
+*(No pending future systems — Focus was promoted to current scope. See `technical-systems.md § Focus (Skill Resource)` for the complete runtime spec. This section will grow as new future systems are identified.)*
 
 ---
 

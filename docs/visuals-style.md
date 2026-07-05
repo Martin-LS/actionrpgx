@@ -376,6 +376,8 @@ Three-face (shadow/base/highlight) material colors for each armour tier 3D model
 
 ## VFX & Skill Effects
 
+> **Development rule — placeholder VFX:** when a task needs a new `.tscn` effect, do not author it — clone `src/vfx/effect1.tscn` unchanged (rename + place at the correct path) and wire it in. The user styles the real effect later. See AGENTS.md Project Rule 7.
+
 | Effect | Primary Hex | Secondary Hex | Notes |
 |---|---|---|---|
 | Physical hit | `#C43030` | `#8C2E2E` | Blood splat, impact |

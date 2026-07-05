@@ -1,0 +1,45 @@
+name: Release on main
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read version from project.godot
+        id: version
+        run: |
+          version="$(grep -oP 'config/version="\K[^"]+' project.godot || true)"
+          if [ -z "$version" ]; then
+            echo "config/version not found in project.godot" >&2
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Create tag and release if missing
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version="${{ steps.version.outputs.version }}"
+          tag="v$version"
+
+          if git ls-remote --tags origin "refs/tags/$tag" | grep -q .; then
+            echo "Tag $tag already exists — nothing to do."
+            exit 0
+          fi
+
+          args=(--repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "$tag" --generate-notes)
+          # A pre-release suffix (e.g. -prealpha) marks the GitHub Release as a pre-release
+          case "$version" in
+            *-*) args+=(--prerelease) ;;
+          esac
+
+          gh release create "$tag" "${args[@]}"
+          echo "Created tag and release $tag."

@@ -55,6 +55,10 @@ private static int FindBone(Skeleton3D skeleton, string name)
 }
 ```
 
+**This also silently breaks animation retargeting.** Animations copied from a shared GLB (e.g. `humanoid_animations.glb`) target un-suffixed bone paths like `Skeleton3D:Hips`. If the model's bones imported as `Hips_2`, those tracks bind to nothing — the animation plays but drives no bones (character slides in rest pose), with no error.
+
+**Fix at the source, not with `_2` fallbacks**: name mesh objects so they never collide with bone names (e.g. prefix meshes `Mesh_`). Then bones import un-suffixed and shared animations retarget cleanly. The `FindBone` fallback above only rescues code lookups — it does nothing for animation track binding.
+
 ---
 
 ## AnimationPlayer autoplay survives `Stop()` in `_Ready()`
@@ -167,7 +171,7 @@ The camera is perspective and oblique (not straight-down). A flat mesh lying in 
 
 **What doesn't work**: flat discs, `PlaneMesh` (zero thickness), or thin cylinders (height < ~15). `depth_draw_never` and `CullMode.Disabled` do not fix this — the geometry itself is the problem, not culling.
 
-**Long-term fix**: use `Decal` nodes projected onto the floor mesh (GPU handles perspective correctly). Not wired up for v1.
+**Long-term fix**: use `Decal` nodes projected onto the floor mesh (GPU handles perspective correctly). Not wired up yet.
 
 **Torus orientation note**: `TorusMesh` default is flat in the XZ plane. `RotateX(Pi/2)` makes it stand vertical — the ring is then clearly visible but wrong for most ground indicators. The aim reticle uses `RotateX` intentionally because it's small enough (~12 units) that the vertical orientation is unnoticeable.
 

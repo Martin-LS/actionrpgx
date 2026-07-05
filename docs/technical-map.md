@@ -38,16 +38,16 @@ DungeonGenerator._Ready()
 | `Seed` | `int` | Drives all random decisions in the generator |
 | `Biome` | `MapBiome` | Determines visual theme and future asset library |
 | `Level` | `int` | Map difficulty; feeds into XP scaling and future modifiers |
-| `ChunkCount` | `int` | Number of rooms to generate (v1: 4–6) |
+| `ChunkCount` | `int` | Number of rooms to generate (currently 4–6) |
 | `EnemyPool` | `List<EnemyPoolEntry>` | Typed pool of enemy variants with count + stat modifiers; drawn by `DungeonGenerator` when populating rooms |
-| `MinEnemiesPerRoom` | `int` | Minimum enemies placed per room (v1 default: 2) |
-| `MaxEnemiesPerRoom` | `int` | Maximum enemies placed per room (v1 default: 4) |
+| `MinEnemiesPerRoom` | `int` | Minimum enemies placed per room (current default: 2) |
+| `MaxEnemiesPerRoom` | `int` | Maximum enemies placed per room (current default: 4) |
 
 `MapData.GenerateRandom(level)` creates a new instance with a random seed via `System.Random` (not Godot's RNG, so it works before the scene is loaded).
 
 ### `MapBiome` — `src/world/MapBiome.cs`
 
-Enum of available biomes. v1: `HollowDarkForest` only.
+Enum of available biomes. Currently `HollowDarkForest` only.
 
 ### `RunConfig` — `src/world/RunConfig.cs`
 

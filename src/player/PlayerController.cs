@@ -108,8 +108,9 @@ public partial class PlayerController : CharacterBody3D
             var weapon = GetEquippedItem(c, Items.ItemSlot.Weapon);
             var hat    = GetEquippedItem(c, Items.ItemSlot.Hat);
             var body   = GetEquippedItem(c, Items.ItemSlot.Body);
+            var boots  = GetEquippedItem(c, Items.ItemSlot.Boots);
 
-            DamageReduction = (hat?.DamageReduction ?? 0f) + (body?.DamageReduction ?? 0f);
+            DamageReduction = (hat?.DamageReduction ?? 0f) + (body?.DamageReduction ?? 0f) + (boots?.DamageReduction ?? 0f);
 
             var weaponController = GetNodeOrNull<Weapon.WeaponController>("Weapon");
             ApplyWeaponDamage(weaponController, weapon);
@@ -123,6 +124,15 @@ public partial class PlayerController : CharacterBody3D
                 var instance = manager.FindSkillInstance(instanceId);
                 var skill    = instance?.Definition;
                 if (skill == null) continue;
+
+                if (instance != null)
+                {
+                    var form = PresetRegistry.FormFor(skill.Id);
+                    if (form != null)
+                    {
+                        skill = SkillTiering.Apply(skill, form.TierTrack, instance.Tier);
+                    }
+                }
 
                 var augmentEots   = new List<(string Id, float Chance)>();
                 bool  hasMagicDamage = false;
@@ -324,9 +334,10 @@ public partial class PlayerController : CharacterBody3D
         var weapon = _charData != null ? GetEquippedItem(_charData, Items.ItemSlot.Weapon) : null;
         var hat    = _charData != null ? GetEquippedItem(_charData, Items.ItemSlot.Hat)    : null;
         var body   = _charData != null ? GetEquippedItem(_charData, Items.ItemSlot.Body)   : null;
+        var boots  = _charData != null ? GetEquippedItem(_charData, Items.ItemSlot.Boots)  : null;
 
         float weaponRange = weapon?.WeaponRange ?? 1.5f;
-        EffectiveRange = (weaponRange * (hat?.RangeMultiplier ?? 1f) * (body?.RangeMultiplier ?? 1f) + _rangeBuffBonus) * GameScale.TileSize;
+        EffectiveRange = (weaponRange * (hat?.RangeMultiplier ?? 1f) * (body?.RangeMultiplier ?? 1f) * (boots?.RangeMultiplier ?? 1f) + _rangeBuffBonus) * GameScale.TileSize;
 
         GetNodeOrNull<Weapon.WeaponController>("Weapon")?.SetRange(EffectiveRange);
     }
@@ -463,7 +474,7 @@ public partial class PlayerController : CharacterBody3D
             {
                 float targetYaw = Mathf.Atan2(direction.X, direction.Z);
                 _yaw = Mathf.LerpAngle(_yaw, targetYaw, Mathf.Min(1f, RotationSpeed * dt));
-                _model.Rotation = new Vector3(0f, _yaw + Mathf.Pi, 0f);
+                _model.Rotation = new Vector3(0f, _yaw, 0f);
             }
             else
             {
@@ -472,7 +483,7 @@ public partial class PlayerController : CharacterBody3D
                 {
                     float targetYaw = Mathf.Atan2(toAim.X, toAim.Z);
                     _yaw = Mathf.LerpAngle(_yaw, targetYaw, Mathf.Min(1f, RotationSpeed * dt));
-                    _model.Rotation = new Vector3(0f, _yaw + Mathf.Pi, 0f);
+                    _model.Rotation = new Vector3(0f, _yaw, 0f);
                 }
             }
 
@@ -565,7 +576,7 @@ public partial class PlayerController : CharacterBody3D
         if (_dodgeDirection.LengthSquared() > 0.01f)
         {
             _yaw = Mathf.Atan2(_dodgeDirection.X, _dodgeDirection.Z);
-            _model.Rotation = new Vector3(0f, _yaw + Mathf.Pi, 0f);
+            _model.Rotation = new Vector3(0f, _yaw, 0f);
         }
 
         _isDodging = true;

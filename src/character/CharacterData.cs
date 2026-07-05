@@ -85,7 +85,7 @@ public class CharacterData
             var item = instance.Definition;
             if (item == null) continue;
 
-            if (item.Slot == ItemSlot.Hat || item.Slot == ItemSlot.Body)
+            if (item.Slot == ItemSlot.Hat || item.Slot == ItemSlot.Body || item.Slot == ItemSlot.Boots)
             {
                 if (item.BonusHp != 0)
                     block.AddModifier(new StatModifier(StatId.MaxHp, ModifierType.FlatAdd,
