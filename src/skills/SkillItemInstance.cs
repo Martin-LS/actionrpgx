@@ -8,7 +8,8 @@ public class SkillItemInstance
     public string       DefinitionId          { get; set; } = "";
     public int          Tier                  { get; set; } = 1;
     public List<string> SocketedSkillAugmentIds { get; set; } = new();
+    public SkillData?   Snapshot              { get; set; }
 
-    public SkillData? Definition        => SkillRegistry.Get(DefinitionId);
+    public SkillData? Definition        => Snapshot ?? SkillRegistry.Get(DefinitionId);
     public int        MaxSkillAugmentSlots => Tier; // 1 / 2 / 3 for Common / Uncommon / Rare
 }
