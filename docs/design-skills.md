@@ -352,7 +352,7 @@ The effect the aura produces (damage AoE, player buff, enemy debuff AoE) is defi
 
 ## v2 — The Composition Model & Wave 1
 
-> Locked in 2026-07-04 (promoted from `design-skill-system-brainstorming.md`). Governs how player-facing skills come to exist. Open follow-ups (custom-wizard naming, forms-as-items, element-wave decisions) remain in the brainstorm doc.
+> Locked in 2026-07-04 (promoted from `design-skill-system-brainstorming.md`). Governs how player-facing skills come to exist. **Revised 2026-07-05:** the *presets-first* shipping rule and the *hand-named presets* naming model were superseded — see the Wizard-first and Naming rules below. Remaining open follow-ups (element-wave decisions, full-roster naming word-map authoring) stay in the brainstorm doc.
 
 ### Architecture: skill = prototype + form + identity
 
@@ -368,7 +368,13 @@ Flattening at craft preserves every prior rule: instances are standalone (no run
 
 *Justification for composition over hand-authored named skills: content scales multiplicatively (a future wave adding 3 identities yields 8 forms × 3 = 24 new skills for 3 authored components — support-gem-style network effects), while authoring scales additively; and the crafting pillar gets a native expression (assembling a skill is crafting).*
 
-**Presets-first shipping rule.** Wave 1 exposes composition only as a **preset recipe book** — "Craft: Nova" fills all three components; the player receives a finished named skill. The custom three-choice wizard is a later unlock, gated on pool size (~4+ identities), when combining feels like creating rather than menu-clicking. *Justification: at 2 forms × 2 identities every combo is an authored design either way; presets buy the architecture with zero player-visible cost and no retrofit.*
+**Wizard-first shipping rule (2026-07-05, supersedes presets-first).** Wave 1 exposes composition directly as a **craft wizard**: the player picks a prototype, then a form, then an identity, paying a resource cost at each step (see the crafting cost model in `design-progression.md`), and receives the flattened skill. Forms and identities are **catalogue entries** — authoring data in per-prototype (form) and universal (identity) registries — **not inventory items**; the only item produced is the finished skill. Registries start sparse and grow as forms/identities are authored ("build as we go"); a prototype with no forms yet shows an empty list and a disabled advance button. There is **no separate preset recipe book** — the reachable skills are simply the combinations the registries currently allow (wave 1: 4 prototypes × 2 forms × 2 identities = 16 reachable combos, *emergent from the catalogue*, not hand-authored recipes).
+
+*Justification: presets were a content-authoring vehicle whose only job — shipping composition to the player — is done directly and more cheaply by the wizard over sparse registries. A curated preset recipe book serves no purpose at the current dev stage; possible future uses (starter loadouts for new characters, a "favourite recipe" bookmark) are different features that sit on top of the catalogue data and are parked until needed. The blandness and playtest-control-group concerns that motivated presets-first are accepted as playtest questions, not blockers.*
+
+**Naming (2026-07-05, supersedes hand-named presets).** A skill's name is a **derived phrase** built from a per-component word map — form→adjective, identity→adjective, prototype→noun (e.g. swift · Magic · entity_burst → "Swift Arcane Strike"). The map is ~25 entries total (one word per form/identity/prototype), so names scale for free and are self-documenting — no wiki lookup, no hundreds of hand-authored names. A thin **iconic-override table** may assign curated names to a small set of signature combos ("Cyclone", "Nova"); every other combo uses the derived phrase. Wave 1 ships the raw composite `[prototype][form][identity]` as a placeholder display string; the derived phrase and any iconic overrides are a later display-layer swap over unchanged composition data.
+
+*Justification: hand-authored per-combo names scale as prototypes × forms × identities (hundreds of names to invent) and force players to look up which combo a name refers to. Derived phrases are self-documenting and free; iconic overrides preserve soul for the combos that earn it.*
 
 ### The Budget/Identity lever framework (governing)
 
@@ -401,7 +407,9 @@ Every lever on a composed skill is one of two kinds:
 | self_channeled_tick | Radius↔drain | **spin** | Tight radius, fast ticks, low drain — aggressive grinder | Tick rate ↑ |
 | | | **vortex** | Wide radius, slower ticks, heavy drain — anchored storm; the Focus bar is the real cooldown | Drain ↓ |
 
-### Wave 1: the preset recipe book (16)
+### Wave 1: the 16 reachable combos
+
+These are the combinations the wave-1 registries allow (4 prototypes × 2 forms × 2 identities) — they **emerge from the catalogue**, they are not authored preset recipes (see the Wizard-first rule above). Names default to the derived phrase; the curated names below are **candidate iconic overrides** for the combos that deserve a signature name.
 
 | Prototype | Physical | Magic |
 |---|---|---|
@@ -419,6 +427,8 @@ All numeric values per form are placeholder, owned by the Balancer.
 ### Engine prerequisites for wave 1
 
 1. **Per-skill VFX mapping** — animation/VFX is currently delivery-driven (all skills of a `SkillType` look identical; the channeled ring is hardcoded per `SkillType`). Identity skins require a per-skill (per-composition) VFX key. The self_channeled_tick forms lean hardest on this.
-2. **Composition data model + preset recipes** — prototype/form/identity as authoring data, flattened into `SkillData` snapshots at craft; recipe book entries for the 16 presets.
+2. **Composition data model + craft wizard** — prototype/form/identity as authoring data in registries (form registry per-prototype, identity registry universal), flattened into `SkillData` snapshots at craft. Craft wizard UI: prototype → form → identity, one resource cost debited per step, empty-list + disabled-advance handling for unauthored registries. No preset recipe book — reachable skills are the combinations the registries allow.
+   - **Crafting cost model** — cost is a **resource bundle** (a list of `(Resource, quantity)` entries), never a scalar. Currencies (coins) and materials share **one unified `Resource` registry** — gold is just another resource. Affordability and debit operate on the whole bundle **atomically** (check all, deduct all, or fail). One shared cost type across *all* crafting (skills, gear, augments), consumed per wizard step. Wave 1 = every entry's bundle is `[(CraftingMaterial, 1)]`. See `design-progression.md`. Recipes also reserve a **`Requirements` seam** — a list of non-consumable predicates (e.g. level/reputation gates) evaluated at an eligibility step *distinct from* cost payment; **none in wave 1** (the step always passes).
+   - **Naming** — derived-phrase word map (form/identity/prototype → one word each) + iconic-override table; wave 1 ships the raw `[prototype][form][identity]` composite as a placeholder, swapped to the derived phrase later without touching composition data.
 3. **WindUp on Entity and Self fire paths** *(sanity check 2026-07-04)* — `SkillData.WindUp` is currently honored only in `FireAtPosition` (Position-targeted skills). The **heavy** form (entity_burst) and **quake** form (self_burst) need the wind-up telegraph + delayed-hit flow on the Entity and Self paths too; the existing `WindupTelegraph` node is reusable.
 4. **Tier tracks** *(sanity check 2026-07-04)* — `SkillItemInstance.Tier` currently gates only augment-slot count; no code applies tier to any skill stat. Implementing per-form tier tracks (cooldown ↓ / radius ↑ / etc. at tier-up) is part of the composition work.

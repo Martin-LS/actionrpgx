@@ -45,7 +45,7 @@ v1 starter skill: **entity_burst** in slot 1 (physical type), slots 2–5 empty.
 
 Skill items are crafted (Craft New — accessible from an empty skill slot, left-click → Craft New; not yet implemented in v1) and equipped from the **Skills inventory tab**. Default keybindings: Q E R F + one mouse button for slots 1–5. Rebindable.
 
-**Craft New in v2 is a preset recipe book.** Player-facing skills are craft-time compositions of `prototype + form + identity` (see the v2 section in `design-skills.md`); wave 1 exposes them only as named preset recipes ("Craft: Nova" fills all three components and produces a finished, standalone skill item). The custom three-choice wizard is a later unlock, gated on component-pool size.
+**Craft New in v2 is a craft wizard.** Player-facing skills are craft-time compositions of `prototype + form + identity` (see the v2 section in `design-skills.md`); wave 1 exposes them as a **wizard** — pick a prototype, then a form, then an identity, paying a resource cost at each step, producing a finished standalone skill item. Forms and identities are catalogue entries (registry authoring data), not inventory items; registries start sparse and grow as they are authored. There is no preset recipe book — reachable skills are the combinations the registries currently allow. *(Revised 2026-07-05, supersedes the earlier preset-recipe-book plan.)*
 
 #### Skill Augments
 
@@ -179,6 +179,16 @@ Crafting materials are the primary run reward — the only meaningful thing enem
 - All materials are **account-shared** — earned by any character, spendable by any character
 - The more exotic the craftable item, the rarer its required materials
 - Specific tiers, drop rates, and material combinations will be designed when crafting is fleshed out
+
+### Crafting Cost Model
+
+Every crafting cost is a **resource bundle** — a list of `(Resource, quantity)` entries (e.g. `[(Gold, 1000), (Ruby, 344), (ChaosOrb, 54443), (StoneRune, 1324)]`), **never a single scalar**. The data model must honor this from the start so multi-resource recipes need no retrofit.
+
+- **One unified `Resource` registry.** Currencies (Coins) and crafting materials are the same kind of thing — gold is just another resource. A cost bundle, the account wallet, and the affordability/debit logic are all single-typed and never special-case currency vs. material.
+- **Atomic settlement.** Affordability checks and debits operate on the whole bundle at once — the player must have *all* entries; then *all* are deducted, or the craft fails. No partial spends.
+- **Shared across all crafting.** The same cost type backs every recipe — skills, gear, augments, maps. Skills are just the first consumer (paid per wizard step; see `design-skills.md`).
+- **Requirements seam (future, none in v1).** Recipes may later carry a `Requirements` list of **non-consumable predicates** (e.g. "level ≥ 60", reputation gates) — *checked*, not spent — evaluated at an eligibility step distinct from cost payment. The craft flow reserves this step (`check requirements → check affordability → debit → produce`); in v1 it always passes.
+- **v1:** every cost bundle is `[(CraftingMaterial, 1)]`. Real multi-resource costs are a Balancer concern, deferred.
 
 ---
 
