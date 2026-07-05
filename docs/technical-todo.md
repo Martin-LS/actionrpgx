@@ -11,7 +11,7 @@ Items where the GDD defines the design but no corresponding technical specificat
 
 ### UI
 
-> **(v1 — postponed)**
+> **(postponed)**
 
 - [ ] Spec Run Results Overlay content — what data is displayed (XP gained, level reached, materials earned, coins, win/lose state) and how it is populated from RunSession
 
@@ -19,7 +19,7 @@ Items where the GDD defines the design but no corresponding technical specificat
 
 ## Systems / Features
 
-- [x] Spec and implement re-roll for v1 (all random).
+- [x] Spec and implement re-roll (all random).
 
 > **Not in scope.**
 
@@ -33,4 +33,4 @@ Items where the GDD defines the design but no corresponding technical specificat
 > **Not in scope.**
 
 - [ ] Hollow Dark Forest assets — floor tile, tree trunk wall, wall corner (Blender); replace placeholder box geometry in DungeonGenerator
-- [ ] **Roll animation** *(v2+)* — No roll clip exists in the player GLB; characters slide while dodging. Needs rig animation in Blender.
+- [ ] **Roll animation** *(deferred)* — No roll clip exists in the player GLB; characters slide while dodging. Needs rig animation in Blender.

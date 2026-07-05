@@ -77,7 +77,7 @@ The delay only fires **after a successful fire**, not on skips. This preserves f
 
 ## Auto-Activate Stagger
 
-*Context: discussed when all slotted skills fired simultaneously the moment any enemy entered range. Current behaviour (all slots fire at once) is intentional for v1 — simple and predictable.*
+*Context: discussed when all slotted skills fired simultaneously the moment any enemy entered range. Current behaviour (all slots fire at once) is intentional for now — simple and predictable.*
 
 Each slot could track its own independent cooldown timer, with timers starting on first fire (not at run start). On first enemy contact, slots fire in sequence offset by `cooldown ÷ slots` (slot 1 at 0s, slot 2 at offset, slot 3 at 2× offset). After that first volley each slot runs independently for the rest of the run.
 
@@ -87,9 +87,9 @@ Worth revisiting if simultaneous firing ever feels bad to play.
 
 ---
 
-## Dedicated Dash + Movement Skills (v2)
+## Dedicated Dash + Movement Skills (deferred)
 
-*Context: v1 is WASD only. A dedicated non-slottable dash ships in v2 as a baseline for all characters.*
+*Context: movement is currently WASD only. A dedicated non-slottable dash is planned as a baseline for all characters.*
 
 Every character gets a free dash — not in a skill slot, always available. This guarantees a movement floor without forcing players to sacrifice a damage slot. Also gives designers freedom to build encounters knowing every player can reposition.
 
@@ -97,9 +97,9 @@ Additional movement-type skills (slottable, with tradeoffs) are possible post-da
 
 ---
 
-## Summon / Totem Skills (v2)
+## Summon / Totem Skills (deferred)
 
-*Context: identified as a major skill category worth having, deferred to v2 due to system complexity.*
+*Context: identified as a major skill category worth having, deferred due to system complexity.*
 
 One activation places an autonomous entity that fights independently until it expires or dies. Flat Focus cost on placement, no ongoing drain.
 
@@ -107,13 +107,13 @@ Two variants to design when ready:
 - **Totem** — timed duration, attacks nearest enemy, then expires. Max 1-2 active at once; placing a new one removes the oldest.
 - **Minion** — persistent until killed, no timer. Necromancer/commander fantasy.
 
-System requirement: autonomous entities need their own targeting, attack loop, and lifetime management — more complex than any v1 skill type. The design value is the player-as-commander paradigm, completely different from direct-attack skills.
+System requirement: autonomous entities need their own targeting, attack loop, and lifetime management — more complex than any current skill type. The design value is the player-as-commander paradigm, completely different from direct-attack skills.
 
 ---
 
-## Weapon Bonus (Post-v1 Expansion)
+## Weapon Bonus (deferred expansion)
 
-*Context: discussed when designing the weapon-adaptive skill system. Cut from v1 to keep things simple.*
+*Context: discussed when designing the weapon-adaptive skill system. Cut from the initial scope to keep things simple.*
 
 Each weapon has a single passive bonus that applies to compatible skills. Examples: a bow adds an extra projectile to all `Ranged` skills; a sword adds a bleed chance to all `Melee` skills. The bonus only applies if the skill's delivery tag matches the weapon type.
 

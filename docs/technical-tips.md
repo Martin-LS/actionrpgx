@@ -171,7 +171,7 @@ The camera is perspective and oblique (not straight-down). A flat mesh lying in 
 
 **What doesn't work**: flat discs, `PlaneMesh` (zero thickness), or thin cylinders (height < ~15). `depth_draw_never` and `CullMode.Disabled` do not fix this — the geometry itself is the problem, not culling.
 
-**Long-term fix**: use `Decal` nodes projected onto the floor mesh (GPU handles perspective correctly). Not wired up for v1.
+**Long-term fix**: use `Decal` nodes projected onto the floor mesh (GPU handles perspective correctly). Not wired up yet.
 
 **Torus orientation note**: `TorusMesh` default is flat in the XZ plane. `RotateX(Pi/2)` makes it stand vertical — the ring is then clearly visible but wrong for most ground indicators. The aim reticle uses `RotateX` intentionally because it's small enough (~12 units) that the vertical orientation is unnoticeable.
 

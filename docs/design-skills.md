@@ -18,12 +18,12 @@ There is no Passive skill type on the skill bar. Everything in a skill slot requ
 
 **Named skills are clones of prototypes — no runtime template system.** When a named skill (e.g. Strike) is created from a prototype (e.g. entity_burst), it is a complete standalone definition. All values are copied at authoring time; the prototype has no runtime relationship to the named skill after that. Changes to a prototype never cascade to existing named skills or crafted instances. The `BasedOn` field on `SkillData` records which prototype a named skill was cloned from — documentation only, no runtime behaviour. This keeps item instances stable and predictable: a crafted Strike is never changed by a prototype balance update without the designer explicitly editing Strike's definition.
 
-**Skill tags — limited to delivery-resolution and AoE in v1.** Skills carry two categories of tag in v1:
+**Skill tags — currently limited to delivery-resolution and AoE.** Skills carry two categories of tag:
 
 - **`AoE`** — marks skills that damage all enemies within a radius. Introduced now because the radius modifier math needs a hook. All skills that deal damage to a radius (self/zone/tracked) carry this tag.
-- **`Melee` / `Range`** — delivery-override tags used internally by `WeaponController` to determine how entity hits are resolved. A skill with `Melee` always fires a melee swing regardless of equipped weapon; a skill with `Range` always fires a ranged projectile. No delivery tag means the skill inherits the weapon's preferred delivery type (weapon-adaptive). Only `self_channeled_tick` carries `Melee` in v1 — it spins in place and must always be a melee swing.
+- **`Melee` / `Range`** — delivery-override tags used internally by `WeaponController` to determine how entity hits are resolved. A skill with `Melee` always fires a melee swing regardless of equipped weapon; a skill with `Range` always fires a ranged projectile. No delivery tag means the skill inherits the weapon's preferred delivery type (weapon-adaptive). Only `self_channeled_tick` currently carries `Melee` — it spins in place and must always be a melee swing.
 
-All other tags (e.g. `Attack`, `Burst`, `Debuff`) are post-v1. Tags are additive (enabling synergies) not restrictive — the no-gate philosophy holds; any augment can socket into any skill regardless of tags.
+All other tags (e.g. `Attack`, `Burst`, `Debuff`) are deferred. Tags are additive (enabling synergies) not restrictive — the no-gate philosophy holds; any augment can socket into any skill regardless of tags.
 
 #### Area of Effect (AoE)
 
@@ -36,9 +36,9 @@ Modifiers increase *area*, not radius directly. The effective radius is:
 
 Example: base 250 units + 100% AoE → 250 × √2 ≈ 354 units. Each additional % yields diminishing radius gains — the standard ARPG tradeoff.
 
-**Sources of AoE modifiers — post-v1, none in v1:** skill augments (e.g. "Increased Area"), gear affixes. Armour range modifiers and weapon range never feed AoE radius.
+**Sources of AoE modifiers — deferred, none yet:** skill augments (e.g. "Increased Area"), gear affixes. Armour range modifiers and weapon range never feed AoE radius.
 
-**v1 AoE skills:**
+**Current AoE skills:**
 
 | Skill | AoE coverage |
 |---|---|
@@ -56,9 +56,9 @@ entity_burst and entity_debuff are single-target — no AoE tag.
 
 #### Skill Prototypes
 
-All skills in v1 are prototypes. Prototypes are the building blocks — they prove mechanics and cover the full design space. Named skills with unique identities are post-v1 and will be derived from these prototypes.
+All authored skills are prototypes. Prototypes are the building blocks — they prove mechanics and cover the full design space. Player-facing skills are derived from them via the composition model (see The Composition Model section below).
 
-All 12 prototypes are craftable. The `EngineProof` kind is retained in code for future use but nothing in v1 is marked as such — all v1 skills are `Prototype`.
+All 12 prototypes are craftable. The `EngineProof` kind is retained in code for future use but nothing is currently marked as such — all authored skills are `Prototype`.
 
 | Prototype | Targeting | Damage pattern | Skill type |
 |---|---|---|---|
@@ -75,7 +75,7 @@ All 12 prototypes are craftable. The `EngineProof` kind is retained in code for 
 | triggered_zone_burst | Position | Burst | Active |
 | self_aura | Self | Tick | Aura |
 
-> **Tech note — renames, not new skills:** entity_burst, self_channeled_tick, self_duration_tick, and self_burst are renames of the existing Strike, Cyclone, Damage Aura, and Nova implementations. Rename in code and data — do not create new skill objects. v2 will create the real named versions (Strike, Cyclone, etc.) derived from these prototypes.
+> **Tech note — renames, not new skills:** entity_burst, self_channeled_tick, self_duration_tick, and self_burst are renames of the existing Strike, Cyclone, Damage Aura, and Nova implementations. Rename in code and data — do not create new skill objects. Player-facing versions (Strike, Cyclone, etc.) are composed from these prototypes via the craft wizard (see The Composition Model section below).
 
 All archetypes start with plain entity_burst in slot 1, no augments pre-socketed.
 
@@ -83,8 +83,8 @@ All archetypes start with plain entity_burst in slot 1, no augments pre-socketed
 
 | Property | Description |
 |---|---|
-| Description | What this skill is designed to prove or do (v1: mechanic proof; future: named skill flavour) |
-| Kind | `Normal` = real named skill (post-v1). `Prototype` = all v1 skills are this kind — craftable. `EngineProof` = reserved for future use, nothing currently marked as such. |
+| Description | What this skill is designed to prove or do (prototypes: mechanic proof; future: named skill flavour) |
+| Kind | `Normal` = real named skill (future). `Prototype` = all authored skills are this kind — craftable. `EngineProof` = reserved for future use, nothing currently marked as such. |
 | Targeting shape | Self / Position / Entity — how the skill resolves its target (see Targeting in `design-mechanics.md`) |
 | Wind-up | Seconds of delay before effect lands; 0 = instant |
 | Damage pattern | Burst (single hit) / Tick (over duration) / None (debuff or utility only) |
@@ -95,7 +95,7 @@ All archetypes start with plain entity_burst in slot 1, no augments pre-socketed
 | Arm time | Delay after placement before the trap becomes active (seconds). Prevents self-triggering. `—` = not a trap skill. |
 | Trigger | How many times the trap fires before despawning. `Single` = fires once then despawns. `—` = not a trap skill. |
 
-**Future field — Dispellable (not in v1):** whether a zone or effect can be removed before its duration expires — by an enemy cleanse ability, a player counter-skill, or a future mechanic. Not added until something in the game actually reads it. Note here so the axis is not forgotten when designing elite enemies or player utility skills.
+**Future field — Dispellable (not yet added):** whether a zone or effect can be removed before its duration expires — by an enemy cleanse ability, a player counter-skill, or a future mechanic. Not added until something in the game actually reads it. Note here so the axis is not forgotten when designing elite enemies or player utility skills.
 
 #### entity_burst
 
@@ -315,9 +315,9 @@ All values (damage, cooldown, radius, tick rate, duration) are TBD — owned by 
 
 **self_aura**
 
-Toggle on — the aura activates, reserves a flat amount of Focus (permanently reducing the available pool for other skills while active), and begins pulsing its effect on every tick. Toggle off — the aura deactivates and the reserved Focus is returned immediately. Proves the Aura toggle + Focus reservation mechanic. The only v1 prototype where a skill runs indefinitely with no player input after activation.
+Toggle on — the aura activates, reserves a flat amount of Focus (permanently reducing the available pool for other skills while active), and begins pulsing its effect on every tick. Toggle off — the aura deactivates and the reserved Focus is returned immediately. Proves the Aura toggle + Focus reservation mechanic. The only prototype where a skill runs indefinitely with no player input after activation.
 
-The effect the aura produces (damage AoE, player buff, enemy debuff AoE) is defined on each named skill cloned from this prototype in v2+. The prototype itself uses a placeholder damage tick.
+The effect the aura produces (damage AoE, player buff, enemy debuff AoE) will be defined on future composed skills derived from this prototype. The prototype itself uses a placeholder damage tick.
 
 | Property | Value |
 |---|---|
@@ -331,7 +331,7 @@ The effect the aura produces (damage AoE, player buff, enemy debuff AoE) is defi
 | Type | Aura |
 | Focus reservation | TBD (Balancer) — flat amount reserved from Max Focus while active |
 | Tick rate | TBD (Balancer) |
-| Effect | Placeholder damage tick in v1; buff, debuff, or damage AoE on named clones in v2+ |
+| Effect | Placeholder damage tick for now; buff, debuff, or damage AoE on future composed derivatives |
 | Acquire | Craft |
 
 ---
@@ -343,14 +343,14 @@ The effect the aura produces (damage AoE, player buff, enemy debuff AoE) is defi
 **Why (rationale, confirmed 2026-07-04):**
 
 1. **Damage progression is anchored in the crafting economy.** Upgrading weapon tier is *the* way to increase damage output. In a fully craft-driven game the weapon is the damage sink for crafting investment — a per-skill multiplier would create a second, competing damage-progression axis: players would shop for the highest-multiplier skill instead of crafting a better weapon.
-2. **No skill can be ranked by a number.** With no multiplier, no skill is "the 1.3× one." Skills compete on delivery shape only — this is the design space the Budget/Identity lever framework (see the v2 section below) formalises.
+2. **No skill can be ranked by a number.** With no multiplier, no skill is "the 1.3× one." Skills compete on delivery shape only — this is the design space the Budget/Identity lever framework (see The Composition Model section below) formalises.
 3. **It collapses the balance surface.** The Balancer tunes tick rate and cooldown only — never a per-skill damage table.
 
 **Skill tier improves budget levers only (decided 2026-07-04).** A skill's tier upgrade advances a fixed per-skill upgrade track over its budget levers (e.g. cooldown down, or radius up — whatever that named skill's track is) and never touches hit size. Which lever a skill's track improves is itself an identity axis. Power parity between named clones of the same prototype is defined **at equal tier**.
 
 ---
 
-## v2 — The Composition Model & Wave 1
+## The Composition Model & Wave 1
 
 > Locked in 2026-07-04 (promoted from `design-skill-system-brainstorming.md`). Governs how player-facing skills come to exist. **Revised 2026-07-05:** the *presets-first* shipping rule and the *hand-named presets* naming model were superseded — see the Wizard-first and Naming rules below. Remaining open follow-ups (element-wave decisions, full-roster naming word-map authoring) stay in the brainstorm doc.
 

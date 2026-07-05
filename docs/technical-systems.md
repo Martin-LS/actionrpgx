@@ -19,7 +19,7 @@
 | `ItemData`          | C# record   | Id, Name, Slot (enum), IconPath, Tags (string[] — equipment tags for augment compatibility; e.g. `["Melee"]` for Sword, `["Heavy"]` for heavy armour, `[]` for Accessory) — plus slot-specific fields: `WeaponRange (float, in tiles)`, `PreferredDelivery (string — "Melee" or "Ranged")` for Weapon; `ArmorCategory`, `BonusHp`, `BonusSpeed`, `DamageReduction (float)`, `RangeMultiplier (float, dimensionless)` for Armor; `PhysicalResistance (float)` for Accessory. Unused fields default to zero. `Tier` removed — tier lives on `GearItemInstance`, not the definition. **Range fields are in tiles** (multiply by `GameScale.TileSize` to get world units), and **RangeMultiplier fields are dimensionless multipliers**. |
 | `ItemSlot`          | C# enum     | Weapon, Hat, Body, Ring                                        |
 | `SkillData`         | C# record   | Id, Name, Type (SkillType enum), Tags (string[]) — e.g. `["Melee","Attack"]`, `["Ranged","Attack"]`, `["Ranged","Magic","Spell"]`. DamageType (DamageType enum, default Physical) — the damage type this skill deals; drives which damage pool fires and which enemy resistance applies. Cooldown (float, seconds — time between casts/activations; 0 for Passive), FocusCost (float — Active: flat spend per cast; Channeled: drain per second; Aura: flat Focus units to reserve while active; Passive: 0/ignored), Range (float — cast range for Position skills; damage/aggro radius for Self skills), **ZoneRadius (float, default 0f — damage radius at the landing/blast site; distinct from Range which is the cast range; 0 = fall back to weapon range)**, IconPath (string, default ""), Description (string, default ""), **Kind (SkillKind enum, default Normal — see `SkillKind` below)**, TargetingShape (SkillTargetingShape enum, default Self), WindUp (float seconds, default 0.0f — 0 = instant), DamagePattern (SkillDamagePattern enum, default Burst), StackLimit (int — −1 = not a zone skill; 1+ = max simultaneous active instances), ZoneTracksEntity (bool, default false), Duration (float seconds, default 0f — 0 = permanent; zone and summon skills must set this), TriggerRadius (float tiles, default 0f — 0 = not a trap; >0 = trap proximity detection radius), ArmTime (float seconds, default 0f — delay after placement before trap can trigger; ignored when TriggerRadius = 0), TriggerCount (int, default 0 — 0 = not a trap; 1 = single-trigger then despawn; >1 = multi-trigger), **DebuffEotId (string?, default null — EoT ID always applied on hit at 100% chance, only allowed for skills with DamagePattern = None)**, **BasedOn (string?, default null — reserved parent prototype ID; unused at runtime)**, **TickRate (float, seconds, default 0f — damage tick interval for tick-based skills)**. No Tier — tier lives on `SkillItemInstance`. No `BasePrototypeId` — prototype relationship is design-time documentation only; C# record required fields enforce new-field completeness at compile time. |
-| `SkillKind`         | C# enum     | `Normal` (shipped skill), `Prototype` (v1 player-facing prototype — all v1 skills), `EngineProof` (internal test/legacy skill — retained for engine validation only, not surfaced to player). Replaces the earlier `IsPrototype: bool` design. |
+| `SkillKind`         | C# enum     | `Normal` (shipped skill), `Prototype` (player-facing prototype — all authored skills currently), `EngineProof` (internal test/legacy skill — retained for engine validation only, not surfaced to player). Replaces the earlier `IsPrototype: bool` design. |
 | `SkillType`         | C# enum     | Active, Channeled, Aura, Passive                               |
 | `SkillTargetingShape` | C# enum   | Self (effect fires from player position — no targeting input needed), Position (effect lands at locked target's world position on controller/keyboard; at cursor on mouse — no enemy required), Entity (must land on a specific enemy — blocked if no valid target; on mouse snaps to nearest enemy to cursor; on controller/keyboard uses locked target) |
 | `SkillDamagePattern` | C# enum    | Burst (single hit fires on cast), Tick (damage repeats over duration at tick rate), None (debuff or utility only — no damage output) |
@@ -28,22 +28,22 @@
 | `ItemTier`          | C# static class (const ints) | Common = 1, Uncommon = 2, Rare = 3, Max = 3. `Label(int)` → display name. `BorderColor(int)` → Godot `Color`. Used for the rarity border colour on item slot buttons. |
 | `BalanceConfig`     | Static class (nested) | Sections: `Weapons` (SwordRange/BowRange/WandRange), `Armour` (Heavy/Medium/Light — BonusHp, BonusSpeed, DamageReduction, RangeMultiplier per tier), `Accessories` (RingPhysicalResistance), `Skills` (cooldown + range per skill), `Eots` (ApplyChance, Duration, per-effect fields), `Enemies.Skeleton` + scaling consts + MeleeContactRange + `LostPlayerDistanceTiles` (float — current: 30 tiles for wave-spawned enemies, which must exceed their spawn radius of ~15.5 tiles or they return to idle immediately on spawn; will be split into `WaveSpawnLostPlayerTiles` and `PrePlacedLostPlayerTiles` when pre-placed enemies are implemented — intended 6–10 tile range applies to pre-placed only) + `EnemyAggroRadiusTiles` (float — idle enemy's individual aggro detection radius) + `ClusterProximityRadiusTiles` (float — max distance between two idle enemies to be considered in the same cluster), `Drops` (coin/health/crafting chances), `Pickups` (XpShardValue, HealthHealAmount), `Archetypes` (base derived stats per archetype — MaxHp/Speed/PhysDmg/MagDmg/MaxFocus/FocusRegen at level 1; primary stat gain rates and conversion rates live in `PrimaryStatGainRegistry` and `PrimaryStatConversions`), `LevelUp` (HpBonusPerLevel), `Focus` (per-archetype MaxFocus/RegenPerSec base values, ShieldFraction, ShieldRegenPerSec; per-skill FocusCost constants). All values are `const` — compile-time resolvable. |
 | `ItemRegistry`      | Static class| `All` dict, `Get(id)`, `ForSlot(slot)` — 7 starter gear definitions. Definitions carry no tier — all instances start at Tier = 1 when crafted. |
-| `SkillRegistry`     | Static class| `All` dict, `Get(id)` — v1: 4 renamed prototype entries: `entity_burst` (was `strike` — Active, Tags: `["Attack"]`, FocusCost: 5, IsPrototype: true), `self_channeled_tick` (was `cyclone` — Channeled, Tags: `["Melee","Attack"]`, FocusCost: 12/sec, Cooldown: 0.25s, IsPrototype: true), `self_burst` (was `nova` — Active, Tags: `["Attack"]`, FocusCost: 20, Cooldown: 1.5s, IsPrototype: true), `self_duration_tick` (was `damage_aura` — Active, Tags: `["Aura"]`, FocusCost: 15 flat, Cooldown: 2.0s after duration ends, IsPrototype: true). Plus 7 new targeting-system prototype entries (TBD — see todo). **Save migration:** `CharacterManager.Load()` must rewrite old definition IDs before any registry lookup: `strike` → `entity_burst`, `cyclone` → `self_channeled_tick`, `nova` → `self_burst`, `damage_aura` → `self_duration_tick`. Apply to all `DefinitionId` fields in `OwnedSkillInstances` and `SlottedSkillInstanceIds` resolution. |
+| `SkillRegistry`     | Static class| `All` dict, `Get(id)` — 4 renamed prototype entries: `entity_burst` (was `strike` — Active, Tags: `["Attack"]`, FocusCost: 5, IsPrototype: true), `self_channeled_tick` (was `cyclone` — Channeled, Tags: `["Melee","Attack"]`, FocusCost: 12/sec, Cooldown: 0.25s, IsPrototype: true), `self_burst` (was `nova` — Active, Tags: `["Attack"]`, FocusCost: 20, Cooldown: 1.5s, IsPrototype: true), `self_duration_tick` (was `damage_aura` — Active, Tags: `["Aura"]`, FocusCost: 15 flat, Cooldown: 2.0s after duration ends, IsPrototype: true). Plus 7 new targeting-system prototype entries (TBD — see todo). **Save migration:** `CharacterManager.Load()` must rewrite old definition IDs before any registry lookup: `strike` → `entity_burst`, `cyclone` → `self_channeled_tick`, `nova` → `self_burst`, `damage_aura` → `self_duration_tick`. Apply to all `DefinitionId` fields in `OwnedSkillInstances` and `SlottedSkillInstanceIds` resolution. |
 | `RecipeData`        | C# record   | Id, OutputItemId (string — definition ID), RecipeType (enum), MaterialCosts (Dictionary\<string, int\>). Crafting always produces a new instance at Tier = 1. |
-| `SkillAugmentData`  | C# record   | Id (string), Name (string), RequiredTags (string[]) — reserved for post-v1 use; all v1 skill augments use `[]` (universal — no gate). EotId (string?, nullable) — links augment to an EoT definition; null for augments with no timed effect. **ConflictGroup (string?, nullable) — augments sharing the same ConflictGroup cannot both be socketed into the same skill; enforcement is in `SocketSkillAugment`. Currently only `magic_damage` has ConflictGroup = `"damage_type"`.** No Effect field — behaviour dispatched by Id in code. v1: Slow (`[]`, EotId: `"slow"`), Critical Strike (`[]`, EotId: null — adds `BalanceConfig.SkillAugments.CritChance` as flat crit chance bonus for that skill slot), Magic Damage (`[]`, EotId: null, ConflictGroup: `"damage_type"` — overrides slot DamageType to Magic at fire time). Splash, pierce, burn are post-v1. |
+| `SkillAugmentData`  | C# record   | Id (string), Name (string), RequiredTags (string[]) — reserved for future use; all current skill augments use `[]` (universal — no gate). EotId (string?, nullable) — links augment to an EoT definition; null for augments with no timed effect. **ConflictGroup (string?, nullable) — augments sharing the same ConflictGroup cannot both be socketed into the same skill; enforcement is in `SocketSkillAugment`. Currently only `magic_damage` has ConflictGroup = `"damage_type"`.** No Effect field — behaviour dispatched by Id in code. Current entries: Slow (`[]`, EotId: `"slow"`), Critical Strike (`[]`, EotId: null — adds `BalanceConfig.SkillAugments.CritChance` as flat crit chance bonus for that skill slot), Magic Damage (`[]`, EotId: null, ConflictGroup: `"damage_type"` — overrides slot DamageType to Magic at fire time). Splash, pierce, burn are deferred. |
 | `SkillAugmentInstance` | Plain C# | Id (string, GUID), DefinitionId (string → `SkillAugmentRegistry`), **Tier (int, default 1 — augments can be upgraded via `UpgradeSkillAugment`; was "no tier" in earlier design)**, **TriggerChance (int, percentage, default 15 — rolled at craft time via `Random.Next(10, 31)`; re-rollable via `RerollSkillAugment`)**. Note: TriggerChance is stored, serialized, and wired into gameplay (divided by 100 to represent a proc probability). |
-| `SkillAugmentRegistry` | Static class | `All` dict, `Get(id)`, `GetAll()` — static catalog of available Skill Augments. v1: 3 entries (magic_damage, slow, critical_strike). Splash, pierce, burn are post-v1. |
-| `EquipmentAugmentData` | C# record | Id (string), Name (string). No tag gate — any Equipment Augment can socket into any equipment item regardless of category. No Effect field — behaviour dispatched by Id in `PlayerController`. v1: Retaliation, Fortify, Dash Reflex, Ghost Step, Mending (all universal). |
+| `SkillAugmentRegistry` | Static class | `All` dict, `Get(id)`, `GetAll()` — static catalog of available Skill Augments. Currently 3 entries (magic_damage, slow, critical_strike). Splash, pierce, burn are deferred. |
+| `EquipmentAugmentData` | C# record | Id (string), Name (string). No tag gate — any Equipment Augment can socket into any equipment item regardless of category. No Effect field — behaviour dispatched by Id in `PlayerController`. Current entries: Retaliation, Fortify, Dash Reflex, Ghost Step, Mending (all universal). |
 | `EquipmentAugmentInstance` | Plain C# | Id (string, GUID), DefinitionId (string → `EquipmentAugmentRegistry`), **Tier (int, default 1 — upgradeable via `UpgradeEquipmentAugment`)**, **TriggerChance (int, percentage, default 15 — rolled at craft, re-rollable via `RerollEquipmentAugment`; wired into effect dispatch divided by 100)**. |
-| `EquipmentAugmentRegistry` | Static class | `All` dict, `Get(id)`, `GetAll()` — static catalog of available Equipment Augments. v1: 5 entries (retaliation, fortify, dash_reflex, ghost_step, mending). |
+| `EquipmentAugmentRegistry` | Static class | `All` dict, `Get(id)`, `GetAll()` — static catalog of available Equipment Augments. Currently 5 entries (retaliation, fortify, dash_reflex, ghost_step, mending). |
 | `RecipeType`        | C# enum     | Gear, Skill, SkillAugment, EquipmentAugment                   |
 | `CraftResult`       | C# enum     | Success, InsufficientMaterials, InventoryFull                  |
-| `RecipeRegistry`    | Static class| `All` dict, `Get(id)`, `ForSlot(ItemSlot)`, `ForType(RecipeType)` — v1: **10 gear recipes** (sword/bow/wand + 3 hat types + 3 body types + ring, 1× common each) + **12 skill recipes** (5 player-facing prototypes: entity_burst/self_channeled_tick/self_duration_tick/self_burst/self_aura; plus 7 engine-proof: fixed_zone_burst, fixed_zone_tick, windup_burst, entity_debuff, tracked_tick, stackable_zone, triggered_zone_burst — all 1× common) + 3 SkillAugment recipes (magic_damage/slow/critical_strike, 1× common each) + 5 EquipmentAugment recipes (retaliation/fortify/dash_reflex/ghost_step/mending, 1× common each). |
+| `RecipeRegistry`    | Static class| `All` dict, `Get(id)`, `ForSlot(ItemSlot)`, `ForType(RecipeType)` — currently **10 gear recipes** (sword/bow/wand + 3 hat types + 3 body types + ring, 1× common each) + **12 skill recipes** (5 player-facing prototypes: entity_burst/self_channeled_tick/self_duration_tick/self_burst/self_aura; plus 7 engine-proof: fixed_zone_burst, fixed_zone_tick, windup_burst, entity_debuff, tracked_tick, stackable_zone, triggered_zone_burst — all 1× common) + 3 SkillAugment recipes (magic_damage/slow/critical_strike, 1× common each) + 5 EquipmentAugment recipes (retaliation/fortify/dash_reflex/ghost_step/mending, 1× common each). |
 | `EnemyData`         | C# record   | EnemyType (string), BaseSpeed, BaseHealth, ContactDamage, DamageInterval, PhysicalResistance (float), MagicResistance (float), ModelPath (string — GLB res:// path, defaults to enemy_generic.glb) |
-| `EnemyPoolEntry`    | Plain C#    | EnemyType (string), Count (int — spawn weight), Modifiers: ArmorBonus (int), HpBonus (int), SpeedBonus (int), DamageBonus (int). Applied to enemy instance at spawn on top of base `EnemyData` values. v1: all modifier fields zero. |
+| `EnemyPoolEntry`    | Plain C#    | EnemyType (string), Count (int — spawn weight), Modifiers: ArmorBonus (int), HpBonus (int), SpeedBonus (int), DamageBonus (int). Applied to enemy instance at spawn on top of base `EnemyData` values. Currently all modifier fields are zero. |
 | `EotData`           | C# record   | Id (string), Name (string), ApplyChance (float 0–1), Duration (float seconds), IsDamageEot (bool), TickRate (float seconds — ignored when IsDamageEot = false), DamagePerTick (float — ignored when IsDamageEot = false), SlowFraction (float — speed reduction ratio, e.g. 0.75 for slow; 0 for others). |
 | `EotInstance`       | Plain C#    | Runtime state per active EoT on an enemy: DefinitionId (string), TimeRemaining (float), TickTimer (float — only relevant for damage EoTs), CritMultiplier (float, default 1.0f — stamped with the applying hit's crit multiplier; damage ticks use DamagePerTick × CritMultiplier; non-damage EoTs ignore). Held in `EnemyController._activeEots (Dictionary<string, EotInstance>)` keyed by EotData.Id — enforces one instance per type. |
-| `EotRegistry`       | Static class| `Get(id)`, `GetAll()` — static catalogue of all EoT definitions. v1: `slow` (IsDamageEot = false). `burn` is post-v1. |
+| `EotRegistry`       | Static class| `Get(id)`, `GetAll()` — static catalogue of all EoT definitions. Currently `slow` only (IsDamageEot = false). `burn` is deferred. |
 | `PrimaryStatGainRegistry` | Static class | `GetGain(CharacterType, PrimaryStat) → float` — returns the archetype's per-level gain rate for Str/Dex/Int. Three entries per archetype (9 total). Owned by the Balancer. Lives in `src/character/`. |
 | `PrimaryStatConversions` | Static class (const floats) | Fixed conversion rates from each primary stat to its derived stats — same for all archetypes. `StrToPhysDamageMultiplier`, `StrToMaxHp`, `StrToPhysResistance`, `StrToCritDamage`; `DexToCritChance`, `DexToEvasion`; `IntToMagDamageMultiplier`, `IntToMaxFocus`, `IntToMagResistance`, `IntToFocusRegen`. Owned by the Balancer. Lives in `src/character/`. |
 
@@ -112,7 +112,7 @@ If multi-user slots or cloud saves are ever needed, evaluate wrapping save data 
 
 ## Weapon
 
-Single weapon per character (v1). `WeaponController` manages:
+Single weapon per character. `WeaponController` manages:
 
 **Damage model — weapon is the root of all damage.** `PlayerController` computes damage at run start (and on level-up) via `ApplyWeaponDamage()` and pushes the results into `WeaponController`. Both pools are always pre-computed; each slot selects its pool from `skill.DamageType` at fire time:
 
@@ -135,7 +135,7 @@ Crit Chance and Crit Multiplier are universal stats. `PlayerController` is respo
 |---|---|---|
 | Global Crit Chance | **Dexterity stat** (primary baseline) + Bow weapon identity bonus + equipment augments + ring stats | `SetGlobalCritChance(float)` — once per run start / level-up |
 | Per-slot Crit Chance | Critical Strike skill augment on that skill | `SetSlot()` `critChanceBonus` float parameter |
-| Global Crit Multiplier | **Strength stat** (`CritDamage`) — fixed 1.5× in v1; grows with Str investment post-v1 | `SetCritMultiplier(float)` — once per run start / level-up |
+| Global Crit Multiplier | **Strength stat** (`CritDamage`) — currently fixed 1.5×; grows with Str investment later | `SetCritMultiplier(float)` — once per run start / level-up |
 
 At fire time: `critChance = _globalCritChance + slot.CritChanceBonus`. If `critChance > 0` and roll succeeds: `baseDmg *= _critMultiplier`.
 
@@ -149,7 +149,7 @@ At fire time: `critChance = _globalCritChance + slot.CritChanceBonus`. If `critC
   bool IsChanneling, float DurationTimer,
   List<Node3D> ActiveZones }
 ```
-`HasMagicDamage` — set when the Magic Damage augment is socketed; overrides `EffectiveDamageType` to Magic at fire time. `AutoActivate` — mirrors `CharacterData.SlotAutoActivate[i]`; when true the slot fires every cooldown automatically; when false the slot only fires on explicit `TryFireSlot(i)` call. `HasSplash` and `HasPierce` are post-v1 (removed until Splash/Pierce augments are implemented). `AuraActive` — whether the Aura toggle is currently on; `AuraReserved` — absolute Focus units locked while active (set at toggle-on time from `slot.Skill.FocusCost`). Aura slots are excluded from the `AutoActivate` path — they only fire via `TryFireSlot` toggle. Each slot fires independently. Empty slots (null Skill) are skipped.
+`HasMagicDamage` — set when the Magic Damage augment is socketed; overrides `EffectiveDamageType` to Magic at fire time. `AutoActivate` — mirrors `CharacterData.SlotAutoActivate[i]`; when true the slot fires every cooldown automatically; when false the slot only fires on explicit `TryFireSlot(i)` call. `HasSplash` and `HasPierce` are deferred (removed until Splash/Pierce augments are implemented). `AuraActive` — whether the Aura toggle is currently on; `AuraReserved` — absolute Focus units locked while active (set at toggle-on time from `slot.Skill.FocusCost`). Aura slots are excluded from the `AutoActivate` path — they only fire via `TryFireSlot` toggle. Each slot fires independently. Empty slots (null Skill) are skipped.
 
 Exposes: `SetDamage(float, float)`, `SetGlobalCritChance(float)`, `SetCritMultiplier(float)`, `SetSlot(int, SkillData, ...)`. `SetBaseDamageType` removed — pool selection is per-slot at fire time via `slot.Skill.DamageType`.
 
@@ -340,7 +340,7 @@ Applies to all skills with the `AoE` tag — currently `self_channeled_tick`, `s
 effectiveRadius = baseRadius × sqrt(1 + totalAoePct)
 ```
 
-`totalAoePct` is a fraction (e.g. `0.5f` = 50% increased area). When `totalAoePct == 0` (v1 state) the formula reduces to `effectiveRadius = baseRadius` — identical to current behaviour, no change.
+`totalAoePct` is a fraction (e.g. `0.5f` = 50% increased area). When `totalAoePct == 0` (the current state) the formula reduces to `effectiveRadius = baseRadius` — identical to current behaviour, no change.
 
 ### Radius Source by Targeting Shape
 
@@ -381,9 +381,9 @@ float effectiveRadius = isAoe && totalAoePct > 0f
 
 Affected call sites: `FireSelfBurst`, `FireSelfChanneledTick`, `FireAuraTick`, and all radius reads inside `FireAtPosition`.
 
-### v1 State
+### Current State
 
-No Skill Augments or gear affixes provide AoE bonus in v1. `slot.AoEPctBonus = 0f` and `_globalAoePctBonus = 0f` for all slots. The `SetSlot` parameter and `SetGlobalAoePctBonus` method are added as scaffolding with zero values — the formula always produces `baseRadius × 1.0` and has no gameplay effect until AoE sources are introduced post-v1.
+No Skill Augments or gear affixes provide AoE bonus yet. `slot.AoEPctBonus = 0f` and `_globalAoePctBonus = 0f` for all slots. The `SetSlot` parameter and `SetGlobalAoePctBonus` method are added as scaffolding with zero values — the formula always produces `baseRadius × 1.0` and has no gameplay effect until AoE sources are introduced later.
 
 ---
 
@@ -478,11 +478,11 @@ Only `Idle` cluster-mates are woken — `Dormant` ones (if `MapReady` has not fi
 
 `BalanceConfig.Enemies.LostPlayerDistanceTiles` controls the chase leash for pre-placed enemies. When the player moves beyond this distance, the enemy returns to `Idle` and re-runs proximity scanning to rejoin or form a cluster.
 
-v1 value: 30 tiles. Balancer will tune this down (6–10 tiles is the ARPG design intent) once pre-placed placement and feel are validated.
+Current value: 30 tiles. Balancer will tune this down (6–10 tiles is the ARPG design intent) once pre-placed placement and feel are validated.
 
-### v1 State
+### Current State
 
-Pre-placed enemy placement is **implemented in v1**. `DungeonGenerator` places 2–4 enemies per room from `MapData.EnemyPool`. The three-state machine (`Dormant` → `Idle` → `Chasing`), `ClusterId`, BFS cluster computation, and cluster wake-up broadcast are all part of the v1 implementation.
+Pre-placed enemy placement is **implemented**. `DungeonGenerator` places 2–4 enemies per room from `MapData.EnemyPool`. The three-state machine (`Dormant` → `Idle` → `Chasing`), `ClusterId`, BFS cluster computation, and cluster wake-up broadcast are all implemented.
 
 ---
 
@@ -571,7 +571,7 @@ emit ShieldChanged(_currentFocusShield, _maxFocusShield)
 
 `ShieldRegenPerSec` is a `BalanceConfig.Focus` constant. No `StatId` entry yet — added when augments invest into shield regen.
 
-**MaxFocus changes mid-run** (future — not v1): ceiling = `_maxFocus × ShieldFraction`, recalculated instantly. Current shield clamped to new ceiling on decrease; increases do not auto-fill.
+**MaxFocus changes mid-run** (future — not implemented): ceiling = `_maxFocus × ShieldFraction`, recalculated instantly. Current shield clamped to new ceiling on decrease; increases do not auto-fill.
 
 ### Archetype starting values (BalanceConfig.Focus)
 
@@ -599,7 +599,7 @@ Active tactical roll available to the player character at all times.
 * **Cooldown:** 1.0 second, starts immediately upon roll initiation.
 * **Direction:** Current WASD vector. If standing still, rolls in the direction the character is currently facing.
 * **Invincibility (I-frames):** Grants full damage immunity for the duration.
-* **Animation:** Bypassed in v1 (characters slide). Model instantly snaps to face the roll direction and locks rotation until the roll ends.
+* **Animation:** Currently bypassed (characters slide). Model instantly snaps to face the roll direction and locks rotation until the roll ends.
 * **Skill Cancellation:** Cancels and aborts any active or channeled skills on activation.
 
 ### Technical Flow
@@ -630,7 +630,7 @@ Active tactical roll available to the player character at all times.
 
 ## Skill Bar (HUD)
 
-An `HBoxContainer` anchored **bottom-center** of the HUD. **5 cells visible in v1** (mapped to Q E R F + Right Click).
+An `HBoxContainer` anchored **bottom-center** of the HUD. **5 cells visible** (mapped to Q E R F + Right Click).
 
 Each cell contains:
 - Skill icon (placeholder if slot empty)
@@ -653,7 +653,7 @@ Items are never dropped — they come exclusively from crafting. Each craftable 
 RecipeData(Id, OutputItemId, MaterialCosts: Dictionary<string, int>)
 ```
 
-`MaterialCosts` keys are material IDs (`"crafting_common"`, `"crafting_rare"`, …). v1: every recipe costs `{ "crafting_common": 1 }`.
+`MaterialCosts` keys are material IDs (`"crafting_common"`, `"crafting_rare"`, …). Currently every recipe costs `{ "crafting_common": 1 }`.
 
 ### `CharacterManager.CraftGearItem(string recipeId) → CraftResult`
 
@@ -725,7 +725,7 @@ augment = OwnedEquipmentAugmentInstances.Find(augmentInstanceId)
 if gear == null || augment == null → InsufficientMaterials
 if slotIndex >= MaxAugmentSlots(gear.Tier) → InsufficientMaterials
 augmentDef = EquipmentAugmentRegistry.Get(augment.DefinitionId)
-// No tag gate in v1 — any equipment augment sockets into any item
+// No tag gate — any equipment augment sockets into any item
 // Duplicate check: if any other slot already has same DefinitionId → InsufficientMaterials
 gear.SocketedEquipmentAugmentIds[slotIndex] = augmentInstanceId
 Save(); return Success
@@ -749,7 +749,7 @@ Structure (built in `ShowGearModifyPanel` / `ShowSkillModifyPanel`):
     - **Filled slot** → click removes augment (`RemoveEquipmentAugment` / `RemoveSkillAugment`), rebuilds row in-place
     - **Empty slot** → click opens `NewStyledPopup()` listing compatible owned augments; on pick: `SocketEquipmentAugment` / `SocketSkillAugment`, rebuilds row in-place
 
-Augment compatibility filter (gear): `EquipmentAugmentData.RequiredTags` empty OR intersects `ItemData.Tags`. No tag gate for skill augments (any augment can socket into any skill in v1).
+Augment compatibility filter (gear): `EquipmentAugmentData.RequiredTags` empty OR intersects `ItemData.Tags`. No tag gate for skill augments (any augment can socket into any skill).
 
 ### Equipment Inventory Tab — in-place component
 
@@ -845,7 +845,7 @@ EotData(Id, Name, ApplyChance, Duration, IsDamageEot, TickRate, DamagePerTick)
 EotInstance { DefinitionId, TimeRemaining, TickTimer, CritMultiplier }
 ```
 
-`EotRegistry` is a static catalogue. `SkillAugmentData` references EoT by id (e.g. `slow` Skill Augment → `"slow"` EoT id). The mapping is 1-to-1 in v1 but augments may reference no EoT (e.g. Magic Damage is purely mechanical — it overrides damage type with no timed effect). Splash and Pierce are post-v1.
+`EotRegistry` is a static catalogue. `SkillAugmentData` references EoT by id (e.g. `slow` Skill Augment → `"slow"` EoT id). The mapping is currently 1-to-1, but augments may reference no EoT (e.g. Magic Damage is purely mechanical — it overrides damage type with no timed effect). Splash and Pierce are deferred.
 
 ### Application flow
 
@@ -1022,7 +1022,7 @@ physDmg  = weapon.BaseDamage × statBlock.Get(PhysicalDamage) × (1 + weapon.Dam
 magicDmg = weapon.BaseDamage × statBlock.Get(MagicDamage)    × (1 + weapon.DamageBonus)
 
 WeaponController.SetDamage(physDmg, magicDmg)
-WeaponController.SetCritMultiplier(statBlock.Get(CritDamage))  // Str-driven; fixed 1.5× in v1
+WeaponController.SetCritMultiplier(statBlock.Get(CritDamage))  // Str-driven; currently fixed 1.5×
 
 // Global crit chance — Dex stat baseline + weapon identity bonus (Bow) + future equipment augment / ring contributions
 globalCritChance   = statBlock.Get(CritChance) + weapon.CritChanceBonus
@@ -1108,7 +1108,7 @@ Base archetype stats (the `base.*` values) are applied directly at level 1 — n
 |----------|-------|-----|--------|-----------------|------------------------------|
 | Skeleton | 42    | 100 | 5      | 10%             | `kaykit_enemy_skeleton.glb`  |
 
-v1: single type only. Pool will expand in future milestones.
+Currently a single type only. Pool will expand in future milestones.
 
 ---
 
@@ -1148,7 +1148,7 @@ Other drops hardcoded in `EnemyController.Die()`:
 
 > ⚠️ **Superseded (2026-07-05).** This section describes the original *presets-first, composed-at-registry-init* plan. Wave 1 actually shipped **wizard-first with per-instance flatten-at-craft snapshots** and **no preset recipe book** (issues #23–#27). The authoritative design is the "Wizard-first shipping rule" in `design-skills.md`; the details below (registry-init composition, `recipe_<preset_id>` entries, the out-of-scope list) are kept only as a historical record of the earlier plan.
 >
-> Implements the v2 composition model (`design-skills.md`). This section is the **binding architecture** for the wave-1 issues: implementers own the finer details but must not deviate from the structures, placement, and strategies pinned here. House conventions (`technical-coding.md`) apply throughout: registry pattern, positional records, all numbers in `BalanceConfig`, snake_case ids.
+> Implements the composition model (`design-skills.md`). This section is the **binding architecture** for the wave-1 issues: implementers own the finer details but must not deviate from the structures, placement, and strategies pinned here. House conventions (`technical-coding.md`) apply throughout: registry pattern, positional records, all numbers in `BalanceConfig`, snake_case ids.
 
 ### Wave-1 strategy: presets are composed at registry init — NOT per-instance
 
@@ -1193,7 +1193,7 @@ public record PresetData(
 );
 ```
 
-Registries: `FormRegistry`, `IdentityRegistry`, `PresetRegistry` — `static class` + `Dictionary<string, T> All` + `Get`, exactly like `SkillRegistry`. **These three must not reference `SkillRegistry`** (init-order rule below). All numeric form values come from a new `BalanceConfig.Forms` nested class (`SwiftCooldown`, `StormZoneRadius`, …); form/identity/preset tables for all 8 forms, 2 identities, 16 presets are in `design-skills.md` (v2 section) — transcribe, don't invent.
+Registries: `FormRegistry`, `IdentityRegistry`, `PresetRegistry` — `static class` + `Dictionary<string, T> All` + `Get`, exactly like `SkillRegistry`. **These three must not reference `SkillRegistry`** (init-order rule below). All numeric form values come from a new `BalanceConfig.Forms` nested class (`SwiftCooldown`, `StormZoneRadius`, …); form/identity/preset tables for all 8 forms, 2 identities, 16 presets are in `design-skills.md` (The Composition Model section) — transcribe, don't invent.
 
 ### Composition function
 
@@ -1217,7 +1217,7 @@ public static SkillData Compose(SkillData proto, FormData form, IdentityData ide
     };
 ```
 
-**Range constraint (decided 2026-07-04):** `SkillData.Range` does double duty — cast range for Position skills, **damage/aggro radius for Self skills**. A form may set `Range` **only when its prototype's `TargetingShape == Self`** — there it *is* the AoE-radius budget lever (nova/quake, spin/vortex forms). Forms of Entity/Position prototypes must leave it null: reach is off the budget-lever list (`design-skills.md` v2). Enforce in the `SkillRegistry` static-ctor validation: form with `Range != null` on a non-Self prototype → throw. Do **not** add runtime `ZoneRadius`-fallback logic for Self skills — their damage radius stays `Range`-driven (the burst VFX ring and the fire-gate both read `Range`; moving damage to `ZoneRadius` would silently desync visuals from damage).
+**Range constraint (decided 2026-07-04):** `SkillData.Range` does double duty — cast range for Position skills, **damage/aggro radius for Self skills**. A form may set `Range` **only when its prototype's `TargetingShape == Self`** — there it *is* the AoE-radius budget lever (nova/quake, spin/vortex forms). Forms of Entity/Position prototypes must leave it null: reach is off the budget-lever list (`design-skills.md`, The Composition Model section). Enforce in the `SkillRegistry` static-ctor validation: form with `Range != null` on a non-Self prototype → throw. Do **not** add runtime `ZoneRadius`-fallback logic for Self skills — their damage radius stays `Range`-driven (the burst VFX ring and the fire-gate both read `Range`; moving damage to `ZoneRadius` would silently desync visuals from damage).
 
 **Init order (pinned to avoid static-ctor cycles):** `SkillRegistry`'s static ctor, *after* its prototype dictionary is built, iterates `PresetRegistry.All` and adds each composed entry to its own `All`. Form/Identity/Preset registries stay leaf dependencies. The existing static-ctor validation (DebuffEotId, TickRate) runs *after* composition so it covers composed entries too.
 
@@ -1242,7 +1242,7 @@ public static SkillData Apply(SkillData skill, TierTrack track, int tier);
 
 ### Recipes
 
-One `RecipeRegistry` entry per preset, `recipe_<preset_id>` (e.g. `recipe_strike` → output `strike`), same `RecipeType` the 12 prototypes use, cost = 1 `crafting_common` (current v1 convention; flag per `technical-coding.md`).
+One `RecipeRegistry` entry per preset, `recipe_<preset_id>` (e.g. `recipe_strike` → output `strike`), same `RecipeType` the 12 prototypes use, cost = 1 `crafting_common` (current convention; flag per `technical-coding.md`).
 
 ### Explicitly out of scope for wave 1
 

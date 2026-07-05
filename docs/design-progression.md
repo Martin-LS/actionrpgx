@@ -16,7 +16,7 @@ All items — both equipment and skills — have a **tier** that represents qual
 |----------|---------------|-----------|------------------------|
 | Common   | Dark Slate    | `#4A5560` | Starter / lowest power |
 | Uncommon | Ash Grey      | `#6B8090` | Mid tier               |
-| Rare     | Dark Gold     | `#A07810` | Highest tier (v1)      |
+| Rare     | Dark Gold     | `#A07810` | Highest tier (current) |
 
 Border colours are taken from the Loot Rarity Border column in `visuals-style.md` for consistency across inventory, loot drops, and minimap dots.
 
@@ -41,15 +41,15 @@ Characters can equip up to 4 gear items (one per gear slot) and 5 skill items. A
 
 5 skill slots shown on the HUD and used during a run. All 5 are available from the start — no unlock progression. Any archetype can equip any skill in any slot — fully freeform, no restrictions.
 
-v1 starter skill: **entity_burst** in slot 1 (physical type), slots 2–5 empty. All archetypes start with plain entity_burst — no augments socketed. Weapon drives the delivery animation; skill defines the damage type.
+Starter skill: **entity_burst** in slot 1 (physical type), slots 2–5 empty. All archetypes start with plain entity_burst — no augments socketed. Weapon drives the delivery animation; skill defines the damage type.
 
-Skill items are crafted (Craft New — accessible from an empty skill slot, left-click → Craft New; not yet implemented in v1) and equipped from the **Skills inventory tab**. Default keybindings: Q E R F + one mouse button for slots 1–5. Rebindable.
+Skill items are crafted via the craft wizard (see below) and equipped from the **Skills inventory tab**. Default keybindings: Q E R F + one mouse button for slots 1–5. Rebindable.
 
-**Craft New in v2 is a craft wizard.** Player-facing skills are craft-time compositions of `prototype + form + identity` (see the v2 section in `design-skills.md`); wave 1 exposes them as a **wizard** — pick a prototype, then a form, then an identity, paying a resource cost at each step, producing a finished standalone skill item. Forms and identities are catalogue entries (registry authoring data), not inventory items; registries start sparse and grow as they are authored. There is no preset recipe book — reachable skills are the combinations the registries currently allow. *(Revised 2026-07-05, supersedes the earlier preset-recipe-book plan.)*
+**Craft New is a craft wizard.** Player-facing skills are craft-time compositions of `prototype + form + identity` (see The Composition Model section in `design-skills.md`); the wizard exposes them directly — pick a prototype, then a form, then an identity, paying a resource cost at each step, producing a finished standalone skill item. Forms and identities are catalogue entries (registry authoring data), not inventory items; registries start sparse and grow as they are authored. There is no preset recipe book — reachable skills are the combinations the registries currently allow. *(Revised 2026-07-05, supersedes the earlier preset-recipe-book plan.)*
 
 #### Skill Augments
 
-> Skill Augment design, v1 augment list, trigger system, and augment resolution order are in `docs/design-augments.md`.
+> Skill Augment design, the current augment list, trigger system, and augment resolution order are in `docs/design-augments.md`.
 
 **Skill Augment slots per tier:**
 
@@ -65,7 +65,7 @@ Armour pieces (Hat, Body, and Boots) carry a **category tag** (`Heavy`, `Medium`
 
 #### Equipment Augments
 
-> Equipment Augment design, v1 augment list, and trigger system are in `docs/design-augments.md`.
+> Equipment Augment design, the current augment list, and trigger system are in `docs/design-augments.md`.
 
 **Equipment Augment slots per tier:**
 
@@ -107,9 +107,9 @@ Any character can equip any category in any slot. Slots are independent — a ch
 
 | Category | Equipment tag | HP       | Speed   | Damage Reduction | Range Multiplier (per piece) |
 |----------|---------------|----------|---------|------------------|------------------------------|
-| Heavy    | `Heavy`       | High     | Penalty | Yes (%)          | ×0.85 (placeholder — Balancer v2+) |
+| Heavy    | `Heavy`       | High     | Penalty | Yes (%)          | ×0.85 (placeholder — Balancer)     |
 | Medium   | `Medium`      | Moderate | Neutral | —                | ×1.00 (neutral)              |
-| Light    | `Light`       | Low      | Bonus   | —                | ×1.15 (placeholder — Balancer v2+) |
+| Light    | `Light`       | Low      | Bonus   | —                | ×1.15 (placeholder — Balancer)     |
 
 Stats above apply per piece — each slot contributes its category's stats independently.
 
@@ -117,11 +117,11 @@ Stats above apply per piece — each slot contributes its category's stats indep
 
 **Effective Range** (visible on the character sheet):
 - `Weapon Range × hat Range Multiplier × body Range Multiplier × boots Range Multiplier` (in tiles), then × `GameScale.TileSize` → world units
-- Range buff bonuses (v2+) are applied after the multiplier step as a flat tile addition.
+- Range buff bonuses (future) are applied after the multiplier step as a flat tile addition.
 
 Displayed as tiles in the UI.
 
-**Range buffs (v2+):** Skills may temporarily or permanently modify Effective Range mid-run. Any such buff adds a flat tile bonus on top of the multiplied baseline. Effective Range is recalculated whenever a range buff is applied or expires.
+**Range buffs (future):** Skills may temporarily or permanently modify Effective Range mid-run. Any such buff adds a flat tile bonus on top of the multiplied baseline. Effective Range is recalculated whenever a range buff is applied or expires.
 
 **Visuals (in-run):** Hat, Body, and Weapon are rendered on the character model. Ring and Boots have no visual representation.
 
@@ -168,7 +168,7 @@ Equipped items are held separately in the character's slots and do not count aga
 Earned during runs (25% enemy drop). **Account-shared** — earned by any character, spendable by any. Spend mechanic TBD — coins accumulate but have no current use.
 
 ### Crafting Materials
-Crafting materials are the primary run reward — the only meaningful thing enemies drop. They are tiered — common through exotic. Each tier drops at a different rate during runs and enables crafting of items at the corresponding tier. **v1:** all items cost 1 crafting resource to craft. Future versions will use material combinations for higher-tier recipes.
+Crafting materials are the primary run reward — the only meaningful thing enemies drop. They are tiered — common through exotic. Each tier drops at a different rate during runs and enables crafting of items at the corresponding tier. **Current:** all items cost 1 crafting resource to craft. Material combinations for higher-tier recipes come later.
 
 | Tier    | Current name     | Drop rate | Enables                          |
 |---------|------------------|-----------|----------------------------------|
@@ -187,8 +187,8 @@ Every crafting cost is a **resource bundle** — a list of `(Resource, quantity)
 - **One unified `Resource` registry.** Currencies (Coins) and crafting materials are the same kind of thing — gold is just another resource. A cost bundle, the account wallet, and the affordability/debit logic are all single-typed and never special-case currency vs. material.
 - **Atomic settlement.** Affordability checks and debits operate on the whole bundle at once — the player must have *all* entries; then *all* are deducted, or the craft fails. No partial spends.
 - **Shared across all crafting.** The same cost type backs every recipe — skills, gear, augments, maps. Skills are just the first consumer (paid per wizard step; see `design-skills.md`).
-- **Requirements seam (future, none in v1).** Recipes may later carry a `Requirements` list of **non-consumable predicates** (e.g. "level ≥ 60", reputation gates) — *checked*, not spent — evaluated at an eligibility step distinct from cost payment. The craft flow reserves this step (`check requirements → check affordability → debit → produce`); in v1 it always passes.
-- **v1:** every cost bundle is `[(CraftingMaterial, 1)]`. Real multi-resource costs are a Balancer concern, deferred.
+- **Requirements seam (future, none yet).** Recipes may later carry a `Requirements` list of **non-consumable predicates** (e.g. "level ≥ 60", reputation gates) — *checked*, not spent — evaluated at an eligibility step distinct from cost payment. The craft flow reserves this step (`check requirements → check affordability → debit → produce`); currently it always passes.
+- **Current:** every cost bundle is `[(CraftingMaterial, 1)]`. Real multi-resource costs are a Balancer concern, deferred.
 
 ---
 
