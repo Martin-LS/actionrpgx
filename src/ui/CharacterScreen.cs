@@ -649,41 +649,205 @@ public partial class CharacterScreen : Control
     private void ShowCraftSkillToInventoryOverlay()
     {
         var overlay = MakeModalOverlay();
-        var panel   = MakeModifyPanel();
-        var vbox    = new VBoxContainer();
-        vbox.AddThemeConstantOverride("separation", 8);
-        panel.AddChild(vbox);
-        overlay.AddChild(panel);
         AddChild(overlay);
 
-        vbox.AddChild(MakeModifyHeader("Craft Skill", () => CloseOverlay(overlay)));
-        vbox.AddChild(new HSeparator());
+        int[] step = { 1 };
+        string[] chosenProtoId = { "" };
+        string[] chosenFormId = { "" };
+        string[] chosenIdentityId = { "" };
 
-        int common   = _manager.Profile.GetMaterial("crafting_common");
+        System.Action rebuild = null!;
+        rebuild = () =>
+        {
+            foreach (Node child in overlay.GetChildren()) child.QueueFree();
+            overlay.AddChild(BuildCraftSkillWizardContent(overlay, step, chosenProtoId, chosenFormId, chosenIdentityId, rebuild));
+        };
+        rebuild();
+    }
+
+    private Control BuildCraftSkillWizardContent(
+        Control overlay,
+        int[] step,
+        string[] chosenProtoId,
+        string[] chosenFormId,
+        string[] chosenIdentityId,
+        System.Action rebuild)
+    {
+        var panel = MakeModifyPanel();
+        var vbox  = new VBoxContainer();
+        vbox.AddThemeConstantOverride("separation", 8);
+        panel.AddChild(vbox);
+
+        int common = _manager.Profile.GetMaterial("crafting_common");
         bool invFull = _manager.GetUnslottedSkillCount() >= Character.ProfileData.MaxInventory;
+
+        string stepTitle = step[0] switch
+        {
+            1 => "Craft Skill (Step 1/3: Prototype)",
+            2 => "Craft Skill (Step 2/3: Form)",
+            3 => "Craft Skill (Step 3/3: Identity)",
+            _ => "Craft Skill (Confirm)"
+        };
+
+        vbox.AddChild(MakeModifyHeader(stepTitle, () => CloseOverlay(overlay)));
+        vbox.AddChild(new HSeparator());
 
         var statusLbl = new Label { Text = invFull ? "Inventory full" : $"Common material: {common}" };
         statusLbl.AddThemeColorOverride("font_color", new Color("#8AA0AE"));
         vbox.AddChild(statusLbl);
 
-        var listScroll = new ScrollContainer { CustomMinimumSize = new Vector2(0f, 360f) };
+        var listScroll = new ScrollContainer { CustomMinimumSize = new Vector2(0f, 320f) };
         var listVbox   = new VBoxContainer();
         listVbox.AddThemeConstantOverride("separation", 8);
         listScroll.AddChild(listVbox);
         vbox.AddChild(listScroll);
 
-        foreach (var recipe in RecipeRegistry.ForType(RecipeType.Skill))
+        if (step[0] == 1)
         {
-            var skillDef = Skills.SkillRegistry.Get(recipe.OutputItemId);
-            if (skillDef == null) continue;
-            if (skillDef.Kind != Skills.SkillKind.Normal) continue;
-            int cost      = recipe.MaterialCosts.TryGetValue("crafting_common", out var mc) ? mc : 1;
-            bool canCraft = !invFull && common >= cost;
-            var btn       = MakeModifyButton($"{skillDef.Name}  —  {cost} Common", !canCraft);
-            string rid    = recipe.Id;
-            btn.Pressed  += () => { _manager.CraftSkillItem(rid); CloseOverlay(overlay); Refresh(); };
-            listVbox.AddChild(btn);
+            var costLbl = MakeModifySubLabel("Step Cost: 1 Common");
+            listVbox.AddChild(costLbl);
+
+            var protos = Skills.SkillRegistry.GetAll().Where(s => s.Kind == Skills.SkillKind.Prototype).ToList();
+            foreach (var proto in protos)
+            {
+                bool canSelect = !invFull && common >= 1;
+                var btn = MakeModifyButton($"{proto.Name} ({proto.Id})", !canSelect);
+                string pid = proto.Id;
+                btn.Pressed += () =>
+                {
+                    chosenProtoId[0] = pid;
+                    step[0] = 2;
+                    rebuild();
+                };
+                listVbox.AddChild(btn);
+            }
         }
+        else if (step[0] == 2)
+        {
+            var costLbl = MakeModifySubLabel("Step Cost: +1 Common (2 total)");
+            listVbox.AddChild(costLbl);
+
+            var forms = Skills.FormRegistry.GetAll().Where(f => f.PrototypeId == chosenProtoId[0]).ToList();
+            if (forms.Count == 0)
+            {
+                var emptyLbl = new Label { Text = "No forms available for this prototype." };
+                emptyLbl.AddThemeColorOverride("font_color", new Color("#E06666"));
+                listVbox.AddChild(emptyLbl);
+
+                var nextBtn = MakeModifyButton("Next Step", true);
+                listVbox.AddChild(nextBtn);
+            }
+            else
+            {
+                foreach (var form in forms)
+                {
+                    bool canSelect = !invFull && common >= 2;
+                    var btn = MakeModifyButton($"{form.Id} form", !canSelect);
+                    string fid = form.Id;
+                    btn.Pressed += () =>
+                    {
+                        chosenFormId[0] = fid;
+                        step[0] = 3;
+                        rebuild();
+                    };
+                    listVbox.AddChild(btn);
+                }
+            }
+
+            vbox.AddChild(new HSeparator());
+            var backBtn = MakeModifyButton("◀ Back", false);
+            backBtn.Pressed += () =>
+            {
+                step[0] = 1;
+                rebuild();
+            };
+            vbox.AddChild(backBtn);
+        }
+        else if (step[0] == 3)
+        {
+            var costLbl = MakeModifySubLabel("Step Cost: +1 Common (3 total)");
+            listVbox.AddChild(costLbl);
+
+            var identities = Skills.IdentityRegistry.GetAll().ToList();
+            foreach (var identity in identities)
+            {
+                bool canSelect = !invFull && common >= 3;
+                var btn = MakeModifyButton($"{identity.Id} identity ({identity.DamageType})", !canSelect);
+                string iid = identity.Id;
+                btn.Pressed += () =>
+                {
+                    chosenIdentityId[0] = iid;
+                    step[0] = 4;
+                    rebuild();
+                };
+                listVbox.AddChild(btn);
+            }
+
+            vbox.AddChild(new HSeparator());
+            var backBtn = MakeModifyButton("◀ Back", false);
+            backBtn.Pressed += () =>
+            {
+                step[0] = 2;
+                rebuild();
+            };
+            vbox.AddChild(backBtn);
+        }
+        else if (step[0] == 4)
+        {
+            var proto = Skills.SkillRegistry.Get(chosenProtoId[0]);
+            var form = Skills.FormRegistry.Get(chosenFormId[0]);
+            var identity = Skills.IdentityRegistry.Get(chosenIdentityId[0]);
+
+            if (proto != null && form != null && identity != null)
+            {
+                string generatedName = Skills.SkillNaming.GenerateName(chosenProtoId[0], chosenFormId[0], chosenIdentityId[0]);
+
+                var nameLbl = new Label { Text = $"Name: {generatedName}" };
+                nameLbl.AddThemeColorOverride("font_color", new Color("#FFD700"));
+                listVbox.AddChild(nameLbl);
+
+                listVbox.AddChild(MakeModifySubLabel($"Prototype: {proto.Name}"));
+                listVbox.AddChild(MakeModifySubLabel($"Form: {form.Id}"));
+                listVbox.AddChild(MakeModifySubLabel($"Identity: {identity.Id} ({identity.DamageType})"));
+                listVbox.AddChild(MakeModifySubLabel("Total Cost: 3 Common"));
+
+                if (!Skills.SkillRegistry.ValidateCombo(proto, form, identity, out var validationError))
+                {
+                    var errLbl = new Label { Text = $"Invalid Combo: {validationError}" };
+                    errLbl.AddThemeColorOverride("font_color", new Color("#E06666"));
+                    listVbox.AddChild(errLbl);
+
+                    var craftBtn = MakeModifyButton("Craft", true);
+                    listVbox.AddChild(craftBtn);
+                }
+                else
+                {
+                    bool canCraft = !invFull && common >= 3;
+                    var craftBtn = MakeModifyButton("Craft Composed Skill", !canCraft);
+                    craftBtn.Pressed += () =>
+                    {
+                        var result = _manager.CraftComposedSkill(chosenProtoId[0], chosenFormId[0], chosenIdentityId[0]);
+                        if (result == Crafting.CraftResult.Success)
+                        {
+                            CloseOverlay(overlay);
+                            Refresh();
+                        }
+                    };
+                    listVbox.AddChild(craftBtn);
+                }
+            }
+
+            vbox.AddChild(new HSeparator());
+            var backBtn = MakeModifyButton("◀ Back", false);
+            backBtn.Pressed += () =>
+            {
+                step[0] = 3;
+                rebuild();
+            };
+            vbox.AddChild(backBtn);
+        }
+
+        return panel;
     }
 
     private void ShowPopupAt(PopupMenu popup, Control anchor)

@@ -170,6 +170,7 @@ public static class SkillRegistry
     };
 
     public static SkillData? Get(string id) => All.TryGetValue(id, out var s) ? s : null;
+    public static IEnumerable<SkillData> GetAll() => All.Values;
 
     public static bool ValidateCombo(SkillData proto, FormData form, IdentityData identity, out string? errorMessage)
     {
