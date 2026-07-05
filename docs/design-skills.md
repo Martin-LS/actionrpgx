@@ -387,6 +387,8 @@ Every lever on a composed skill is one of two kinds:
 
 `Range`-as-**reach** (cast range on Entity/Position skills) is deliberately **not** a budget lever — a long-range form (Snipe fantasy) requires consciously revisiting this line first (weapon-driven delivery makes melee-at-range visually incoherent). Clarified 2026-07-04: on **Self** skills the `Range` field *is* the AoE damage radius, which is a listed budget lever — Self-prototype forms (nova/quake, spin/vortex) tune their radius through it. Same field, two meanings; the constraint is per targeting shape (enforced in registry validation — see `technical-systems.md`).
 
+**Hit size is not a lever (clarified 2026-07-06).** A single hit's damage is `weapon base × stat block` — constant, never bought or sold. It is neither a budget lever (you cannot trade cooldown or Focus for a bigger hit) nor an identity lever. What a form *may* change is **how a press's payload is delivered** — e.g. splitting one press's constant total into N equal sub-hits (the **salvo** shape below) — because that leaves per-press total damage untouched; the size of the payload itself never moves. Multi-hit delivery carries its own engine rule so it cannot leak power through per-hit augment procs — see per-hit proc normalization in the salvo spec. This is the precise reading of "hit size is constant, so a heavy-hitter is impossible by design": the constraint bars *buying* a bigger hit, not *dividing* a fixed one.
+
 ### Structural decisions (wave 1)
 
 - **Identities in wave 1: Physical and Magic** — a real mechanical split (Phys couples to Str builds, Magic to Int). Elements arrive as their own wave together with enemy-resist promotion (D1), where the "element whispers, augments shout" token-effect framing is the leading candidate (see brainstorm doc).
@@ -423,6 +425,35 @@ These are the combinations the wave-1 registries allow (4 prototypes × 2 forms 
 | self_channeled_tick · vortex | **Bladestorm** | **Maelstrom** |
 
 All numeric values per form are placeholder, owned by the Balancer.
+
+### Beyond wave 1 — adopted forms & axis rulings
+
+Forms and contrast-axis rulings resolved after the wave-1 lock, promoted here from the brainstorm doc as each clears synthesis (budget-parity + rule-compliance). Adopted forms are not in the shipped registries yet — each becomes its own implementation issue, and each new form multiplies against the existing identity pool (so it adds a whole row of reachable combos, not one skill). Axis rulings are accepted design tools that may not yet have a built form.
+
+#### salvo (entity_burst, third form) — adopted 2026-07-06
+
+| Field | Value |
+|---|---|
+| Prototype | entity_burst |
+| Contrast axis | **Delivery granularity** — one chunk (swift/heavy) vs. a volley. A third axis on entity_burst, distinct from the swift↔heavy commitment axis. |
+| Budget shape | One press = **N rapid sub-hits** over a short volley window (~0.5s), the press's constant payload split evenly across them. |
+| N (sub-hits) | Fixed per form, **3–5 (Balancer-owned)**. Deliberately **not** the tier track — N is power-neutral under proc normalization, so advancing it would be a dead tier-up. |
+| Tier track | **Cooldown ↓** — the volley fires more often, sharpening the thing the form is about. (Shares the cooldown track with swift; the varied-contrast-axes rule governs *contrast axes*, not tier tracks, so the repeat is legal.) |
+| Budget trade | Pays for its smoother texture with **spread payload**: full damage arrives across the volley window, not instantly, so burst and time-to-first-kill are worse than swift's instant hit, and any sub-hits after the target dies are wasted. The Balancer nets it to swift/heavy parity at equal tier via cooldown/Focus. |
+| Word-map fragment | "volley" / "flurry" |
+
+Two new reachable combos (× Physical, Magic) — candidate iconic names TBD (e.g. "Flurry", "Arcane Barrage").
+
+**Why it is a form and not power:** under the Budget/Identity framework a form must change *shape*, never throughput. Salvo's whole substance is texture — smoother damage, lower crit variance, a real mid-volley-waste downside — all power-neutral. The one thing that would leak power, N× per-hit augment procs per press, is closed by the engine rule below.
+
+**Engine need — per-hit proc normalization.** A multi-hit skill's per-hit augment trigger chance is divided by N so expected procs per press stay form-invariant (the genre-standard solution; PoE normalizes per projectile). The change is local to multi-hit skills, and it is the precedent the future **Splash** and **projectile-augment** families will reuse. Until it exists, salvo cannot ship.
+
+#### fleet ↔ enduring (duration ↔ potency) — accepted as generic fallback axis, parked 2026-07-06
+
+The **designated fallback contrast axis** for a prototype that has no richer budget trade: the same budget spread over time two ways — short-intense (fleet) vs. long-weak (enduring). Accepted in principle as a tool; **no form is built and its concrete use is parked.**
+
+- **Barred from damage-tick prototypes.** After the hit-size clarification above, "potency" on a tick skill cannot mean damage-per-tick — the only throughput lever left is tick rate, so "duration ↔ potency" collapses into the existing **storm/floor duration↔tick-rate axis** (`fixed_zone_tick`). Using it on `self_duration_tick` or `tracked_tick` adds no new exchange rate and pushes the roster toward the fast/slow-toggle reading the varied-axes rule prevents. Not to be spent there.
+- **Its one unique home is `entity_debuff`** — a `None`-pattern skill with no damage, radius, or tick rate, whose only possible trade is duration ↔ debuff-strength. **Blocked:** both a debuff's duration and its strength (`SlowFraction`, etc.) live on the shared `EotData` *definition* (`design-stats.md` EoT-payload ownership), not on the skill or form. A short-strong/long-weak pair would require promoting EoT magnitude/duration to a per-form override — a stat-ownership decision that belongs with the **element/EoT wave (D1)**, where debuff magnitudes and the "element whispers, augments shout" token effects get designed. **Unblock condition:** that wave rules on whether a form may override an EoT's magnitude/duration.
 
 ### Engine prerequisites for wave 1
 
