@@ -488,6 +488,21 @@ The contrast axis for **self_aura** (Self/Tick/Aura) — the only prototype that
 
 *Note: superficially adjacent to self_channeled_tick·vortex (both "Focus ↔ radius"), but the Focus sub-lever differs — vortex is continuous **drain** (trades against sustain, the bar empties as you hold), reserve-heavy is flat **reservation** (trades against your Focus budget for other skills, set-and-forget). Different build math on distinct prototypes.*
 
+#### blast ↔ echo (single burst ↔ split delayed aftershock) — adopted 2026-07-06
+
+The contrast axis for **fixed_zone_burst** (Position/Burst — a zone that detonates at the cast position), giving it its first forms: one instant blast vs. a blast split into an initial hit **+ a delayed second hit at the same spot** (aftershock). Adds 4 reachable combos.
+
+| | blast | echo |
+|---|---|---|
+| Budget shape | Single instant detonation at the target position | Payload split into an initial hit + a delayed aftershock at the same position |
+| Tier track | Cooldown ↓ | Radius ↑ (both hits catch more) |
+
+- **Same family as salvo, same rules.** Each of echo's two hits is payload/2 — dividing a fixed payload, not buying a bigger one (hit-size clarification) — and its two per-hit augment procs are neutralized by the **÷N proc normalization** (N=2). Echo therefore **shares salvo's multi-hit engine machinery**: build "two-plus hits from one activation" + ÷N normalization once, both forms consume it.
+- **The delayed hit reuses existing scheduling.** "Fire a hit at a stored position after delay D" is exactly the wind-up flow windup_burst and the quake/heavy forms already use — so the only genuinely new engine piece is the shared multi-hit hook above.
+- **Budget trade:** echo pays for its second-chance area coverage (the aftershock catches enemies who lingered or returned) with spread payload — full damage lands over the delay window, not instantly — plus the risk the second hit whiffs if the area clears. Balancer nets it to blast parity.
+
+*Homed on fixed_zone_burst deliberately: its position is fixed, so "same spot" for the aftershock is unambiguous. **Not** placed on self_burst (its nova/quake pair already owns the telegraph-timing axis, and "same spot" is ambiguous when the player moves) or windup_burst (left clear for the pending wind-up-as-form-axis question — see the fuse candidate in the brainstorm doc).*
+
 ### Engine prerequisites for wave 1
 
 1. **Per-skill VFX mapping** — animation/VFX is currently delivery-driven (all skills of a `SkillType` look identical; the channeled ring is hardcoded per `SkillType`). Identity skins require a per-skill (per-composition) VFX key. The self_channeled_tick forms lean hardest on this.
