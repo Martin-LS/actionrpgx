@@ -472,6 +472,20 @@ Adds **8 reachable combos** (2 prototypes × 2 forms × 2 identities) and gives 
 
 *Note: this is the one axis intentionally shared across two prototypes. Legal because the chassis are mechanically distinct (persistent zones vs. one-shot traps) and stacking is the *defining* trade for both — it reads as two fantasies exploring one exchange rate, not a fast/slow mode toggle.*
 
+#### reserve-heavy ↔ reserve-light (Focus reservation ↔ radius) — adopted 2026-07-06, damage-aura scope
+
+The contrast axis for **self_aura** (Self/Tick/Aura) — the only prototype that pays with Focus *reservation* (a flat chunk locked out of Max Focus while toggled on), so this is the only axis it can express. Trades reservation against area at constant budget: **reserve-heavy** = big reservation + big radius (a strong aura that taxes a large slice of your Focus ceiling), **reserve-light** = small reservation + small radius (a cheap aura that leaves Focus for your active skills). Adds 4 reachable combos (self_aura × 2 forms × 2 identities) — self_aura's first player-facing forms.
+
+| | reserve-heavy | reserve-light |
+|---|---|---|
+| Budget shape | Large Focus reservation, large damage radius | Small reservation, small radius |
+| Tier track | Radius ↑ (grows the aura) | Reservation ↓ (frees more Focus) |
+
+- **Effect "size" is radius, never per-target magnitude** (hit-size constancy). For a damage aura, damage-per-tick is constant, so the tradeable lever is the aura's radius (`Range`-as-radius on Self skills, the same machinery self_duration_tick/self_burst use). Both levers are real and built — reservation on self_aura, radius on its Self siblings — so this ships without new engine work. *(One verify at implementation: confirm self_aura applies damage across its `Range` radius rather than a degenerate placeholder tick.)*
+- **Scoped to damage/area auras.** The buff/debuff-aura branch — where "effect strength" would be per-target buff/debuff magnitude — is **blocked on the same D1 EoT/buff-magnitude question as fleet↔enduring** (magnitude lives on the shared effect definition, not the form). Those auras don't get this form until that question is ruled.
+
+*Note: superficially adjacent to self_channeled_tick·vortex (both "Focus ↔ radius"), but the Focus sub-lever differs — vortex is continuous **drain** (trades against sustain, the bar empties as you hold), reserve-heavy is flat **reservation** (trades against your Focus budget for other skills, set-and-forget). Different build math on distinct prototypes.*
+
 ### Engine prerequisites for wave 1
 
 1. **Per-skill VFX mapping** — animation/VFX is currently delivery-driven (all skills of a `SkillType` look identical; the channeled ring is hardcoded per `SkillType`). Identity skins require a per-skill (per-composition) VFX key. The self_channeled_tick forms lean hardest on this.
