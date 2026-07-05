@@ -380,7 +380,7 @@ Flattening at craft preserves every prior rule: instances are standalone (no run
 
 Every lever on a composed skill is one of two kinds:
 
-- **Budget levers** — cooldown, tick rate, AoE/zone radius, Focus cost/drain, wind-up. They move throughput. Across any two forms of the same prototype they must net to the same power budget **at equal tier** — "no free lunch," enforced as design discipline (exchange rates Balancer-owned, not exact math). Trading among them changes a skill's *shape*, never its power.
+- **Budget levers** — cooldown, tick rate, AoE/zone radius, Focus cost/drain, wind-up, **stack count** (the `StackLimit` field — more simultaneous instances is more total throughput; added 2026-07-06 with the swarm↔singular axis below). They move throughput. Across any two forms of the same prototype they must net to the same power budget **at equal tier** — "no free lunch," enforced as design discipline (exchange rates Balancer-owned, not exact math). Trading among them changes a skill's *shape*, never its power.
 - **Identity levers** — damage type, VFX/animation/sound, wind-up-as-telegraph, and *which* budget lever the tier track advances. Free: they place the skill in the build ecosystem without moving throughput.
 
 **Skill identity = prototype (delivery fantasy) × form (budget-spend shape + tier track) × identity (type + skin).**
@@ -454,6 +454,23 @@ The **designated fallback contrast axis** for a prototype that has no richer bud
 
 - **Barred from damage-tick prototypes.** After the hit-size clarification above, "potency" on a tick skill cannot mean damage-per-tick — the only throughput lever left is tick rate, so "duration ↔ potency" collapses into the existing **storm/floor duration↔tick-rate axis** (`fixed_zone_tick`). Using it on `self_duration_tick` or `tracked_tick` adds no new exchange rate and pushes the roster toward the fast/slow-toggle reading the varied-axes rule prevents. Not to be spent there.
 - **Its one unique home is `entity_debuff`** — a `None`-pattern skill with no damage, radius, or tick rate, whose only possible trade is duration ↔ debuff-strength. **Blocked:** both a debuff's duration and its strength (`SlowFraction`, etc.) live on the shared `EotData` *definition* (`design-stats.md` EoT-payload ownership), not on the skill or form. A short-strong/long-weak pair would require promoting EoT magnitude/duration to a per-form override — a stat-ownership decision that belongs with the **element/EoT wave (D1)**, where debuff magnitudes and the "element whispers, augments shout" token effects get designed. **Unblock condition:** that wave rules on whether a form may override an EoT's magnitude/duration.
+
+#### swarm ↔ singular (stack count ↔ instance size) — adopted 2026-07-06
+
+The contrast axis for the two multi-instance prototypes: **stackable_zone** (Position/Tick — independent ticking zones) and **triggered_zone_burst** (Position/Burst — proximity traps). Trade board coverage against concentrated power at constant budget: **many small instances** (swarm) vs. **few big ones** (singular). Ships on pure data — `StackLimit` already exists and is enforced; no engine work.
+
+| | stackable_zone | triggered_zone_burst |
+|---|---|---|
+| **swarm** | Many small, short-radius ticking zones — area saturation | Many small-radius traps blanketing an area |
+| **singular** | Few (**stack floor ≥ 2**) large, long-duration zones | One or two big-radius traps |
+| swarm tier track | Stack count ↑ | Stack count ↑ |
+| singular tier track | Radius ↑ | Radius ↑ |
+
+Adds **8 reachable combos** (2 prototypes × 2 forms × 2 identities) and gives both prototypes their first player-facing forms.
+
+**Instance "size" is never per-instance damage** (hit-size constancy) — it is the instance's radius/duration/tick-rate for the tick zones, and radius alone for the burst traps (a burst's per-hit damage is fixed, so a "big" trap just catches more). **Overlap guard:** stackable_zone's *singular* end keeps a **stack floor ≥ 2** — dropping to one ticking zone would make it a `fixed_zone_tick` clone (which owns the storm/floor forms). triggered_zone_burst has no such twin, so its singular end may go to a single trap.
+
+*Note: this is the one axis intentionally shared across two prototypes. Legal because the chassis are mechanically distinct (persistent zones vs. one-shot traps) and stacking is the *defining* trade for both — it reads as two fantasies exploring one exchange rate, not a fast/slow mode toggle.*
 
 ### Engine prerequisites for wave 1
 
