@@ -503,6 +503,22 @@ The contrast axis for **fixed_zone_burst** (Position/Burst — a zone that deton
 
 *Homed on fixed_zone_burst deliberately: its position is fixed, so "same spot" for the aftershock is unambiguous. **Not** placed on self_burst (its nova/quake pair already owns the telegraph-timing axis, and "same spot" is ambiguous when the player moves) or windup_burst (left clear for the pending wind-up-as-form-axis question — see the fuse candidate in the brainstorm doc).*
 
+#### ramp (self_channeled_tick, third form) — adopted 2026-07-06
+
+A third form for **self_channeled_tick** on a new temporal axis: while channeling, **tick rate accelerates the longer you hold**, at constant drain — a reward for uninterrupted commitment. Within-channel state only: it resets to base the instant you stop (no stored stacks between activations, so it is *not* the gated charge-accumulation mechanic). Contrasts against the spin/vortex radius↔drain pair. Adds 2 reachable combos.
+
+| Field | Value |
+|---|---|
+| Prototype | self_channeled_tick (third form) |
+| Contrast axis | Temporal ramp — flat throughput (spin/vortex) vs. throughput that climbs with hold time |
+| Budget shape | Tick rate starts low and accelerates toward a cap the longer the channel is held continuously; drain constant; resets on release |
+| Tier track | Ramp speed ↑ (reaches the payoff sooner) |
+| Word-map fragment | "surge" / "swell" / "kindle" |
+
+- **"Builds" is tick rate, never damage-per-tick** (hit-size constancy). Escalating channel *intensity* is modeled as accelerating ticks, not bigger hits.
+- **Power-neutral via the ramp curve.** Ramp trades early weakness for late strength — worse than spin/vortex at channel start, better after a sustained hold. The Balancer prices the curve so time-averaged DPS over a typical channel meets spin/vortex parity. It is *situational*, not a strict upgrade: it rewards long uninterrupted holds (contained rooms, stationary tanky targets) and is punished by kiting or any interrupt (dodge, reposition, target death) that resets it to base. Against a mobile horde you must chase, the flat forms win.
+- **Engine need — a within-channel hold-time accumulator** driving the current tick rate, reset on release. A bounded change to the existing channel tick loop; explicitly **not** a stored-stack/charge system (that is the gated charge_release mechanic).
+
 ### Engine prerequisites for wave 1
 
 1. **Per-skill VFX mapping** — animation/VFX is currently delivery-driven (all skills of a `SkillType` look identical; the channeled ring is hardcoded per `SkillType`). Identity skins require a per-skill (per-composition) VFX key. The self_channeled_tick forms lean hardest on this.
