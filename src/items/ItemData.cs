@@ -12,6 +12,7 @@ public record ItemData(
     DamageType     BaseDamageType      = DamageType.Physical,
     float          DamageBonus         = 0f,  // % bonus to damage of this weapon's type (e.g. 0.10 = +10%)
     float          CritChanceBonus     = 0f,  // flat crit chance added by weapon identity
+    float          CritDamageBonus     = 0f,  // flat crit damage added by gear affix
     // Armor fields
     ArmorCategory  ArmorCategory      = ArmorCategory.None,
     int            BonusHp            = 0,
