@@ -7,8 +7,8 @@ public static class FormRegistry
 {
     private static readonly Dictionary<string, FormData> All = new()
     {
-        ["reserve-heavy"] = new FormData(
-            Id: "reserve-heavy",
+        ["reserve_heavy"] = new FormData(
+            Id: "reserve_heavy",
             PrototypeId: "self_aura",
             TierTrack: TierTrack.RadiusUp,
             Range: BalanceConfig.Forms.SelfAuraHeavyRange,
@@ -16,8 +16,8 @@ public static class FormRegistry
             Cooldown: BalanceConfig.Forms.SelfAuraHeavyCooldown,
             TickRate: BalanceConfig.Forms.SelfAuraHeavyCooldown
         ),
-        ["reserve-light"] = new FormData(
-            Id: "reserve-light",
+        ["reserve_light"] = new FormData(
+            Id: "reserve_light",
             PrototypeId: "self_aura",
             TierTrack: TierTrack.FocusCostDown,
             Range: BalanceConfig.Forms.SelfAuraLightRange,

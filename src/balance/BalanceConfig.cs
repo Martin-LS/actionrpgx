@@ -248,7 +248,7 @@ public static class BalanceConfig
         public const float StackableZoneSingularDuration = 15.0f;
         public const int   StackableZoneSingularStackLimit = 2;
 
-        // self_aura (reserve-heavy / reserve-light)
+        // self_aura (reserve_heavy / reserve_light)
         public const float SelfAuraHeavyCooldown = 1.0f;
         public const float SelfAuraHeavyRange = 180f;
         public const float SelfAuraHeavyFocusReservation = 35f;

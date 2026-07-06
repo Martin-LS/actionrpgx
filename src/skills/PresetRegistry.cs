@@ -226,28 +226,28 @@ public static class PresetRegistry
             Id: "steel_wall",
             Name: "Steel Wall",
             PrototypeId: "self_aura",
-            FormId: "reserve-heavy",
+            FormId: "reserve_heavy",
             IdentityId: "physical"
         ),
         ["arcane_singularity"] = new PresetData(
             Id: "arcane_singularity",
             Name: "Arcane Singularity",
             PrototypeId: "self_aura",
-            FormId: "reserve-heavy",
+            FormId: "reserve_heavy",
             IdentityId: "magic"
         ),
         ["razor_aura"] = new PresetData(
             Id: "razor_aura",
             Name: "Razor Aura",
             PrototypeId: "self_aura",
-            FormId: "reserve-light",
+            FormId: "reserve_light",
             IdentityId: "physical"
         ),
         ["static_field"] = new PresetData(
             Id: "static_field",
             Name: "Static Field",
             PrototypeId: "self_aura",
-            FormId: "reserve-light",
+            FormId: "reserve_light",
             IdentityId: "magic"
         )
     };
