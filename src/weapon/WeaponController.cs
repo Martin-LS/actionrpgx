@@ -590,10 +590,11 @@ public partial class WeaponController : Node
             critMultiplier = _critMultiplier;
         baseDmg *= critMultiplier;
 
+        int subHits = slot.Skill!.SubHits;
         if (slot.Skill.WindUp > 0f)
         {
             float            capWindUp  = slot.Skill.WindUp;
-            float            capDmg     = baseDmg;
+            float            capDmg     = baseDmg / subHits;
             Items.DamageType capType    = dmgType;
             float            capCrit    = critMultiplier;
             var              capEots    = slot.Eots;
@@ -609,43 +610,92 @@ public partial class WeaponController : Node
                 if (target == null || !GodotObject.IsInstanceValid(target) || target.IsQueuedForDeletion())
                     return;
 
-                if (capIsMelee)
+                for (int j = 0; j < subHits; j++)
                 {
-                    HitMelee(target, capDmg, capType, capEots, capCrit);
-                }
-                else
-                {
-                    var playerNode = GetParent<Node3D>();
-                    if (playerNode == null || !GodotObject.IsInstanceValid(playerNode)) return;
-                    var origin    = playerNode.GlobalPosition;
-                    var diff      = target.GlobalPosition - origin;
-                    var direction = new Vector3(diff.X, 0f, diff.Z).Normalized();
+                    int subIndex = j;
+                    float delay = subIndex * (0.5f / subHits);
+                    if (delay > 0f)
+                    {
+                        GetTree().CreateTimer(delay).Timeout += () =>
+                        {
+                            if (target == null || !GodotObject.IsInstanceValid(target) || target.IsQueuedForDeletion())
+                                return;
 
-                    var projectile = ProjectileScene.Instantiate<Projectile>();
-                    projectile.Initialize(direction, capDmg, capType, capEots, false, false, capCrit);
-                    GetTree().Root.AddChild(projectile);
-                    projectile.GlobalPosition = new Vector3(origin.X, target.GlobalPosition.Y, origin.Z);
+                            if (capIsMelee)
+                            {
+                                HitMelee(target, capDmg, capType, capEots, capCrit, subHits);
+                            }
+                            else
+                            {
+                                FireProjectileAtTarget(target, capDmg, capType, capEots, capCrit, subHits);
+                            }
+                        };
+                    }
+                    else
+                    {
+                        if (capIsMelee)
+                        {
+                            HitMelee(target, capDmg, capType, capEots, capCrit, subHits);
+                        }
+                        else
+                        {
+                            FireProjectileAtTarget(target, capDmg, capType, capEots, capCrit, subHits);
+                        }
+                    }
                 }
             };
         }
         else
         {
+            float capDmg = baseDmg / subHits;
             if (isMelee)
             {
                 float windupDelay = slot.Skill!.Cooldown * BalanceConfig.Skills.MeleeWindupFraction;
-                GetTree().CreateTimer(windupDelay).Timeout +=
-                    () => { if (!target.IsQueuedForDeletion()) HitMelee(target, baseDmg, dmgType, slot.Eots, critMultiplier); };
+                GetTree().CreateTimer(windupDelay).Timeout += () =>
+                {
+                    if (target == null || !GodotObject.IsInstanceValid(target) || target.IsQueuedForDeletion())
+                        return;
+
+                    for (int j = 0; j < subHits; j++)
+                    {
+                        int subIndex = j;
+                        float delay = subIndex * (0.5f / subHits);
+                        if (delay > 0f)
+                        {
+                            GetTree().CreateTimer(delay).Timeout += () =>
+                            {
+                                if (target == null || !GodotObject.IsInstanceValid(target) || target.IsQueuedForDeletion())
+                                    return;
+                                HitMelee(target, capDmg, dmgType, slot.Eots, critMultiplier, subHits);
+                            };
+                        }
+                        else
+                        {
+                            HitMelee(target, capDmg, dmgType, slot.Eots, critMultiplier, subHits);
+                        }
+                    }
+                };
             }
             else
             {
-                var origin    = GetParent<Node3D>().GlobalPosition;
-                var diff      = target.GlobalPosition - origin;
-                var direction = new Vector3(diff.X, 0f, diff.Z).Normalized();
-
-                var projectile = ProjectileScene.Instantiate<Projectile>();
-                projectile.Initialize(direction, baseDmg, dmgType, slot.Eots, false, false, critMultiplier);
-                GetTree().Root.AddChild(projectile);
-                projectile.GlobalPosition = new Vector3(origin.X, target.GlobalPosition.Y, origin.Z);
+                for (int j = 0; j < subHits; j++)
+                {
+                    int subIndex = j;
+                    float delay = subIndex * (0.5f / subHits);
+                    if (delay > 0f)
+                    {
+                        GetTree().CreateTimer(delay).Timeout += () =>
+                        {
+                            if (target == null || !GodotObject.IsInstanceValid(target) || target.IsQueuedForDeletion())
+                                return;
+                            FireProjectileAtTarget(target, capDmg, dmgType, slot.Eots, critMultiplier, subHits);
+                        };
+                    }
+                    else
+                    {
+                        FireProjectileAtTarget(target, capDmg, dmgType, slot.Eots, critMultiplier, subHits);
+                    }
+                }
             }
         }
 
@@ -895,22 +945,37 @@ public partial class WeaponController : Node
         EmitSignal(SignalName.SkillFired, slotIndex, slot.Skill!.Cooldown, "SelfBurst");
     }
 
+    private void FireProjectileAtTarget(Enemies.EnemyController target, float damage, Items.DamageType dmgType,
+        List<(string Id, float Chance)> eots, float critMultiplier, int subHits)
+    {
+        var playerNode = GetParent<Node3D>();
+        if (playerNode == null || !GodotObject.IsInstanceValid(playerNode)) return;
+        var origin    = playerNode.GlobalPosition;
+        var diff      = target.GlobalPosition - origin;
+        var direction = new Vector3(diff.X, 0f, diff.Z).Normalized();
+
+        var projectile = ProjectileScene.Instantiate<Projectile>();
+        projectile.Initialize(direction, damage, dmgType, eots, false, false, critMultiplier, subHits);
+        GetTree().Root.AddChild(projectile);
+        projectile.GlobalPosition = new Vector3(origin.X, target.GlobalPosition.Y, origin.Z);
+    }
+
     private void HitMelee(Enemies.EnemyController target, float damage, Items.DamageType dmgType,
-        List<(string Id, float Chance)> eots, float critMultiplier)
+        List<(string Id, float Chance)> eots, float critMultiplier, int subHits = 1)
     {
         bool   isCrit  = critMultiplier > 1f;
         var    hitPos  = target.GlobalPosition;
         target.TakeDamage(damage, dmgType, isCrit);
-        ApplyEots(target, eots, critMultiplier);
+        ApplyEots(target, eots, critMultiplier, subHits);
         SpawnHitVfx(hitPos);
     }
 
-    private void ApplyEots(Enemies.EnemyController enemy, List<(string Id, float Chance)> eots, float critMultiplier)
+    private void ApplyEots(Enemies.EnemyController enemy, List<(string Id, float Chance)> eots, float critMultiplier, int subHits = 1)
     {
         foreach (var (eotId, chance) in eots)
         {
             var eot = EotRegistry.Get(eotId);
-            if (eot != null && GD.Randf() < chance)
+            if (eot != null && GD.Randf() < (chance / subHits))
                 enemy.ApplyEot(eot, critMultiplier);
         }
     }

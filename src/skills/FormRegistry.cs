@@ -7,6 +7,14 @@ public static class FormRegistry
 {
     private static readonly Dictionary<string, FormData> All = new()
     {
+        ["salvo"] = new FormData(
+            Id: "salvo",
+            PrototypeId: "entity_burst",
+            TierTrack: TierTrack.CooldownDown,
+            Cooldown: BalanceConfig.Forms.SalvoCooldown,
+            FocusCost: BalanceConfig.Forms.SalvoFocusCost,
+            SubHits: BalanceConfig.Forms.SalvoSubHits
+        ),
         ["swift"] = new FormData(
             Id: "swift",
             PrototypeId: "entity_burst",

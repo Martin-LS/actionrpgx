@@ -8,6 +8,22 @@ public static class PresetRegistry
     public static readonly Dictionary<string, PresetData> All = new()
     {
         // entity_burst presets
+        ["flurry"] = new PresetData(
+            Id: "flurry",
+            Name: "Flurry",
+            PrototypeId: "entity_burst",
+            FormId: "salvo",
+            IdentityId: "physical",
+            IconPath: "res://assets/icons/items/battle_axe.png"
+        ),
+        ["arcane_flurry"] = new PresetData(
+            Id: "arcane_flurry",
+            Name: "Arcane Flurry",
+            PrototypeId: "entity_burst",
+            FormId: "salvo",
+            IdentityId: "magic",
+            IconPath: "res://assets/icons/items/battle_axe.png"
+        ),
         ["strike"] = new PresetData(
             Id: "strike",
             Name: "Strike",
