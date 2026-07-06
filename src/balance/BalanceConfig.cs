@@ -248,6 +248,14 @@ public static class BalanceConfig
         public const float StackableZoneSingularDuration = 15.0f;
         public const int   StackableZoneSingularStackLimit = 2;
 
+        // self_aura (reserve-heavy / reserve-light)
+        public const float SelfAuraHeavyCooldown = 1.0f;
+        public const float SelfAuraHeavyRange = 180f;
+        public const float SelfAuraHeavyFocusReservation = 35f;
+        public const float SelfAuraLightCooldown = 1.0f;
+        public const float SelfAuraLightRange = 72f;
+        public const float SelfAuraLightFocusReservation = 10f;
+
         // triggered_zone_burst (swarm / singular)
         public const float TriggeredZoneBurstSwarmCooldown = 0.8f;
         public const float TriggeredZoneBurstSwarmTriggerRadius = 18f;

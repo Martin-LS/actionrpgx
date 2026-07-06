@@ -219,6 +219,36 @@ public static class PresetRegistry
             PrototypeId: "self_channeled_tick",
             FormId: "vortex",
             IdentityId: "magic"
+        ),
+
+        // self_aura presets
+        ["steel_wall"] = new PresetData(
+            Id: "steel_wall",
+            Name: "Steel Wall",
+            PrototypeId: "self_aura",
+            FormId: "reserve-heavy",
+            IdentityId: "physical"
+        ),
+        ["arcane_singularity"] = new PresetData(
+            Id: "arcane_singularity",
+            Name: "Arcane Singularity",
+            PrototypeId: "self_aura",
+            FormId: "reserve-heavy",
+            IdentityId: "magic"
+        ),
+        ["razor_aura"] = new PresetData(
+            Id: "razor_aura",
+            Name: "Razor Aura",
+            PrototypeId: "self_aura",
+            FormId: "reserve-light",
+            IdentityId: "physical"
+        ),
+        ["static_field"] = new PresetData(
+            Id: "static_field",
+            Name: "Static Field",
+            PrototypeId: "self_aura",
+            FormId: "reserve-light",
+            IdentityId: "magic"
         )
     };
 
