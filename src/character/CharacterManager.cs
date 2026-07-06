@@ -969,6 +969,7 @@ public partial class CharacterManager : Node
         "cyclone"                => "self_channeled_tick",
         "nova"                   => "self_burst",
         "damage_aura"            => "self_duration_tick",
+        "windup_burst"           => "fixed_zone_burst",
         _                        => oldId,
     };
 

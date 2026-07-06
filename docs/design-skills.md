@@ -47,7 +47,6 @@ Example: base 250 units + 100% AoE → 250 × √2 ≈ 354 units. Each additiona
 | self_burst | All enemies within radius of player |
 | fixed_zone_tick | All enemies within zone radius |
 | fixed_zone_burst | All enemies within zone radius at detonation |
-| windup_burst | All enemies within zone radius at detonation |
 | tracked_tick | Tracked enemy + all enemies within radius around them |
 | stackable_zone | All enemies within zone radius |
 | triggered_zone_burst | All enemies within zone radius at detonation |
@@ -68,7 +67,6 @@ All 12 prototypes are craftable. The `EngineProof` kind is retained in code for 
 | self_burst | Self | Burst | Active |
 | fixed_zone_tick | Position | Tick | Active |
 | fixed_zone_burst | Position | Burst | Active |
-| windup_burst | Position | Burst | Active |
 | tracked_tick | Entity | Tick | Active |
 | entity_debuff | Entity | None | Active |
 | stackable_zone | Position | Tick | Active |
@@ -223,21 +221,7 @@ All values (damage, cooldown, radius, tick rate, duration) are TBD — owned by 
 | Type | Active |
 | Damage type | Fire (placeholder — Magic→Fire) |
 
-**windup_burst**
-
-| Property | Value |
-|---|---|
-| Description | Proves wind-up mechanic. Telegraphed 1.5s delay before a high-damage burst lands at target position. Wind-up is the balancing cost. |
-| Good for | Skills with a visible telegraph before a powerful hit lands — high damage that enemies can theoretically walk out of. |
-| Kind | Prototype |
-| Targeting shape | Position |
-| Wind-up | 1.5s |
-| Damage pattern | Burst |
-| Stack limit | 1 |
-| Zone tracks entity | No |
-| Duration | 0 — instant burst on detonation, no persistent zone |
-| Type | Active |
-| Damage type | Fire (placeholder — Magic→Fire) |
+*windup_burst — retired (2026-07-06). Its engine-proof job (wind-up mechanic) is complete; wind-up now lives as a form (self_burst·quake, fixed_zone_burst·fuse). See "Beyond wave 1 — fuse" below for the structural ruling.*
 
 **tracked_tick**
 

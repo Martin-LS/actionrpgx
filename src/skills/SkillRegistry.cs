@@ -113,21 +113,6 @@ public static class SkillRegistry
             DamagePattern: SkillDamagePattern.None,
             DebuffEotId: "slow"),
 
-        ["windup_burst"] = new SkillData(
-            "windup_burst", "Windup Burst", SkillType.Active,
-            Tags: new[] { "AoE" },
-            Cooldown: BalanceConfig.Skills.WindupBurstCooldown,
-            Range: BalanceConfig.Skills.WindupBurstRange,
-            FocusCost: BalanceConfig.Focus.WindupBurstFocusCost,
-            Description: "Telegraphed 1.5s wind-up before a high-damage burst at cursor position. Proves wind-up mechanic.",
-            Kind: SkillKind.Prototype,
-            TargetingShape: SkillTargetingShape.Position,
-            DamagePattern: SkillDamagePattern.Burst,
-            WindUp: BalanceConfig.Skills.WindupBurstWindUp,
-            StackLimit: 1,
-            Duration: 0f,
-            ZoneRadius: BalanceConfig.Skills.WindupBurstZoneRadius),
-
         ["fixed_zone_burst"] = new SkillData(
             "fixed_zone_burst", "Fixed Zone Burst", SkillType.Active,
             Tags: new[] { "AoE" },
