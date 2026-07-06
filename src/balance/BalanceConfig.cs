@@ -66,11 +66,6 @@ public static class BalanceConfig
         public const float FixedZoneBurstRange       = 180f; // cast range (5 tiles)
         public const float FixedZoneBurstZoneRadius  = 72f;  // blast radius at landing (2 tiles)
 
-        // Prototype: Windup-Burst — test values, owned by Balancer
-        public const float WindupBurstCooldown    = 3.0f;
-        public const float WindupBurstRange       = 180f;
-        public const float WindupBurstZoneRadius  = 108f; // 3 tiles
-        public const float WindupBurstWindUp      = 1.5f;
 
         // Prototype: Tracked-Tick — test values, owned by Balancer
         public const float TrackedTickCooldown   = 3.0f;
@@ -133,7 +128,6 @@ public static class BalanceConfig
         public const float TriggeredZoneBurstFocusCost = 15f;
         public const float StackableZoneFocusCost      = 15f;
         public const float EntityDebuffFocusCost   = 10f;
-        public const float WindupBurstFocusCost    = 20f;
         public const float FixedZoneBurstFocusCost = 15f;
         public const float FixedZoneTickFocusCost  = 20f;
 
