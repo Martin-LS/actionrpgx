@@ -23,7 +23,7 @@ public static class ItemRegistry
             ["wand_t1"]  = new("wand_t1",  "Wand",  ItemSlot.Weapon,
                 IconPath: "res://assets/icons/items/enchanted_blade.png",
                 WeaponRange: BalanceConfig.Weapons.WandRange, PreferredDelivery: "RangeMagic",
-                BaseDamage: BalanceConfig.Weapons.WandBaseDamage, BaseDamageType: DamageType.Magic,
+                BaseDamage: BalanceConfig.Weapons.WandBaseDamage, BaseDamageType: DamageType.Fire,
                 DamageBonus: BalanceConfig.Weapons.WandDamageBonus) { Tags = new[] { "Magic" } },
 
             // Hats

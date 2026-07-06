@@ -596,7 +596,7 @@ public partial class PlayerController : CharacterBody3D
         float effective = rawAmount * (1f - DamageReduction);
         if (type == Items.DamageType.Physical)
             effective *= (1f - PhysicalResistance);
-        else if (type == Items.DamageType.Magic)
+        else
             effective *= (1f - MagicResistance);
 
         // Fortify: if active, reduce this hit; refresh for next hit
@@ -621,7 +621,7 @@ public partial class PlayerController : CharacterBody3D
         EmitSignal(SignalName.HealthChanged, CurrentHealth);
 
         if (damageToShow > 0f)
-            EmitSignal(SignalName.DamageTaken, damageToShow, type == Items.DamageType.Magic);
+            EmitSignal(SignalName.DamageTaken, damageToShow, type != Items.DamageType.Physical);
 
         if (effective > 0f)
         {

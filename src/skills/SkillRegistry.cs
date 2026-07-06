@@ -41,7 +41,7 @@ public static class SkillRegistry
             TargetingShape: SkillTargetingShape.Self,
             DamagePattern: SkillDamagePattern.Tick,
             Duration: BalanceConfig.Skills.SelfDurationTickDuration,
-            DamageType: DamageType.Magic,
+            DamageType: DamageType.Fire,
             TickRate: BalanceConfig.Skills.SelfDurationTickCooldown),
 
         ["self_burst"] = new SkillData(

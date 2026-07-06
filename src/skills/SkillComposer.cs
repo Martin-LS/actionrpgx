@@ -9,6 +9,7 @@ public static class SkillComposer
             Kind       = SkillKind.Normal,
             BasedOn    = proto.Id,
             DamageType = identity.DamageType,
+            SignatureEotId = identity.SignatureEotId,
             VfxKey = identity.VfxKey,
             IconPath   = preset.IconPath,
             Cooldown   = form.Cooldown   ?? proto.Cooldown,

@@ -146,6 +146,22 @@ public static class BalanceConfig
         public const float BurnDuration      = 4f;
         public const float BurnTickRate      = 0.5f;
         public const float BurnDamagePerTick = 5f;
+
+        // Signature ailments (element wave) apply innately/guaranteed; Balancer tunes magnitudes.
+        public const float SignatureApplyChance = 1f;
+
+        // Bleed — Physical signature DoT
+        public const float BleedDuration      = 4f;
+        public const float BleedTickRate      = 0.5f;
+        public const float BleedDamagePerTick = 5f;
+
+        // Chill — Cold signature slow (milder than the hard Slow augment)
+        public const float ChillDuration      = 3f;
+        public const float ChillSlowFraction  = 0.30f;
+
+        // Shock — Lightning signature damage-taken amp
+        public const float ShockDuration       = 4f;
+        public const float ShockDamageTakenAmp = 0.20f; // +20% damage taken while shocked
     }
 
     public static class Enemies

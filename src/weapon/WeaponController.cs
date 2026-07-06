@@ -147,10 +147,16 @@ public partial class WeaponController : Node
             var eot = EotRegistry.Get(skill.DebuffEotId);
             eots.Add((skill.DebuffEotId, eot?.ApplyChance ?? 1f));
         }
+        // Innate signature ailment from the skill's identity (element wave).
+        if (!string.IsNullOrEmpty(skill.SignatureEotId))
+        {
+            var sig = EotRegistry.Get(skill.SignatureEotId);
+            eots.Add((skill.SignatureEotId, sig?.ApplyChance ?? 1f));
+        }
         if (augmentEots != null) eots.AddRange(augmentEots);
         _slots[slotIndex].Eots             = eots;
         _slots[slotIndex].HasMagicDamage   = hasMagicDamage;
-        _slots[slotIndex].EffectiveDamageType = hasMagicDamage ? Items.DamageType.Magic : skill.DamageType;
+        _slots[slotIndex].EffectiveDamageType = hasMagicDamage ? Items.DamageType.Fire : skill.DamageType;
         _slots[slotIndex].CritChanceBonus  = critChanceBonus;
         _slots[slotIndex].AutoActivate  = true;
         _slots[slotIndex].IsChanneling  = false;
@@ -409,8 +415,7 @@ public partial class WeaponController : Node
         ref var slot   = ref _slots[slotIndex];
         var     origin = GetParent<Node3D>().GlobalPosition;
 
-        bool  isMagic = slot.HasMagicDamage || slot.EffectiveDamageType == Items.DamageType.Magic;
-        var   dmgType = isMagic ? Items.DamageType.Magic : Items.DamageType.Physical;
+        var   dmgType = slot.EffectiveDamageType;
         float baseDmg = _deliveryDamage;
 
         float critChance = _globalCritChance + slot.CritChanceBonus;
@@ -435,8 +440,7 @@ public partial class WeaponController : Node
         ref var slot   = ref _slots[slotIndex];
         var     origin = GetParent<Node3D>().GlobalPosition;
 
-        bool  isMagic = slot.HasMagicDamage || slot.EffectiveDamageType == Items.DamageType.Magic;
-        var   dmgType = isMagic ? Items.DamageType.Magic : Items.DamageType.Physical;
+        var   dmgType = slot.EffectiveDamageType;
         float baseDmg = _deliveryDamage;
 
         float critChance = _globalCritChance + slot.CritChanceBonus;
@@ -573,8 +577,7 @@ public partial class WeaponController : Node
 
         if (slot.Skill.DamagePattern == SkillDamagePattern.Tick && slot.Skill.ZoneTracksEntity)
         {
-            bool  ttMagic  = slot.HasMagicDamage || slot.EffectiveDamageType == Items.DamageType.Magic;
-            var   ttType   = ttMagic ? Items.DamageType.Magic : Items.DamageType.Physical;
+            var   ttType   = slot.EffectiveDamageType;
             float ttDmg    = _deliveryDamage;
             float ttCritChance = _globalCritChance + slot.CritChanceBonus;
             float ttCrit   = 1.0f;
@@ -599,14 +602,13 @@ public partial class WeaponController : Node
             return;
         }
 
-        bool  isMagic   = slot.HasMagicDamage || slot.EffectiveDamageType == Items.DamageType.Magic;
         bool  hasMelee  = System.Array.Exists(slot.Skill!.Tags, t => t == "Melee");
         bool  hasRange  = System.Array.Exists(slot.Skill!.Tags, t => t == "Range");
         // Weapon-adaptive: no delivery tag → inherit weapon's PreferredDelivery
         bool  isMelee   = hasMelee || (!hasRange && _preferredDelivery == "Melee");
         string delivery = isMelee ? "Melee"
             : (_preferredDelivery == "RangeMagic" ? "RangeMagic" : "Ranged");
-        var   dmgType   = isMagic ? Items.DamageType.Magic : Items.DamageType.Physical;
+        var   dmgType   = slot.EffectiveDamageType;
         float baseDmg   = _deliveryDamage;
 
         float critChance      = _globalCritChance + slot.CritChanceBonus;
@@ -746,8 +748,7 @@ public partial class WeaponController : Node
 
                 var slotData = _slots[slotIndex];
 
-                bool  isMagic = slotData.HasMagicDamage || slotData.EffectiveDamageType == Items.DamageType.Magic;
-                var   dmgType = isMagic ? Items.DamageType.Magic : Items.DamageType.Physical;
+                var   dmgType = slotData.EffectiveDamageType;
                 float baseDmg = _deliveryDamage;
 
                 float critChance = _globalCritChance + slotData.CritChanceBonus;
@@ -783,8 +784,7 @@ public partial class WeaponController : Node
         {
             var origin = GetParent<Node3D>().GlobalPosition;
 
-            bool  isMagic = slot.HasMagicDamage || slot.EffectiveDamageType == Items.DamageType.Magic;
-            var   dmgType = isMagic ? Items.DamageType.Magic : Items.DamageType.Physical;
+            var   dmgType = slot.EffectiveDamageType;
             float baseDmg = _deliveryDamage;
 
             float critChance = _globalCritChance + slot.CritChanceBonus;
@@ -823,8 +823,7 @@ public partial class WeaponController : Node
 
         if (slot.Skill!.TriggerRadius > 0f)
         {
-            bool  isMagic  = slot.HasMagicDamage || slot.EffectiveDamageType == Items.DamageType.Magic;
-            var   dmgType  = isMagic ? Items.DamageType.Magic : Items.DamageType.Physical;
+            var   dmgType  = slot.EffectiveDamageType;
             float baseDmg  = _deliveryDamage;
 
             float critChance = _globalCritChance + slot.CritChanceBonus;
@@ -858,8 +857,7 @@ public partial class WeaponController : Node
         }
         else if (slot.Skill!.DamagePattern == SkillDamagePattern.Burst)
         {
-            bool  isMagic    = slot.HasMagicDamage || slot.EffectiveDamageType == Items.DamageType.Magic;
-            var   dmgType    = isMagic ? Items.DamageType.Magic : Items.DamageType.Physical;
+            var   dmgType    = slot.EffectiveDamageType;
             float baseDmg    = _deliveryDamage;
 
             float critChance = _globalCritChance + slot.CritChanceBonus;
@@ -932,8 +930,7 @@ public partial class WeaponController : Node
         }
         else if (slot.Skill!.DamagePattern == SkillDamagePattern.Tick)
         {
-            bool  isMagic = slot.HasMagicDamage || slot.EffectiveDamageType == Items.DamageType.Magic;
-            var   dmgType = isMagic ? Items.DamageType.Magic : Items.DamageType.Physical;
+            var   dmgType = slot.EffectiveDamageType;
             float baseDmg = _deliveryDamage;
 
             float critChance = _globalCritChance + slot.CritChanceBonus;
