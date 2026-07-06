@@ -228,6 +228,11 @@ public static class BalanceConfig
 
     public static class Forms
     {
+        // salvo (entity_burst)
+        public const float SalvoCooldown = 0.8f;
+        public const float SalvoFocusCost = 6f;
+        public const int   SalvoSubHits = 4;
+
         // swift (entity_burst)
         public const float SwiftCooldown = 0.5f;
         public const float SwiftFocusCost = 6f;

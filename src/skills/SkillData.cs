@@ -27,5 +27,6 @@ public record SkillData(
     DamageType           DamageType        = DamageType.Physical,
     string               VfxKey            = "",
     string?              BasedOn           = null,
-    float                TickRate          = 0f
+    float                TickRate          = 0f,
+    int                  SubHits           = 1
 );
