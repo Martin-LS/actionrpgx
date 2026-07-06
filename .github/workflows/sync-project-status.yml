@@ -8,6 +8,16 @@ jobs:
   sync-status:
     runs-on: ubuntu-latest
     steps:
+      - name: Close issue on terminal label
+        if: >
+          github.event.action == 'labeled' &&
+          (github.event.label.name == 'finished' || github.event.label.name == 'rejected')
+        env:
+          GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+        run: |
+          REASON=$([ "${{ github.event.label.name }}" = "rejected" ] && echo "not planned" || echo "completed")
+          gh issue close "${{ github.event.issue.number }}" --repo "$GITHUB_REPOSITORY" --reason "$REASON"
+
       - name: Determine and set board Status
         env:
           GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}
