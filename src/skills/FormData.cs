@@ -13,5 +13,7 @@ public record FormData(
     float?    TickRate   = null,
     float?    Range      = null,   // ONLY on forms of Self-targeting prototypes
     int?      SubHits    = null,
-    float?    RampSpeed  = null
+    float?    RampSpeed  = null,
+    int?      StackLimit = null,
+    float?    TriggerRadius = null
 );

@@ -46,6 +46,14 @@ public static class SkillTiering
                 float newRampSpeed = skill.RampSpeed * (1f + factor);
                 return skill with { RampSpeed = newRampSpeed };
 
+            case TierTrack.StackLimitUp:
+                if (skill.StackLimit > 0)
+                {
+                    int newStackLimit = skill.StackLimit + (tier - 1);
+                    return skill with { StackLimit = newStackLimit };
+                }
+                return skill;
+
             default:
                 return skill;
         }

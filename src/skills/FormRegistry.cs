@@ -7,6 +7,41 @@ public static class FormRegistry
 {
     private static readonly Dictionary<string, FormData> All = new()
     {
+        ["swarm"] = new FormData(
+            Id: "swarm",
+            PrototypeId: "stackable_zone",
+            TierTrack: TierTrack.StackLimitUp,
+            Cooldown: BalanceConfig.Forms.StackableZoneSwarmCooldown,
+            ZoneRadius: BalanceConfig.Forms.StackableZoneSwarmZoneRadius,
+            StackLimit: BalanceConfig.Forms.StackableZoneSwarmStackLimit
+        ),
+        ["singular"] = new FormData(
+            Id: "singular",
+            PrototypeId: "stackable_zone",
+            TierTrack: TierTrack.RadiusUp,
+            Cooldown: BalanceConfig.Forms.StackableZoneSingularCooldown,
+            ZoneRadius: BalanceConfig.Forms.StackableZoneSingularZoneRadius,
+            Duration: BalanceConfig.Forms.StackableZoneSingularDuration,
+            StackLimit: BalanceConfig.Forms.StackableZoneSingularStackLimit
+        ),
+        ["trap_swarm"] = new FormData(
+            Id: "trap_swarm",
+            PrototypeId: "triggered_zone_burst",
+            TierTrack: TierTrack.StackLimitUp,
+            Cooldown: BalanceConfig.Forms.TriggeredZoneBurstSwarmCooldown,
+            TriggerRadius: BalanceConfig.Forms.TriggeredZoneBurstSwarmTriggerRadius,
+            ZoneRadius: BalanceConfig.Forms.TriggeredZoneBurstSwarmZoneRadius,
+            StackLimit: BalanceConfig.Forms.TriggeredZoneBurstSwarmStackLimit
+        ),
+        ["trap_singular"] = new FormData(
+            Id: "trap_singular",
+            PrototypeId: "triggered_zone_burst",
+            TierTrack: TierTrack.RadiusUp,
+            Cooldown: BalanceConfig.Forms.TriggeredZoneBurstSingularCooldown,
+            TriggerRadius: BalanceConfig.Forms.TriggeredZoneBurstSingularTriggerRadius,
+            ZoneRadius: BalanceConfig.Forms.TriggeredZoneBurstSingularZoneRadius,
+            StackLimit: BalanceConfig.Forms.TriggeredZoneBurstSingularStackLimit
+        ),
         ["salvo"] = new FormData(
             Id: "salvo",
             PrototypeId: "entity_burst",
