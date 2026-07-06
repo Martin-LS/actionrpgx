@@ -7,6 +7,24 @@ public static class FormRegistry
 {
     private static readonly Dictionary<string, FormData> All = new()
     {
+        ["reserve-heavy"] = new FormData(
+            Id: "reserve-heavy",
+            PrototypeId: "self_aura",
+            TierTrack: TierTrack.RadiusUp,
+            Range: BalanceConfig.Forms.SelfAuraHeavyRange,
+            FocusCost: BalanceConfig.Forms.SelfAuraHeavyFocusReservation,
+            Cooldown: BalanceConfig.Forms.SelfAuraHeavyCooldown,
+            TickRate: BalanceConfig.Forms.SelfAuraHeavyCooldown
+        ),
+        ["reserve-light"] = new FormData(
+            Id: "reserve-light",
+            PrototypeId: "self_aura",
+            TierTrack: TierTrack.FocusCostDown,
+            Range: BalanceConfig.Forms.SelfAuraLightRange,
+            FocusCost: BalanceConfig.Forms.SelfAuraLightFocusReservation,
+            Cooldown: BalanceConfig.Forms.SelfAuraLightCooldown,
+            TickRate: BalanceConfig.Forms.SelfAuraLightCooldown
+        ),
         ["swarm"] = new FormData(
             Id: "swarm",
             PrototypeId: "stackable_zone",
