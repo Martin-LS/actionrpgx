@@ -169,13 +169,14 @@ public partial class PlayerController : CharacterBody3D
         }
         else
         {
-            _statBlock.SetBase(Stats.StatId.MaxHp,         MaxHealth);
-            _statBlock.SetBase(Stats.StatId.Speed,          Speed);
-            _statBlock.SetBase(Stats.StatId.PhysicalDamage, 20f);
-            _statBlock.SetBase(Stats.StatId.MagicDamage,    0f);
+            _statBlock.SetBase(Stats.StatId.MaxHp,        MaxHealth);
+            _statBlock.SetBase(Stats.StatId.Speed,        Speed);
+            _statBlock.SetBase(Stats.StatId.MeleeDamage,  20f);
+            _statBlock.SetBase(Stats.StatId.RangedDamage, 20f);
+            _statBlock.SetBase(Stats.StatId.SpellDamage,  20f);
             XpToNextLevel = ComputeXpToNextLevel(Level);
             var wc = GetNodeOrNull<Weapon.WeaponController>("Weapon");
-            wc?.SetDamage(20f, 0f);
+            wc?.SetDamage(20f);
             wc?.SetGlobalCritChance(0f);
             wc?.SetCritMultiplier(BalanceConfig.SkillAugments.CritMultiplier);
             wc?.SetRange(1.5f * GameScale.TileSize);
@@ -902,10 +903,17 @@ public partial class PlayerController : CharacterBody3D
         if (wc == null || weapon == null) return;
 
         float weaponBase = weapon.BaseDamage * (1f + weapon.DamageBonus);
-        float physDmg    = Mathf.Max(1f, weaponBase * _statBlock.Get(Stats.StatId.PhysicalDamage));
-        float magicDmg   = Mathf.Max(1f, weaponBase * _statBlock.Get(Stats.StatId.MagicDamage));
 
-        wc.SetDamage(physDmg, magicDmg);
+        // Damage number comes from the weapon's DELIVERY pool, not its damage type.
+        float deliveryMult = weapon.PreferredDelivery switch
+        {
+            "Ranged"     => _statBlock.Get(Stats.StatId.RangedDamage),
+            "RangeMagic" => _statBlock.Get(Stats.StatId.SpellDamage),
+            _            => _statBlock.Get(Stats.StatId.MeleeDamage),
+        };
+        float deliveryDmg = Mathf.Max(1f, weaponBase * deliveryMult);
+
+        wc.SetDamage(deliveryDmg);
         wc.SetGlobalCritChance(_statBlock.Get(Stats.StatId.CritChance) + weapon.CritChanceBonus);
         wc.SetCritMultiplier(_statBlock.Get(Stats.StatId.CritDamage));
     }

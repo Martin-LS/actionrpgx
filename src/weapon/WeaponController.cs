@@ -45,8 +45,7 @@ public partial class WeaponController : Node
     private GpuParticles3D?[] _selfAuraVfx = new GpuParticles3D?[5];
     private bool _wasChanneling;
 
-    private float      _physicalDamage  = 20f;
-    private float      _magicDamage     = 0f;
+    private float      _deliveryDamage   = 20f;
     private float      _globalCritChance = 0f;
     private float      _critMultiplier   = BalanceConfig.SkillAugments.CritMultiplier;
 
@@ -100,10 +99,9 @@ public partial class WeaponController : Node
         }
     }
 
-    public void SetDamage(float physicalDamage, float magicDamage)
+    public void SetDamage(float deliveryDamage)
     {
-        _physicalDamage = physicalDamage;
-        _magicDamage    = magicDamage;
+        _deliveryDamage = deliveryDamage;
     }
 
     public void SetGlobalCritChance(float critChance) => _globalCritChance = critChance;
@@ -413,7 +411,7 @@ public partial class WeaponController : Node
 
         bool  isMagic = slot.HasMagicDamage || slot.EffectiveDamageType == Items.DamageType.Magic;
         var   dmgType = isMagic ? Items.DamageType.Magic : Items.DamageType.Physical;
-        float baseDmg = isMagic ? _magicDamage : _physicalDamage;
+        float baseDmg = _deliveryDamage;
 
         float critChance = _globalCritChance + slot.CritChanceBonus;
         float critMult   = 1.0f;
@@ -439,7 +437,7 @@ public partial class WeaponController : Node
 
         bool  isMagic = slot.HasMagicDamage || slot.EffectiveDamageType == Items.DamageType.Magic;
         var   dmgType = isMagic ? Items.DamageType.Magic : Items.DamageType.Physical;
-        float baseDmg = isMagic ? _magicDamage : _physicalDamage;
+        float baseDmg = _deliveryDamage;
 
         float critChance = _globalCritChance + slot.CritChanceBonus;
         float critMult   = 1.0f;
@@ -577,7 +575,7 @@ public partial class WeaponController : Node
         {
             bool  ttMagic  = slot.HasMagicDamage || slot.EffectiveDamageType == Items.DamageType.Magic;
             var   ttType   = ttMagic ? Items.DamageType.Magic : Items.DamageType.Physical;
-            float ttDmg    = ttMagic ? _magicDamage : _physicalDamage;
+            float ttDmg    = _deliveryDamage;
             float ttCritChance = _globalCritChance + slot.CritChanceBonus;
             float ttCrit   = 1.0f;
             if (ttCritChance > 0f && GD.Randf() < ttCritChance)
@@ -609,7 +607,7 @@ public partial class WeaponController : Node
         string delivery = isMelee ? "Melee"
             : (_preferredDelivery == "RangeMagic" ? "RangeMagic" : "Ranged");
         var   dmgType   = isMagic ? Items.DamageType.Magic : Items.DamageType.Physical;
-        float baseDmg   = isMagic ? _magicDamage : _physicalDamage;
+        float baseDmg   = _deliveryDamage;
 
         float critChance      = _globalCritChance + slot.CritChanceBonus;
         float critMultiplier  = 1.0f;
@@ -750,7 +748,7 @@ public partial class WeaponController : Node
 
                 bool  isMagic = slotData.HasMagicDamage || slotData.EffectiveDamageType == Items.DamageType.Magic;
                 var   dmgType = isMagic ? Items.DamageType.Magic : Items.DamageType.Physical;
-                float baseDmg = isMagic ? _magicDamage : _physicalDamage;
+                float baseDmg = _deliveryDamage;
 
                 float critChance = _globalCritChance + slotData.CritChanceBonus;
                 float critMult   = 1.0f;
@@ -787,7 +785,7 @@ public partial class WeaponController : Node
 
             bool  isMagic = slot.HasMagicDamage || slot.EffectiveDamageType == Items.DamageType.Magic;
             var   dmgType = isMagic ? Items.DamageType.Magic : Items.DamageType.Physical;
-            float baseDmg = isMagic ? _magicDamage : _physicalDamage;
+            float baseDmg = _deliveryDamage;
 
             float critChance = _globalCritChance + slot.CritChanceBonus;
             float critMult   = 1.0f;
@@ -827,7 +825,7 @@ public partial class WeaponController : Node
         {
             bool  isMagic  = slot.HasMagicDamage || slot.EffectiveDamageType == Items.DamageType.Magic;
             var   dmgType  = isMagic ? Items.DamageType.Magic : Items.DamageType.Physical;
-            float baseDmg  = isMagic ? _magicDamage : _physicalDamage;
+            float baseDmg  = _deliveryDamage;
 
             float critChance = _globalCritChance + slot.CritChanceBonus;
             float critMult   = 1.0f;
@@ -862,7 +860,7 @@ public partial class WeaponController : Node
         {
             bool  isMagic    = slot.HasMagicDamage || slot.EffectiveDamageType == Items.DamageType.Magic;
             var   dmgType    = isMagic ? Items.DamageType.Magic : Items.DamageType.Physical;
-            float baseDmg    = isMagic ? _magicDamage : _physicalDamage;
+            float baseDmg    = _deliveryDamage;
 
             float critChance = _globalCritChance + slot.CritChanceBonus;
             float critMult   = 1.0f;
@@ -936,7 +934,7 @@ public partial class WeaponController : Node
         {
             bool  isMagic = slot.HasMagicDamage || slot.EffectiveDamageType == Items.DamageType.Magic;
             var   dmgType = isMagic ? Items.DamageType.Magic : Items.DamageType.Physical;
-            float baseDmg = isMagic ? _magicDamage : _physicalDamage;
+            float baseDmg = _deliveryDamage;
 
             float critChance = _globalCritChance + slot.CritChanceBonus;
             float critMult   = 1.0f;
