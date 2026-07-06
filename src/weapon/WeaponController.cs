@@ -123,6 +123,7 @@ public partial class WeaponController : Node
         public List<Node3D> ActiveZones;
         public bool         AuraActive;
         public float        AuraReserved;
+        public float        ChanneledHoldTime;
     }
 
     private readonly SkillSlot[] _slots = new SkillSlot[5];
@@ -159,6 +160,7 @@ public partial class WeaponController : Node
         _slots[slotIndex].ActiveZones   = new List<Node3D>();
         _slots[slotIndex].AuraActive    = false;
         _slots[slotIndex].AuraReserved  = 0f;
+        _slots[slotIndex].ChanneledHoldTime = 0f;
 
         // Initialize new VFX for the slot
         if (_player == null)
@@ -254,14 +256,25 @@ public partial class WeaponController : Node
                 continue;
             }
 
+            if (_slots[i].Skill!.Type == SkillType.Channeled)
+            {
+                if (_slots[i].IsChanneling)
+                {
+                    _slots[i].ChanneledHoldTime += dt;
+                    ProcessChanneledSlot(i, dt);
+                }
+                else
+                {
+                    _slots[i].ChanneledHoldTime = 0f;
+                }
+                continue;
+            }
+
             bool active = (_slots[i].AutoActivate && _slots[i].Skill!.Type != SkillType.Channeled) ||
                           (_slots[i].Skill!.Type == SkillType.Channeled && _slots[i].IsChanneling);
             if (!active) continue;
 
-            if (_slots[i].Skill!.Type == SkillType.Channeled)
-                ProcessChanneledSlot(i, dt);
-            else
-                ProcessActiveSlot(i, dt);
+            ProcessActiveSlot(i, dt);
         }
 
         if (IsAnySlotChanneling())
@@ -371,10 +384,19 @@ public partial class WeaponController : Node
     {
         if (_slots[i].CooldownTimer > 0f) return;
         if (FindNearestEnemy(_slots[i].Skill!.Range) == null) return;
-        float drain = _slots[i].Skill!.FocusCost * _slots[i].Skill!.TickRate;
+
+        float currentTickRate = _slots[i].Skill!.TickRate;
+        if (_slots[i].Skill!.RampSpeed > 0f)
+        {
+            float rampDuration = BalanceConfig.Forms.RampDuration / _slots[i].Skill!.RampSpeed;
+            float progress = Mathf.Clamp(_slots[i].ChanneledHoldTime / rampDuration, 0f, 1f);
+            currentTickRate = Mathf.Lerp(BalanceConfig.Forms.RampInitialTickRate, BalanceConfig.Forms.RampCapTickRate, progress);
+        }
+
+        float drain = _slots[i].Skill!.FocusCost * currentTickRate;
         if (_player != null && !_player.TrySpendFocus(drain)) { _slots[i].IsChanneling = false; return; }
         FireSelfChanneledTick(i);
-        _slots[i].CooldownTimer = _slots[i].Skill!.TickRate;
+        _slots[i].CooldownTimer = currentTickRate;
     }
 
     private void ProcessAuraSlot(int i, float dt)
@@ -443,7 +465,10 @@ public partial class WeaponController : Node
     {
         if (slotIndex < 0 || slotIndex >= 5) return;
         if (_slots[slotIndex].Skill?.Type == SkillType.Channeled)
+        {
             _slots[slotIndex].IsChanneling = false;
+            _slots[slotIndex].ChanneledHoldTime = 0f;
+        }
     }
 
     public void CancelActiveSkills()
@@ -453,6 +478,7 @@ public partial class WeaponController : Node
             if (_slots[i].Skill != null)
             {
                 _slots[i].IsChanneling = false;
+                _slots[i].ChanneledHoldTime = 0f;
             }
         }
     }
@@ -492,6 +518,7 @@ public partial class WeaponController : Node
         if (slot.Skill.Type == SkillType.Channeled)
         {
             slot.IsChanneling = true;
+            slot.ChanneledHoldTime = 0f;
             return;
         }
 

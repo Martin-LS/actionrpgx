@@ -18,6 +18,7 @@ public static class SkillComposer
             ZoneRadius = form.ZoneRadius ?? proto.ZoneRadius,
             TickRate   = form.TickRate   ?? proto.TickRate,
             Range      = form.Range      ?? proto.Range,
-            SubHits    = form.SubHits    ?? proto.SubHits
+            SubHits    = form.SubHits    ?? proto.SubHits,
+            RampSpeed  = form.RampSpeed  ?? proto.RampSpeed
         };
 }

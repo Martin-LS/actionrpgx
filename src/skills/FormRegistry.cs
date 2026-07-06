@@ -64,6 +64,15 @@ public static class FormRegistry
             TickRate: BalanceConfig.Forms.FloorTickRate,
             FocusCost: BalanceConfig.Forms.FloorFocusCost
         ),
+        ["ramp"] = new FormData(
+            Id: "ramp",
+            PrototypeId: "self_channeled_tick",
+            TierTrack: TierTrack.RampSpeedUp,
+            Range: BalanceConfig.Forms.SpinRange,
+            TickRate: BalanceConfig.Forms.RampInitialTickRate,
+            FocusCost: BalanceConfig.Forms.RampFocusCost,
+            RampSpeed: 1.0f
+        ),
         ["spin"] = new FormData(
             Id: "spin",
             PrototypeId: "self_channeled_tick",

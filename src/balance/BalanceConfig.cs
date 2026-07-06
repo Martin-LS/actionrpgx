@@ -233,6 +233,12 @@ public static class BalanceConfig
         public const float SalvoFocusCost = 6f;
         public const int   SalvoSubHits = 4;
 
+        // ramp (self_channeled_tick)
+        public const float RampInitialTickRate = 0.5f;
+        public const float RampCapTickRate = 0.1f;
+        public const float RampDuration = 3.0f;
+        public const float RampFocusCost = 12f;
+
         // swift (entity_burst)
         public const float SwiftCooldown = 0.5f;
         public const float SwiftFocusCost = 6f;
