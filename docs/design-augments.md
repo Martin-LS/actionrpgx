@@ -27,9 +27,9 @@ Skill Augments are craftable items that socket into a skill item to modify it. A
 
 | Skill Augment | Tag | Trigger type | Proves |
 |---|---|---|---|
-| Magic Damage | `magic_damage` | `on_enemy_hit_%` | Damage-type augment: modifies the skill's effective damage type to Magic. Future named versions: Burn (magic DoT), Arcane Bolt, etc. |
-| Slow | `slow` | `on_enemy_hit_%` | Debuff augment: applies the Slow EoT on hit. Future named versions: Chill, Weaken, etc. |
-| Critical Strike | `crit` | `on_enemy_hit_%` | Stat-mod augment: adds a per-skill crit chance bonus on top of the global Dex-derived CritChance. |
+| Fire Damage | `fire_damage` | `on_enemy_hit_%` | Damage-type conversion augment: converts the skill's effective damage type to Fire (migrated from the shipped "Magic Damage" augment — Magic→Fire under the elements-only roster). The head of the per-element conversion family (Cold/Lightning conversions follow). |
+| Slow | `slow` | `on_enemy_hit_%` | Debuff-graft augment: grafts the Slow EoT onto a skill on hit. The generic form; **Chill** is Cold's *innate* signature (not this augment) — this grafts a slow onto skills that don't have one. |
+| Critical Strike | `crit` | `on_enemy_hit_%` | Stat-mod augment: adds a per-skill crit **chance** bonus. Companion **Critical Power** (`crit_damage`) augment adds crit **damage** — both itemizable now that crit is a build archetype (`design-stats.md`). |
 
 Exact trigger chances and values are TBD — owned by the Balancer.
 
@@ -43,7 +43,7 @@ All current skill augments are on-hit augments — they resolve on each hit, ind
 - **AoE augments** (e.g. Splash) — will create secondary hits on nearby enemies. Secondary hits re-run all on-hit augments independently, but never projectile augments.
 - **Crit inheritance** — if the primary hit crits, all splash-generated secondary hits will also crit. Splash hits do not roll crit independently.
 
-**Augment interactions across damage types:** on-hit EoT augments are independent of the skill's damage type. A magic-type skill can carry a Slow augment — the hit deals magic damage and separately has a % chance to apply the Slow EoT.
+**Augment interactions across damage types (amended 2026-07-06):** a damage type's **signature ailment is innate to its identity** (Fire→Burn, Cold→Chill, etc. — see `design-skills.md`), and **augments *graft* an off-type ailment** onto a skill that lacks it. Grafted effects are independent of the hit's damage type: a Fire skill deals its innate Burn *and* can carry a grafted Slow — the hit stays mono-typed Fire, and the grafted slow applies separately on its own roll. Augments never amplify the innate signature; ailment scaling is the generic Ailment stat family (`design-stats.md`).
 
 **Future augment pattern — mine/trap placement:** A mine augment triggers `on_enemy_hit_%` and places a proximity trap at the hit location. Successive hits place additional mines up to an active cap. The cap scales with augment tier (e.g. tier 1 = 2 active mines, tier 2 = 4, tier 3 = 6).
 
@@ -120,7 +120,7 @@ Named augments (e.g. "Burn", "Splash", "Pierce") are deferred and will be derive
 | Prototype | Tag | Trigger | Concept proven |
 |---|---|---|---|
 | Hit-Debuff | `slow` | `on_enemy_hit_%` | Debuff augment path: on-hit % → non-damage EoT applied |
-| Hit-Damage | `magic_damage` | `on_enemy_hit_%` | Damage augment path: switches skill's effective damage type to Magic |
+| Hit-Damage | `fire_damage` | `on_enemy_hit_%` | Damage augment path: converts skill's effective damage type to Fire (migrated from Magic) |
 | Hit-Damage-Mod | `crit` | `on_enemy_hit_%` | Stat-mod augment path: per-skill crit bonus stacks with global Dex crit |
 
 #### Hit-Debuff
@@ -138,15 +138,15 @@ Proves the debuff augment path. A % chance on each hit to apply Slow — no dama
 
 #### Hit-Damage
 
-Proves the damage-type augment path. Switches the skill's effective damage type to Magic. The Mage archetype uses this augment on their starter skill. Tests: damage numbers show as magic type, magic resistance applies, works regardless of equipped weapon.
+Proves the damage-type conversion path. Converts the skill's effective damage type to Fire (migrated from Magic under the elements-only roster). Tests: damage numbers show as the converted type, the enemy's per-element (Fire) resistance applies, works regardless of equipped weapon.
 
 | Property | Value |
 |---|---|
-| Description | Converts the skill's effective damage type to Magic. Generic damage augment — future named versions: Burn (magic DoT), Arcane Bolt, etc. |
-| Tag | `magic_damage` |
+| Description | Converts the skill's effective damage type to Fire (migrated from Magic under the elements-only roster). Generic conversion augment — the per-element conversion family (Cold/Lightning) derives from it. Converting to Fire also brings Fire's innate Burn signature. |
+| Tag | `fire_damage` |
 | Trigger type | `on_enemy_hit_%` |
 | Trigger chance | N/A — always active when socketed |
-| Effect | Skill deals Magic damage instead of its base type |
+| Effect | Skill deals Fire damage instead of its base type |
 | Acquire | Craft |
 
 #### Hit-Damage-Mod
@@ -184,6 +184,6 @@ Augment mixes are combinations tested together after individual augment prototyp
 
 | Mix | Augments combined | Concept proven |
 |---|---|---|
-| Damage+Debuff | Hit-Damage + Hit-Debuff on same skill | Both augments fire independently on each hit; magic damage type applies, Slow EoT rolls separately |
-| Damage+Crit | Hit-Damage + Hit-Damage-Mod on same skill | Magic damage type applies; crit rolls at the boosted chance; crit multiplier applies correctly |
+| Damage+Debuff | Hit-Damage + Hit-Debuff on same skill | Both augments fire independently on each hit; Fire damage type applies, Slow EoT rolls separately |
+| Damage+Crit | Hit-Damage + Hit-Damage-Mod on same skill | Fire damage type applies; crit rolls at the boosted chance; crit multiplier applies correctly |
 | Debuff+Crit | Hit-Debuff + Hit-Damage-Mod on same skill | Slow EoT rolls at its own %; crit fires at boosted chance; both operate independently per hit |

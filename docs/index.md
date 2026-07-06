@@ -64,3 +64,4 @@ Quick reference for every doc in this folder. Load this first each session to kn
 | [design-directions.md](design-directions.md) | Parked design discussions — open but unresolved ideas; resolved items are removed and moved to design docs |
 | [design-ideas.md](design-ideas.md) | Uncommitted design concepts parking lot — nothing here is scheduled or spec'd |
 | [ref-arpg-skills.md](ref-arpg-skills.md) | Cross-game ARPG skill reference — PoE2 (EA 0.5.0) + D4 (Season 14) + The Last Epoch (2024) for prototype extraction; design inspiration only, adapt concepts not names |
+| [ref-arpg-damage-types.md](ref-arpg-damage-types.md) | Cross-game damage-type & ailment reference (D4/PoE2/LE/Grim Dawn/No Rest for the Wicked) — sourcing for the element wave (roster, per-type ailments, resist model); design inspiration only |

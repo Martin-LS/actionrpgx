@@ -57,9 +57,9 @@ The **skill bar** on the run HUD shows the slotted skill, its cooldown state, an
 
 **Attack / cast speed — no character stat; CDR lives on the weapon.** There is no global attack speed stat on the character. A skill's cooldown belongs to the skill item and is reduced by tier upgrades. The weapon's **CDR property** is the one gear-level lever — it applies globally to all skills regardless of type. Different weapon types have different base CDR values; CDR is currently fixed per weapon type (no roll variance).
 
-**Damage model.** The weapon provides the base damage number. The skill defines the damage type. Delivery (how the attack animates) is always driven by the equipped weapon — a Sword always swings, a Bow always shoots, a Wand always fires a bolt — regardless of which skill is equipped.
+**Damage model.** The weapon provides the base damage number. The skill defines the damage **type** (element). **Delivery** — how the attack resolves — is driven by the equipped weapon (Sword = melee, Bow = ranged, Wand = spell/cast) and is what selects the **scaling channel** (melee→Str, ranged→Dex, spell→Int). So type and scaling are independent axes: the skill's element decides resist channel + ailment, the weapon's delivery decides which stat scales it. *(Wand reclassifies from Ranged to Spell/cast under this model — see `design-stats.md`.)*
 
-**Weapon bonus is type-agnostic.** Each weapon type carries an identity bonus (e.g. Sword +10% damage, Wand +10% damage, Bow +8% crit chance). This bonus applies to all damage the character deals regardless of skill damage type — a Sword warrior casting a magic skill still benefits from the Sword's damage bonus. There are no skill-type gates on weapon bonuses.
+**Weapon bonus is type-agnostic.** Each weapon type carries an identity bonus (e.g. Sword +10% damage, Wand +10% damage, Bow +8% crit chance). This bonus applies to all damage the character deals regardless of skill damage type — a Sword warrior casting a Fire skill still benefits from the Sword's damage bonus. There are no skill-type gates on weapon bonuses.
 
 Damage output scales through the archetype's primary stat growth — a Warrior gains Strength faster per level, which converts to higher PhysicalDamage; a Mage gains Intelligence faster, which converts to higher MagicDamage. A mismatched build (e.g. Warrior equipping a magic-type skill) is viable but produces lower output because the stat multiplier for that damage type grows slowly. The weapon bonus never blocks or reduces mismatched output — only the stat multiplier is weaker. See Archetype Stat Multipliers for the full formula.
 
@@ -235,15 +235,17 @@ Every character has a dodge roll available at all times.
 
 ### Damage Types
 
-Every damage source has a **damage type**. Every entity that can take damage has a **resistance** value per type (percentage reduction).
+Every damage source has a **damage type**. Every entity that can take damage has a **per-type resistance** value (percentage reduction).
 
 `effective damage = raw damage × (1 − resistance)`
 
-**Current damage types:** Physical, Magic
+**Damage types (elements-only roster):** Physical, Fire, Cold, Lightning. There is **no generic "Magic" type** — no modern ARPG has one, and it left the roster without a signature ailment. Later occult additions (Poison, Void/Shadow) and special player-side types (Blood/leech, Holy/heal) come with their own systems.
 
-**Future expansion:** Elemental types (Fire, Lightning, Frost, etc.) will be added as the system grows — the formula and resistance model extend naturally. Getting Magic right first is the template: a new damage type means adding a resistance value per enemy, a DamageType enum entry, and a weapon or augment that produces it. Nothing else changes.
+**Every damage type carries a signature ailment** and its **own enemy-resist channel** (Model A): Physical→Bleed, Fire→Burn, Cold→Chill (+Freeze at threshold), Lightning→Shock (damage-taken amp). Element is **decoupled from scaling** — the type drives resist channel + ailment only; scaling comes from delivery (melee/ranged/spell). Full identity framework in `design-skills.md`; ownership in `design-stats.md`.
 
-Resistances are always soft (never total immunity). Exact values are TBD.
+*Justification: element choice is a real, resist-balanced build lever — no element is globally best because each is countered by its own resist channel appearing on some packs. Migration note: the shipped "Magic" type migrates to **Fire**.*
+
+Resistances are always **soft** (never total immunity, §5C). Exact values are TBD.
 
 ### Critical Hits
 
@@ -251,12 +253,16 @@ Crit applies to the hit that applies an EoT — damage EoT ticks inherit the cri
 
 `Final damage (on crit) = Skill base damage × Crit Multiplier`
 
-- **CritChance** — global baseline comes from Dexterity. The Bow identity bonus adds a flat % on top. The Critical Strike skill augment adds a further per-skill bonus on top of the global chance — any archetype can invest in crit this way; Rogue builds it more naturally through Dex.
-- **CritDamage (Crit Multiplier)** — comes from Strength. Currently fixed at 1.5× at base; grows with Str investment.
+**Crit is a real build archetype (2026-07-06)** — both crit stats are itemizable, chased on attributes *and* gear affixes *and* augments:
+
+- **CritChance** — Dexterity baseline + Bow identity + gear affixes + Critical Strike / equipment augments.
+- **CritDamage (Crit Multiplier)** — base 1.5× + Strength + gear affixes + a crit-damage augment.
+
+**Native attribute crit (Dex chance, Str damage) is martial-favored**; other archetypes itemize into crit at opportunity cost. **Mages do not crit natively** — Int gives Focus, not crit — so spell is the reliable, non-crit delivery whose amplifier path is ailment-stacking + Focus tempo; a mage *can* still build a crit caster via gear/augments (+ splashing Str/Dex). *Justification: keeps three distinct damage textures (melee/ranged = crit-swingy, spell = steady) instead of "everyone crits," while leaving crit open to all as an itemization build. Crit-stamping means a crit build also amplifies ailments (intended crit+ailment synergy). See `design-stats.md` crit rows.*
 
 ### Effects over Time (EoT)
 
-Skill Augments can apply **Effects over Time (EoT)** to enemies. EoTs are not applied by skills directly — they always come from augments. The augment's trigger chance determines whether the EoT is applied on a given hit; once triggered, the EoT applies at 100%.
+EoTs and ailments come from **two** sources (amended 2026-07-06): a damage type's **signature ailment is innate to its identity** (Physical→Bleed, Fire→Burn, Cold→Chill, Lightning→Shock — applied by the skill because it *is* that element), and **Skill Augments *graft* an off-type ailment** onto a skill that lacks it (the augment's trigger chance gates it; once triggered it applies at 100%). Augments never amplify the innate signature — scaling comes from the generic Ailment stat family (`design-stats.md`). *Justification: an element that doesn't do its own thing reads as broken; parity is held by per-element resist distribution, not by withholding the ailment. Supersedes the old "EoTs only ever come from augments" rule.*
 
 Every EoT has the same three properties:
 
@@ -273,11 +279,16 @@ Every EoT has the same three properties:
 
 The EoT type defines *what it does* when active:
 
-| EoT | Damage per tick? | What it does |
-|---|---|---|
-| Slow | No | Reduces enemy movement speed |
-| Burn | Yes (Magic) | Deals Magic damage per tick |
-| Vulnerability | No | Increases damage taken by the enemy — **deferred** (no augment or EotRegistry entry yet) |
+| EoT / ailment | Damage per tick? | What it does | Signature of |
+|---|---|---|---|
+| Bleed | Yes (Physical) | Physical damage per tick | Physical |
+| Burn | Yes (Fire) | Fire damage per tick | Fire |
+| Chill | No | Slows the enemy (Freeze at threshold — deferred, needs a CC-diminishing rule) | Cold |
+| Shock | No | Increases damage the enemy takes (damage-taken amp) | Lightning |
+| Slow | No | Generic movement slow — the graftable augment version of Chill | augment |
+| Vulnerability | No | Increases damage taken — **deferred** (no augment or EotRegistry entry yet) | — |
+
+Poison (stacking DoT that bypasses mitigation) is a **later** ailment — it needs a stacking-EoT extension (the current "one instance, refresh on reapply" rule below doesn't stack).
 
 When designing new EoTs: if it deals damage per tick, set tick rate and damage per tick. If not, leave those blank. That is the only distinction.
 
@@ -295,9 +306,9 @@ Every run requires a character. Characters are created by the player, persist be
 
 | Archetype | Max HP (base) | Speed (base) | Max Focus (base) | Focus Regen/sec (base) | Primary stat emphasis | Default build |
 |-----------|--------|-------|-----------|-----------------|--------------|---------------|
-| Warrior   | 150    | Shared base | 80        | 12              | Strength (→ PhysicalDamage, MaxHp, PhysRes, CritDmg) | Sword + Heavy armour — close-range brawler |
-| Rogue     | 80     | Shared base | 100       | 15              | Dexterity (→ CritChance, Evasion) | Bow + Medium armour — fast, agile kiter |
-| Mage      | 100    | Shared base | 150       | 10              | Intelligence (→ MagicDamage, MaxFocus, MagRes, FocusRegen) | Wand + Medium armour — glass cannon; largest Focus Shield by default |
+| Warrior   | 150    | Shared base | 80        | 12              | Strength (→ MeleeDamage, MaxHp, PhysRes, CritDmg) | Sword + Heavy armour — close-range brawler |
+| Rogue     | 80     | Shared base | 100       | 15              | Dexterity (→ RangedDamage, CritChance, Evasion) | Bow + Medium armour — fast, agile kiter |
+| Mage      | 100    | Shared base | 150       | 10              | Intelligence (→ SpellDamage, MaxFocus, ElementalRes, FocusRegen) | Wand + Medium armour — glass cannon; largest Focus Shield by default |
 
 All values are base stats at level 1 — placeholder, owned by the Balancer. Damage and defensive stats scale through primary stat growth per level (see Archetype Stat Multipliers below).
 
@@ -313,9 +324,11 @@ Stats scale through **primary stat growth per level** (D4 / Last Epoch pattern):
 
 | Primary stat | Derived stats it feeds |
 |---|---|
-| Strength | PhysicalDamage, MaxHp, PhysicalResistance, CritDamage |
-| Dexterity | CritChance, Evasion |
-| Intelligence | MagicDamage, MaxFocus, MagicResistance, FocusRegen |
+| Strength | **MeleeDamage**, MaxHp, PhysicalResistance, CritDamage |
+| Dexterity | **RangedDamage**, CritChance, Evasion |
+| Intelligence | **SpellDamage**, MaxFocus, ElementalResistance, FocusRegen |
+
+*Justification (2026-07-06): damage scales by **delivery** (melee/ranged/spell), not damage type — so each of the three stats owns a damage channel (Str no longer leaves Dex crit-only, which had left the Rogue with no damage pool). Element (damage type) is fully decoupled from scaling; any archetype plays any element, scaled by how they deliver it. Off-alignment (e.g. a Str build wielding a wand) is viable-but-weak on a deliberately shallow, hybrid-friendly curve: splash a weapon's stat → usable, commit → strong, ignore → weak. See `design-stats.md`.*
 
 Conversion rates are fixed constants — TBD, owned by the Balancer.
 
@@ -398,9 +411,11 @@ Maps are the arenas where runs take place. Each map has a **Map Level** attribut
 
 ## Enemies
 
-| Type     | Behavior     | Physical Resist | Magic Resist | Notes                                      |
-|----------|--------------|-----------------|--------------|--------------------------------------------|
-| Skeleton | Chase player | 10%             | 0%           | Currently the only enemy — bone-white voxel model |
+Under **Model A**, each enemy carries a **per-element resistance** (Physical / Fire / Cold / Lightning) — the old single "Magic Resist" column is replaced. Resist *distribution* across the enemy roster is the balance lever that keeps any one element from dominating.
+
+| Type     | Behavior     | Physical Resist | Fire / Cold / Lightning Resist | Notes                          |
+|----------|--------------|-----------------|--------------------------------|--------------------------------|
+| Skeleton | Chase player | 10%             | 0% / 0% / 0% (placeholder)     | Currently the only enemy — bone-white voxel model; per-element resist values are Balancer-owned |
 | [TBD]    | Chase fast   | —               | —            | Future runner-type                         |
 | [TBD]    | Ranged       | —               | —            | Future ranged attacker                     |
 | [TBD]    | Boss         | —               | —            | Spawns when timer expires                  |

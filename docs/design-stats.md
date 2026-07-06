@@ -43,9 +43,11 @@ The three character primary stats. They grow with level (archetype-specific rate
 
 | Primary | Feeds (derived) |
 |---|---|
-| **Strength (Str)** | Physical Damage mult, Max HP, Physical Resistance, Crit Damage |
-| **Dexterity (Dex)** | Crit Chance, Evasion |
-| **Intelligence (Int)** | Magic Damage mult, Max Focus, Magic Resistance, Focus Regen |
+| **Strength (Str)** | **Melee** Damage mult, Max HP, Physical Resistance, Crit Damage |
+| **Dexterity (Dex)** | **Ranged** Damage mult, Crit Chance, Evasion |
+| **Intelligence (Int)** | **Spell** Damage mult, Max Focus, Elemental Resistance, Focus Regen |
+
+*Justification (delivery-scaling, 2026-07-06): damage scales by **delivery** (melee/ranged/spell), not by damage type. This gives all three primary stats a damage role — Dex was previously crit-only, leaving the Rogue archetype with no damage pool of its own — and decouples the element (damage type) from scaling, so any archetype can wield any element, scaled by how they deliver it. See the "Damage number" composed stat and `design-mechanics.md`.*
 
 Conversion rates live in `PrimaryStatConversions.cs` (Balancer-owned). Primary stats do **not** affect move speed, and level progression does not affect move speed.
 
@@ -57,14 +59,15 @@ The in-game-effective stats. This is the "stat block" in the damage formula `wea
 |---|---|---|
 | **MaxHp** | Character health pool | Str-derived + Armour BonusHp + level |
 | **Speed** | Move speed | Composed — see the move-speed model in `design-mechanics.md`. **Not** an archetype identity stat; all archetypes share one base |
-| **PhysicalDamage** | Multiplier on weapon base for physical hits | Str-derived. This is a *multiplier*, not flat damage |
-| **MagicDamage** | Multiplier on weapon base for magic hits | Int-derived. Multiplier, not flat |
+| **MeleeDamage** | Multiplier on weapon base for **melee-delivered** hits | Str-derived. A *multiplier*, not flat. Selected by delivery (sword/melee), not damage type |
+| **RangedDamage** | Multiplier on weapon base for **ranged-delivered** hits | Dex-derived. Multiplier, not flat. Selected by delivery (bow/ranged) |
+| **SpellDamage** | Multiplier on weapon base for **spell/cast-delivered** hits | Int-derived. Multiplier, not flat. Selected by delivery (wand/spell) |
 | **PhysicalResistance** | Reduces incoming physical damage | Str-derived + accessory contributions |
-| **MagicResistance** | Reduces incoming magic damage | Int-derived; no item source |
+| **ElementalResistance** | Reduces incoming elemental damage | Int-derived. **Placeholder — lumped for now**; per-element player resistances are deferred until enemies deal elemental damage (enemy-design work). Renamed from MagicResistance (no "Magic" damage type exists) |
 | **MaxFocus** | Focus resource pool (skill fuel) | Int-derived + level |
 | **FocusRegen** | Focus regenerated per second | Int-derived + level |
-| **CritChance** | Chance for a hit to crit | Dex-derived + Weapon CritChanceBonus + `critical_strike` augment |
-| **CritDamage** | Crit damage multiplier | Base 1.5× + Str-derived |
+| **CritChance** | Chance for a hit to crit | Dex-derived + Weapon CritChanceBonus + gear affixes + `critical_strike`/equipment augments — itemizable |
+| **CritDamage** | Crit damage multiplier | Base 1.5× + Str-derived + gear affixes + crit-damage augment — itemizable (crit is a build archetype) |
 | **Evasion** | Chance to avoid an incoming hit | Dex-derived |
 
 Related but **not** a `StatId`: **Focus Shield** — a Focus sub-mechanic (fraction of MaxFocus; `ShieldFraction` / `ShieldRegenPerSec` in `BalanceConfig.Focus`), not a stat on the block.
@@ -80,6 +83,7 @@ Skill-owned stats are the delivery levers: Cooldown, FocusCost/drain/reservation
 | BaseDamage | Weapon | Root of the damage number; scales with tier |
 | DamageBonus | Weapon | % bonus to this weapon's damage (weapon identity) |
 | CritChanceBonus | Weapon | Flat crit chance added by weapon identity |
+| CritDamageBonus | Weapon / gear | Flat crit damage added by affix — new source (crit is now a build archetype; see the matrix) |
 | WeaponRange | Weapon | Base attack range before armour/skill modifiers |
 | DamageReduction | Armour | Flat % incoming damage reduction by category |
 | RangeMultiplier | Armour | Multiplies attack range by category |
@@ -111,18 +115,19 @@ Two kinds of stat:
 | DamagePattern, TargetingShape, Type | **Skill** (prototype-locked) | inherited by clones, not varied |
 | StackLimit, Duration, ZoneRadius, TriggerRadius, ArmTime, TriggerCount | **Skill** | zone/trap shape |
 | **TickRate** | **Skill** | *Not yet a field — currently lives only in `BalanceConfig`, read directly by `WeaponController`. Formalised as skill-owned; needs a `TickRate` field on `SkillData`.* |
-| **DamageType** | **Skill** | **Skill-authoritative** (decided 2026-07-04). The skill defines the element. `weapon.BaseDamageType` is fallback/display only and never overrides the skill. **Mutability (decided 2026-07-04):** set at skill creation, not re-rollable by crafting; only a socketed augment may override it at fire time (e.g. the Magic Damage augment). |
+| **DamageType** | **Skill** | **Skill-authoritative** (decided 2026-07-04). The skill defines the element. `weapon.BaseDamageType` is fallback/display only and never overrides the skill. **Mutability (decided 2026-07-04):** set at skill creation, not re-rollable by crafting; only a socketed augment may override it at fire time (e.g. the Fire Damage conversion augment, migrated from Magic). |
 | BaseDamage | **Weapon** | root of the damage number |
 | ArmorCategory, DamageReduction | **Armour** | |
-| MaxFocus, FocusRegen, Evasion, CritDamage, MagicResistance | **Character stat block** | derived from primary stats; MagicResistance has no item source |
-| EoT payload (`EotId`) | **Augment** | On damage-dealing skills, EoTs come exclusively from augments — never baked in. **Narrow exception (amended 2026-07-04):** a skill with `DamagePattern == None` carries a single `DebuffEotId` — the debuff *is* its base behaviour, not an add-on (e.g. entity_debuff's Slow). No damage skill may ever carry an inherent EoT. |
+| MaxFocus, FocusRegen, Evasion, ElementalResistance | **Character stat block** | derived from primary stats; ElementalResistance is a lumped placeholder (per-element player resistances deferred). **CritDamage moved out of this row 2026-07-06** — now a composed, itemizable stat (see below) |
+| EoT / ailment payload (`EotId`) | **Identity + Augment (co-owned — amended 2026-07-06)** | **Every damage type carries one *signature ailment* innately, owned by its identity:** Physical→Bleed, Fire→Burn, Cold→Chill, Lightning→Shock. **Augments *graft* an off-type ailment** onto a skill that lacks it (e.g. a Burn augment on a Lightning skill) — they never amplify the innate signature; scaling of any ailment comes from the generic **Ailment stat family** (see §6 note), never per-skill. The `DamagePattern == None` → single `DebuffEotId` case still holds for pure-debuff skills. *Justification: elements are a genre-standard build lever, and an element that doesn't do its own thing (fire that doesn't burn) reads as broken; parity between types is held by **per-element enemy-resistance distribution** — resistant packs make each element situationally strong/weak — not by suppressing the ailment. **Supersedes the pre-2026-07-06 "no damage skill may ever carry an inherent EoT" rule** (that rule assumed a Physical/Magic-only roster with no elemental identities).* |
 
 ### B. Composed stats (fixed formula, closed contributor list)
 
 | Stat | Contributors | Formula / rule |
 |---|---|---|
-| **Damage number** | Weapon `BaseDamage` × Weapon `DamageBonus` × Character `Physical/MagicDamage` mult | weapon is root, character scales. **No per-skill damage multiplier — ever.** |
-| **Crit chance** | Character `CritChance` + Weapon `CritChanceBonus` + `critical_strike` augment | additive |
+| **Damage number** | Weapon `BaseDamage` × Weapon `DamageBonus` × Character `Melee/Ranged/Spell` damage mult (channel selected by the skill's **delivery**, not its damage type) | weapon is root, character scales. Delivery picks the scaling channel; damage *type* (element) is independent. **No per-skill damage multiplier — ever.** *Justification: scaling by delivery (Str→melee, Dex→ranged, Int→spell) gives every primary stat a damage role and decouples element from scaling — see the Primary-stats justification above.* |
+| **Crit chance** | Character `CritChance` (Dex) + Weapon `CritChanceBonus` + gear affixes + `critical_strike` / equipment augments | additive; **itemizable** |
+| **Crit damage** | Base 1.5× + Character `CritDamage` (Str) + Weapon/gear `CritDamageBonus` + crit-damage augment | additive multiplier; **itemizable**. **Amended 2026-07-06: promoted from Exclusively-owned (Str-only) to a composed, itemizable stat.** *Justification: with hits mono-typed and no per-skill multiplier, crit is the marquee damage-variance lever; making it a full itemization build (chance + multiplier chased on gear + augments + attributes) adds a cross-archetype "crit build" archetype. Str stays the native head-start (martial-favored); other archetypes itemize into crit at opportunity cost. Crit-stamping means a crit build also amplifies ailments — an intended crit+ailment synergy.* |
 | **Physical Resistance** | Character (Str-derived) + Ring accessory `PhysicalResistance` | additive |
 | **Range** | Weapon `WeaponRange` × Armour `RangeMultiplier`, overridden by Skill `Range` | resolution chain |
 | **Max HP** | Character stat block (Str-derived + level) + Armour `BonusHp` | additive |
@@ -137,7 +142,7 @@ These are written decisions, not omissions. Adding any of them requires amending
 | **Per-skill damage multiplier** | Never. Damage = `weapon BaseDamage × DamageBonus × character mult`. Rationale in `design-skills.md`. | 2026-07-04 (rationale documented) |
 | **Character attack speed / cast speed / cooldown-recovery stat** | Never. Skill throughput is owned by the skill's own cooldown/tick levers (tuned by Balancer, advanced by skill tier) plus the single global **weapon CDR property** (`design-mechanics.md`). CDR may never appear on armour, rings, or augments — `design-directions.md`'s "CDR on skills" idea requires amending this row first. | 2026-07-04 (D5 closed) |
 | **Enemy immunity (resistance ≥ 100%)** | Never. Enemy resistances always cap below 100% — a resistant enemy takes *reduced* damage, never zero. *Justification: hits are mono-typed by design (see below), so immunities would hard-wall mono-typed builds (the PoE immune-mob problem); capping resists is the clean alternative to forcing a "minimum physical damage" floor onto every hit.* | 2026-07-04 |
-| **Composite/multi-typed hits & typed weapon damage** | Never (as designed). Every hit is 100% one damage type; weapon `BaseDamage` stays a typeless scalar stamped by the skill's `DamageType`. *Justification: (1) the crafting anchor — one weapon number must serve every build or the weapon pool forks into Str/Int weapons, breaking "any character equips any weapon"; (2) attribute build identity — phys→Str, magic→Int only stays meaningful if hits scale one channel; (3) keeps the D3 hit-event model closed — composite portions/conversion are the retrofit pain the D3 ⭐ warning exists for. D4-lineage model, chosen deliberately over the D2/PoE composite lineage.* | 2026-07-04 |
+| **Composite/multi-typed hits & typed weapon damage** | Never (as designed). Every hit is 100% one damage type; weapon `BaseDamage` stays a typeless scalar stamped by the skill's `DamageType`. *Justification: (1) the crafting anchor — one weapon number must serve every build or the weapon pool forks into Str/Int weapons, breaking "any character equips any weapon"; (2) attribute build identity — the scaling channel is now **delivery** (melee→Str, ranged→Dex, spell→Int, per the delivery-scaling model), and build identity only stays meaningful if a hit scales exactly one channel; mono-typing the hit keeps that clean (the *element* rides independently on top); (3) keeps the D3 hit-event model closed — composite portions/conversion are the retrofit pain the D3 ⭐ warning exists for. D4-lineage model, chosen deliberately over the D2/PoE composite lineage.* | 2026-07-04 |
 
 Related decision: **skill tier improves budget levers only** (never hit size); power parity between named clones is defined at equal tier — see `design-skills.md`.
 
@@ -146,10 +151,17 @@ Related decision: **skill tier improves budget levers only** (never hit size); p
 Player-facing skills are craft-time compositions of `prototype + form + identity` (`design-skills.md`, The Composition Model section). **Form and identity are authoring/crafting components only: their contents flatten into skill-owned stats at creation.** At runtime there is no "form" or "identity" entity that owns a stat — the composed skill item owns everything, exactly per the matrix above. Any future design that wants a *live* stat on a form or identity (e.g. a swappable identity changing damage type post-craft) must amend this section first.
 *Justification: keeps the ownership matrix closed under the composition model — composition changes how skills are authored, not who owns stats at runtime.*
 
+### E. Element wave — resist model & the Ailment stat family (added 2026-07-06)
+
+The element wave promotes two surfaces alongside the identity rework (elements-only roster: Physical, Fire, Cold, Lightning — see `design-skills.md`).
+
+- **Per-element enemy resistances (Model A).** Each damage type carries its **own soft resist channel** on the enemy (Physical / Fire / Cold / Lightning resistance), replacing the single lumped MagicResistance on the enemy side. Resistances stay soft (no immunity, §5C). *Justification: with no per-element **scaling** on the player side (all elements scale through their delivery channel, not a per-element stat), the enemy resist channel is the one place element choice becomes build-relevant — "bring the element this pack doesn't resist." Per-element resist **distribution** is also the lever that holds identity power-parity (see the EoT/ailment matrix row), so it must be a real per-type channel, not a lump.*
+- **Ailment stat family (Hit/interaction surface — surface 6, 🟡 Deferred for *sources*).** A **generic** family — Ailment Damage, Ailment Effect (non-DoT magnitude), Ailment Duration, Ailment Chance — scales *all* ailments, never per-element. The signature ailments themselves are innate per identity (matrix row above); this family is how they *grow*. *Justification: generic (not per-element) scaling is the only model that fits three primary stats and two-plus delivery pools without inventing a stat per element; it is also how every reference ARPG scales ailments. The stats exist as a designed surface; their **sources** (gear affixes / augments) are deferred, so ailments currently sit at their innate baseline.*
+
 ### Open flags
 
 - ✅ **Damage type owner = Skill** (skill-authoritative). Weapon `BaseDamageType` is fallback/display. Mutability decided 2026-07-04 — see the DamageType matrix row.
-- ✅ **`InherentEotIds` on `SkillData`** — resolved 2026-07-04, amended same day: **narrow, don't delete.** Initial resolution was deletion, but entity_debuff (`DamagePattern: None`) delivers its Slow through the field — a debuff-pattern skill's payload is its base behaviour, not an augment-style add-on. Final rule: replace the general `InherentEotIds` list with a single `DebuffEotId`, valid only when `DamagePattern == None`. No signature-EoT carve-out for damage skills — that escape hatch (revisit if named skills feel same-y) still requires a conscious matrix amendment. Code change tracked as a GitHub issue.
+- ✅ **`InherentEotIds` on `SkillData`** — resolved 2026-07-04 (narrow to `DebuffEotId` for `DamagePattern == None`), then **the signature-EoT carve-out was consciously taken 2026-07-06**: the element wave gives every damage type an innate signature ailment owned by its **identity** (Bleed/Burn/Chill/Shock), the matrix amendment the earlier flag reserved. Implementation will need identity→signature-ailment wiring at flatten-time in addition to the `DebuffEotId` path. Tracked with the element-wave tickets.
 - ⬜ **`TickRate` field** does not exist on `SkillData` yet; matrix says it must. Implementation deferred.
 - ✅ **Boots drift** — resolved 2026-07-04: **docs follow code.** Boots is a first-class armour slot; all armour-composed stats (BonusHp, BonusSpeed, DamageReduction, RangeMultiplier) draw from Hat, Body, and Boots. `design-mechanics.md` and `design-progression.md` updated.
 

@@ -156,7 +156,7 @@ Activate once — pulses magic damage to all nearby enemies repeatedly for a few
 | Stack limit | — |
 | Zone tracks entity | — |
 | Type | Active |
-| Damage type | Magic (placeholder) |
+| Damage type | Fire (placeholder — Magic→Fire) |
 | Focus cost | 15 Focus (flat, on activation — placeholder) |
 | Tick rate | 2/sec (placeholder) |
 | Duration | 3s (placeholder) |
@@ -205,7 +205,7 @@ All values (damage, cooldown, radius, tick rate, duration) are TBD — owned by 
 | Zone tracks entity | No |
 | Duration | 5s (test value) |
 | Type | Active |
-| Damage type | Magic |
+| Damage type | Fire (placeholder — Magic→Fire) |
 
 **fixed_zone_burst**
 
@@ -221,7 +221,7 @@ All values (damage, cooldown, radius, tick rate, duration) are TBD — owned by 
 | Zone tracks entity | No |
 | Duration | 0 — instant burst, no persistent zone |
 | Type | Active |
-| Damage type | Magic |
+| Damage type | Fire (placeholder — Magic→Fire) |
 
 **windup_burst**
 
@@ -237,7 +237,7 @@ All values (damage, cooldown, radius, tick rate, duration) are TBD — owned by 
 | Zone tracks entity | No |
 | Duration | 0 — instant burst on detonation, no persistent zone |
 | Type | Active |
-| Damage type | Magic |
+| Damage type | Fire (placeholder — Magic→Fire) |
 
 **tracked_tick**
 
@@ -254,7 +254,7 @@ All values (damage, cooldown, radius, tick rate, duration) are TBD — owned by 
 | Zone tracks entity | Yes |
 | Duration | 5s (test value) — zone persists after target dies (stops following, keeps ticking in place until duration expires) |
 | Type | Active |
-| Damage type | Magic |
+| Damage type | Fire (placeholder — Magic→Fire) |
 | AoE | Hits tracked enemy + all enemies within radius around them |
 
 **entity_debuff**
@@ -271,7 +271,7 @@ All values (damage, cooldown, radius, tick rate, duration) are TBD — owned by 
 | Zone tracks entity | Yes |
 | Duration | 6s (test value) |
 | Type | Active |
-| Damage type | Magic (N/A) |
+| Damage type | Fire (N/A — debuff prototype; Magic→Fire) |
 | Effect | Slow (placeholder) |
 
 **stackable_zone**
@@ -292,7 +292,7 @@ All values (damage, cooldown, radius, tick rate, duration) are TBD — owned by 
 | Arm time | — |
 | Trigger | — |
 | Type | Active |
-| Damage type | Magic |
+| Damage type | Fire (placeholder — Magic→Fire) |
 
 **triggered_zone_burst**
 
@@ -311,7 +311,7 @@ All values (damage, cooldown, radius, tick rate, duration) are TBD — owned by 
 | Arm time | 0.5s (test value) — prevents self-triggering immediately after placement |
 | Trigger | Single (fires once, despawns) |
 | Type | Active |
-| Damage type | Magic |
+| Damage type | Fire (placeholder — Magic→Fire) |
 
 **self_aura**
 
@@ -362,7 +362,7 @@ A player-facing skill is a **craft-time composition** of three components, **fus
 |---|---|---|
 | **Prototype** | Delivery chassis: targeting shape, damage pattern, skill type, base budget stats | The 12 internal base skills above |
 | **Form** | Budget-spend shape (where the power budget goes) + **tier track** (which budget lever tier upgrades advance) | Per-prototype (2 in wave 1; up to ~3 later) |
-| **Identity** | Damage type + VFX/audio skin + name fragment | Universal — composes with any prototype × form |
+| **Identity** | Damage type + **signature ailment** + **enemy-resist channel** + VFX/audio skin + name fragment | Universal — composes with any prototype × form |
 
 Flattening at craft preserves every prior rule: instances are standalone (no runtime template link), damage type is fixed at creation, budget levers stay Balancer-owned, and the ownership matrix is untouched — the composed item is "the skill" and owns its stats (`design-stats.md`).
 
@@ -381,9 +381,9 @@ Flattening at craft preserves every prior rule: instances are standalone (no run
 Every lever on a composed skill is one of two kinds:
 
 - **Budget levers** — cooldown, tick rate, AoE/zone radius, Focus cost/drain, wind-up, **stack count** (the `StackLimit` field — more simultaneous instances is more total throughput; added 2026-07-06 with the swarm↔singular axis below). They move throughput. Across any two forms of the same prototype they must net to the same power budget **at equal tier** — "no free lunch," enforced as design discipline (exchange rates Balancer-owned, not exact math). Trading among them changes a skill's *shape*, never its power.
-- **Identity levers** — damage type, VFX/animation/sound, wind-up-as-telegraph, and *which* budget lever the tier track advances. Free: they place the skill in the build ecosystem without moving throughput.
+- **Identity levers** — VFX/animation/sound, name fragment, wind-up-as-telegraph, and *which* budget lever the tier track advances are **free** (no throughput). **But damage type is no longer free (amended 2026-07-06, element wave):** each type carries a real signature ailment and its own enemy-resist channel, so choosing an element is a genuine build decision. **Parity is held not by making identities equal, but by per-element enemy-resist *distribution*** — every element is situationally strong/weak depending on which packs resist it, so none is globally best. (Forms remain strictly power-neutral; only *identity* was promoted to a real lever.) See the Identity Layer section below and `design-stats.md`.
 
-**Skill identity = prototype (delivery fantasy) × form (budget-spend shape + tier track) × identity (type + skin).**
+**Skill identity = prototype (delivery fantasy) × form (budget-spend shape + tier track) × identity (damage type + ailment + resist + skin).**
 
 **A distinction that moves no budget lever is an identity skin, not a form** (ruling 2026-07-06). If two candidate "forms" tick the same enemies at the same radius/rate/duration/cost and differ only in look or fantasy — e.g. a zone drawn as a planted emitter pulsing outward vs. a uniform carpet (the rejected *pylon* candidate) — that is an identity/VFX skin, selectable without changing mechanics. A form must spend budget differently. (A pulsing emitter only becomes mechanically real if it gains its own HP → that is the summon_totem prototype, not a zone form; or if its pulse travels as a distance-band → the moving_zone_tick prototype.)
 
@@ -395,9 +395,9 @@ Every lever on a composed skill is one of two kinds:
 
 ### Structural decisions (wave 1)
 
-- **Identities in wave 1: Physical and Magic** — a real mechanical split (Phys couples to Str builds, Magic to Int). Elements arrive as their own wave together with enemy-resist promotion (D1), where the "element whispers, augments shout" token-effect framing is the leading candidate (see brainstorm doc).
+- **Identities: elements-only roster (resolved 2026-07-06 — supersedes the Physical/Magic wave-1 pair and the "element whispers, augments shout" framing).** The roster is **Physical, Fire, Cold, Lightning** — no generic "Magic"/"Arcane" type (see the Identity Layer section below). Shipped Magic migrates to Fire. The identity axis is now decoupled from damage *scaling* (that's delivery — Str/Dex/Int → melee/ranged/spell, `design-stats.md`), so an element rides on any archetype.
 - **Prototypes are internal skills**, not player-facing content: the authoring basis for composition, the testable proof of the base system, and the wave-1 playtest control group (if players keep crafting plain prototypes next to the presets, identity isn't earning its keep). They stay craftable through wave 1; retirement from the player pool is a full-roster-time decision.
-- **Naming: classic ARPG vocabulary with the no-false-promises guardrail**, applied to genre expectations as well as literal words (no "Whirlwind" for a stationary spin). **The guardrail extends to VFX:** visuals must not promise mechanics or elements we don't deliver — wave-1 skins are kinetic (Physical) and arcane (Magic); no elemental cosplay before elements exist.
+- **Naming: classic ARPG vocabulary with the no-false-promises guardrail**, applied to genre expectations as well as literal words (no "Whirlwind" for a stationary spin). **The guardrail extends to VFX:** visuals must not promise mechanics we don't deliver — each element's skin should read as its type and its signature ailment (fire burns, cold chills), and must not cosplay an element or effect the skill doesn't have.
 - **Contrast axes are varied per prototype** (one budget trade each) — tests four exchange rates instead of one, and prevents the roster reading as a fast/slow mode toggle.
 
 ### Wave 1: the 8 forms
@@ -415,20 +415,43 @@ Every lever on a composed skill is one of two kinds:
 
 ### Wave 1: the 16 reachable combos
 
-These are the combinations the wave-1 registries allow (4 prototypes × 2 forms × 2 identities) — they **emerge from the catalogue**, they are not authored preset recipes (see the Wizard-first rule above). Names default to the derived phrase; the curated names below are **candidate iconic overrides** for the combos that deserve a signature name.
+These are the combinations the wave-1 registries allow (4 prototypes × 2 forms × identities) — they **emerge from the catalogue**, they are not authored preset recipes (see the Wizard-first rule above). Names default to the derived phrase; the curated names below are **candidate iconic overrides** for the combos that deserve a signature name.
 
-| Prototype | Physical | Magic |
+**Identity columns updated 2026-07-06 (elements-only roster):** the shipped **Magic** column migrates to **Fire**, and **Cold** and **Lightning** are added — so each prototype·form row now reaches Physical / Fire / Cold / Lightning (the "Arcane" names re-theme to their element). Below shows Physical and Fire; Cold and Lightning follow the same pattern.
+
+| Prototype | Physical | Fire *(was Magic)* |
 |---|---|---|
-| entity_burst · swift | **Strike** | **Arcane Strike** |
+| entity_burst · swift | **Strike** | **Fire Strike** |
 | entity_burst · heavy | **Crushing Blow** | **Smite** |
 | self_burst · nova | **Shockwave** | **Nova** |
 | self_burst · quake | **Quake** | **Cataclysm** |
 | fixed_zone_tick · storm | **Rockfall** | **Tempest** |
 | fixed_zone_tick · floor | **Caltrops** | **Glyph of Agony** |
-| self_channeled_tick · spin | **Cyclone** | **Arcane Cyclone** |
+| self_channeled_tick · spin | **Cyclone** | **Fire Cyclone** |
 | self_channeled_tick · vortex | **Bladestorm** | **Maelstrom** |
 
 All numeric values per form are placeholder, owned by the Balancer.
+
+### The Identity Layer — elements & ailments (resolved 2026-07-06)
+
+Sourced from `ref-arpg-damage-types.md` (five games). Governs what an identity *is* now that it is a real build lever.
+
+**Roster — elements-only:** **Physical, Fire, Cold, Lightning** (core). No generic "Magic"/"Arcane" — no modern ARPG has one, and it is the one slot with no natural signature ailment. Shipped Magic migrates to **Fire**. Later occult additions (Poison, Void/Shadow) and special player-side types (Blood/leech, Holy/heal) arrive with their own systems.
+
+| Identity | Damage type | Signature ailment | Kind |
+|---|---|---|---|
+| Physical | Physical | **Bleed** | DoT |
+| Fire | Fire | **Burn** | DoT |
+| Cold | Cold | **Chill** (slow); Freeze at threshold | soft CC |
+| Lightning | Lightning | **Shock** (damage-taken amp) | debuff |
+
+**Governing rules:**
+- **Model A — per-element enemy resistances.** Each type has its own soft resist channel. This is the build lever (bring the element a pack doesn't resist) *and* the parity mechanism (resist distribution keeps any one element from dominating). *Justification: since scaling is by delivery, not per-element, the resist channel is the only place element choice is build-relevant.*
+- **Every type carries its signature ailment innately** (identity-owned); **augments graft an off-type ailment** onto a skill that lacks it, never amplifying the innate. Scaling is the generic Ailment stat family (`design-stats.md`). The ownership-matrix pillar was rewritten for this — see the EoT/ailment row there.
+- **Target-debuff class only.** An identity's signature is a DoT, slow, or damage-amp on the *enemy*. **Chain is delivery** (a prototype/augment concern, not an ailment) and **Heal is player-side** (a later special type) — neither is a signature ailment.
+- **Casters amplify via ailments + Focus, not crit** (mages are non-crit natively — see `design-mechanics.md` Critical Hits).
+
+*Justification: elements are a genre-standard build lever, and the whole point of an element is that it does its own thing (fire burns) — so the signature ailment is definitional, not an add-on. Making identity a real lever (vs the old "free" framing) is what earns the element wave its depth; per-element resistance is what keeps it balanced.*
 
 ### Beyond wave 1 — adopted forms & axis rulings
 
@@ -446,7 +469,7 @@ Forms and contrast-axis rulings resolved after the wave-1 lock, promoted here fr
 | Budget trade | Pays for its smoother texture with **spread payload**: full damage arrives across the volley window, not instantly, so burst and time-to-first-kill are worse than swift's instant hit, and any sub-hits after the target dies are wasted. The Balancer nets it to swift/heavy parity at equal tier via cooldown/Focus. |
 | Word-map fragment | "volley" / "flurry" |
 
-Two new reachable combos (× Physical, Magic) — candidate iconic names TBD (e.g. "Flurry", "Arcane Barrage").
+Two new reachable combos (× the current identities, Physical & Fire; scales as Cold/Lightning are added) — candidate iconic names TBD (e.g. "Flurry", "Fire Barrage").
 
 **Why it is a form and not power:** under the Budget/Identity framework a form must change *shape*, never throughput. Salvo's whole substance is texture — smoother damage, lower crit variance, a real mid-volley-waste downside — all power-neutral. The one thing that would leak power, N× per-hit augment procs per press, is closed by the engine rule below.
 
