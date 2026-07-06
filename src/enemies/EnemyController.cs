@@ -266,8 +266,11 @@ public partial class EnemyController : CharacterBody3D
         foreach (var id in expired)
         {
             var eot = EotRegistry.Get(id);
-            if (eot != null) RemoveEotEffect(eot);
+            // Remove from the active set first so the Refresh* recompute in
+            // RemoveEotEffect no longer counts this expiring EoT (otherwise
+            // slow/amp would never lift).
             _activeEots.Remove(id);
+            if (eot != null) RemoveEotEffect(eot);
         }
     }
 
