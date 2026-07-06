@@ -87,6 +87,12 @@ public class CharacterData
             var item = instance.Definition;
             if (item == null) continue;
 
+            if (item.CritDamageBonus != 0f)
+            {
+                block.AddModifier(new StatModifier(StatId.CritDamage, ModifierType.FlatAdd,
+                    item.CritDamageBonus, ModifierSource.Item, instance.Id));
+            }
+
             if (item.Slot == ItemSlot.Hat || item.Slot == ItemSlot.Body || item.Slot == ItemSlot.Boots)
             {
                 if (item.BonusHp != 0)

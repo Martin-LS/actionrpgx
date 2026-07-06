@@ -39,6 +39,7 @@ public static class RecipeRegistry
         // Skill Augment recipes — v1 generics only
         ["recipe_slow"]            = new("recipe_slow",            "slow",            RecipeType.SkillAugment, new() { ["crafting_common"] = 1 }),
         ["recipe_critical_strike"] = new("recipe_critical_strike", "critical_strike", RecipeType.SkillAugment, new() { ["crafting_common"] = 1 }),
+        ["recipe_crit_damage"]     = new("recipe_crit_damage",     "crit_damage",     RecipeType.SkillAugment, new() { ["crafting_common"] = 1 }),
         ["recipe_magic_damage"]    = new("recipe_magic_damage",    "magic_damage",    RecipeType.SkillAugment, new() { ["crafting_common"] = 1 }),
 
         // Equipment Augment recipes

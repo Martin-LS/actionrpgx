@@ -137,6 +137,7 @@ public partial class PlayerController : CharacterBody3D
                 var augmentEots   = new List<(string Id, float Chance)>();
                 bool  hasMagicDamage = false;
                 float critChanceBonus = 0f;
+                float critDamageBonus = 0f;
                 if (instance != null)
                 {
                     var activeAugments = Skills.AugmentResolver.Resolve(instance.SocketedSkillAugmentIds, manager.FindSkillAugmentInstance);
@@ -144,12 +145,13 @@ public partial class PlayerController : CharacterBody3D
                     {
                         if (augInst.DefinitionId == "magic_damage")    hasMagicDamage = true;
                         if (augInst.DefinitionId == "critical_strike") critChanceBonus += augInst.TriggerChance / 100f;
+                        if (augInst.DefinitionId == "crit_damage")     critDamageBonus += augInst.TriggerChance / 100f;
                         var eotId = augInst.Definition?.EotId;
                         if (eotId != null) augmentEots.Add((eotId, augInst.TriggerChance / 100f));
                     }
                 }
 
-                weaponController?.SetSlot(i, skill, augmentEots, hasMagicDamage, critChanceBonus);
+                weaponController?.SetSlot(i, skill, augmentEots, hasMagicDamage, critChanceBonus, critDamageBonus);
                 bool autoActivate = i < c.SlotAutoActivate.Count ? c.SlotAutoActivate[i] : true;
                 weaponController?.SetSlotAutoActivate(i, autoActivate);
             }

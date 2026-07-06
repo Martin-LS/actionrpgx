@@ -115,6 +115,7 @@ public partial class WeaponController : Node
         public bool         HasMagicDamage;
         public Items.DamageType EffectiveDamageType;
         public float        CritChanceBonus;
+        public float        CritDamageBonus;
         public bool         AutoActivate;
         public bool         IsChanneling;
         public float        DurationTimer;
@@ -132,7 +133,7 @@ public partial class WeaponController : Node
     public void SetPreferredDelivery(string delivery)      => _preferredDelivery = delivery;
 
     public void SetSlot(int slotIndex, SkillData skill,
-        List<(string Id, float Chance)>? augmentEots = null, bool hasMagicDamage = false, float critChanceBonus = 0f)
+        List<(string Id, float Chance)>? augmentEots = null, bool hasMagicDamage = false, float critChanceBonus = 0f, float critDamageBonus = 0f)
     {
         if (slotIndex < 0 || slotIndex >= 5) return;
 
@@ -158,6 +159,7 @@ public partial class WeaponController : Node
         _slots[slotIndex].HasMagicDamage   = hasMagicDamage;
         _slots[slotIndex].EffectiveDamageType = hasMagicDamage ? Items.DamageType.Fire : skill.DamageType;
         _slots[slotIndex].CritChanceBonus  = critChanceBonus;
+        _slots[slotIndex].CritDamageBonus  = critDamageBonus;
         _slots[slotIndex].AutoActivate  = true;
         _slots[slotIndex].IsChanneling  = false;
         _slots[slotIndex].DurationTimer = 0f;
@@ -421,7 +423,7 @@ public partial class WeaponController : Node
         float critChance = _globalCritChance + slot.CritChanceBonus;
         float critMult   = 1.0f;
         if (critChance > 0f && GD.Randf() < critChance)
-            critMult = _critMultiplier;
+            critMult = _critMultiplier + slot.CritDamageBonus;
         baseDmg *= critMult;
 
         foreach (var node in GetTree().GetNodesInGroup("enemies"))
@@ -446,7 +448,7 @@ public partial class WeaponController : Node
         float critChance = _globalCritChance + slot.CritChanceBonus;
         float critMult   = 1.0f;
         if (critChance > 0f && GD.Randf() < critChance)
-            critMult = _critMultiplier;
+            critMult = _critMultiplier + slot.CritDamageBonus;
         baseDmg *= critMult;
 
         bool hit = false;
@@ -582,7 +584,7 @@ public partial class WeaponController : Node
             float ttCritChance = _globalCritChance + slot.CritChanceBonus;
             float ttCrit   = 1.0f;
             if (ttCritChance > 0f && GD.Randf() < ttCritChance)
-                ttCrit = _critMultiplier;
+                ttCrit = _critMultiplier + slot.CritDamageBonus;
             float radius = slot.Skill.ZoneRadius > 0f ? slot.Skill.ZoneRadius : 54f;
 
             var zone = new TrackedTick
@@ -614,7 +616,7 @@ public partial class WeaponController : Node
         float critChance      = _globalCritChance + slot.CritChanceBonus;
         float critMultiplier  = 1.0f;
         if (critChance > 0f && GD.Randf() < critChance)
-            critMultiplier = _critMultiplier;
+            critMultiplier = _critMultiplier + slot.CritDamageBonus;
         baseDmg *= critMultiplier;
 
         int subHits = slot.Skill!.SubHits;
@@ -754,7 +756,7 @@ public partial class WeaponController : Node
                 float critChance = _globalCritChance + slotData.CritChanceBonus;
                 float critMult   = 1.0f;
                 if (critChance > 0f && GD.Randf() < critChance)
-                    critMult = _critMultiplier;
+                    critMult = _critMultiplier + slotData.CritDamageBonus;
                 baseDmg *= critMult;
 
                 var origin = player.GlobalPosition;
@@ -790,7 +792,7 @@ public partial class WeaponController : Node
             float critChance = _globalCritChance + slot.CritChanceBonus;
             float critMult   = 1.0f;
             if (critChance > 0f && GD.Randf() < critChance)
-                critMult = _critMultiplier;
+                critMult = _critMultiplier + slot.CritDamageBonus;
             baseDmg *= critMult;
 
             foreach (var node in GetTree().GetNodesInGroup("enemies"))
@@ -829,7 +831,7 @@ public partial class WeaponController : Node
             float critChance = _globalCritChance + slot.CritChanceBonus;
             float critMult   = 1.0f;
             if (critChance > 0f && GD.Randf() < critChance)
-                critMult = _critMultiplier;
+                critMult = _critMultiplier + slot.CritDamageBonus;
             baseDmg *= critMult;
 
             slot.ActiveZones.RemoveAll(z => z == null || !GodotObject.IsInstanceValid(z) || z.IsQueuedForDeletion());
@@ -863,7 +865,7 @@ public partial class WeaponController : Node
             float critChance = _globalCritChance + slot.CritChanceBonus;
             float critMult   = 1.0f;
             if (critChance > 0f && GD.Randf() < critChance)
-                critMult = _critMultiplier;
+                critMult = _critMultiplier + slot.CritDamageBonus;
             baseDmg *= critMult;
 
             float radius = slot.Skill!.ZoneRadius > 0f ? slot.Skill!.ZoneRadius : 54f;
@@ -936,7 +938,7 @@ public partial class WeaponController : Node
             float critChance = _globalCritChance + slot.CritChanceBonus;
             float critMult   = 1.0f;
             if (critChance > 0f && GD.Randf() < critChance)
-                critMult = _critMultiplier;
+                critMult = _critMultiplier + slot.CritDamageBonus;
             baseDmg *= critMult;
 
             float radius = slot.Skill!.ZoneRadius > 0f ? slot.Skill!.ZoneRadius : 54f;

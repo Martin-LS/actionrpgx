@@ -8,6 +8,7 @@ public static class SkillAugmentRegistry
     {
         ["slow"]            = new SkillAugmentData("slow",            "Slow",            new string[] { }, EotId: "slow"),
         ["critical_strike"] = new SkillAugmentData("critical_strike", "Critical Strike", new string[] { }, EotId: null),
+        ["crit_damage"]     = new SkillAugmentData("crit_damage",     "Critical Power",  new string[] { }, EotId: null),
         ["magic_damage"]    = new SkillAugmentData("magic_damage",    "Magic Damage",    new string[] { }, EotId: null, ConflictGroup: "damage_type"),
     };
 
