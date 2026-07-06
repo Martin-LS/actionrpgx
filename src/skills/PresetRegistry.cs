@@ -118,6 +118,20 @@ public static class PresetRegistry
         ),
 
         // self_channeled_tick presets
+        ["surge"] = new PresetData(
+            Id: "surge",
+            Name: "Surge",
+            PrototypeId: "self_channeled_tick",
+            FormId: "ramp",
+            IdentityId: "physical"
+        ),
+        ["kindle"] = new PresetData(
+            Id: "kindle",
+            Name: "Kindle",
+            PrototypeId: "self_channeled_tick",
+            FormId: "ramp",
+            IdentityId: "magic"
+        ),
         ["cyclone"] = new PresetData(
             Id: "cyclone",
             Name: "Cyclone",

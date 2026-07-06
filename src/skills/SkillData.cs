@@ -28,5 +28,6 @@ public record SkillData(
     string               VfxKey            = "",
     string?              BasedOn           = null,
     float                TickRate          = 0f,
-    int                  SubHits           = 1
+    int                  SubHits           = 1,
+    float                RampSpeed         = 0f
 );

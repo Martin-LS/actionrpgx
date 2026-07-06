@@ -42,6 +42,10 @@ public static class SkillTiering
                 }
                 return skill;
 
+            case TierTrack.RampSpeedUp:
+                float newRampSpeed = skill.RampSpeed * (1f + factor);
+                return skill with { RampSpeed = newRampSpeed };
+
             default:
                 return skill;
         }
