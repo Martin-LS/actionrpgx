@@ -75,6 +75,27 @@ public static class FormRegistry
             Cooldown: BalanceConfig.Forms.SwiftCooldown,
             FocusCost: BalanceConfig.Forms.SwiftFocusCost
         ),
+        ["blast"] = new FormData(
+            Id: "blast",
+            PrototypeId: "fixed_zone_burst",
+            TierTrack: TierTrack.CooldownDown,
+            Cooldown: BalanceConfig.Forms.BlastCooldown
+        ),
+        ["fuse"] = new FormData(
+            Id: "fuse",
+            PrototypeId: "fixed_zone_burst",
+            TierTrack: TierTrack.RadiusUp,
+            Cooldown: BalanceConfig.Forms.FuseCooldown,
+            WindUp: BalanceConfig.Forms.FuseWindUp,
+            ZoneRadius: BalanceConfig.Forms.FuseZoneRadius
+        ),
+        ["echo"] = new FormData(
+            Id: "echo",
+            PrototypeId: "fixed_zone_burst",
+            TierTrack: TierTrack.RadiusUp,
+            Cooldown: BalanceConfig.Forms.EchoCooldown,
+            SubHits: BalanceConfig.Forms.EchoSubHits
+        ),
         ["heavy"] = new FormData(
             Id: "heavy",
             PrototypeId: "entity_burst",

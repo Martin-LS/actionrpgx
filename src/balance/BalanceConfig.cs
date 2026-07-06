@@ -233,6 +233,15 @@ public static class BalanceConfig
         public const float SalvoFocusCost = 6f;
         public const int   SalvoSubHits = 4;
 
+        // blast / fuse / echo (fixed_zone_burst)
+        public const float BlastCooldown       = 0.7f;
+        public const float FuseCooldown        = 2.5f;
+        public const float FuseWindUp          = 1.5f;
+        public const float FuseZoneRadius      = 126f;
+        public const float EchoCooldown        = 1.0f;
+        public const int   EchoSubHits         = 2;
+        public const float EchoAftershockDelay = 0.6f;
+
         // ramp (self_channeled_tick)
         public const float RampInitialTickRate = 0.5f;
         public const float RampCapTickRate = 0.1f;
