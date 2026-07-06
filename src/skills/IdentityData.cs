@@ -4,7 +4,8 @@ namespace ActionRpgX.Skills;
 
 // IdentityData.cs
 public record IdentityData(
-    string     Id,        // "physical", "magic"
+    string     Id,        // "physical", "fire", "cold", "lightning"
     DamageType DamageType,
-    string     VfxKey     // consumed by the VFX issue; "" allowed until then
+    string     VfxKey,        // consumed by the VFX issue; "" allowed until then
+    string?    SignatureEotId // innate signature ailment for this element (element wave); null = none
 );

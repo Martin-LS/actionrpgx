@@ -6,7 +6,8 @@ public record EotData(
     float  ApplyChance,
     float  Duration,
     bool   IsDamageEot,
-    float  TickRate      = 0f,
-    float  DamagePerTick = 0f,
-    float  SlowFraction  = 0f
+    float  TickRate       = 0f,
+    float  DamagePerTick  = 0f,
+    float  SlowFraction   = 0f,
+    float  DamageTakenAmp = 0f   // fractional increase to all damage the target takes (Shock)
 );

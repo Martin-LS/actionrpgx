@@ -21,7 +21,7 @@ public static class PresetRegistry
             Name: "Arcane Flurry",
             PrototypeId: "entity_burst",
             FormId: "salvo",
-            IdentityId: "magic",
+            IdentityId: "fire",
             IconPath: "res://assets/icons/items/battle_axe.png"
         ),
         ["strike"] = new PresetData(
@@ -37,7 +37,7 @@ public static class PresetRegistry
             Name: "Arcane Strike",
             PrototypeId: "entity_burst",
             FormId: "swift",
-            IdentityId: "magic",
+            IdentityId: "fire",
             IconPath: "res://assets/icons/items/battle_axe.png"
         ),
         ["crushing_blow"] = new PresetData(
@@ -53,7 +53,7 @@ public static class PresetRegistry
             Name: "Smite",
             PrototypeId: "entity_burst",
             FormId: "heavy",
-            IdentityId: "magic",
+            IdentityId: "fire",
             IconPath: "res://assets/icons/items/battle_axe.png"
         ),
 
@@ -70,7 +70,7 @@ public static class PresetRegistry
             Name: "Nova",
             PrototypeId: "self_burst",
             FormId: "nova",
-            IdentityId: "magic"
+            IdentityId: "fire"
         ),
         ["quake"] = new PresetData(
             Id: "quake",
@@ -84,7 +84,7 @@ public static class PresetRegistry
             Name: "Cataclysm",
             PrototypeId: "self_burst",
             FormId: "quake",
-            IdentityId: "magic"
+            IdentityId: "fire"
         ),
 
         // stackable_zone presets
@@ -100,7 +100,7 @@ public static class PresetRegistry
             Name: "Arcane Saturation",
             PrototypeId: "stackable_zone",
             FormId: "swarm",
-            IdentityId: "magic"
+            IdentityId: "fire"
         ),
         ["barbed_zone"] = new PresetData(
             Id: "barbed_zone",
@@ -114,7 +114,7 @@ public static class PresetRegistry
             Name: "Arcane Nexus",
             PrototypeId: "stackable_zone",
             FormId: "singular",
-            IdentityId: "magic"
+            IdentityId: "fire"
         ),
 
         // triggered_zone_burst presets
@@ -130,7 +130,7 @@ public static class PresetRegistry
             Name: "Runic Mine",
             PrototypeId: "triggered_zone_burst",
             FormId: "trap_swarm",
-            IdentityId: "magic"
+            IdentityId: "fire"
         ),
         ["claymore"] = new PresetData(
             Id: "claymore",
@@ -144,7 +144,7 @@ public static class PresetRegistry
             Name: "Blast Sigil",
             PrototypeId: "triggered_zone_burst",
             FormId: "trap_singular",
-            IdentityId: "magic"
+            IdentityId: "fire"
         ),
 
         // fixed_zone_burst presets
@@ -160,7 +160,7 @@ public static class PresetRegistry
             Name: "Arcane Blast",
             PrototypeId: "fixed_zone_burst",
             FormId: "blast",
-            IdentityId: "magic"
+            IdentityId: "fire"
         ),
         ["mortar"] = new PresetData(
             Id: "mortar",
@@ -174,7 +174,7 @@ public static class PresetRegistry
             Name: "Arcane Mortar",
             PrototypeId: "fixed_zone_burst",
             FormId: "fuse",
-            IdentityId: "magic"
+            IdentityId: "fire"
         ),
         ["aftershock"] = new PresetData(
             Id: "aftershock",
@@ -188,7 +188,7 @@ public static class PresetRegistry
             Name: "Arcane Aftershock",
             PrototypeId: "fixed_zone_burst",
             FormId: "echo",
-            IdentityId: "magic"
+            IdentityId: "fire"
         ),
 
         // fixed_zone_tick presets
@@ -204,7 +204,7 @@ public static class PresetRegistry
             Name: "Tempest",
             PrototypeId: "fixed_zone_tick",
             FormId: "storm",
-            IdentityId: "magic"
+            IdentityId: "fire"
         ),
         ["caltrops"] = new PresetData(
             Id: "caltrops",
@@ -218,7 +218,7 @@ public static class PresetRegistry
             Name: "Glyph of Agony",
             PrototypeId: "fixed_zone_tick",
             FormId: "floor",
-            IdentityId: "magic"
+            IdentityId: "fire"
         ),
 
         // self_channeled_tick presets
@@ -234,7 +234,7 @@ public static class PresetRegistry
             Name: "Kindle",
             PrototypeId: "self_channeled_tick",
             FormId: "ramp",
-            IdentityId: "magic"
+            IdentityId: "fire"
         ),
         ["cyclone"] = new PresetData(
             Id: "cyclone",
@@ -248,7 +248,7 @@ public static class PresetRegistry
             Name: "Arcane Cyclone",
             PrototypeId: "self_channeled_tick",
             FormId: "spin",
-            IdentityId: "magic"
+            IdentityId: "fire"
         ),
         ["bladestorm"] = new PresetData(
             Id: "bladestorm",
@@ -262,7 +262,7 @@ public static class PresetRegistry
             Name: "Maelstrom",
             PrototypeId: "self_channeled_tick",
             FormId: "vortex",
-            IdentityId: "magic"
+            IdentityId: "fire"
         ),
 
         // self_aura presets
@@ -278,7 +278,7 @@ public static class PresetRegistry
             Name: "Arcane Singularity",
             PrototypeId: "self_aura",
             FormId: "reserve_heavy",
-            IdentityId: "magic"
+            IdentityId: "fire"
         ),
         ["razor_aura"] = new PresetData(
             Id: "razor_aura",
@@ -292,7 +292,7 @@ public static class PresetRegistry
             Name: "Static Field",
             PrototypeId: "self_aura",
             FormId: "reserve_light",
-            IdentityId: "magic"
+            IdentityId: "fire"
         )
     };
 

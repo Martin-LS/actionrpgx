@@ -47,6 +47,7 @@ public partial class EnemyController : CharacterBody3D
     private float _baseSpeed;
     private AnimationNodeStateMachinePlayback? _smPlayback;
     private Node3D? _slowVfx;
+    private float _damageTakenAmp;   // Shock: fractional increase to incoming damage
 
     public override void _Ready()
     {
@@ -257,7 +258,7 @@ public partial class EnemyController : CharacterBody3D
                 inst.TickTimer -= delta;
                 if (inst.TickTimer <= 0f)
                 {
-                    TakeDamage(eot.DamagePerTick * inst.CritMultiplier, Items.DamageType.Magic, inst.CritMultiplier > 1f);
+                    TakeDamage(eot.DamagePerTick * inst.CritMultiplier, Items.DamageType.Fire, inst.CritMultiplier > 1f);
                     inst.TickTimer = eot.TickRate;
                 }
             }
@@ -265,37 +266,68 @@ public partial class EnemyController : CharacterBody3D
         foreach (var id in expired)
         {
             var eot = EotRegistry.Get(id);
-            if (eot != null) RemoveEotEffect(eot);
+            // Remove from the active set first so the Refresh* recompute in
+            // RemoveEotEffect no longer counts this expiring EoT (otherwise
+            // slow/amp would never lift).
             _activeEots.Remove(id);
+            if (eot != null) RemoveEotEffect(eot);
         }
     }
 
     private void ApplyEotEffect(EotData eot)
     {
-        if (eot.Id == "slow")
-        {
-            Speed = _baseSpeed * (1f - eot.SlowFraction);
-            _slowVfx = SlowVfxScene.Instantiate<Node3D>();
-            AddChild(_slowVfx);
-            _slowVfx.GetNode<GpuParticles3D>("Whirl").Emitting = true;
-        }
+        if (eot.SlowFraction > 0f)     RefreshSlowState();
+        if (eot.DamageTakenAmp > 0f)   RefreshAmpState();
     }
 
     private void RemoveEotEffect(EotData eot)
     {
-        if (eot.Id == "slow")
+        if (eot.SlowFraction > 0f)     RefreshSlowState();
+        if (eot.DamageTakenAmp > 0f)   RefreshAmpState();
+    }
+
+    // Recompute movement speed from the strongest active slow (Slow augment, Chill signature, …).
+    private void RefreshSlowState()
+    {
+        float maxSlow = 0f;
+        foreach (var id in _activeEots.Keys)
         {
-            Speed = _baseSpeed;
-            _slowVfx?.QueueFree();
+            var eot = EotRegistry.Get(id);
+            if (eot != null && eot.SlowFraction > maxSlow) maxSlow = eot.SlowFraction;
+        }
+
+        Speed = _baseSpeed * (1f - maxSlow);
+
+        if (maxSlow > 0f && _slowVfx == null)
+        {
+            _slowVfx = SlowVfxScene.Instantiate<Node3D>();
+            AddChild(_slowVfx);
+            _slowVfx.GetNode<GpuParticles3D>("Whirl").Emitting = true;
+        }
+        else if (maxSlow <= 0f && _slowVfx != null)
+        {
+            _slowVfx.QueueFree();
             _slowVfx = null;
         }
+    }
+
+    // Recompute the incoming-damage amp from the strongest active amp EoT (Shock signature).
+    private void RefreshAmpState()
+    {
+        float maxAmp = 0f;
+        foreach (var id in _activeEots.Keys)
+        {
+            var eot = EotRegistry.Get(id);
+            if (eot != null && eot.DamageTakenAmp > maxAmp) maxAmp = eot.DamageTakenAmp;
+        }
+        _damageTakenAmp = maxAmp;
     }
 
     public void TakeDamage(float rawAmount, Items.DamageType type, bool isCrit = false)
     {
         float resistance = type == Items.DamageType.Physical ? PhysicalResistance : MagicResistance;
-        float effective  = rawAmount * (1f - resistance);
-        EmitSignal(SignalName.DamageTaken, effective, type == Items.DamageType.Magic, isCrit);
+        float effective  = rawAmount * (1f - resistance) * (1f + _damageTakenAmp);
+        EmitSignal(SignalName.DamageTaken, effective, type != Items.DamageType.Physical, isCrit);
         _currentHealth  -= Mathf.CeilToInt(effective);
         if (_currentHealth <= 0)
             Die();
