@@ -147,6 +147,50 @@ public static class PresetRegistry
             IdentityId: "magic"
         ),
 
+        // fixed_zone_burst presets
+        ["blast"] = new PresetData(
+            Id: "blast",
+            Name: "Blast",
+            PrototypeId: "fixed_zone_burst",
+            FormId: "blast",
+            IdentityId: "physical"
+        ),
+        ["arcane_blast"] = new PresetData(
+            Id: "arcane_blast",
+            Name: "Arcane Blast",
+            PrototypeId: "fixed_zone_burst",
+            FormId: "blast",
+            IdentityId: "magic"
+        ),
+        ["mortar"] = new PresetData(
+            Id: "mortar",
+            Name: "Mortar",
+            PrototypeId: "fixed_zone_burst",
+            FormId: "fuse",
+            IdentityId: "physical"
+        ),
+        ["arcane_mortar"] = new PresetData(
+            Id: "arcane_mortar",
+            Name: "Arcane Mortar",
+            PrototypeId: "fixed_zone_burst",
+            FormId: "fuse",
+            IdentityId: "magic"
+        ),
+        ["aftershock"] = new PresetData(
+            Id: "aftershock",
+            Name: "Aftershock",
+            PrototypeId: "fixed_zone_burst",
+            FormId: "echo",
+            IdentityId: "physical"
+        ),
+        ["arcane_aftershock"] = new PresetData(
+            Id: "arcane_aftershock",
+            Name: "Arcane Aftershock",
+            PrototypeId: "fixed_zone_burst",
+            FormId: "echo",
+            IdentityId: "magic"
+        ),
+
         // fixed_zone_tick presets
         ["rockfall"] = new PresetData(
             Id: "rockfall",

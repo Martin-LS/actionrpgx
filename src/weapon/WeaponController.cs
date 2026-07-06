@@ -904,14 +904,32 @@ public partial class WeaponController : Node
             }
             else
             {
-                foreach (var node in GetTree().GetNodesInGroup("enemies"))
+                int    subHits  = slot.Skill!.SubHits;
+                float  perHitDmg = baseDmg / subHits;
+                var    capEots   = slot.Eots;
+                string capVfxKey = slot.Skill.VfxKey;
+
+                for (int j = 0; j < subHits; j++)
                 {
-                    if (node is not Enemies.EnemyController enemy || enemy.IsQueuedForDeletion()) continue;
-                    if (worldPos.DistanceTo(enemy.GlobalPosition) > radius) continue;
-                    enemy.TakeDamage(baseDmg, dmgType, isCrit);
-                    ApplyEots(enemy, slot.Eots, critMult);
+                    float delay = j * BalanceConfig.Forms.EchoAftershockDelay;
+
+                    void DoHit()
+                    {
+                        foreach (var node in GetTree().GetNodesInGroup("enemies"))
+                        {
+                            if (node is not Enemies.EnemyController enemy || enemy.IsQueuedForDeletion()) continue;
+                            if (worldPos.DistanceTo(enemy.GlobalPosition) > radius) continue;
+                            enemy.TakeDamage(perHitDmg, dmgType, isCrit);
+                            ApplyEots(enemy, capEots, critMult, subHits);
+                        }
+                        SpawnZoneBurstVfx(worldPos, capVfxKey);
+                    }
+
+                    if (delay > 0f)
+                        GetTree().CreateTimer(delay).Timeout += DoHit;
+                    else
+                        DoHit();
                 }
-                SpawnZoneBurstVfx(worldPos, slot.Skill.VfxKey);
             }
         }
         else if (slot.Skill!.DamagePattern == SkillDamagePattern.Tick)
