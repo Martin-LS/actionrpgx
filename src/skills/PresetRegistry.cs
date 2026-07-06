@@ -87,6 +87,66 @@ public static class PresetRegistry
             IdentityId: "magic"
         ),
 
+        // stackable_zone presets
+        ["spike_field"] = new PresetData(
+            Id: "spike_field",
+            Name: "Spike Field",
+            PrototypeId: "stackable_zone",
+            FormId: "swarm",
+            IdentityId: "physical"
+        ),
+        ["arcane_saturation"] = new PresetData(
+            Id: "arcane_saturation",
+            Name: "Arcane Saturation",
+            PrototypeId: "stackable_zone",
+            FormId: "swarm",
+            IdentityId: "magic"
+        ),
+        ["barbed_zone"] = new PresetData(
+            Id: "barbed_zone",
+            Name: "Barbed Zone",
+            PrototypeId: "stackable_zone",
+            FormId: "singular",
+            IdentityId: "physical"
+        ),
+        ["arcane_nexus"] = new PresetData(
+            Id: "arcane_nexus",
+            Name: "Arcane Nexus",
+            PrototypeId: "stackable_zone",
+            FormId: "singular",
+            IdentityId: "magic"
+        ),
+
+        // triggered_zone_burst presets
+        ["spike_trap"] = new PresetData(
+            Id: "spike_trap",
+            Name: "Spike Trap",
+            PrototypeId: "triggered_zone_burst",
+            FormId: "trap_swarm",
+            IdentityId: "physical"
+        ),
+        ["runic_mine"] = new PresetData(
+            Id: "runic_mine",
+            Name: "Runic Mine",
+            PrototypeId: "triggered_zone_burst",
+            FormId: "trap_swarm",
+            IdentityId: "magic"
+        ),
+        ["claymore"] = new PresetData(
+            Id: "claymore",
+            Name: "Claymore",
+            PrototypeId: "triggered_zone_burst",
+            FormId: "trap_singular",
+            IdentityId: "physical"
+        ),
+        ["blast_sigil"] = new PresetData(
+            Id: "blast_sigil",
+            Name: "Blast Sigil",
+            PrototypeId: "triggered_zone_burst",
+            FormId: "trap_singular",
+            IdentityId: "magic"
+        ),
+
         // fixed_zone_tick presets
         ["rockfall"] = new PresetData(
             Id: "rockfall",

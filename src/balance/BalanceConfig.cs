@@ -239,6 +239,25 @@ public static class BalanceConfig
         public const float RampDuration = 3.0f;
         public const float RampFocusCost = 12f;
 
+        // stackable_zone (swarm / singular)
+        public const float StackableZoneSwarmCooldown = 1.0f;
+        public const float StackableZoneSwarmZoneRadius = 36f;
+        public const int   StackableZoneSwarmStackLimit = 6;
+        public const float StackableZoneSingularCooldown = 3.0f;
+        public const float StackableZoneSingularZoneRadius = 108f;
+        public const float StackableZoneSingularDuration = 15.0f;
+        public const int   StackableZoneSingularStackLimit = 2;
+
+        // triggered_zone_burst (swarm / singular)
+        public const float TriggeredZoneBurstSwarmCooldown = 0.8f;
+        public const float TriggeredZoneBurstSwarmTriggerRadius = 18f;
+        public const float TriggeredZoneBurstSwarmZoneRadius = 54f;
+        public const int   TriggeredZoneBurstSwarmStackLimit = 6;
+        public const float TriggeredZoneBurstSingularCooldown = 2.5f;
+        public const float TriggeredZoneBurstSingularTriggerRadius = 54f;
+        public const float TriggeredZoneBurstSingularZoneRadius = 162f;
+        public const int   TriggeredZoneBurstSingularStackLimit = 1;
+
         // swift (entity_burst)
         public const float SwiftCooldown = 0.5f;
         public const float SwiftFocusCost = 6f;
