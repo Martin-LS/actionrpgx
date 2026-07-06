@@ -24,7 +24,9 @@ public partial class EnemyController : CharacterBody3D
     [Export] public float DamageInterval = 1f;
     public int MapLevel = 1;
     public float PhysicalResistance = 0f;
-    public float MagicResistance    = 0f;
+    public float FireResistance      = 0f;
+    public float ColdResistance      = 0f;
+    public float LightningResistance = 0f;
     public string ModelPath = "res://assets/models/characters/enemy_generic.glb";
 
     private enum EnemyState { Dormant, Idle, Chasing }
@@ -325,7 +327,15 @@ public partial class EnemyController : CharacterBody3D
 
     public void TakeDamage(float rawAmount, Items.DamageType type, bool isCrit = false)
     {
-        float resistance = type == Items.DamageType.Physical ? PhysicalResistance : MagicResistance;
+        float baseResistance = type switch
+        {
+            Items.DamageType.Physical  => PhysicalResistance,
+            Items.DamageType.Fire      => FireResistance,
+            Items.DamageType.Cold      => ColdResistance,
+            Items.DamageType.Lightning => LightningResistance,
+            _                          => 0f
+        };
+        float resistance = Mathf.Min(baseResistance, 0.99f);
         float effective  = rawAmount * (1f - resistance) * (1f + _damageTakenAmp);
         EmitSignal(SignalName.DamageTaken, effective, type != Items.DamageType.Physical, isCrit);
         _currentHealth  -= Mathf.CeilToInt(effective);

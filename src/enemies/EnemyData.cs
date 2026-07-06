@@ -7,7 +7,9 @@ public record EnemyData(
     int    ContactDamage,
     float  DamageInterval     = 1f,
     float  PhysicalResistance = 0f,
-    float  MagicResistance    = 0f,
+    float  FireResistance      = 0f,
+    float  ColdResistance      = 0f,
+    float  LightningResistance = 0f,
     string ModelPath          = "res://assets/models/characters/enemy_generic.glb"
 );
 
@@ -18,7 +20,9 @@ public static class EnemyRegistry
         BalanceConfig.Enemies.Skeleton.BaseHealth,
         BalanceConfig.Enemies.Skeleton.ContactDamage,
         PhysicalResistance: BalanceConfig.Enemies.Skeleton.PhysicalResistance,
-        MagicResistance: 0f,
+        FireResistance: 0f,
+        ColdResistance: 0f,
+        LightningResistance: 0f,
         ModelPath: "res://assets/models/characters/enemy_skeleton.glb");
 
     public static EnemyData Get(string enemyType) => enemyType switch
