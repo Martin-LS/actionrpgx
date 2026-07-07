@@ -183,7 +183,7 @@ public static class SkillRegistry
         );
         var composed = SkillComposer.Compose(proto, form, identity, dummyPreset);
 
-        if (composed.DamagePattern != SkillDamagePattern.None && !string.IsNullOrEmpty(composed.DebuffEotId))
+        if (composed.DamagePattern != SkillDamagePattern.None && !string.IsNullOrEmpty(composed.DebuffEotId) && composed.Type != SkillType.Aura)
         {
             errorMessage = $"Skill '{composed.Id}' has DebuffEotId set ('{composed.DebuffEotId}') but DamagePattern is {composed.DamagePattern} (must be None).";
             return false;
@@ -204,7 +204,7 @@ public static class SkillRegistry
         // prototypes below live here. Validate them for internal consistency.
         foreach (var skill in All.Values)
         {
-            if (skill.DamagePattern != SkillDamagePattern.None && !string.IsNullOrEmpty(skill.DebuffEotId))
+            if (skill.DamagePattern != SkillDamagePattern.None && !string.IsNullOrEmpty(skill.DebuffEotId) && skill.Type != SkillType.Aura)
             {
                 throw new System.InvalidOperationException(
                     $"Skill '{skill.Id}' has DebuffEotId set ('{skill.DebuffEotId}') but DamagePattern is {skill.DamagePattern} (must be None).");

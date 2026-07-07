@@ -432,12 +432,21 @@ public partial class WeaponController : Node
             critMult = _critMultiplier + slot.CritDamageBonus;
         baseDmg *= critMult;
 
+        bool isDebuffAura = !string.IsNullOrEmpty(slot.Skill!.DebuffEotId);
+
         foreach (var node in GetTree().GetNodesInGroup("enemies"))
         {
             if (node is not Enemies.EnemyController enemy || enemy.IsQueuedForDeletion()) continue;
             if (origin.DistanceTo(enemy.GlobalPosition) > slot.Skill!.Range) continue;
-            enemy.TakeDamage(baseDmg, dmgType, critMult > 1f);
-            ApplyEots(enemy, slot.Eots, critMult);
+            if (isDebuffAura)
+            {
+                ApplyEots(enemy, slot.Eots, critMult);
+            }
+            else
+            {
+                enemy.TakeDamage(baseDmg, dmgType, critMult > 1f);
+                ApplyEots(enemy, slot.Eots, critMult);
+            }
         }
 
         EmitSignal(SignalName.SkillFired, slotIndex, slot.Skill!.TickRate, "AuraTick");
