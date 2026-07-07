@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using ActionRpgX.Items;
 
 namespace ActionRpgX.Eot;
 
@@ -23,7 +24,8 @@ public static class EotRegistry
             Duration:      BalanceConfig.Eots.BleedDuration,
             IsDamageEot:   true,
             TickRate:      BalanceConfig.Eots.BleedTickRate,
-            DamagePerTick: BalanceConfig.Eots.BleedDamagePerTick
+            DamagePerTick: BalanceConfig.Eots.BleedDamagePerTick,
+            DamageType:    DamageType.Physical
         ),
         ["burn"] = new EotData(
             Id:            "burn",
@@ -32,7 +34,8 @@ public static class EotRegistry
             Duration:      BalanceConfig.Eots.BurnDuration,
             IsDamageEot:   true,
             TickRate:      BalanceConfig.Eots.BurnTickRate,
-            DamagePerTick: BalanceConfig.Eots.BurnDamagePerTick
+            DamagePerTick: BalanceConfig.Eots.BurnDamagePerTick,
+            DamageType:    DamageType.Fire
         ),
         ["chill"] = new EotData(
             Id:           "chill",
@@ -49,6 +52,17 @@ public static class EotRegistry
             Duration:       BalanceConfig.Eots.ShockDuration,
             IsDamageEot:    false,
             DamageTakenAmp: BalanceConfig.Eots.ShockDamageTakenAmp
+        ),
+        ["poison"] = new EotData(
+            Id:            "poison",
+            Name:          "Poison",
+            ApplyChance:   BalanceConfig.Eots.SignatureApplyChance,
+            Duration:      BalanceConfig.Eots.PoisonDuration,
+            IsDamageEot:   true,
+            TickRate:      BalanceConfig.Eots.PoisonTickRate,
+            DamagePerTick: BalanceConfig.Eots.PoisonDamagePerTick,
+            DamageType:    DamageType.Poison,
+            MaxStacks:     BalanceConfig.Eots.PoisonMaxStacks
         ),
     };
 

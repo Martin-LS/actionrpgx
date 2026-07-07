@@ -385,6 +385,7 @@ public partial class DungeonGenerator : Node3D
         enemy.FireResistance      = data.FireResistance;
         enemy.ColdResistance      = data.ColdResistance;
         enemy.LightningResistance = data.LightningResistance;
+        enemy.PoisonResistance    = data.PoisonResistance;
         enemy.ModelPath          = data.ModelPath;
         enemy.MapLevel           = mapLevel;
     }

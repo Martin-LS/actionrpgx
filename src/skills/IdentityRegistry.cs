@@ -31,6 +31,12 @@ public static class IdentityRegistry
             DamageType: DamageType.Lightning,
             VfxKey: "lightning",     // lightning = arc/spark particle skins
             SignatureEotId: "shock"
+        ),
+        ["poison"] = new IdentityData(
+            Id: "poison",
+            DamageType: DamageType.Poison,
+            VfxKey: "poison",        // poison = toxic/venom particle skins
+            SignatureEotId: "poison"
         )
     };
 
