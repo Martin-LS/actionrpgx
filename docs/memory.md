@@ -123,7 +123,7 @@ All three raw-extraction tables are resolved and promoted to docs. What remains 
 
 Emergent principle: *a new identity is earned only by a genuine enemy-side, resist-relevant signature; else it's existing type + augment + skin.*
 
-- **2 survive → occult wave (adopted-in-principle, GATED):** Poison (own channel + stacking-DoT; gated on a stacking-EoT engine + a 5th resist channel); Void/Shadow (signature Wither-vs-Decay + channel own-vs-shared-Chaos parked on a roster-growth decision; its raw "defence-bypass" signature was rejected).
+- **2 survive → occult wave (adopted-in-principle, GATED):** Poison (own channel + stacking-DoT; gated on a stacking-EoT engine + a 5th resist channel — unblocked 2026-07-07, ticketed as #73); Void/Shadow (own channel resolved 2026-07-07 — each occult type gets its own, no shared "Chaos" channel; signature still parked — Weaken vs %-HP Decay floated, undecided — tracked on #72; its raw "defence-bypass" signature was rejected).
 - **5 rejected → decomposed:** Bone (Physical skin); Blood + Holy (player-side leech/heal = augment/heal-system, not signatures); Earth + Wind (Physical + CC/displacement augment).
 - **Rulings promoted to `design-skills.md` Identity Layer:** identity adoption test (pylon's twin); *signature may not undermine resist-parity*; *player-side effects are never signatures*; *CC/displacement effects are never signatures*.
 
@@ -157,8 +157,8 @@ Key implementation facts for whoever builds on this:
 
 ### 2.5 Still open / next threads
 
-- **#62 — reserve buff/debuff-aura FORM** (blocked, now unblocked by #61/#63/#64). **This is the key remaining piece:** #63 and #64 shipped the *plumbing* (`DebuffEotId`/`BuffId` fields + FireAuraTick branches + buff framework) but **no form/preset yet wires `DebuffEotId`/`BuffId` onto `self_aura`**, so neither the debuff-aura nor buff-aura mode is reachable through the craft wizard until #62. `BuffRegistry` currently holds seed buffs only (steel_wall / haste / focus_shield). The buff-aura's radius is vestigial → the reserve form's lever is reservation↔magnitude.
-- **Occult wave** — stacking-EoT engine + Poison's 5th resist channel (unblocks Poison); roster-growth / shared-Chaos-channel decision (unblocks Void's channel+signature).
+- **#62 — reserve buff/debuff-aura FORM — SHIPPED ✅** (2026-07-07, PR #71, merged to develop, issue closed). Wired `DebuffEotId`/`BuffId` onto `self_aura` via new `reserve_heavy_magnitude`/`reserve_light_magnitude` forms + a preset-level `BuffId`/`DebuffEotId` override, closing out the whole D1/buff-debuff-aura branch.
+- **Occult wave — split in two (2026-07-07).** Roster-growth call resolved: each occult type earns its own resist channel, not a shared "Chaos" channel. **Poison** unblocked outright, ticketed as **#73** (stacking-EoT engine + PoisonResistance channel). **Void/Shadow**'s channel is settled too; only its **signature** remains open (Weaken vs %-HP Decay, undecided) — tracked on **#72**.
 - **Deferred bucket-B/C gates** (become issues when scheduled): projectile/AoE augment systems, Sustain path, placement/mine, EoT-transfer, corpse-free detonate, equipment defensive mechanics, enemy-accuracy/armour models, hard-CC diminishing rule; the condition-layer triggers (`on_crit`/`while_channeling`/hp-threshold); an accumulation-state mechanic (Kill-momentum gate, also gates buff stacking).
 
 ---
