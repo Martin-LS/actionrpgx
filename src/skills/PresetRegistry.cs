@@ -270,8 +270,9 @@ public static class PresetRegistry
             Id: "steel_wall",
             Name: "Steel Wall",
             PrototypeId: "self_aura",
-            FormId: "reserve_heavy",
-            IdentityId: "physical"
+            FormId: "reserve_heavy_magnitude",
+            IdentityId: "physical",
+            BuffId: "steel_wall"
         ),
         ["arcane_singularity"] = new PresetData(
             Id: "arcane_singularity",
@@ -284,8 +285,9 @@ public static class PresetRegistry
             Id: "razor_aura",
             Name: "Razor Aura",
             PrototypeId: "self_aura",
-            FormId: "reserve_light",
-            IdentityId: "physical"
+            FormId: "reserve_light_magnitude",
+            IdentityId: "physical",
+            DebuffEotId: "slow"
         ),
         ["static_field"] = new PresetData(
             Id: "static_field",

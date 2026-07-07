@@ -25,6 +25,27 @@ public static class FormRegistry
             Cooldown: BalanceConfig.Forms.SelfAuraLightCooldown,
             TickRate: BalanceConfig.Forms.SelfAuraLightCooldown
         ),
+        // Buff/debuff scope: reservation ↔ magnitude (EotSlice), vs the damage scope's reservation ↔ radius above.
+        ["reserve_heavy_magnitude"] = new FormData(
+            Id: "reserve_heavy_magnitude",
+            PrototypeId: "self_aura",
+            TierTrack: TierTrack.EotMagnitudeUp,
+            Range: BalanceConfig.Forms.SelfAuraMagnitudeHeavyRange,
+            FocusCost: BalanceConfig.Forms.SelfAuraMagnitudeHeavyFocusReservation,
+            EotSlice: BalanceConfig.Forms.SelfAuraMagnitudeHeavyEotSlice,
+            Cooldown: BalanceConfig.Forms.SelfAuraMagnitudeHeavyCooldown,
+            TickRate: BalanceConfig.Forms.SelfAuraMagnitudeHeavyCooldown
+        ),
+        ["reserve_light_magnitude"] = new FormData(
+            Id: "reserve_light_magnitude",
+            PrototypeId: "self_aura",
+            TierTrack: TierTrack.FocusCostDown,
+            Range: BalanceConfig.Forms.SelfAuraMagnitudeLightRange,
+            FocusCost: BalanceConfig.Forms.SelfAuraMagnitudeLightFocusReservation,
+            EotSlice: BalanceConfig.Forms.SelfAuraMagnitudeLightEotSlice,
+            Cooldown: BalanceConfig.Forms.SelfAuraMagnitudeLightCooldown,
+            TickRate: BalanceConfig.Forms.SelfAuraMagnitudeLightCooldown
+        ),
         ["swarm"] = new FormData(
             Id: "swarm",
             PrototypeId: "stackable_zone",
