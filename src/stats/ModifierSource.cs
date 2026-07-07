@@ -1,3 +1,3 @@
 namespace ActionRpgX.Stats;
 
-public enum ModifierSource { Level, Item }
+public enum ModifierSource { Level, Item, Buff }

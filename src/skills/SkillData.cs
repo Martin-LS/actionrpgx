@@ -31,5 +31,6 @@ public record SkillData(
     float                TickRate          = 0f,
     int                  SubHits           = 1,
     float                RampSpeed         = 0f,
-    float                EotSlice          = 1f
+    float                EotSlice          = 1f,
+    string?              BuffId            = null
 );

@@ -17,5 +17,6 @@ public record FormData(
     int?      StackLimit = null,
     float?    TriggerRadius = null,
     float?    EotSlice   = null,
-    string?   DebuffEotId = null
+    string?   DebuffEotId = null,
+    string?   BuffId     = null
 );
