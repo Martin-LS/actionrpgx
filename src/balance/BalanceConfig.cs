@@ -168,6 +168,11 @@ public static class BalanceConfig
         public const float PoisonTickRate      = 0.5f;
         public const float PoisonDamagePerTick = 3f;   // per stack, per tick
         public const int   PoisonMaxStacks     = 5;
+
+        // Decay — Void/Shadow signature %-max-HP non-stacking DoT
+        public const float DecayDuration           = 4f;
+        public const float DecayTickRate           = 0.5f;
+        public const float DecayDamageFraction     = 0.01f; // 1% max HP per tick
     }
 
     public static class Enemies
@@ -179,6 +184,7 @@ public static class BalanceConfig
             public const int   ContactDamage      = 5;
             public const float PhysicalResistance = 0.10f;
             public const float PoisonResistance   = 0f;
+            public const float VoidResistance     = 0f;
         }
 
         public const float SpeedPerMinute      = 5f;  // added to base speed each minute

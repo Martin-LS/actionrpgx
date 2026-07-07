@@ -28,6 +28,7 @@ public partial class EnemyController : CharacterBody3D
     public float ColdResistance      = 0f;
     public float LightningResistance = 0f;
     public float PoisonResistance    = 0f;
+    public float VoidResistance      = 0f;
     public string ModelPath = "res://assets/models/characters/enemy_generic.glb";
 
     private enum EnemyState { Dormant, Idle, Chasing }
@@ -228,10 +229,21 @@ public partial class EnemyController : CharacterBody3D
 
     public void ApplyEot(EotData eot, float critMultiplier = 1.0f, float eotSlice = 1.0f)
     {
+        if (eot.Id == "decay")
+        {
+            critMultiplier = 1.0f;
+        }
+
         if (!_activeEots.TryGetValue(eot.Id, out var instances))
         {
             instances = new List<EotInstance>();
             _activeEots[eot.Id] = instances;
+        }
+
+        float resolvedDamagePerTick = eot.DamagePerTick;
+        if (eot.DamagePerTickFraction > 0f)
+        {
+            resolvedDamagePerTick = MaxHealth * eot.DamagePerTickFraction;
         }
 
         // At the stack cap (or for non-stacking EoTs, MaxStacks == 1): refresh the instance closest to
@@ -245,7 +257,7 @@ public partial class EnemyController : CharacterBody3D
             existing.TimeRemaining = eot.Duration / eotSlice;
             existing.SlowFraction  = eot.SlowFraction * eotSlice;
             existing.DamageTakenAmp = eot.DamageTakenAmp * eotSlice;
-            existing.DamagePerTick  = eot.DamagePerTick * eotSlice;
+            existing.DamagePerTick  = resolvedDamagePerTick * eotSlice;
             if (eot.IsDamageEot) existing.CritMultiplier = critMultiplier;
             ApplyEotEffect(existing);
             return;
@@ -259,7 +271,7 @@ public partial class EnemyController : CharacterBody3D
             CritMultiplier = eot.IsDamageEot ? critMultiplier : 1.0f,
             SlowFraction   = eot.SlowFraction * eotSlice,
             DamageTakenAmp = eot.DamageTakenAmp * eotSlice,
-            DamagePerTick  = eot.DamagePerTick * eotSlice,
+            DamagePerTick  = resolvedDamagePerTick * eotSlice,
         };
         instances.Add(newInst);
         ApplyEotEffect(newInst);
@@ -357,6 +369,7 @@ public partial class EnemyController : CharacterBody3D
             Items.DamageType.Cold      => ColdResistance,
             Items.DamageType.Lightning => LightningResistance,
             Items.DamageType.Poison    => PoisonResistance,
+            Items.DamageType.Void      => VoidResistance,
             _                          => 0f
         };
         float resistance = Mathf.Min(baseResistance, 0.99f);
