@@ -11,6 +11,7 @@ public record EnemyData(
     float  ColdResistance      = 0f,
     float  LightningResistance = 0f,
     float  PoisonResistance    = 0f,
+    float  VoidResistance      = 0f,
     string ModelPath          = "res://assets/models/characters/enemy_generic.glb"
 );
 
@@ -25,6 +26,7 @@ public static class EnemyRegistry
         ColdResistance: 0f,
         LightningResistance: 0f,
         PoisonResistance: BalanceConfig.Enemies.Skeleton.PoisonResistance,
+        VoidResistance: BalanceConfig.Enemies.Skeleton.VoidResistance,
         ModelPath: "res://assets/models/characters/enemy_skeleton.glb");
 
     public static EnemyData Get(string enemyType) => enemyType switch

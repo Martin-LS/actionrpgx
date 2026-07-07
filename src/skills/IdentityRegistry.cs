@@ -37,6 +37,12 @@ public static class IdentityRegistry
             DamageType: DamageType.Poison,
             VfxKey: "poison",        // poison = toxic/venom particle skins
             SignatureEotId: "poison"
+        ),
+        ["void"] = new IdentityData(
+            Id: "void",
+            DamageType: DamageType.Void,
+            VfxKey: "void",          // void = shadow/decay particle skins
+            SignatureEotId: "decay"
         )
     };
 

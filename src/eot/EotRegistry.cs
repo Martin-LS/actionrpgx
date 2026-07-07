@@ -64,6 +64,17 @@ public static class EotRegistry
             DamageType:    DamageType.Poison,
             MaxStacks:     BalanceConfig.Eots.PoisonMaxStacks
         ),
+        ["decay"] = new EotData(
+            Id:                    "decay",
+            Name:                  "Decay",
+            ApplyChance:           BalanceConfig.Eots.SignatureApplyChance,
+            Duration:              BalanceConfig.Eots.DecayDuration,
+            IsDamageEot:           true,
+            TickRate:              BalanceConfig.Eots.DecayTickRate,
+            DamagePerTickFraction: BalanceConfig.Eots.DecayDamageFraction,
+            DamageType:            DamageType.Void,
+            MaxStacks:             1
+        ),
     };
 
     public static EotData?             Get(string id) => _all.TryGetValue(id, out var e) ? e : null;
