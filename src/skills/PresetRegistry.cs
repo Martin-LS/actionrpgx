@@ -293,6 +293,64 @@ public static class PresetRegistry
             PrototypeId: "self_aura",
             FormId: "reserve_light",
             IdentityId: "fire"
+        ),
+        // entity_debuff (fleet)
+        ["fleet_frailty"] = new PresetData(
+            Id: "fleet_frailty",
+            Name: "Fleet Frailty",
+            PrototypeId: "entity_debuff",
+            FormId: "fleet",
+            IdentityId: "physical"
+        ),
+        ["scorching_delay"] = new PresetData(
+            Id: "scorching_delay",
+            Name: "Scorching Delay",
+            PrototypeId: "entity_debuff",
+            FormId: "fleet",
+            IdentityId: "fire"
+        ),
+        ["flash_frost"] = new PresetData(
+            Id: "flash_frost",
+            Name: "Flash Frost",
+            PrototypeId: "entity_debuff",
+            FormId: "fleet",
+            IdentityId: "cold"
+        ),
+        ["static_stutter"] = new PresetData(
+            Id: "static_stutter",
+            Name: "Static Stutter",
+            PrototypeId: "entity_debuff",
+            FormId: "fleet",
+            IdentityId: "lightning"
+        ),
+        // entity_debuff (enduring)
+        ["enduring_curse"] = new PresetData(
+            Id: "enduring_curse",
+            Name: "Enduring Curse",
+            PrototypeId: "entity_debuff",
+            FormId: "enduring",
+            IdentityId: "physical"
+        ),
+        ["lingering_ash"] = new PresetData(
+            Id: "lingering_ash",
+            Name: "Lingering Ash",
+            PrototypeId: "entity_debuff",
+            FormId: "enduring",
+            IdentityId: "fire"
+        ),
+        ["permafrost"] = new PresetData(
+            Id: "permafrost",
+            Name: "Permafrost",
+            PrototypeId: "entity_debuff",
+            FormId: "enduring",
+            IdentityId: "cold"
+        ),
+        ["staggering_shock"] = new PresetData(
+            Id: "staggering_shock",
+            Name: "Staggering Shock",
+            PrototypeId: "entity_debuff",
+            FormId: "enduring",
+            IdentityId: "lightning"
         )
     };
 
