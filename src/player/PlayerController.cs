@@ -87,15 +87,8 @@ public partial class PlayerController : CharacterBody3D
         {
             var c = manager.SelectedCharacter;
             _charData  = c;
-            _statBlock = c.BuildStatBlock();
+            RebuildStats();
 
-            MaxHealth          = (int)_statBlock.Get(Stats.StatId.MaxHp);
-            Speed              = _statBlock.Get(Stats.StatId.Speed);
-            PhysicalResistance = _statBlock.Get(Stats.StatId.PhysicalResistance);
-            MagicResistance    = _statBlock.Get(Stats.StatId.MagicResistance);
-            _evasion           = _statBlock.Get(Stats.StatId.Evasion);
-            MaxFocus           = _statBlock.Get(Stats.StatId.MaxFocus);
-            _focusRegen        = _statBlock.Get(Stats.StatId.FocusRegen);
             CurrentFocus       = MaxFocus;
 
             _maxFocusShield     = MaxFocus * BalanceConfig.Focus.ShieldFraction;
@@ -414,6 +407,8 @@ public partial class PlayerController : CharacterBody3D
             _dodgeCooldownTimer -= dt;
         }
 
+        TickBuffs(dt);
+
         var input     = Input.GetVector("move_left", "move_right", "move_up", "move_down");
         var direction = new Vector3(input.X, 0f, input.Y);
         bool moving = direction.LengthSquared() > 0.01f;
@@ -674,20 +669,13 @@ public partial class PlayerController : CharacterBody3D
             if (_charData != null)
             {
                 _charData.CurrentLevel = Level;
-                _statBlock = _charData.BuildStatBlock();
-                Speed              = _statBlock.Get(Stats.StatId.Speed);
-                PhysicalResistance = _statBlock.Get(Stats.StatId.PhysicalResistance);
-                MagicResistance    = _statBlock.Get(Stats.StatId.MagicResistance);
-                _evasion           = _statBlock.Get(Stats.StatId.Evasion);
+                RebuildStats();
                 var wc     = GetNodeOrNull<Weapon.WeaponController>("Weapon");
                 var weapon = GetEquippedItem(_charData, Items.ItemSlot.Weapon);
                 ApplyWeaponDamage(wc, weapon);
             }
 
-            MaxHealth     = (int)_statBlock.Get(Stats.StatId.MaxHp);
             CurrentHealth = Mathf.Min(CurrentHealth + 5f, MaxHealth);
-            MaxFocus      = _statBlock.Get(Stats.StatId.MaxFocus);
-            _focusRegen   = _statBlock.Get(Stats.StatId.FocusRegen);
             EmitSignal(SignalName.LeveledUp, Level);
         }
         EmitSignal(SignalName.XpChanged, CurrentXp, XpToNextLevel);
@@ -918,5 +906,132 @@ public partial class PlayerController : CharacterBody3D
         wc.SetDamage(deliveryDmg);
         wc.SetGlobalCritChance(_statBlock.Get(Stats.StatId.CritChance) + weapon.CritChanceBonus);
         wc.SetCritMultiplier(_statBlock.Get(Stats.StatId.CritDamage));
+    }
+
+    private class ActiveBuff
+    {
+        public string DefinitionId { get; set; } = "";
+        public float? TimeRemaining { get; set; }
+        public float  MagnitudeModifier { get; set; } = 1.0f;
+    }
+
+    private readonly Dictionary<string, ActiveBuff> _activeBuffs = new();
+
+    public void ApplyBuff(string buffId, float magnitudeModifier = 1.0f, float? duration = null)
+    {
+        if (_activeBuffs.TryGetValue(buffId, out var existing))
+        {
+            existing.TimeRemaining = duration;
+            existing.MagnitudeModifier = magnitudeModifier;
+            RebuildStats();
+            return;
+        }
+
+        var newBuff = new ActiveBuff
+        {
+            DefinitionId = buffId,
+            TimeRemaining = duration,
+            MagnitudeModifier = magnitudeModifier
+        };
+        _activeBuffs[buffId] = newBuff;
+        RebuildStats();
+    }
+
+    public void RemoveBuff(string buffId)
+    {
+        if (_activeBuffs.Remove(buffId))
+        {
+            RebuildStats();
+        }
+    }
+
+    private void TickBuffs(float dt)
+    {
+        var expired = new List<string>();
+        foreach (var (id, active) in _activeBuffs)
+        {
+            if (active.TimeRemaining.HasValue)
+            {
+                active.TimeRemaining = active.TimeRemaining.Value - dt;
+                if (active.TimeRemaining.Value <= 0f)
+                {
+                    expired.Add(id);
+                }
+            }
+        }
+
+        if (expired.Count > 0)
+        {
+            foreach (var id in expired)
+            {
+                _activeBuffs.Remove(id);
+            }
+            RebuildStats();
+        }
+    }
+
+    private void RebuildStats()
+    {
+        if (_charData == null) return;
+
+        _statBlock = _charData.BuildStatBlock();
+
+        foreach (var (id, active) in _activeBuffs)
+        {
+            var buff = Buffs.BuffRegistry.Get(id);
+            if (buff == null) continue;
+
+            foreach (var mod in buff.Modifiers)
+            {
+                float scaledValue = ScaleModifierValue(mod.Value, mod.Type, active.MagnitudeModifier);
+                _statBlock.AddModifier(new Stats.StatModifier(mod.Stat, mod.Type, scaledValue, Stats.ModifierSource.Buff, id));
+            }
+        }
+
+        UpdateDerivedFields();
+    }
+
+    private void UpdateDerivedFields()
+    {
+        if (_statBlock == null) return;
+
+        float oldMaxHp = MaxHealth;
+        float oldMaxFocus = MaxFocus;
+
+        MaxHealth          = (int)_statBlock.Get(Stats.StatId.MaxHp);
+        Speed              = _statBlock.Get(Stats.StatId.Speed);
+        PhysicalResistance = _statBlock.Get(Stats.StatId.PhysicalResistance);
+        MagicResistance    = _statBlock.Get(Stats.StatId.MagicResistance);
+        _evasion           = _statBlock.Get(Stats.StatId.Evasion);
+        MaxFocus           = _statBlock.Get(Stats.StatId.MaxFocus);
+        _focusRegen        = _statBlock.Get(Stats.StatId.FocusRegen);
+
+        if (MaxHealth != oldMaxHp)
+        {
+            CurrentHealth = Mathf.Min(CurrentHealth, MaxHealth);
+            EmitSignal(SignalName.HealthChanged, CurrentHealth);
+        }
+
+        if (MaxFocus != oldMaxFocus)
+        {
+            CurrentFocus = Mathf.Min(CurrentFocus, MaxFocus);
+            _maxFocusShield     = MaxFocus * BalanceConfig.Focus.ShieldFraction;
+            _currentFocusShield = Mathf.Min(_currentFocusShield, _maxFocusShield);
+            EmitSignal(SignalName.FocusChanged, GetAvailableFocus(), MaxFocus);
+            EmitSignal(SignalName.ShieldChanged, _currentFocusShield, _maxFocusShield);
+        }
+    }
+
+    private float ScaleModifierValue(float baseValue, Stats.ModifierType type, float magnitudeModifier)
+    {
+        if (type == Stats.ModifierType.Multiply)
+        {
+            float excess = baseValue - 1f;
+            return 1f + excess * magnitudeModifier;
+        }
+        else
+        {
+            return baseValue * magnitudeModifier;
+        }
     }
 }

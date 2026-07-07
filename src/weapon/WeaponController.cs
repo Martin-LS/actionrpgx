@@ -417,6 +417,12 @@ public partial class WeaponController : Node
         ref var slot   = ref _slots[slotIndex];
         var     origin = GetParent<Node3D>().GlobalPosition;
 
+        if (!string.IsNullOrEmpty(slot.Skill!.BuffId))
+        {
+            EmitSignal(SignalName.SkillFired, slotIndex, slot.Skill!.TickRate, "AuraTick");
+            return;
+        }
+
         var   dmgType = slot.EffectiveDamageType;
         float baseDmg = _deliveryDamage;
 
@@ -498,6 +504,10 @@ public partial class WeaponController : Node
             if (slot.AuraActive)
             {
                 _player?.UnreserveFocus(slot.AuraReserved);
+                if (!string.IsNullOrEmpty(slot.Skill.BuffId))
+                {
+                    _player?.RemoveBuff(slot.Skill.BuffId);
+                }
                 _slots[slotIndex].AuraActive  = false;
                 _slots[slotIndex].AuraReserved = 0f;
                 if (_selfAuraVfx[slotIndex] is { } auraVfxOff) { auraVfxOff.Restart(); auraVfxOff.Emitting = false; }
@@ -508,6 +518,10 @@ public partial class WeaponController : Node
                 float reserve = slot.Skill.FocusCost;
                 if (_player == null || _player.GetAvailableFocus() < reserve) return;
                 _player.ReserveFocus(reserve);
+                if (!string.IsNullOrEmpty(slot.Skill.BuffId))
+                {
+                    _player?.ApplyBuff(slot.Skill.BuffId, slot.Skill.EotSlice);
+                }
                 _slots[slotIndex].AuraActive   = true;
                 _slots[slotIndex].AuraReserved = reserve;
                 _slots[slotIndex].CooldownTimer = 0f;
