@@ -275,6 +275,17 @@ public static class BalanceConfig
         public const float SelfAuraLightRange = 72f;
         public const float SelfAuraLightFocusReservation = 10f;
 
+        // self_aura buff/debuff magnitude scope (reserve_heavy_magnitude / reserve_light_magnitude)
+        // EotSlice is cost-proportional to reservation paid vs the prototype's baseline reservation (§5C/§5E guardrail).
+        public const float SelfAuraMagnitudeHeavyCooldown = 1.0f;
+        public const float SelfAuraMagnitudeHeavyRange = 180f;
+        public const float SelfAuraMagnitudeHeavyFocusReservation = 35f;
+        public const float SelfAuraMagnitudeHeavyEotSlice = SelfAuraMagnitudeHeavyFocusReservation / Focus.SelfAuraFocusReservation;
+        public const float SelfAuraMagnitudeLightCooldown = 1.0f;
+        public const float SelfAuraMagnitudeLightRange = 72f;
+        public const float SelfAuraMagnitudeLightFocusReservation = 10f;
+        public const float SelfAuraMagnitudeLightEotSlice = SelfAuraMagnitudeLightFocusReservation / Focus.SelfAuraFocusReservation;
+
         // triggered_zone_burst (swarm / singular)
         public const float TriggeredZoneBurstSwarmCooldown = 0.8f;
         public const float TriggeredZoneBurstSwarmTriggerRadius = 18f;

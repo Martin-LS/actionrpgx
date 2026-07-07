@@ -283,7 +283,9 @@ public partial class CharacterManager : Node
             PrototypeId: protoId,
             FormId: formId,
             IdentityId: identityId,
-            IconPath: iconPath
+            IconPath: iconPath,
+            BuffId: matchingPreset?.BuffId,
+            DebuffEotId: matchingPreset?.DebuffEotId
         );
 
         var composed = SkillComposer.Compose(proto, form, identity, tempPreset);

@@ -24,7 +24,7 @@ public static class SkillComposer
             StackLimit = form.StackLimit ?? proto.StackLimit,
             TriggerRadius = form.TriggerRadius ?? proto.TriggerRadius,
             EotSlice   = form.EotSlice   ?? proto.EotSlice,
-            DebuffEotId = form.DebuffEotId ?? proto.DebuffEotId,
-            BuffId     = form.BuffId     ?? proto.BuffId
+            DebuffEotId = preset.DebuffEotId ?? form.DebuffEotId ?? proto.DebuffEotId,
+            BuffId     = preset.BuffId     ?? form.BuffId     ?? proto.BuffId
         };
 }
