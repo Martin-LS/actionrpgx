@@ -234,10 +234,14 @@ public partial class EnemyController : CharacterBody3D
             _activeEots[eot.Id] = instances;
         }
 
-        // At the stack cap (or for non-stacking EoTs, MaxStacks == 1): refresh the oldest instance in place.
+        // At the stack cap (or for non-stacking EoTs, MaxStacks == 1): refresh the instance closest to
+        // expiring in place. Refreshing a fixed slot (e.g. always index 0) would let that one slot renew
+        // forever while the others age out untouched, decaying the stack count under sustained reapplication.
         if (instances.Count >= eot.MaxStacks && instances.Count > 0)
         {
             var existing = instances[0];
+            for (int i = 1; i < instances.Count; i++)
+                if (instances[i].TimeRemaining < existing.TimeRemaining) existing = instances[i];
             existing.TimeRemaining = eot.Duration / eotSlice;
             existing.SlowFraction  = eot.SlowFraction * eotSlice;
             existing.DamageTakenAmp = eot.DamageTakenAmp * eotSlice;
@@ -306,13 +310,20 @@ public partial class EnemyController : CharacterBody3D
         if (inst.DamageTakenAmp > 0f)   RefreshAmpState();
     }
 
+    // Strongest value of an EotInstance field across every active instance (all stacks, all EoT ids).
+    private float MaxAcrossInstances(System.Func<EotInstance, float> selector)
+    {
+        float max = 0f;
+        foreach (var instances in _activeEots.Values)
+            foreach (var inst in instances)
+                if (selector(inst) > max) max = selector(inst);
+        return max;
+    }
+
     // Recompute movement speed from the strongest active slow (Slow augment, Chill signature, …).
     private void RefreshSlowState()
     {
-        float maxSlow = 0f;
-        foreach (var instances in _activeEots.Values)
-            foreach (var inst in instances)
-                if (inst.SlowFraction > maxSlow) maxSlow = inst.SlowFraction;
+        float maxSlow = MaxAcrossInstances(inst => inst.SlowFraction);
 
         Speed = _baseSpeed * (1f - maxSlow);
 
@@ -332,15 +343,13 @@ public partial class EnemyController : CharacterBody3D
     // Recompute the incoming-damage amp from the strongest active amp EoT (Shock signature).
     private void RefreshAmpState()
     {
-        float maxAmp = 0f;
-        foreach (var instances in _activeEots.Values)
-            foreach (var inst in instances)
-                if (inst.DamageTakenAmp > maxAmp) maxAmp = inst.DamageTakenAmp;
-        _damageTakenAmp = maxAmp;
+        _damageTakenAmp = MaxAcrossInstances(inst => inst.DamageTakenAmp);
     }
 
     public void TakeDamage(float rawAmount, Items.DamageType type, bool isCrit = false)
     {
+        if (_currentHealth <= 0) return; // already dying/QueueFree'd; avoid re-entering Die() from same-frame ticks
+
         float baseResistance = type switch
         {
             Items.DamageType.Physical  => PhysicalResistance,
