@@ -15,5 +15,6 @@ public record FormData(
     int?      SubHits    = null,
     float?    RampSpeed  = null,
     int?      StackLimit = null,
-    float?    TriggerRadius = null
+    float?    TriggerRadius = null,
+    float?    EotSlice   = null
 );

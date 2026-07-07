@@ -162,6 +162,20 @@ public static class FormRegistry
             Range: BalanceConfig.Forms.VortexRange,
             TickRate: BalanceConfig.Forms.VortexTickRate,
             FocusCost: BalanceConfig.Forms.VortexFocusCost
+        ),
+        ["fleet"] = new FormData(
+            Id: "fleet",
+            PrototypeId: "entity_debuff",
+            TierTrack: TierTrack.EotMagnitudeUp,
+            Cooldown: BalanceConfig.Skills.EntityDebuffCooldown,
+            EotSlice: BalanceConfig.Forms.FleetSliceFactor
+        ),
+        ["enduring"] = new FormData(
+            Id: "enduring",
+            PrototypeId: "entity_debuff",
+            TierTrack: TierTrack.EotDurationUp,
+            Cooldown: BalanceConfig.Skills.EntityDebuffCooldown,
+            EotSlice: BalanceConfig.Forms.EnduringSliceFactor
         )
     };
 
