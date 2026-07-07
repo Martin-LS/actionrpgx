@@ -162,6 +162,12 @@ public static class BalanceConfig
         // Shock — Lightning signature damage-taken amp
         public const float ShockDuration       = 4f;
         public const float ShockDamageTakenAmp = 0.20f; // +20% damage taken while shocked
+
+        // Poison — occult signature stacking DoT (N independent instances, each ticking on its own timeline)
+        public const float PoisonDuration      = 4f;
+        public const float PoisonTickRate      = 0.5f;
+        public const float PoisonDamagePerTick = 3f;   // per stack, per tick
+        public const int   PoisonMaxStacks     = 5;
     }
 
     public static class Enemies
@@ -172,6 +178,7 @@ public static class BalanceConfig
             public const int   BaseHealth         = 100;
             public const int   ContactDamage      = 5;
             public const float PhysicalResistance = 0.10f;
+            public const float PoisonResistance   = 0f;
         }
 
         public const float SpeedPerMinute      = 5f;  // added to base speed each minute

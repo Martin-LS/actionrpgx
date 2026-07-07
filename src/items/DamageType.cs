@@ -1,3 +1,3 @@
 namespace ActionRpgX.Items;
 
-public enum DamageType { Physical, Fire, Cold, Lightning }
+public enum DamageType { Physical, Fire, Cold, Lightning, Poison }
