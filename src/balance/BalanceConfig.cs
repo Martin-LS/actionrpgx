@@ -325,6 +325,10 @@ public static class BalanceConfig
         public const float VortexRange = 200f;
         public const float VortexTickRate = 0.35f;
         public const float VortexFocusCost = 25f;
+
+        // entity_debuff (fleet / enduring)
+        public const float FleetSliceFactor = 1.5f;
+        public const float EnduringSliceFactor = 0.5f;
     }
 
     public static class Tiers

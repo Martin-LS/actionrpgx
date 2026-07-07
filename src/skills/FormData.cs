@@ -16,5 +16,6 @@ public record FormData(
     float?    RampSpeed  = null,
     int?      StackLimit = null,
     float?    TriggerRadius = null,
+    float?    EotSlice   = null,
     string?   DebuffEotId = null
 );

@@ -621,6 +621,7 @@ public partial class CharacterManager : Node
             ["vfxKey"]           = s.VfxKey,
             ["basedOn"]          = s.BasedOn ?? "",
             ["tickRate"]         = s.TickRate,
+            ["eotSlice"]         = s.EotSlice,
         };
     }
 
@@ -667,7 +668,8 @@ public partial class CharacterManager : Node
             DamageType:       d.ContainsKey("damageType") ? System.Enum.Parse<DamageType>(MigrateDamageType(d["damageType"].ToString()!)) : DamageType.Physical,
             VfxKey:           d.ContainsKey("vfxKey") ? MigrateVfxKey(d["vfxKey"].ToString()!) : "",
             BasedOn:          basedOn,
-            TickRate:         d.ContainsKey("tickRate") ? System.Convert.ToSingle(d["tickRate"].Obj) : 0f
+            TickRate:         d.ContainsKey("tickRate") ? System.Convert.ToSingle(d["tickRate"].Obj) : 0f,
+            EotSlice:         d.ContainsKey("eotSlice") ? System.Convert.ToSingle(d["eotSlice"].Obj) : 1f
         );
     }
 

@@ -23,6 +23,7 @@ public static class SkillComposer
             RampSpeed  = form.RampSpeed  ?? proto.RampSpeed,
             StackLimit = form.StackLimit ?? proto.StackLimit,
             TriggerRadius = form.TriggerRadius ?? proto.TriggerRadius,
+            EotSlice   = form.EotSlice   ?? proto.EotSlice,
             DebuffEotId = form.DebuffEotId ?? proto.DebuffEotId
         };
 }

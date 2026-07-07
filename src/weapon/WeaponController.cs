@@ -111,7 +111,7 @@ public partial class WeaponController : Node
     {
         public SkillData?   Skill;
         public float        CooldownTimer;
-        public List<(string Id, float Chance)> Eots;
+        public List<(string Id, float Chance, float Slice)> Eots;
         public bool         HasMagicDamage;
         public Items.DamageType EffectiveDamageType;
         public float        CritChanceBonus;
@@ -142,19 +142,25 @@ public partial class WeaponController : Node
 
         _slots[slotIndex].Skill            = skill;
         _slots[slotIndex].CooldownTimer    = 0f;
-        var eots = new List<(string Id, float Chance)>();
+        var eots = new List<(string Id, float Chance, float Slice)>();
         if (!string.IsNullOrEmpty(skill.DebuffEotId))
         {
             var eot = EotRegistry.Get(skill.DebuffEotId);
-            eots.Add((skill.DebuffEotId, eot?.ApplyChance ?? 1f));
+            eots.Add((skill.DebuffEotId, eot?.ApplyChance ?? 1f, skill.EotSlice));
         }
         // Innate signature ailment from the skill's identity (element wave).
         if (!string.IsNullOrEmpty(skill.SignatureEotId))
         {
             var sig = EotRegistry.Get(skill.SignatureEotId);
-            eots.Add((skill.SignatureEotId, sig?.ApplyChance ?? 1f));
+            eots.Add((skill.SignatureEotId, sig?.ApplyChance ?? 1f, 1.0f));
         }
-        if (augmentEots != null) eots.AddRange(augmentEots);
+        if (augmentEots != null)
+        {
+            foreach (var ae in augmentEots)
+            {
+                eots.Add((ae.Id, ae.Chance, 1.0f));
+            }
+        }
         _slots[slotIndex].Eots             = eots;
         _slots[slotIndex].HasMagicDamage   = hasMagicDamage;
         _slots[slotIndex].EffectiveDamageType = hasMagicDamage ? Items.DamageType.Fire : skill.DamageType;
@@ -577,10 +583,10 @@ public partial class WeaponController : Node
 
         if (slot.Skill!.DamagePattern == SkillDamagePattern.None)
         {
-            foreach (var (eotId, chance) in slot.Eots)
+            foreach (var (eotId, chance, slice) in slot.Eots)
             {
                 var eot = EotRegistry.Get(eotId);
-                if (eot != null && GD.Randf() < chance) target.ApplyEot(eot, 1.0f);
+                if (eot != null && GD.Randf() < chance) target.ApplyEot(eot, 1.0f, slice);
             }
             EmitSignal(SignalName.SkillFired, slotIndex, slot.Skill.Cooldown, "Debuff");
             return;
@@ -997,7 +1003,7 @@ public partial class WeaponController : Node
     }
 
     private void FireProjectileAtTarget(Enemies.EnemyController target, float damage, Items.DamageType dmgType,
-        List<(string Id, float Chance)> eots, float critMultiplier, int subHits)
+        List<(string Id, float Chance, float Slice)> eots, float critMultiplier, int subHits)
     {
         var playerNode = GetParent<Node3D>();
         if (playerNode == null || !GodotObject.IsInstanceValid(playerNode)) return;
@@ -1012,7 +1018,7 @@ public partial class WeaponController : Node
     }
 
     private void HitMelee(Enemies.EnemyController target, float damage, Items.DamageType dmgType,
-        List<(string Id, float Chance)> eots, float critMultiplier, int subHits = 1)
+        List<(string Id, float Chance, float Slice)> eots, float critMultiplier, int subHits = 1)
     {
         bool   isCrit  = critMultiplier > 1f;
         var    hitPos  = target.GlobalPosition;
@@ -1021,13 +1027,13 @@ public partial class WeaponController : Node
         SpawnHitVfx(hitPos);
     }
 
-    private void ApplyEots(Enemies.EnemyController enemy, List<(string Id, float Chance)> eots, float critMultiplier, int subHits = 1)
+    private void ApplyEots(Enemies.EnemyController enemy, List<(string Id, float Chance, float Slice)> eots, float critMultiplier, int subHits = 1)
     {
-        foreach (var (eotId, chance) in eots)
+        foreach (var (eotId, chance, slice) in eots)
         {
             var eot = EotRegistry.Get(eotId);
             if (eot != null && GD.Randf() < (chance / subHits))
-                enemy.ApplyEot(eot, critMultiplier);
+                enemy.ApplyEot(eot, critMultiplier, slice);
         }
     }
 

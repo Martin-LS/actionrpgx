@@ -225,22 +225,30 @@ public partial class EnemyController : CharacterBody3D
         }
     }
 
-    public void ApplyEot(EotData eot, float critMultiplier = 1.0f)
+    public void ApplyEot(EotData eot, float critMultiplier = 1.0f, float eotSlice = 1.0f)
     {
         if (_activeEots.TryGetValue(eot.Id, out var existing))
         {
-            existing.TimeRemaining = eot.Duration;
+            existing.TimeRemaining = eot.Duration / eotSlice;
+            existing.SlowFraction  = eot.SlowFraction * eotSlice;
+            existing.DamageTakenAmp = eot.DamageTakenAmp * eotSlice;
+            existing.DamagePerTick  = eot.DamagePerTick * eotSlice;
             if (eot.IsDamageEot) existing.CritMultiplier = critMultiplier;
+            ApplyEotEffect(existing);
             return;
         }
-        _activeEots[eot.Id] = new EotInstance
+        var newInst = new EotInstance
         {
             DefinitionId   = eot.Id,
-            TimeRemaining  = eot.Duration,
+            TimeRemaining  = eot.Duration / eotSlice,
             TickTimer      = eot.TickRate,
             CritMultiplier = eot.IsDamageEot ? critMultiplier : 1.0f,
+            SlowFraction   = eot.SlowFraction * eotSlice,
+            DamageTakenAmp = eot.DamageTakenAmp * eotSlice,
+            DamagePerTick  = eot.DamagePerTick * eotSlice,
         };
-        ApplyEotEffect(eot);
+        _activeEots[eot.Id] = newInst;
+        ApplyEotEffect(newInst);
     }
 
     private void TickEots(float delta)
@@ -260,42 +268,40 @@ public partial class EnemyController : CharacterBody3D
                 inst.TickTimer -= delta;
                 if (inst.TickTimer <= 0f)
                 {
-                    TakeDamage(eot.DamagePerTick * inst.CritMultiplier, Items.DamageType.Fire, inst.CritMultiplier > 1f);
+                    TakeDamage(inst.DamagePerTick * inst.CritMultiplier, Items.DamageType.Fire, inst.CritMultiplier > 1f);
                     inst.TickTimer = eot.TickRate;
                 }
             }
         }
         foreach (var id in expired)
         {
-            var eot = EotRegistry.Get(id);
-            // Remove from the active set first so the Refresh* recompute in
-            // RemoveEotEffect no longer counts this expiring EoT (otherwise
-            // slow/amp would never lift).
-            _activeEots.Remove(id);
-            if (eot != null) RemoveEotEffect(eot);
+            if (_activeEots.TryGetValue(id, out var inst))
+            {
+                _activeEots.Remove(id);
+                RemoveEotEffect(inst);
+            }
         }
     }
 
-    private void ApplyEotEffect(EotData eot)
+    private void ApplyEotEffect(EotInstance inst)
     {
-        if (eot.SlowFraction > 0f)     RefreshSlowState();
-        if (eot.DamageTakenAmp > 0f)   RefreshAmpState();
+        if (inst.SlowFraction > 0f)     RefreshSlowState();
+        if (inst.DamageTakenAmp > 0f)   RefreshAmpState();
     }
 
-    private void RemoveEotEffect(EotData eot)
+    private void RemoveEotEffect(EotInstance inst)
     {
-        if (eot.SlowFraction > 0f)     RefreshSlowState();
-        if (eot.DamageTakenAmp > 0f)   RefreshAmpState();
+        if (inst.SlowFraction > 0f)     RefreshSlowState();
+        if (inst.DamageTakenAmp > 0f)   RefreshAmpState();
     }
 
     // Recompute movement speed from the strongest active slow (Slow augment, Chill signature, …).
     private void RefreshSlowState()
     {
         float maxSlow = 0f;
-        foreach (var id in _activeEots.Keys)
+        foreach (var inst in _activeEots.Values)
         {
-            var eot = EotRegistry.Get(id);
-            if (eot != null && eot.SlowFraction > maxSlow) maxSlow = eot.SlowFraction;
+            if (inst.SlowFraction > maxSlow) maxSlow = inst.SlowFraction;
         }
 
         Speed = _baseSpeed * (1f - maxSlow);
@@ -317,10 +323,9 @@ public partial class EnemyController : CharacterBody3D
     private void RefreshAmpState()
     {
         float maxAmp = 0f;
-        foreach (var id in _activeEots.Keys)
+        foreach (var inst in _activeEots.Values)
         {
-            var eot = EotRegistry.Get(id);
-            if (eot != null && eot.DamageTakenAmp > maxAmp) maxAmp = eot.DamageTakenAmp;
+            if (inst.DamageTakenAmp > maxAmp) maxAmp = inst.DamageTakenAmp;
         }
         _damageTakenAmp = maxAmp;
     }
