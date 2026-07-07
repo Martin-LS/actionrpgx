@@ -8,5 +8,7 @@ public enum TierTrack
     TickRateUp,
     FocusCostDown,
     RampSpeedUp,
-    StackLimitUp
+    StackLimitUp,
+    EotMagnitudeUp,
+    EotDurationUp
 }
