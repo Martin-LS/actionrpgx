@@ -8,5 +8,6 @@ public record BuffData(
     string         Id,
     string         Name,
     BuffModifier[] Modifiers,
-    float?         Duration = null
+    float?         Duration = null,
+    int            MaxStacks = 1
 );
