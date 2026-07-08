@@ -915,13 +915,39 @@ public partial class PlayerController : CharacterBody3D
         public float  MagnitudeModifier { get; set; } = 1.0f;
     }
 
-    private readonly Dictionary<string, ActiveBuff> _activeBuffs = new();
+    private readonly Dictionary<string, List<ActiveBuff>> _activeBuffs = new();
 
     public void ApplyBuff(string buffId, float magnitudeModifier = 1.0f, float? duration = null)
     {
-        if (_activeBuffs.TryGetValue(buffId, out var existing))
+        var buff = Buffs.BuffRegistry.Get(buffId);
+        if (buff == null) return;
+
+        float? resolvedDuration = duration ?? buff.Duration;
+
+        if (!_activeBuffs.TryGetValue(buffId, out var instances))
         {
-            existing.TimeRemaining = duration;
+            instances = new List<ActiveBuff>();
+            _activeBuffs[buffId] = instances;
+        }
+
+        if (instances.Count >= buff.MaxStacks && instances.Count > 0)
+        {
+            ActiveBuff existing = instances[0];
+            for (int i = 1; i < instances.Count; i++)
+            {
+                if (!existing.TimeRemaining.HasValue && instances[i].TimeRemaining.HasValue)
+                {
+                    existing = instances[i];
+                }
+                else if (existing.TimeRemaining.HasValue && instances[i].TimeRemaining.HasValue)
+                {
+                    if (instances[i].TimeRemaining!.Value < existing.TimeRemaining!.Value)
+                    {
+                        existing = instances[i];
+                    }
+                }
+            }
+            existing.TimeRemaining = resolvedDuration;
             existing.MagnitudeModifier = magnitudeModifier;
             RebuildStats();
             return;
@@ -930,10 +956,10 @@ public partial class PlayerController : CharacterBody3D
         var newBuff = new ActiveBuff
         {
             DefinitionId = buffId,
-            TimeRemaining = duration,
+            TimeRemaining = resolvedDuration,
             MagnitudeModifier = magnitudeModifier
         };
-        _activeBuffs[buffId] = newBuff;
+        instances.Add(newBuff);
         RebuildStats();
     }
 
@@ -947,25 +973,37 @@ public partial class PlayerController : CharacterBody3D
 
     private void TickBuffs(float dt)
     {
-        var expired = new List<string>();
-        foreach (var (id, active) in _activeBuffs)
+        bool anyRemoved = false;
+        var expiredKeys = new List<string>();
+
+        foreach (var (id, instances) in _activeBuffs)
         {
-            if (active.TimeRemaining.HasValue)
+            for (int i = instances.Count - 1; i >= 0; i--)
             {
-                active.TimeRemaining = active.TimeRemaining.Value - dt;
-                if (active.TimeRemaining.Value <= 0f)
+                var active = instances[i];
+                if (active.TimeRemaining.HasValue)
                 {
-                    expired.Add(id);
+                    active.TimeRemaining = active.TimeRemaining.Value - dt;
+                    if (active.TimeRemaining.Value <= 0f)
+                    {
+                        instances.RemoveAt(i);
+                        anyRemoved = true;
+                    }
                 }
+            }
+            if (instances.Count == 0)
+            {
+                expiredKeys.Add(id);
             }
         }
 
-        if (expired.Count > 0)
+        foreach (var id in expiredKeys)
         {
-            foreach (var id in expired)
-            {
-                _activeBuffs.Remove(id);
-            }
+            _activeBuffs.Remove(id);
+        }
+
+        if (anyRemoved)
+        {
             RebuildStats();
         }
     }
@@ -976,15 +1014,18 @@ public partial class PlayerController : CharacterBody3D
 
         _statBlock = _charData.BuildStatBlock();
 
-        foreach (var (id, active) in _activeBuffs)
+        foreach (var (id, instances) in _activeBuffs)
         {
             var buff = Buffs.BuffRegistry.Get(id);
             if (buff == null) continue;
 
-            foreach (var mod in buff.Modifiers)
+            foreach (var active in instances)
             {
-                float scaledValue = ScaleModifierValue(mod.Value, mod.Type, active.MagnitudeModifier);
-                _statBlock.AddModifier(new Stats.StatModifier(mod.Stat, mod.Type, scaledValue, Stats.ModifierSource.Buff, id));
+                foreach (var mod in buff.Modifiers)
+                {
+                    float scaledValue = ScaleModifierValue(mod.Value, mod.Type, active.MagnitudeModifier);
+                    _statBlock.AddModifier(new Stats.StatModifier(mod.Stat, mod.Type, scaledValue, Stats.ModifierSource.Buff, id));
+                }
             }
         }
 
