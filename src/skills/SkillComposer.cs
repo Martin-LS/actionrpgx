@@ -9,6 +9,7 @@ public static class SkillComposer
             Kind       = SkillKind.Normal,
             BasedOn    = proto.Id,
             DamageType = identity.DamageType,
+            SignatureEotId = identity.SignatureEotId,
             VfxKey = identity.VfxKey,
             IconPath   = preset.IconPath,
             Cooldown   = form.Cooldown   ?? proto.Cooldown,
@@ -17,6 +18,13 @@ public static class SkillComposer
             Duration   = form.Duration   ?? proto.Duration,
             ZoneRadius = form.ZoneRadius ?? proto.ZoneRadius,
             TickRate   = form.TickRate   ?? proto.TickRate,
-            Range      = form.Range      ?? proto.Range
+            Range      = form.Range      ?? proto.Range,
+            SubHits    = form.SubHits    ?? proto.SubHits,
+            RampSpeed  = form.RampSpeed  ?? proto.RampSpeed,
+            StackLimit = form.StackLimit ?? proto.StackLimit,
+            TriggerRadius = form.TriggerRadius ?? proto.TriggerRadius,
+            EotSlice   = form.EotSlice   ?? proto.EotSlice,
+            DebuffEotId = preset.DebuffEotId ?? form.DebuffEotId ?? proto.DebuffEotId,
+            BuffId     = preset.BuffId     ?? form.BuffId     ?? proto.BuffId
         };
 }

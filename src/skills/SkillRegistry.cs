@@ -41,7 +41,7 @@ public static class SkillRegistry
             TargetingShape: SkillTargetingShape.Self,
             DamagePattern: SkillDamagePattern.Tick,
             Duration: BalanceConfig.Skills.SelfDurationTickDuration,
-            DamageType: DamageType.Magic,
+            DamageType: DamageType.Fire,
             TickRate: BalanceConfig.Skills.SelfDurationTickCooldown),
 
         ["self_burst"] = new SkillData(
@@ -113,21 +113,6 @@ public static class SkillRegistry
             DamagePattern: SkillDamagePattern.None,
             DebuffEotId: "slow"),
 
-        ["windup_burst"] = new SkillData(
-            "windup_burst", "Windup Burst", SkillType.Active,
-            Tags: new[] { "AoE" },
-            Cooldown: BalanceConfig.Skills.WindupBurstCooldown,
-            Range: BalanceConfig.Skills.WindupBurstRange,
-            FocusCost: BalanceConfig.Focus.WindupBurstFocusCost,
-            Description: "Telegraphed 1.5s wind-up before a high-damage burst at cursor position. Proves wind-up mechanic.",
-            Kind: SkillKind.Prototype,
-            TargetingShape: SkillTargetingShape.Position,
-            DamagePattern: SkillDamagePattern.Burst,
-            WindUp: BalanceConfig.Skills.WindupBurstWindUp,
-            StackLimit: 1,
-            Duration: 0f,
-            ZoneRadius: BalanceConfig.Skills.WindupBurstZoneRadius),
-
         ["fixed_zone_burst"] = new SkillData(
             "fixed_zone_burst", "Fixed Zone Burst", SkillType.Active,
             Tags: new[] { "AoE" },
@@ -198,7 +183,7 @@ public static class SkillRegistry
         );
         var composed = SkillComposer.Compose(proto, form, identity, dummyPreset);
 
-        if (composed.DamagePattern != SkillDamagePattern.None && !string.IsNullOrEmpty(composed.DebuffEotId))
+        if (composed.DamagePattern != SkillDamagePattern.None && !string.IsNullOrEmpty(composed.DebuffEotId) && composed.Type != SkillType.Aura)
         {
             errorMessage = $"Skill '{composed.Id}' has DebuffEotId set ('{composed.DebuffEotId}') but DamagePattern is {composed.DamagePattern} (must be None).";
             return false;
@@ -219,7 +204,7 @@ public static class SkillRegistry
         // prototypes below live here. Validate them for internal consistency.
         foreach (var skill in All.Values)
         {
-            if (skill.DamagePattern != SkillDamagePattern.None && !string.IsNullOrEmpty(skill.DebuffEotId))
+            if (skill.DamagePattern != SkillDamagePattern.None && !string.IsNullOrEmpty(skill.DebuffEotId) && skill.Type != SkillType.Aura)
             {
                 throw new System.InvalidOperationException(
                     $"Skill '{skill.Id}' has DebuffEotId set ('{skill.DebuffEotId}') but DamagePattern is {skill.DamagePattern} (must be None).");

@@ -382,7 +382,11 @@ public partial class DungeonGenerator : Node3D
         enemy.ContactDamage      = data.ContactDamage + entry.DamageBonus;
         enemy.DamageInterval     = data.DamageInterval;
         enemy.PhysicalResistance = data.PhysicalResistance + entry.ArmorBonus * 0.01f;
-        enemy.MagicResistance    = data.MagicResistance;
+        enemy.FireResistance      = data.FireResistance;
+        enemy.ColdResistance      = data.ColdResistance;
+        enemy.LightningResistance = data.LightningResistance;
+        enemy.PoisonResistance    = data.PoisonResistance;
+        enemy.VoidResistance      = data.VoidResistance;
         enemy.ModelPath          = data.ModelPath;
         enemy.MapLevel           = mapLevel;
     }

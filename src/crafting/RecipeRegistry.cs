@@ -32,7 +32,6 @@ public static class RecipeRegistry
         ["recipe_stackable_zone"]       = new("recipe_stackable_zone",       "stackable_zone",       RecipeType.Skill, new() { ["crafting_common"] = 1 }),
         ["recipe_triggered_zone_burst"] = new("recipe_triggered_zone_burst", "triggered_zone_burst", RecipeType.Skill, new() { ["crafting_common"] = 1 }),
         ["recipe_entity_debuff"]    = new("recipe_entity_debuff",    "entity_debuff",    RecipeType.Skill, new() { ["crafting_common"] = 1 }),
-        ["recipe_windup_burst"]     = new("recipe_windup_burst",     "windup_burst",     RecipeType.Skill, new() { ["crafting_common"] = 1 }),
         ["recipe_fixed_zone_burst"] = new("recipe_fixed_zone_burst", "fixed_zone_burst", RecipeType.Skill, new() { ["crafting_common"] = 1 }),
         ["recipe_fixed_zone_tick"]  = new("recipe_fixed_zone_tick",  "fixed_zone_tick",  RecipeType.Skill, new() { ["crafting_common"] = 1 }),
         ["recipe_self_aura"]        = new("recipe_self_aura",        "self_aura",        RecipeType.Skill, new() { ["crafting_common"] = 1 }),
@@ -40,6 +39,7 @@ public static class RecipeRegistry
         // Skill Augment recipes — v1 generics only
         ["recipe_slow"]            = new("recipe_slow",            "slow",            RecipeType.SkillAugment, new() { ["crafting_common"] = 1 }),
         ["recipe_critical_strike"] = new("recipe_critical_strike", "critical_strike", RecipeType.SkillAugment, new() { ["crafting_common"] = 1 }),
+        ["recipe_crit_damage"]     = new("recipe_crit_damage",     "crit_damage",     RecipeType.SkillAugment, new() { ["crafting_common"] = 1 }),
         ["recipe_magic_damage"]    = new("recipe_magic_damage",    "magic_damage",    RecipeType.SkillAugment, new() { ["crafting_common"] = 1 }),
 
         // Equipment Augment recipes

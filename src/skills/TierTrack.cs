@@ -6,5 +6,9 @@ public enum TierTrack
     CooldownDown,
     RadiusUp,
     TickRateUp,
-    FocusCostDown
+    FocusCostDown,
+    RampSpeedUp,
+    StackLimitUp,
+    EotMagnitudeUp,
+    EotDurationUp
 }

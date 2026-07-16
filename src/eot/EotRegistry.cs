@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using ActionRpgX.Items;
 
 namespace ActionRpgX.Eot;
 
@@ -13,6 +14,66 @@ public static class EotRegistry
             Duration:     BalanceConfig.Eots.SlowDuration,
             IsDamageEot:  false,
             SlowFraction: BalanceConfig.Eots.SlowFraction
+        ),
+
+        // Signature ailments (element wave) — one per identity, applied innately at flatten time.
+        ["bleed"] = new EotData(
+            Id:            "bleed",
+            Name:          "Bleed",
+            ApplyChance:   BalanceConfig.Eots.SignatureApplyChance,
+            Duration:      BalanceConfig.Eots.BleedDuration,
+            IsDamageEot:   true,
+            TickRate:      BalanceConfig.Eots.BleedTickRate,
+            DamagePerTick: BalanceConfig.Eots.BleedDamagePerTick,
+            DamageType:    DamageType.Physical
+        ),
+        ["burn"] = new EotData(
+            Id:            "burn",
+            Name:          "Burn",
+            ApplyChance:   BalanceConfig.Eots.SignatureApplyChance,
+            Duration:      BalanceConfig.Eots.BurnDuration,
+            IsDamageEot:   true,
+            TickRate:      BalanceConfig.Eots.BurnTickRate,
+            DamagePerTick: BalanceConfig.Eots.BurnDamagePerTick,
+            DamageType:    DamageType.Fire
+        ),
+        ["chill"] = new EotData(
+            Id:           "chill",
+            Name:         "Chill",
+            ApplyChance:  BalanceConfig.Eots.SignatureApplyChance,
+            Duration:     BalanceConfig.Eots.ChillDuration,
+            IsDamageEot:  false,
+            SlowFraction: BalanceConfig.Eots.ChillSlowFraction
+        ),
+        ["shock"] = new EotData(
+            Id:             "shock",
+            Name:           "Shock",
+            ApplyChance:    BalanceConfig.Eots.SignatureApplyChance,
+            Duration:       BalanceConfig.Eots.ShockDuration,
+            IsDamageEot:    false,
+            DamageTakenAmp: BalanceConfig.Eots.ShockDamageTakenAmp
+        ),
+        ["poison"] = new EotData(
+            Id:            "poison",
+            Name:          "Poison",
+            ApplyChance:   BalanceConfig.Eots.SignatureApplyChance,
+            Duration:      BalanceConfig.Eots.PoisonDuration,
+            IsDamageEot:   true,
+            TickRate:      BalanceConfig.Eots.PoisonTickRate,
+            DamagePerTick: BalanceConfig.Eots.PoisonDamagePerTick,
+            DamageType:    DamageType.Poison,
+            MaxStacks:     BalanceConfig.Eots.PoisonMaxStacks
+        ),
+        ["decay"] = new EotData(
+            Id:                    "decay",
+            Name:                  "Decay",
+            ApplyChance:           BalanceConfig.Eots.SignatureApplyChance,
+            Duration:              BalanceConfig.Eots.DecayDuration,
+            IsDamageEot:           true,
+            TickRate:              BalanceConfig.Eots.DecayTickRate,
+            DamagePerTickFraction: BalanceConfig.Eots.DecayDamageFraction,
+            DamageType:            DamageType.Void,
+            MaxStacks:             1
         ),
     };
 

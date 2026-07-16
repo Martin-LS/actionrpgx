@@ -54,9 +54,11 @@ public class CharacterData
         float dex     = gains.DexBase + (CurrentLevel - 1) * gains.DexPerLevel;
         float intStat = gains.IntBase + (CurrentLevel - 1) * gains.IntPerLevel;
 
-        // Damage multipliers — read by PlayerController.ApplyWeaponDamage.
-        block.SetBase(StatId.PhysicalDamage, str     * PrimaryStatConversions.StrToPhysDamageMultiplier);
-        block.SetBase(StatId.MagicDamage,    intStat * PrimaryStatConversions.IntToMagDamageMultiplier);
+        // Delivery-pool multipliers (Str→Melee, Dex→Ranged, Int→Spell) — read by
+        // PlayerController.ApplyWeaponDamage, selected by the equipped weapon's delivery.
+        block.SetBase(StatId.MeleeDamage,  str     * PrimaryStatConversions.StrToMeleeDamageMultiplier);
+        block.SetBase(StatId.RangedDamage, dex     * PrimaryStatConversions.DexToRangedDamageMultiplier);
+        block.SetBase(StatId.SpellDamage,  intStat * PrimaryStatConversions.IntToSpellDamageMultiplier);
 
         // Derived stats from primary growth (incremental above level-1 base).
         float strGain = str - gains.StrBase;
@@ -84,6 +86,12 @@ public class CharacterData
         {
             var item = instance.Definition;
             if (item == null) continue;
+
+            if (item.CritDamageBonus != 0f)
+            {
+                block.AddModifier(new StatModifier(StatId.CritDamage, ModifierType.FlatAdd,
+                    item.CritDamageBonus, ModifierSource.Item, instance.Id));
+            }
 
             if (item.Slot == ItemSlot.Hat || item.Slot == ItemSlot.Body || item.Slot == ItemSlot.Boots)
             {

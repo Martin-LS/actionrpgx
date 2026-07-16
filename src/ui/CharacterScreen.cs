@@ -146,7 +146,7 @@ public partial class CharacterScreen : Control
         _nameLabel.Text  = c.Name;
         _typeLabel.Text  = c.Type.ToString();
         _levelLabel.Text = $"Level {c.CurrentLevel}   XP: {c.CurrentXp}";
-        _statsLabel.Text = $"HP {(int)stats.Get(StatId.MaxHp)}   Speed {stats.Get(StatId.Speed):F0}   P.Dmg {stats.Get(StatId.PhysicalDamage):F0}   M.Dmg {stats.Get(StatId.MagicDamage):F0}\nRange {effectiveRange:0.#} tiles   Runs: {c.RunsCompleted}";
+        _statsLabel.Text = $"HP {(int)stats.Get(StatId.MaxHp)}   Speed {stats.Get(StatId.Speed):F0}   Melee {stats.Get(StatId.MeleeDamage):F2}  Ranged {stats.Get(StatId.RangedDamage):F2}  Spell {stats.Get(StatId.SpellDamage):F2}\nRange {effectiveRange:0.#} tiles   Runs: {c.RunsCompleted}";
 
         RefreshSlotButton(_weaponBtn, c, ItemSlot.Weapon, "Weapon");
         RefreshSlotButton(_hatBtn,    c, ItemSlot.Hat,    "Hat");

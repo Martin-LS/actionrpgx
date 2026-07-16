@@ -24,7 +24,11 @@ public partial class EnemyController : CharacterBody3D
     [Export] public float DamageInterval = 1f;
     public int MapLevel = 1;
     public float PhysicalResistance = 0f;
-    public float MagicResistance    = 0f;
+    public float FireResistance      = 0f;
+    public float ColdResistance      = 0f;
+    public float LightningResistance = 0f;
+    public float PoisonResistance    = 0f;
+    public float VoidResistance      = 0f;
     public string ModelPath = "res://assets/models/characters/enemy_generic.glb";
 
     private enum EnemyState { Dormant, Idle, Chasing }
@@ -43,10 +47,11 @@ public partial class EnemyController : CharacterBody3D
     private float _damageCooldown;
     private float _pathTimer;
     private const float PathUpdateInterval = 0.25f;
-    private readonly Dictionary<string, EotInstance> _activeEots = new();
+    private readonly Dictionary<string, List<EotInstance>> _activeEots = new();
     private float _baseSpeed;
     private AnimationNodeStateMachinePlayback? _smPlayback;
     private Node3D? _slowVfx;
+    private float _damageTakenAmp;   // Shock: fractional increase to incoming damage
 
     public override void _Ready()
     {
@@ -222,80 +227,154 @@ public partial class EnemyController : CharacterBody3D
         }
     }
 
-    public void ApplyEot(EotData eot, float critMultiplier = 1.0f)
+    public void ApplyEot(EotData eot, float critMultiplier = 1.0f, float eotSlice = 1.0f)
     {
-        if (_activeEots.TryGetValue(eot.Id, out var existing))
+        if (eot.Id == "decay")
         {
-            existing.TimeRemaining = eot.Duration;
+            critMultiplier = 1.0f;
+        }
+
+        if (!_activeEots.TryGetValue(eot.Id, out var instances))
+        {
+            instances = new List<EotInstance>();
+            _activeEots[eot.Id] = instances;
+        }
+
+        float resolvedDamagePerTick = eot.DamagePerTick;
+        if (eot.DamagePerTickFraction > 0f)
+        {
+            resolvedDamagePerTick = MaxHealth * eot.DamagePerTickFraction;
+        }
+
+        // At the stack cap (or for non-stacking EoTs, MaxStacks == 1): refresh the instance closest to
+        // expiring in place. Refreshing a fixed slot (e.g. always index 0) would let that one slot renew
+        // forever while the others age out untouched, decaying the stack count under sustained reapplication.
+        if (instances.Count >= eot.MaxStacks && instances.Count > 0)
+        {
+            var existing = instances[0];
+            for (int i = 1; i < instances.Count; i++)
+                if (instances[i].TimeRemaining < existing.TimeRemaining) existing = instances[i];
+            existing.TimeRemaining = eot.Duration / eotSlice;
+            existing.SlowFraction  = eot.SlowFraction * eotSlice;
+            existing.DamageTakenAmp = eot.DamageTakenAmp * eotSlice;
+            existing.DamagePerTick  = resolvedDamagePerTick * eotSlice;
             if (eot.IsDamageEot) existing.CritMultiplier = critMultiplier;
+            ApplyEotEffect(existing);
             return;
         }
-        _activeEots[eot.Id] = new EotInstance
+
+        var newInst = new EotInstance
         {
             DefinitionId   = eot.Id,
-            TimeRemaining  = eot.Duration,
+            TimeRemaining  = eot.Duration / eotSlice,
             TickTimer      = eot.TickRate,
             CritMultiplier = eot.IsDamageEot ? critMultiplier : 1.0f,
+            SlowFraction   = eot.SlowFraction * eotSlice,
+            DamageTakenAmp = eot.DamageTakenAmp * eotSlice,
+            DamagePerTick  = resolvedDamagePerTick * eotSlice,
         };
-        ApplyEotEffect(eot);
+        instances.Add(newInst);
+        ApplyEotEffect(newInst);
     }
 
     private void TickEots(float delta)
     {
-        var expired = new System.Collections.Generic.List<string>();
-        foreach (var (id, inst) in _activeEots)
+        var expiredIds = new System.Collections.Generic.List<string>();
+        foreach (var (id, instances) in _activeEots)
         {
-            inst.TimeRemaining -= delta;
-            if (inst.TimeRemaining <= 0f)
-            {
-                expired.Add(id);
-                continue;
-            }
             var eot = EotRegistry.Get(id);
-            if (eot is { IsDamageEot: true })
+            var damageType = eot?.DamageType ?? Items.DamageType.Physical;
+            for (int i = instances.Count - 1; i >= 0; i--)
             {
-                inst.TickTimer -= delta;
-                if (inst.TickTimer <= 0f)
+                var inst = instances[i];
+                inst.TimeRemaining -= delta;
+                if (inst.TimeRemaining <= 0f)
                 {
-                    TakeDamage(eot.DamagePerTick * inst.CritMultiplier, Items.DamageType.Magic, inst.CritMultiplier > 1f);
-                    inst.TickTimer = eot.TickRate;
+                    instances.RemoveAt(i);
+                    RemoveEotEffect(inst);
+                    continue;
+                }
+                if (eot is { IsDamageEot: true })
+                {
+                    inst.TickTimer -= delta;
+                    if (inst.TickTimer <= 0f)
+                    {
+                        TakeDamage(inst.DamagePerTick * inst.CritMultiplier, damageType, inst.CritMultiplier > 1f);
+                        inst.TickTimer = eot.TickRate;
+                    }
                 }
             }
+            if (instances.Count == 0) expiredIds.Add(id);
         }
-        foreach (var id in expired)
-        {
-            var eot = EotRegistry.Get(id);
-            if (eot != null) RemoveEotEffect(eot);
+        foreach (var id in expiredIds)
             _activeEots.Remove(id);
-        }
     }
 
-    private void ApplyEotEffect(EotData eot)
+    private void ApplyEotEffect(EotInstance inst)
     {
-        if (eot.Id == "slow")
+        if (inst.SlowFraction > 0f)     RefreshSlowState();
+        if (inst.DamageTakenAmp > 0f)   RefreshAmpState();
+    }
+
+    private void RemoveEotEffect(EotInstance inst)
+    {
+        if (inst.SlowFraction > 0f)     RefreshSlowState();
+        if (inst.DamageTakenAmp > 0f)   RefreshAmpState();
+    }
+
+    // Strongest value of an EotInstance field across every active instance (all stacks, all EoT ids).
+    private float MaxAcrossInstances(System.Func<EotInstance, float> selector)
+    {
+        float max = 0f;
+        foreach (var instances in _activeEots.Values)
+            foreach (var inst in instances)
+                if (selector(inst) > max) max = selector(inst);
+        return max;
+    }
+
+    // Recompute movement speed from the strongest active slow (Slow augment, Chill signature, …).
+    private void RefreshSlowState()
+    {
+        float maxSlow = MaxAcrossInstances(inst => inst.SlowFraction);
+
+        Speed = _baseSpeed * (1f - maxSlow);
+
+        if (maxSlow > 0f && _slowVfx == null)
         {
-            Speed = _baseSpeed * (1f - eot.SlowFraction);
             _slowVfx = SlowVfxScene.Instantiate<Node3D>();
             AddChild(_slowVfx);
             _slowVfx.GetNode<GpuParticles3D>("Whirl").Emitting = true;
         }
-    }
-
-    private void RemoveEotEffect(EotData eot)
-    {
-        if (eot.Id == "slow")
+        else if (maxSlow <= 0f && _slowVfx != null)
         {
-            Speed = _baseSpeed;
-            _slowVfx?.QueueFree();
+            _slowVfx.QueueFree();
             _slowVfx = null;
         }
     }
 
+    // Recompute the incoming-damage amp from the strongest active amp EoT (Shock signature).
+    private void RefreshAmpState()
+    {
+        _damageTakenAmp = MaxAcrossInstances(inst => inst.DamageTakenAmp);
+    }
+
     public void TakeDamage(float rawAmount, Items.DamageType type, bool isCrit = false)
     {
-        float resistance = type == Items.DamageType.Physical ? PhysicalResistance : MagicResistance;
-        float effective  = rawAmount * (1f - resistance);
-        EmitSignal(SignalName.DamageTaken, effective, type == Items.DamageType.Magic, isCrit);
+        if (_currentHealth <= 0) return; // already dying/QueueFree'd; avoid re-entering Die() from same-frame ticks
+
+        float baseResistance = type switch
+        {
+            Items.DamageType.Physical  => PhysicalResistance,
+            Items.DamageType.Fire      => FireResistance,
+            Items.DamageType.Cold      => ColdResistance,
+            Items.DamageType.Lightning => LightningResistance,
+            Items.DamageType.Poison    => PoisonResistance,
+            Items.DamageType.Void      => VoidResistance,
+            _                          => 0f
+        };
+        float resistance = Mathf.Min(baseResistance, 0.99f);
+        float effective  = rawAmount * (1f - resistance) * (1f + _damageTakenAmp);
+        EmitSignal(SignalName.DamageTaken, effective, type != Items.DamageType.Physical, isCrit);
         _currentHealth  -= Mathf.CeilToInt(effective);
         if (_currentHealth <= 0)
             Die();

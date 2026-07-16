@@ -283,7 +283,9 @@ public partial class CharacterManager : Node
             PrototypeId: protoId,
             FormId: formId,
             IdentityId: identityId,
-            IconPath: iconPath
+            IconPath: iconPath,
+            BuffId: matchingPreset?.BuffId,
+            DebuffEotId: matchingPreset?.DebuffEotId
         );
 
         var composed = SkillComposer.Compose(proto, form, identity, tempPreset);
@@ -616,10 +618,13 @@ public partial class CharacterManager : Node
             ["armTime"]          = s.ArmTime,
             ["triggerCount"]     = s.TriggerCount,
             ["debuffEotId"]      = s.DebuffEotId ?? "",
+            ["signatureEotId"]   = s.SignatureEotId ?? "",
             ["damageType"]       = s.DamageType.ToString(),
             ["vfxKey"]           = s.VfxKey,
             ["basedOn"]          = s.BasedOn ?? "",
             ["tickRate"]         = s.TickRate,
+            ["eotSlice"]         = s.EotSlice,
+            ["buffId"]           = s.BuffId ?? "",
         };
     }
 
@@ -634,8 +639,14 @@ public partial class CharacterManager : Node
         string? debuffEotId = d.ContainsKey("debuffEotId") ? d["debuffEotId"].ToString() : null;
         if (string.IsNullOrEmpty(debuffEotId)) debuffEotId = null;
 
+        string? signatureEotId = d.ContainsKey("signatureEotId") ? d["signatureEotId"].ToString() : null;
+        if (string.IsNullOrEmpty(signatureEotId)) signatureEotId = null;
+
         string? basedOn = d.ContainsKey("basedOn") ? d["basedOn"].ToString() : null;
         if (string.IsNullOrEmpty(basedOn)) basedOn = null;
+
+        string? buffId = d.ContainsKey("buffId") ? d["buffId"].ToString() : null;
+        if (string.IsNullOrEmpty(buffId)) buffId = null;
 
         return new SkillData(
             Id:               d["id"].ToString()!,
@@ -659,10 +670,13 @@ public partial class CharacterManager : Node
             ArmTime:          d.ContainsKey("armTime") ? System.Convert.ToSingle(d["armTime"].Obj) : 0f,
             TriggerCount:     d.ContainsKey("triggerCount") ? System.Convert.ToInt32(d["triggerCount"].Obj) : 0,
             DebuffEotId:      debuffEotId,
-            DamageType:       d.ContainsKey("damageType") ? System.Enum.Parse<DamageType>(d["damageType"].ToString()!) : DamageType.Physical,
-            VfxKey:           d.ContainsKey("vfxKey") ? d["vfxKey"].ToString()! : "",
+            SignatureEotId:   signatureEotId,
+            DamageType:       d.ContainsKey("damageType") ? System.Enum.Parse<DamageType>(MigrateDamageType(d["damageType"].ToString()!)) : DamageType.Physical,
+            VfxKey:           d.ContainsKey("vfxKey") ? MigrateVfxKey(d["vfxKey"].ToString()!) : "",
             BasedOn:          basedOn,
-            TickRate:         d.ContainsKey("tickRate") ? System.Convert.ToSingle(d["tickRate"].Obj) : 0f
+            TickRate:         d.ContainsKey("tickRate") ? System.Convert.ToSingle(d["tickRate"].Obj) : 0f,
+            EotSlice:         d.ContainsKey("eotSlice") ? System.Convert.ToSingle(d["eotSlice"].Obj) : 1f,
+            BuffId:           buffId
         );
     }
 
@@ -958,6 +972,10 @@ public partial class CharacterManager : Node
         _           => oldKey,
     };
 
+    // Element wave (2026-07-06): the Magic damage type / magic identity migrate to Fire.
+    private static string MigrateDamageType(string oldType) => oldType == "Magic" ? "Fire" : oldType;
+    private static string MigrateVfxKey(string oldKey) => oldKey == "magic" ? "fire" : oldKey;
+
     private static string MigrateSkillId(string oldId) => oldId switch
     {
         "attack_melee"           => "entity_burst",
@@ -969,6 +987,7 @@ public partial class CharacterManager : Node
         "cyclone"                => "self_channeled_tick",
         "nova"                   => "self_burst",
         "damage_aura"            => "self_duration_tick",
+        "windup_burst"           => "fixed_zone_burst",
         _                        => oldId,
     };
 

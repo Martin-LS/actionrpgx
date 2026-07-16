@@ -45,8 +45,7 @@ public partial class WeaponController : Node
     private GpuParticles3D?[] _selfAuraVfx = new GpuParticles3D?[5];
     private bool _wasChanneling;
 
-    private float      _physicalDamage  = 20f;
-    private float      _magicDamage     = 0f;
+    private float      _deliveryDamage   = 20f;
     private float      _globalCritChance = 0f;
     private float      _critMultiplier   = BalanceConfig.SkillAugments.CritMultiplier;
 
@@ -100,10 +99,9 @@ public partial class WeaponController : Node
         }
     }
 
-    public void SetDamage(float physicalDamage, float magicDamage)
+    public void SetDamage(float deliveryDamage)
     {
-        _physicalDamage = physicalDamage;
-        _magicDamage    = magicDamage;
+        _deliveryDamage = deliveryDamage;
     }
 
     public void SetGlobalCritChance(float critChance) => _globalCritChance = critChance;
@@ -113,16 +111,18 @@ public partial class WeaponController : Node
     {
         public SkillData?   Skill;
         public float        CooldownTimer;
-        public List<(string Id, float Chance)> Eots;
+        public List<(string Id, float Chance, float Slice)> Eots;
         public bool         HasMagicDamage;
         public Items.DamageType EffectiveDamageType;
         public float        CritChanceBonus;
+        public float        CritDamageBonus;
         public bool         AutoActivate;
         public bool         IsChanneling;
         public float        DurationTimer;
         public List<Node3D> ActiveZones;
         public bool         AuraActive;
         public float        AuraReserved;
+        public float        ChanneledHoldTime;
     }
 
     private readonly SkillSlot[] _slots = new SkillSlot[5];
@@ -133,7 +133,7 @@ public partial class WeaponController : Node
     public void SetPreferredDelivery(string delivery)      => _preferredDelivery = delivery;
 
     public void SetSlot(int slotIndex, SkillData skill,
-        List<(string Id, float Chance)>? augmentEots = null, bool hasMagicDamage = false, float critChanceBonus = 0f)
+        List<(string Id, float Chance)>? augmentEots = null, bool hasMagicDamage = false, float critChanceBonus = 0f, float critDamageBonus = 0f)
     {
         if (slotIndex < 0 || slotIndex >= 5) return;
 
@@ -142,23 +142,37 @@ public partial class WeaponController : Node
 
         _slots[slotIndex].Skill            = skill;
         _slots[slotIndex].CooldownTimer    = 0f;
-        var eots = new List<(string Id, float Chance)>();
+        var eots = new List<(string Id, float Chance, float Slice)>();
         if (!string.IsNullOrEmpty(skill.DebuffEotId))
         {
             var eot = EotRegistry.Get(skill.DebuffEotId);
-            eots.Add((skill.DebuffEotId, eot?.ApplyChance ?? 1f));
+            eots.Add((skill.DebuffEotId, eot?.ApplyChance ?? 1f, skill.EotSlice));
         }
-        if (augmentEots != null) eots.AddRange(augmentEots);
+        // Innate signature ailment from the skill's identity (element wave).
+        if (!string.IsNullOrEmpty(skill.SignatureEotId))
+        {
+            var sig = EotRegistry.Get(skill.SignatureEotId);
+            eots.Add((skill.SignatureEotId, sig?.ApplyChance ?? 1f, 1.0f));
+        }
+        if (augmentEots != null)
+        {
+            foreach (var ae in augmentEots)
+            {
+                eots.Add((ae.Id, ae.Chance, 1.0f));
+            }
+        }
         _slots[slotIndex].Eots             = eots;
         _slots[slotIndex].HasMagicDamage   = hasMagicDamage;
-        _slots[slotIndex].EffectiveDamageType = hasMagicDamage ? Items.DamageType.Magic : skill.DamageType;
+        _slots[slotIndex].EffectiveDamageType = hasMagicDamage ? Items.DamageType.Fire : skill.DamageType;
         _slots[slotIndex].CritChanceBonus  = critChanceBonus;
+        _slots[slotIndex].CritDamageBonus  = critDamageBonus;
         _slots[slotIndex].AutoActivate  = true;
         _slots[slotIndex].IsChanneling  = false;
         _slots[slotIndex].DurationTimer = 0f;
         _slots[slotIndex].ActiveZones   = new List<Node3D>();
         _slots[slotIndex].AuraActive    = false;
         _slots[slotIndex].AuraReserved  = 0f;
+        _slots[slotIndex].ChanneledHoldTime = 0f;
 
         // Initialize new VFX for the slot
         if (_player == null)
@@ -254,14 +268,25 @@ public partial class WeaponController : Node
                 continue;
             }
 
+            if (_slots[i].Skill!.Type == SkillType.Channeled)
+            {
+                if (_slots[i].IsChanneling)
+                {
+                    _slots[i].ChanneledHoldTime += dt;
+                    ProcessChanneledSlot(i, dt);
+                }
+                else
+                {
+                    _slots[i].ChanneledHoldTime = 0f;
+                }
+                continue;
+            }
+
             bool active = (_slots[i].AutoActivate && _slots[i].Skill!.Type != SkillType.Channeled) ||
                           (_slots[i].Skill!.Type == SkillType.Channeled && _slots[i].IsChanneling);
             if (!active) continue;
 
-            if (_slots[i].Skill!.Type == SkillType.Channeled)
-                ProcessChanneledSlot(i, dt);
-            else
-                ProcessActiveSlot(i, dt);
+            ProcessActiveSlot(i, dt);
         }
 
         if (IsAnySlotChanneling())
@@ -371,10 +396,19 @@ public partial class WeaponController : Node
     {
         if (_slots[i].CooldownTimer > 0f) return;
         if (FindNearestEnemy(_slots[i].Skill!.Range) == null) return;
-        float drain = _slots[i].Skill!.FocusCost * _slots[i].Skill!.TickRate;
+
+        float currentTickRate = _slots[i].Skill!.TickRate;
+        if (_slots[i].Skill!.RampSpeed > 0f)
+        {
+            float rampDuration = BalanceConfig.Forms.RampDuration / _slots[i].Skill!.RampSpeed;
+            float progress = Mathf.Clamp(_slots[i].ChanneledHoldTime / rampDuration, 0f, 1f);
+            currentTickRate = Mathf.Lerp(BalanceConfig.Forms.RampInitialTickRate, BalanceConfig.Forms.RampCapTickRate, progress);
+        }
+
+        float drain = _slots[i].Skill!.FocusCost * currentTickRate;
         if (_player != null && !_player.TrySpendFocus(drain)) { _slots[i].IsChanneling = false; return; }
         FireSelfChanneledTick(i);
-        _slots[i].CooldownTimer = _slots[i].Skill!.TickRate;
+        _slots[i].CooldownTimer = currentTickRate;
     }
 
     private void ProcessAuraSlot(int i, float dt)
@@ -389,22 +423,36 @@ public partial class WeaponController : Node
         ref var slot   = ref _slots[slotIndex];
         var     origin = GetParent<Node3D>().GlobalPosition;
 
-        bool  isMagic = slot.HasMagicDamage || slot.EffectiveDamageType == Items.DamageType.Magic;
-        var   dmgType = isMagic ? Items.DamageType.Magic : Items.DamageType.Physical;
-        float baseDmg = isMagic ? _magicDamage : _physicalDamage;
+        if (!string.IsNullOrEmpty(slot.Skill!.BuffId))
+        {
+            EmitSignal(SignalName.SkillFired, slotIndex, slot.Skill!.TickRate, "AuraTick");
+            return;
+        }
+
+        var   dmgType = slot.EffectiveDamageType;
+        float baseDmg = _deliveryDamage;
 
         float critChance = _globalCritChance + slot.CritChanceBonus;
         float critMult   = 1.0f;
         if (critChance > 0f && GD.Randf() < critChance)
-            critMult = _critMultiplier;
+            critMult = _critMultiplier + slot.CritDamageBonus;
         baseDmg *= critMult;
+
+        bool isDebuffAura = !string.IsNullOrEmpty(slot.Skill!.DebuffEotId);
 
         foreach (var node in GetTree().GetNodesInGroup("enemies"))
         {
             if (node is not Enemies.EnemyController enemy || enemy.IsQueuedForDeletion()) continue;
             if (origin.DistanceTo(enemy.GlobalPosition) > slot.Skill!.Range) continue;
-            enemy.TakeDamage(baseDmg, dmgType, critMult > 1f);
-            ApplyEots(enemy, slot.Eots, critMult);
+            if (isDebuffAura)
+            {
+                ApplyEots(enemy, slot.Eots, critMult);
+            }
+            else
+            {
+                enemy.TakeDamage(baseDmg, dmgType, critMult > 1f);
+                ApplyEots(enemy, slot.Eots, critMult);
+            }
         }
 
         EmitSignal(SignalName.SkillFired, slotIndex, slot.Skill!.TickRate, "AuraTick");
@@ -415,14 +463,13 @@ public partial class WeaponController : Node
         ref var slot   = ref _slots[slotIndex];
         var     origin = GetParent<Node3D>().GlobalPosition;
 
-        bool  isMagic = slot.HasMagicDamage || slot.EffectiveDamageType == Items.DamageType.Magic;
-        var   dmgType = isMagic ? Items.DamageType.Magic : Items.DamageType.Physical;
-        float baseDmg = isMagic ? _magicDamage : _physicalDamage;
+        var   dmgType = slot.EffectiveDamageType;
+        float baseDmg = _deliveryDamage;
 
         float critChance = _globalCritChance + slot.CritChanceBonus;
         float critMult   = 1.0f;
         if (critChance > 0f && GD.Randf() < critChance)
-            critMult = _critMultiplier;
+            critMult = _critMultiplier + slot.CritDamageBonus;
         baseDmg *= critMult;
 
         bool hit = false;
@@ -443,7 +490,10 @@ public partial class WeaponController : Node
     {
         if (slotIndex < 0 || slotIndex >= 5) return;
         if (_slots[slotIndex].Skill?.Type == SkillType.Channeled)
+        {
             _slots[slotIndex].IsChanneling = false;
+            _slots[slotIndex].ChanneledHoldTime = 0f;
+        }
     }
 
     public void CancelActiveSkills()
@@ -453,6 +503,7 @@ public partial class WeaponController : Node
             if (_slots[i].Skill != null)
             {
                 _slots[i].IsChanneling = false;
+                _slots[i].ChanneledHoldTime = 0f;
             }
         }
     }
@@ -468,6 +519,10 @@ public partial class WeaponController : Node
             if (slot.AuraActive)
             {
                 _player?.UnreserveFocus(slot.AuraReserved);
+                if (!string.IsNullOrEmpty(slot.Skill.BuffId))
+                {
+                    _player?.RemoveBuff(slot.Skill.BuffId);
+                }
                 _slots[slotIndex].AuraActive  = false;
                 _slots[slotIndex].AuraReserved = 0f;
                 if (_selfAuraVfx[slotIndex] is { } auraVfxOff) { auraVfxOff.Restart(); auraVfxOff.Emitting = false; }
@@ -478,6 +533,10 @@ public partial class WeaponController : Node
                 float reserve = slot.Skill.FocusCost;
                 if (_player == null || _player.GetAvailableFocus() < reserve) return;
                 _player.ReserveFocus(reserve);
+                if (!string.IsNullOrEmpty(slot.Skill.BuffId))
+                {
+                    _player?.ApplyBuff(slot.Skill.BuffId, slot.Skill.EotSlice);
+                }
                 _slots[slotIndex].AuraActive   = true;
                 _slots[slotIndex].AuraReserved = reserve;
                 _slots[slotIndex].CooldownTimer = 0f;
@@ -492,6 +551,7 @@ public partial class WeaponController : Node
         if (slot.Skill.Type == SkillType.Channeled)
         {
             slot.IsChanneling = true;
+            slot.ChanneledHoldTime = 0f;
             return;
         }
 
@@ -537,10 +597,10 @@ public partial class WeaponController : Node
 
         if (slot.Skill!.DamagePattern == SkillDamagePattern.None)
         {
-            foreach (var (eotId, chance) in slot.Eots)
+            foreach (var (eotId, chance, slice) in slot.Eots)
             {
                 var eot = EotRegistry.Get(eotId);
-                if (eot != null && GD.Randf() < chance) target.ApplyEot(eot, 1.0f);
+                if (eot != null && GD.Randf() < chance) target.ApplyEot(eot, 1.0f, slice);
             }
             EmitSignal(SignalName.SkillFired, slotIndex, slot.Skill.Cooldown, "Debuff");
             return;
@@ -548,13 +608,12 @@ public partial class WeaponController : Node
 
         if (slot.Skill.DamagePattern == SkillDamagePattern.Tick && slot.Skill.ZoneTracksEntity)
         {
-            bool  ttMagic  = slot.HasMagicDamage || slot.EffectiveDamageType == Items.DamageType.Magic;
-            var   ttType   = ttMagic ? Items.DamageType.Magic : Items.DamageType.Physical;
-            float ttDmg    = ttMagic ? _magicDamage : _physicalDamage;
+            var   ttType   = slot.EffectiveDamageType;
+            float ttDmg    = _deliveryDamage;
             float ttCritChance = _globalCritChance + slot.CritChanceBonus;
             float ttCrit   = 1.0f;
             if (ttCritChance > 0f && GD.Randf() < ttCritChance)
-                ttCrit = _critMultiplier;
+                ttCrit = _critMultiplier + slot.CritDamageBonus;
             float radius = slot.Skill.ZoneRadius > 0f ? slot.Skill.ZoneRadius : 54f;
 
             var zone = new TrackedTick
@@ -574,26 +633,26 @@ public partial class WeaponController : Node
             return;
         }
 
-        bool  isMagic   = slot.HasMagicDamage || slot.EffectiveDamageType == Items.DamageType.Magic;
         bool  hasMelee  = System.Array.Exists(slot.Skill!.Tags, t => t == "Melee");
         bool  hasRange  = System.Array.Exists(slot.Skill!.Tags, t => t == "Range");
         // Weapon-adaptive: no delivery tag → inherit weapon's PreferredDelivery
         bool  isMelee   = hasMelee || (!hasRange && _preferredDelivery == "Melee");
         string delivery = isMelee ? "Melee"
             : (_preferredDelivery == "RangeMagic" ? "RangeMagic" : "Ranged");
-        var   dmgType   = isMagic ? Items.DamageType.Magic : Items.DamageType.Physical;
-        float baseDmg   = isMagic ? _magicDamage : _physicalDamage;
+        var   dmgType   = slot.EffectiveDamageType;
+        float baseDmg   = _deliveryDamage;
 
         float critChance      = _globalCritChance + slot.CritChanceBonus;
         float critMultiplier  = 1.0f;
         if (critChance > 0f && GD.Randf() < critChance)
-            critMultiplier = _critMultiplier;
+            critMultiplier = _critMultiplier + slot.CritDamageBonus;
         baseDmg *= critMultiplier;
 
+        int subHits = slot.Skill!.SubHits;
         if (slot.Skill.WindUp > 0f)
         {
             float            capWindUp  = slot.Skill.WindUp;
-            float            capDmg     = baseDmg;
+            float            capDmg     = baseDmg / subHits;
             Items.DamageType capType    = dmgType;
             float            capCrit    = critMultiplier;
             var              capEots    = slot.Eots;
@@ -609,43 +668,92 @@ public partial class WeaponController : Node
                 if (target == null || !GodotObject.IsInstanceValid(target) || target.IsQueuedForDeletion())
                     return;
 
-                if (capIsMelee)
+                for (int j = 0; j < subHits; j++)
                 {
-                    HitMelee(target, capDmg, capType, capEots, capCrit);
-                }
-                else
-                {
-                    var playerNode = GetParent<Node3D>();
-                    if (playerNode == null || !GodotObject.IsInstanceValid(playerNode)) return;
-                    var origin    = playerNode.GlobalPosition;
-                    var diff      = target.GlobalPosition - origin;
-                    var direction = new Vector3(diff.X, 0f, diff.Z).Normalized();
+                    int subIndex = j;
+                    float delay = subIndex * (0.5f / subHits);
+                    if (delay > 0f)
+                    {
+                        GetTree().CreateTimer(delay).Timeout += () =>
+                        {
+                            if (target == null || !GodotObject.IsInstanceValid(target) || target.IsQueuedForDeletion())
+                                return;
 
-                    var projectile = ProjectileScene.Instantiate<Projectile>();
-                    projectile.Initialize(direction, capDmg, capType, capEots, false, false, capCrit);
-                    GetTree().Root.AddChild(projectile);
-                    projectile.GlobalPosition = new Vector3(origin.X, target.GlobalPosition.Y, origin.Z);
+                            if (capIsMelee)
+                            {
+                                HitMelee(target, capDmg, capType, capEots, capCrit, subHits);
+                            }
+                            else
+                            {
+                                FireProjectileAtTarget(target, capDmg, capType, capEots, capCrit, subHits);
+                            }
+                        };
+                    }
+                    else
+                    {
+                        if (capIsMelee)
+                        {
+                            HitMelee(target, capDmg, capType, capEots, capCrit, subHits);
+                        }
+                        else
+                        {
+                            FireProjectileAtTarget(target, capDmg, capType, capEots, capCrit, subHits);
+                        }
+                    }
                 }
             };
         }
         else
         {
+            float capDmg = baseDmg / subHits;
             if (isMelee)
             {
                 float windupDelay = slot.Skill!.Cooldown * BalanceConfig.Skills.MeleeWindupFraction;
-                GetTree().CreateTimer(windupDelay).Timeout +=
-                    () => { if (!target.IsQueuedForDeletion()) HitMelee(target, baseDmg, dmgType, slot.Eots, critMultiplier); };
+                GetTree().CreateTimer(windupDelay).Timeout += () =>
+                {
+                    if (target == null || !GodotObject.IsInstanceValid(target) || target.IsQueuedForDeletion())
+                        return;
+
+                    for (int j = 0; j < subHits; j++)
+                    {
+                        int subIndex = j;
+                        float delay = subIndex * (0.5f / subHits);
+                        if (delay > 0f)
+                        {
+                            GetTree().CreateTimer(delay).Timeout += () =>
+                            {
+                                if (target == null || !GodotObject.IsInstanceValid(target) || target.IsQueuedForDeletion())
+                                    return;
+                                HitMelee(target, capDmg, dmgType, slot.Eots, critMultiplier, subHits);
+                            };
+                        }
+                        else
+                        {
+                            HitMelee(target, capDmg, dmgType, slot.Eots, critMultiplier, subHits);
+                        }
+                    }
+                };
             }
             else
             {
-                var origin    = GetParent<Node3D>().GlobalPosition;
-                var diff      = target.GlobalPosition - origin;
-                var direction = new Vector3(diff.X, 0f, diff.Z).Normalized();
-
-                var projectile = ProjectileScene.Instantiate<Projectile>();
-                projectile.Initialize(direction, baseDmg, dmgType, slot.Eots, false, false, critMultiplier);
-                GetTree().Root.AddChild(projectile);
-                projectile.GlobalPosition = new Vector3(origin.X, target.GlobalPosition.Y, origin.Z);
+                for (int j = 0; j < subHits; j++)
+                {
+                    int subIndex = j;
+                    float delay = subIndex * (0.5f / subHits);
+                    if (delay > 0f)
+                    {
+                        GetTree().CreateTimer(delay).Timeout += () =>
+                        {
+                            if (target == null || !GodotObject.IsInstanceValid(target) || target.IsQueuedForDeletion())
+                                return;
+                            FireProjectileAtTarget(target, capDmg, dmgType, slot.Eots, critMultiplier, subHits);
+                        };
+                    }
+                    else
+                    {
+                        FireProjectileAtTarget(target, capDmg, dmgType, slot.Eots, critMultiplier, subHits);
+                    }
+                }
             }
         }
 
@@ -671,14 +779,13 @@ public partial class WeaponController : Node
 
                 var slotData = _slots[slotIndex];
 
-                bool  isMagic = slotData.HasMagicDamage || slotData.EffectiveDamageType == Items.DamageType.Magic;
-                var   dmgType = isMagic ? Items.DamageType.Magic : Items.DamageType.Physical;
-                float baseDmg = isMagic ? _magicDamage : _physicalDamage;
+                var   dmgType = slotData.EffectiveDamageType;
+                float baseDmg = _deliveryDamage;
 
                 float critChance = _globalCritChance + slotData.CritChanceBonus;
                 float critMult   = 1.0f;
                 if (critChance > 0f && GD.Randf() < critChance)
-                    critMult = _critMultiplier;
+                    critMult = _critMultiplier + slotData.CritDamageBonus;
                 baseDmg *= critMult;
 
                 var origin = player.GlobalPosition;
@@ -708,14 +815,13 @@ public partial class WeaponController : Node
         {
             var origin = GetParent<Node3D>().GlobalPosition;
 
-            bool  isMagic = slot.HasMagicDamage || slot.EffectiveDamageType == Items.DamageType.Magic;
-            var   dmgType = isMagic ? Items.DamageType.Magic : Items.DamageType.Physical;
-            float baseDmg = isMagic ? _magicDamage : _physicalDamage;
+            var   dmgType = slot.EffectiveDamageType;
+            float baseDmg = _deliveryDamage;
 
             float critChance = _globalCritChance + slot.CritChanceBonus;
             float critMult   = 1.0f;
             if (critChance > 0f && GD.Randf() < critChance)
-                critMult = _critMultiplier;
+                critMult = _critMultiplier + slot.CritDamageBonus;
             baseDmg *= critMult;
 
             foreach (var node in GetTree().GetNodesInGroup("enemies"))
@@ -748,14 +854,13 @@ public partial class WeaponController : Node
 
         if (slot.Skill!.TriggerRadius > 0f)
         {
-            bool  isMagic  = slot.HasMagicDamage || slot.EffectiveDamageType == Items.DamageType.Magic;
-            var   dmgType  = isMagic ? Items.DamageType.Magic : Items.DamageType.Physical;
-            float baseDmg  = isMagic ? _magicDamage : _physicalDamage;
+            var   dmgType  = slot.EffectiveDamageType;
+            float baseDmg  = _deliveryDamage;
 
             float critChance = _globalCritChance + slot.CritChanceBonus;
             float critMult   = 1.0f;
             if (critChance > 0f && GD.Randf() < critChance)
-                critMult = _critMultiplier;
+                critMult = _critMultiplier + slot.CritDamageBonus;
             baseDmg *= critMult;
 
             slot.ActiveZones.RemoveAll(z => z == null || !GodotObject.IsInstanceValid(z) || z.IsQueuedForDeletion());
@@ -783,14 +888,13 @@ public partial class WeaponController : Node
         }
         else if (slot.Skill!.DamagePattern == SkillDamagePattern.Burst)
         {
-            bool  isMagic    = slot.HasMagicDamage || slot.EffectiveDamageType == Items.DamageType.Magic;
-            var   dmgType    = isMagic ? Items.DamageType.Magic : Items.DamageType.Physical;
-            float baseDmg    = isMagic ? _magicDamage : _physicalDamage;
+            var   dmgType    = slot.EffectiveDamageType;
+            float baseDmg    = _deliveryDamage;
 
             float critChance = _globalCritChance + slot.CritChanceBonus;
             float critMult   = 1.0f;
             if (critChance > 0f && GD.Randf() < critChance)
-                critMult = _critMultiplier;
+                critMult = _critMultiplier + slot.CritDamageBonus;
             baseDmg *= critMult;
 
             float radius = slot.Skill!.ZoneRadius > 0f ? slot.Skill!.ZoneRadius : 54f;
@@ -827,26 +931,43 @@ public partial class WeaponController : Node
             }
             else
             {
-                foreach (var node in GetTree().GetNodesInGroup("enemies"))
+                int    subHits  = slot.Skill!.SubHits;
+                float  perHitDmg = baseDmg / subHits;
+                var    capEots   = slot.Eots;
+                string capVfxKey = slot.Skill.VfxKey;
+
+                for (int j = 0; j < subHits; j++)
                 {
-                    if (node is not Enemies.EnemyController enemy || enemy.IsQueuedForDeletion()) continue;
-                    if (worldPos.DistanceTo(enemy.GlobalPosition) > radius) continue;
-                    enemy.TakeDamage(baseDmg, dmgType, isCrit);
-                    ApplyEots(enemy, slot.Eots, critMult);
+                    float delay = j * BalanceConfig.Forms.EchoAftershockDelay;
+
+                    void DoHit()
+                    {
+                        foreach (var node in GetTree().GetNodesInGroup("enemies"))
+                        {
+                            if (node is not Enemies.EnemyController enemy || enemy.IsQueuedForDeletion()) continue;
+                            if (worldPos.DistanceTo(enemy.GlobalPosition) > radius) continue;
+                            enemy.TakeDamage(perHitDmg, dmgType, isCrit);
+                            ApplyEots(enemy, capEots, critMult, subHits);
+                        }
+                        SpawnZoneBurstVfx(worldPos, capVfxKey);
+                    }
+
+                    if (delay > 0f)
+                        GetTree().CreateTimer(delay).Timeout += DoHit;
+                    else
+                        DoHit();
                 }
-                SpawnZoneBurstVfx(worldPos, slot.Skill.VfxKey);
             }
         }
         else if (slot.Skill!.DamagePattern == SkillDamagePattern.Tick)
         {
-            bool  isMagic = slot.HasMagicDamage || slot.EffectiveDamageType == Items.DamageType.Magic;
-            var   dmgType = isMagic ? Items.DamageType.Magic : Items.DamageType.Physical;
-            float baseDmg = isMagic ? _magicDamage : _physicalDamage;
+            var   dmgType = slot.EffectiveDamageType;
+            float baseDmg = _deliveryDamage;
 
             float critChance = _globalCritChance + slot.CritChanceBonus;
             float critMult   = 1.0f;
             if (critChance > 0f && GD.Randf() < critChance)
-                critMult = _critMultiplier;
+                critMult = _critMultiplier + slot.CritDamageBonus;
             baseDmg *= critMult;
 
             float radius = slot.Skill!.ZoneRadius > 0f ? slot.Skill!.ZoneRadius : 54f;
@@ -895,23 +1016,38 @@ public partial class WeaponController : Node
         EmitSignal(SignalName.SkillFired, slotIndex, slot.Skill!.Cooldown, "SelfBurst");
     }
 
+    private void FireProjectileAtTarget(Enemies.EnemyController target, float damage, Items.DamageType dmgType,
+        List<(string Id, float Chance, float Slice)> eots, float critMultiplier, int subHits)
+    {
+        var playerNode = GetParent<Node3D>();
+        if (playerNode == null || !GodotObject.IsInstanceValid(playerNode)) return;
+        var origin    = playerNode.GlobalPosition;
+        var diff      = target.GlobalPosition - origin;
+        var direction = new Vector3(diff.X, 0f, diff.Z).Normalized();
+
+        var projectile = ProjectileScene.Instantiate<Projectile>();
+        projectile.Initialize(direction, damage, dmgType, eots, false, false, critMultiplier, subHits);
+        GetTree().Root.AddChild(projectile);
+        projectile.GlobalPosition = new Vector3(origin.X, target.GlobalPosition.Y, origin.Z);
+    }
+
     private void HitMelee(Enemies.EnemyController target, float damage, Items.DamageType dmgType,
-        List<(string Id, float Chance)> eots, float critMultiplier)
+        List<(string Id, float Chance, float Slice)> eots, float critMultiplier, int subHits = 1)
     {
         bool   isCrit  = critMultiplier > 1f;
         var    hitPos  = target.GlobalPosition;
         target.TakeDamage(damage, dmgType, isCrit);
-        ApplyEots(target, eots, critMultiplier);
+        ApplyEots(target, eots, critMultiplier, subHits);
         SpawnHitVfx(hitPos);
     }
 
-    private void ApplyEots(Enemies.EnemyController enemy, List<(string Id, float Chance)> eots, float critMultiplier)
+    private void ApplyEots(Enemies.EnemyController enemy, List<(string Id, float Chance, float Slice)> eots, float critMultiplier, int subHits = 1)
     {
-        foreach (var (eotId, chance) in eots)
+        foreach (var (eotId, chance, slice) in eots)
         {
             var eot = EotRegistry.Get(eotId);
-            if (eot != null && GD.Randf() < chance)
-                enemy.ApplyEot(eot, critMultiplier);
+            if (eot != null && GD.Randf() < (chance / subHits))
+                enemy.ApplyEot(eot, critMultiplier, slice);
         }
     }
 

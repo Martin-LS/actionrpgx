@@ -66,11 +66,6 @@ public static class BalanceConfig
         public const float FixedZoneBurstRange       = 180f; // cast range (5 tiles)
         public const float FixedZoneBurstZoneRadius  = 72f;  // blast radius at landing (2 tiles)
 
-        // Prototype: Windup-Burst — test values, owned by Balancer
-        public const float WindupBurstCooldown    = 3.0f;
-        public const float WindupBurstRange       = 180f;
-        public const float WindupBurstZoneRadius  = 108f; // 3 tiles
-        public const float WindupBurstWindUp      = 1.5f;
 
         // Prototype: Tracked-Tick — test values, owned by Balancer
         public const float TrackedTickCooldown   = 3.0f;
@@ -133,7 +128,6 @@ public static class BalanceConfig
         public const float TriggeredZoneBurstFocusCost = 15f;
         public const float StackableZoneFocusCost      = 15f;
         public const float EntityDebuffFocusCost   = 10f;
-        public const float WindupBurstFocusCost    = 20f;
         public const float FixedZoneBurstFocusCost = 15f;
         public const float FixedZoneTickFocusCost  = 20f;
 
@@ -152,6 +146,33 @@ public static class BalanceConfig
         public const float BurnDuration      = 4f;
         public const float BurnTickRate      = 0.5f;
         public const float BurnDamagePerTick = 5f;
+
+        // Signature ailments (element wave) apply innately/guaranteed; Balancer tunes magnitudes.
+        public const float SignatureApplyChance = 1f;
+
+        // Bleed — Physical signature DoT
+        public const float BleedDuration      = 4f;
+        public const float BleedTickRate      = 0.5f;
+        public const float BleedDamagePerTick = 5f;
+
+        // Chill — Cold signature slow (milder than the hard Slow augment)
+        public const float ChillDuration      = 3f;
+        public const float ChillSlowFraction  = 0.30f;
+
+        // Shock — Lightning signature damage-taken amp
+        public const float ShockDuration       = 4f;
+        public const float ShockDamageTakenAmp = 0.20f; // +20% damage taken while shocked
+
+        // Poison — occult signature stacking DoT (N independent instances, each ticking on its own timeline)
+        public const float PoisonDuration      = 4f;
+        public const float PoisonTickRate      = 0.5f;
+        public const float PoisonDamagePerTick = 3f;   // per stack, per tick
+        public const int   PoisonMaxStacks     = 5;
+
+        // Decay — Void/Shadow signature %-max-HP non-stacking DoT
+        public const float DecayDuration           = 4f;
+        public const float DecayTickRate           = 0.5f;
+        public const float DecayDamageFraction     = 0.01f; // 1% max HP per tick
     }
 
     public static class Enemies
@@ -162,6 +183,8 @@ public static class BalanceConfig
             public const int   BaseHealth         = 100;
             public const int   ContactDamage      = 5;
             public const float PhysicalResistance = 0.10f;
+            public const float PoisonResistance   = 0f;
+            public const float VoidResistance     = 0f;
         }
 
         public const float SpeedPerMinute      = 5f;  // added to base speed each minute
@@ -228,6 +251,64 @@ public static class BalanceConfig
 
     public static class Forms
     {
+        // salvo (entity_burst)
+        public const float SalvoCooldown = 0.8f;
+        public const float SalvoFocusCost = 6f;
+        public const int   SalvoSubHits = 4;
+
+        // blast / fuse / echo (fixed_zone_burst)
+        public const float BlastCooldown       = 0.7f;
+        public const float FuseCooldown        = 2.5f;
+        public const float FuseWindUp          = 1.5f;
+        public const float FuseZoneRadius      = 126f;
+        public const float EchoCooldown        = 1.0f;
+        public const int   EchoSubHits         = 2;
+        public const float EchoAftershockDelay = 0.6f;
+
+        // ramp (self_channeled_tick)
+        public const float RampInitialTickRate = 0.5f;
+        public const float RampCapTickRate = 0.1f;
+        public const float RampDuration = 3.0f;
+        public const float RampFocusCost = 12f;
+
+        // stackable_zone (swarm / singular)
+        public const float StackableZoneSwarmCooldown = 1.0f;
+        public const float StackableZoneSwarmZoneRadius = 36f;
+        public const int   StackableZoneSwarmStackLimit = 6;
+        public const float StackableZoneSingularCooldown = 3.0f;
+        public const float StackableZoneSingularZoneRadius = 108f;
+        public const float StackableZoneSingularDuration = 15.0f;
+        public const int   StackableZoneSingularStackLimit = 2;
+
+        // self_aura (reserve_heavy / reserve_light)
+        public const float SelfAuraHeavyCooldown = 1.0f;
+        public const float SelfAuraHeavyRange = 180f;
+        public const float SelfAuraHeavyFocusReservation = 35f;
+        public const float SelfAuraLightCooldown = 1.0f;
+        public const float SelfAuraLightRange = 72f;
+        public const float SelfAuraLightFocusReservation = 10f;
+
+        // self_aura buff/debuff magnitude scope (reserve_heavy_magnitude / reserve_light_magnitude)
+        // EotSlice is cost-proportional to reservation paid vs the prototype's baseline reservation (§5C/§5E guardrail).
+        public const float SelfAuraMagnitudeHeavyCooldown = 1.0f;
+        public const float SelfAuraMagnitudeHeavyRange = 180f;
+        public const float SelfAuraMagnitudeHeavyFocusReservation = 35f;
+        public const float SelfAuraMagnitudeHeavyEotSlice = SelfAuraMagnitudeHeavyFocusReservation / Focus.SelfAuraFocusReservation;
+        public const float SelfAuraMagnitudeLightCooldown = 1.0f;
+        public const float SelfAuraMagnitudeLightRange = 72f;
+        public const float SelfAuraMagnitudeLightFocusReservation = 10f;
+        public const float SelfAuraMagnitudeLightEotSlice = SelfAuraMagnitudeLightFocusReservation / Focus.SelfAuraFocusReservation;
+
+        // triggered_zone_burst (swarm / singular)
+        public const float TriggeredZoneBurstSwarmCooldown = 0.8f;
+        public const float TriggeredZoneBurstSwarmTriggerRadius = 18f;
+        public const float TriggeredZoneBurstSwarmZoneRadius = 54f;
+        public const int   TriggeredZoneBurstSwarmStackLimit = 6;
+        public const float TriggeredZoneBurstSingularCooldown = 2.5f;
+        public const float TriggeredZoneBurstSingularTriggerRadius = 54f;
+        public const float TriggeredZoneBurstSingularZoneRadius = 162f;
+        public const int   TriggeredZoneBurstSingularStackLimit = 1;
+
         // swift (entity_burst)
         public const float SwiftCooldown = 0.5f;
         public const float SwiftFocusCost = 6f;
@@ -268,6 +349,10 @@ public static class BalanceConfig
         public const float VortexRange = 200f;
         public const float VortexTickRate = 0.35f;
         public const float VortexFocusCost = 25f;
+
+        // entity_debuff (fleet / enduring)
+        public const float FleetSliceFactor = 1.5f;
+        public const float EnduringSliceFactor = 0.5f;
     }
 
     public static class Tiers

@@ -11,12 +11,38 @@ public static class IdentityRegistry
         ["physical"] = new IdentityData(
             Id: "physical",
             DamageType: DamageType.Physical,
-            VfxKey: "kinetic"    // physical = steel-grey particle skins (kinetic)
+            VfxKey: "kinetic",       // physical = steel-grey particle skins (kinetic)
+            SignatureEotId: "bleed"
         ),
-        ["magic"] = new IdentityData(
-            Id: "magic",
-            DamageType: DamageType.Magic,
-            VfxKey: "magic"      // magic = arcane-blue particle skins
+        ["fire"] = new IdentityData(
+            Id: "fire",
+            DamageType: DamageType.Fire,
+            VfxKey: "fire",          // fire = ember/flame particle skins
+            SignatureEotId: "burn"
+        ),
+        ["cold"] = new IdentityData(
+            Id: "cold",
+            DamageType: DamageType.Cold,
+            VfxKey: "cold",          // cold = frost/ice particle skins
+            SignatureEotId: "chill"
+        ),
+        ["lightning"] = new IdentityData(
+            Id: "lightning",
+            DamageType: DamageType.Lightning,
+            VfxKey: "lightning",     // lightning = arc/spark particle skins
+            SignatureEotId: "shock"
+        ),
+        ["poison"] = new IdentityData(
+            Id: "poison",
+            DamageType: DamageType.Poison,
+            VfxKey: "poison",        // poison = toxic/venom particle skins
+            SignatureEotId: "poison"
+        ),
+        ["void"] = new IdentityData(
+            Id: "void",
+            DamageType: DamageType.Void,
+            VfxKey: "void",          // void = shadow/decay particle skins
+            SignatureEotId: "decay"
         )
     };
 

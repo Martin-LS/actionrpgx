@@ -42,6 +42,26 @@ public static class SkillTiering
                 }
                 return skill;
 
+            case TierTrack.RampSpeedUp:
+                float newRampSpeed = skill.RampSpeed * (1f + factor);
+                return skill with { RampSpeed = newRampSpeed };
+
+            case TierTrack.StackLimitUp:
+                if (skill.StackLimit > 0)
+                {
+                    int newStackLimit = skill.StackLimit + (tier - 1);
+                    return skill with { StackLimit = newStackLimit };
+                }
+                return skill;
+
+            case TierTrack.EotMagnitudeUp:
+                float newEotSliceMag = skill.EotSlice * (1f + factor);
+                return skill with { EotSlice = newEotSliceMag };
+
+            case TierTrack.EotDurationUp:
+                float newEotSliceDur = skill.EotSlice / (1f + factor);
+                return skill with { EotSlice = newEotSliceDur };
+
             default:
                 return skill;
         }

@@ -87,15 +87,8 @@ public partial class PlayerController : CharacterBody3D
         {
             var c = manager.SelectedCharacter;
             _charData  = c;
-            _statBlock = c.BuildStatBlock();
+            RebuildStats();
 
-            MaxHealth          = (int)_statBlock.Get(Stats.StatId.MaxHp);
-            Speed              = _statBlock.Get(Stats.StatId.Speed);
-            PhysicalResistance = _statBlock.Get(Stats.StatId.PhysicalResistance);
-            MagicResistance    = _statBlock.Get(Stats.StatId.MagicResistance);
-            _evasion           = _statBlock.Get(Stats.StatId.Evasion);
-            MaxFocus           = _statBlock.Get(Stats.StatId.MaxFocus);
-            _focusRegen        = _statBlock.Get(Stats.StatId.FocusRegen);
             CurrentFocus       = MaxFocus;
 
             _maxFocusShield     = MaxFocus * BalanceConfig.Focus.ShieldFraction;
@@ -137,6 +130,7 @@ public partial class PlayerController : CharacterBody3D
                 var augmentEots   = new List<(string Id, float Chance)>();
                 bool  hasMagicDamage = false;
                 float critChanceBonus = 0f;
+                float critDamageBonus = 0f;
                 if (instance != null)
                 {
                     var activeAugments = Skills.AugmentResolver.Resolve(instance.SocketedSkillAugmentIds, manager.FindSkillAugmentInstance);
@@ -144,12 +138,13 @@ public partial class PlayerController : CharacterBody3D
                     {
                         if (augInst.DefinitionId == "magic_damage")    hasMagicDamage = true;
                         if (augInst.DefinitionId == "critical_strike") critChanceBonus += augInst.TriggerChance / 100f;
+                        if (augInst.DefinitionId == "crit_damage")     critDamageBonus += augInst.TriggerChance / 100f;
                         var eotId = augInst.Definition?.EotId;
                         if (eotId != null) augmentEots.Add((eotId, augInst.TriggerChance / 100f));
                     }
                 }
 
-                weaponController?.SetSlot(i, skill, augmentEots, hasMagicDamage, critChanceBonus);
+                weaponController?.SetSlot(i, skill, augmentEots, hasMagicDamage, critChanceBonus, critDamageBonus);
                 bool autoActivate = i < c.SlotAutoActivate.Count ? c.SlotAutoActivate[i] : true;
                 weaponController?.SetSlotAutoActivate(i, autoActivate);
             }
@@ -169,13 +164,14 @@ public partial class PlayerController : CharacterBody3D
         }
         else
         {
-            _statBlock.SetBase(Stats.StatId.MaxHp,         MaxHealth);
-            _statBlock.SetBase(Stats.StatId.Speed,          Speed);
-            _statBlock.SetBase(Stats.StatId.PhysicalDamage, 20f);
-            _statBlock.SetBase(Stats.StatId.MagicDamage,    0f);
+            _statBlock.SetBase(Stats.StatId.MaxHp,        MaxHealth);
+            _statBlock.SetBase(Stats.StatId.Speed,        Speed);
+            _statBlock.SetBase(Stats.StatId.MeleeDamage,  20f);
+            _statBlock.SetBase(Stats.StatId.RangedDamage, 20f);
+            _statBlock.SetBase(Stats.StatId.SpellDamage,  20f);
             XpToNextLevel = ComputeXpToNextLevel(Level);
             var wc = GetNodeOrNull<Weapon.WeaponController>("Weapon");
-            wc?.SetDamage(20f, 0f);
+            wc?.SetDamage(20f);
             wc?.SetGlobalCritChance(0f);
             wc?.SetCritMultiplier(BalanceConfig.SkillAugments.CritMultiplier);
             wc?.SetRange(1.5f * GameScale.TileSize);
@@ -411,6 +407,8 @@ public partial class PlayerController : CharacterBody3D
             _dodgeCooldownTimer -= dt;
         }
 
+        TickBuffs(dt);
+
         var input     = Input.GetVector("move_left", "move_right", "move_up", "move_down");
         var direction = new Vector3(input.X, 0f, input.Y);
         bool moving = direction.LengthSquared() > 0.01f;
@@ -595,7 +593,7 @@ public partial class PlayerController : CharacterBody3D
         float effective = rawAmount * (1f - DamageReduction);
         if (type == Items.DamageType.Physical)
             effective *= (1f - PhysicalResistance);
-        else if (type == Items.DamageType.Magic)
+        else
             effective *= (1f - MagicResistance);
 
         // Fortify: if active, reduce this hit; refresh for next hit
@@ -620,7 +618,7 @@ public partial class PlayerController : CharacterBody3D
         EmitSignal(SignalName.HealthChanged, CurrentHealth);
 
         if (damageToShow > 0f)
-            EmitSignal(SignalName.DamageTaken, damageToShow, type == Items.DamageType.Magic);
+            EmitSignal(SignalName.DamageTaken, damageToShow, type != Items.DamageType.Physical);
 
         if (effective > 0f)
         {
@@ -671,20 +669,13 @@ public partial class PlayerController : CharacterBody3D
             if (_charData != null)
             {
                 _charData.CurrentLevel = Level;
-                _statBlock = _charData.BuildStatBlock();
-                Speed              = _statBlock.Get(Stats.StatId.Speed);
-                PhysicalResistance = _statBlock.Get(Stats.StatId.PhysicalResistance);
-                MagicResistance    = _statBlock.Get(Stats.StatId.MagicResistance);
-                _evasion           = _statBlock.Get(Stats.StatId.Evasion);
+                RebuildStats();
                 var wc     = GetNodeOrNull<Weapon.WeaponController>("Weapon");
                 var weapon = GetEquippedItem(_charData, Items.ItemSlot.Weapon);
                 ApplyWeaponDamage(wc, weapon);
             }
 
-            MaxHealth     = (int)_statBlock.Get(Stats.StatId.MaxHp);
             CurrentHealth = Mathf.Min(CurrentHealth + 5f, MaxHealth);
-            MaxFocus      = _statBlock.Get(Stats.StatId.MaxFocus);
-            _focusRegen   = _statBlock.Get(Stats.StatId.FocusRegen);
             EmitSignal(SignalName.LeveledUp, Level);
         }
         EmitSignal(SignalName.XpChanged, CurrentXp, XpToNextLevel);
@@ -902,11 +893,186 @@ public partial class PlayerController : CharacterBody3D
         if (wc == null || weapon == null) return;
 
         float weaponBase = weapon.BaseDamage * (1f + weapon.DamageBonus);
-        float physDmg    = Mathf.Max(1f, weaponBase * _statBlock.Get(Stats.StatId.PhysicalDamage));
-        float magicDmg   = Mathf.Max(1f, weaponBase * _statBlock.Get(Stats.StatId.MagicDamage));
 
-        wc.SetDamage(physDmg, magicDmg);
+        // Damage number comes from the weapon's DELIVERY pool, not its damage type.
+        float deliveryMult = weapon.PreferredDelivery switch
+        {
+            "Ranged"     => _statBlock.Get(Stats.StatId.RangedDamage),
+            "RangeMagic" => _statBlock.Get(Stats.StatId.SpellDamage),
+            _            => _statBlock.Get(Stats.StatId.MeleeDamage),
+        };
+        float deliveryDmg = Mathf.Max(1f, weaponBase * deliveryMult);
+
+        wc.SetDamage(deliveryDmg);
         wc.SetGlobalCritChance(_statBlock.Get(Stats.StatId.CritChance) + weapon.CritChanceBonus);
         wc.SetCritMultiplier(_statBlock.Get(Stats.StatId.CritDamage));
+    }
+
+    private class ActiveBuff
+    {
+        public string DefinitionId { get; set; } = "";
+        public float? TimeRemaining { get; set; }
+        public float  MagnitudeModifier { get; set; } = 1.0f;
+    }
+
+    private readonly Dictionary<string, List<ActiveBuff>> _activeBuffs = new();
+
+    public void ApplyBuff(string buffId, float magnitudeModifier = 1.0f, float? duration = null)
+    {
+        var buff = Buffs.BuffRegistry.Get(buffId);
+        if (buff == null) return;
+
+        float? resolvedDuration = duration ?? buff.Duration;
+
+        if (!_activeBuffs.TryGetValue(buffId, out var instances))
+        {
+            instances = new List<ActiveBuff>();
+            _activeBuffs[buffId] = instances;
+        }
+
+        if (instances.Count >= buff.MaxStacks && instances.Count > 0)
+        {
+            ActiveBuff existing = instances[0];
+            for (int i = 1; i < instances.Count; i++)
+            {
+                if (!existing.TimeRemaining.HasValue && instances[i].TimeRemaining.HasValue)
+                {
+                    existing = instances[i];
+                }
+                else if (existing.TimeRemaining.HasValue && instances[i].TimeRemaining.HasValue)
+                {
+                    if (instances[i].TimeRemaining!.Value < existing.TimeRemaining!.Value)
+                    {
+                        existing = instances[i];
+                    }
+                }
+            }
+            existing.TimeRemaining = resolvedDuration;
+            existing.MagnitudeModifier = magnitudeModifier;
+            RebuildStats();
+            return;
+        }
+
+        var newBuff = new ActiveBuff
+        {
+            DefinitionId = buffId,
+            TimeRemaining = resolvedDuration,
+            MagnitudeModifier = magnitudeModifier
+        };
+        instances.Add(newBuff);
+        RebuildStats();
+    }
+
+    public void RemoveBuff(string buffId)
+    {
+        if (_activeBuffs.Remove(buffId))
+        {
+            RebuildStats();
+        }
+    }
+
+    private void TickBuffs(float dt)
+    {
+        bool anyRemoved = false;
+        var expiredKeys = new List<string>();
+
+        foreach (var (id, instances) in _activeBuffs)
+        {
+            for (int i = instances.Count - 1; i >= 0; i--)
+            {
+                var active = instances[i];
+                if (active.TimeRemaining.HasValue)
+                {
+                    active.TimeRemaining = active.TimeRemaining.Value - dt;
+                    if (active.TimeRemaining.Value <= 0f)
+                    {
+                        instances.RemoveAt(i);
+                        anyRemoved = true;
+                    }
+                }
+            }
+            if (instances.Count == 0)
+            {
+                expiredKeys.Add(id);
+            }
+        }
+
+        foreach (var id in expiredKeys)
+        {
+            _activeBuffs.Remove(id);
+        }
+
+        if (anyRemoved)
+        {
+            RebuildStats();
+        }
+    }
+
+    private void RebuildStats()
+    {
+        if (_charData == null) return;
+
+        _statBlock = _charData.BuildStatBlock();
+
+        foreach (var (id, instances) in _activeBuffs)
+        {
+            var buff = Buffs.BuffRegistry.Get(id);
+            if (buff == null) continue;
+
+            foreach (var active in instances)
+            {
+                foreach (var mod in buff.Modifiers)
+                {
+                    float scaledValue = ScaleModifierValue(mod.Value, mod.Type, active.MagnitudeModifier);
+                    _statBlock.AddModifier(new Stats.StatModifier(mod.Stat, mod.Type, scaledValue, Stats.ModifierSource.Buff, id));
+                }
+            }
+        }
+
+        UpdateDerivedFields();
+    }
+
+    private void UpdateDerivedFields()
+    {
+        if (_statBlock == null) return;
+
+        float oldMaxHp = MaxHealth;
+        float oldMaxFocus = MaxFocus;
+
+        MaxHealth          = (int)_statBlock.Get(Stats.StatId.MaxHp);
+        Speed              = _statBlock.Get(Stats.StatId.Speed);
+        PhysicalResistance = _statBlock.Get(Stats.StatId.PhysicalResistance);
+        MagicResistance    = _statBlock.Get(Stats.StatId.MagicResistance);
+        _evasion           = _statBlock.Get(Stats.StatId.Evasion);
+        MaxFocus           = _statBlock.Get(Stats.StatId.MaxFocus);
+        _focusRegen        = _statBlock.Get(Stats.StatId.FocusRegen);
+
+        if (MaxHealth != oldMaxHp)
+        {
+            CurrentHealth = Mathf.Min(CurrentHealth, MaxHealth);
+            EmitSignal(SignalName.HealthChanged, CurrentHealth);
+        }
+
+        if (MaxFocus != oldMaxFocus)
+        {
+            CurrentFocus = Mathf.Min(CurrentFocus, MaxFocus);
+            _maxFocusShield     = MaxFocus * BalanceConfig.Focus.ShieldFraction;
+            _currentFocusShield = Mathf.Min(_currentFocusShield, _maxFocusShield);
+            EmitSignal(SignalName.FocusChanged, GetAvailableFocus(), MaxFocus);
+            EmitSignal(SignalName.ShieldChanged, _currentFocusShield, _maxFocusShield);
+        }
+    }
+
+    private float ScaleModifierValue(float baseValue, Stats.ModifierType type, float magnitudeModifier)
+    {
+        if (type == Stats.ModifierType.Multiply)
+        {
+            float excess = baseValue - 1f;
+            return 1f + excess * magnitudeModifier;
+        }
+        else
+        {
+            return baseValue * magnitudeModifier;
+        }
     }
 }

@@ -11,5 +11,12 @@ public record FormData(
     float?    Duration   = null,
     float?    ZoneRadius = null,
     float?    TickRate   = null,
-    float?    Range      = null   // ONLY on forms of Self-targeting prototypes
+    float?    Range      = null,   // ONLY on forms of Self-targeting prototypes
+    int?      SubHits    = null,
+    float?    RampSpeed  = null,
+    int?      StackLimit = null,
+    float?    TriggerRadius = null,
+    float?    EotSlice   = null,
+    string?   DebuffEotId = null,
+    string?   BuffId     = null
 );

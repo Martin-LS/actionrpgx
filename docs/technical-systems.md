@@ -38,7 +38,7 @@
 | `EquipmentAugmentRegistry` | Static class | `All` dict, `Get(id)`, `GetAll()` — static catalog of available Equipment Augments. Currently 5 entries (retaliation, fortify, dash_reflex, ghost_step, mending). |
 | `RecipeType`        | C# enum     | Gear, Skill, SkillAugment, EquipmentAugment                   |
 | `CraftResult`       | C# enum     | Success, InsufficientMaterials, InventoryFull                  |
-| `RecipeRegistry`    | Static class| `All` dict, `Get(id)`, `ForSlot(ItemSlot)`, `ForType(RecipeType)` — currently **10 gear recipes** (sword/bow/wand + 3 hat types + 3 body types + ring, 1× common each) + **12 skill recipes** (5 player-facing prototypes: entity_burst/self_channeled_tick/self_duration_tick/self_burst/self_aura; plus 7 engine-proof: fixed_zone_burst, fixed_zone_tick, windup_burst, entity_debuff, tracked_tick, stackable_zone, triggered_zone_burst — all 1× common) + 3 SkillAugment recipes (magic_damage/slow/critical_strike, 1× common each) + 5 EquipmentAugment recipes (retaliation/fortify/dash_reflex/ghost_step/mending, 1× common each). |
+| `RecipeRegistry`    | Static class| `All` dict, `Get(id)`, `ForSlot(ItemSlot)`, `ForType(RecipeType)` — currently **10 gear recipes** (sword/bow/wand + 3 hat types + 3 body types + ring, 1× common each) + **11 skill recipes** (5 player-facing prototypes: entity_burst/self_channeled_tick/self_duration_tick/self_burst/self_aura; plus 6 engine-proof: fixed_zone_burst, fixed_zone_tick, entity_debuff, tracked_tick, stackable_zone, triggered_zone_burst — all 1× common) + 3 SkillAugment recipes (magic_damage/slow/critical_strike, 1× common each) + 5 EquipmentAugment recipes (retaliation/fortify/dash_reflex/ghost_step/mending, 1× common each). |
 | `EnemyData`         | C# record   | EnemyType (string), BaseSpeed, BaseHealth, ContactDamage, DamageInterval, PhysicalResistance (float), MagicResistance (float), ModelPath (string — GLB res:// path, defaults to enemy_generic.glb) |
 | `EnemyPoolEntry`    | Plain C#    | EnemyType (string), Count (int — spawn weight), Modifiers: ArmorBonus (int), HpBonus (int), SpeedBonus (int), DamageBonus (int). Applied to enemy instance at spawn on top of base `EnemyData` values. Currently all modifier fields are zero. |
 | `EotData`           | C# record   | Id (string), Name (string), ApplyChance (float 0–1), Duration (float seconds), IsDamageEot (bool), TickRate (float seconds — ignored when IsDamageEot = false), DamagePerTick (float — ignored when IsDamageEot = false), SlowFraction (float — speed reduction ratio, e.g. 0.75 for slow; 0 for others). |
@@ -275,7 +275,7 @@ Both paths call the same `FireAt` / `FireAtPosition` / `FireSelfBurst` methods w
 | `TrackedTick` | `tracked_tick` | 1 | Ticking zone that follows a target entity |
 | `TriggerZone` | `triggered_zone_burst` | 3 | Dormant trap, bursts on proximity |
 
-`fixed_zone_burst` and `windup_burst` are not zone nodes — they deal damage directly in `WeaponController.FireAtPosition` and have no persistent lifecycle.
+`fixed_zone_burst` is not a zone node — it deals damage directly in `WeaponController.FireAtPosition` and has no persistent lifecycle.
 
 ### Spawn
 
@@ -332,7 +332,7 @@ All zones: `Duration > 0 && _elapsed >= Duration` → `QueueFree()`. `Duration =
 
 ### Scope
 
-Applies to all skills with the `AoE` tag — currently `self_channeled_tick`, `self_duration_tick`, `self_burst`, `tracked_tick`, `fixed_zone_tick`, `fixed_zone_burst`, `windup_burst`, `stackable_zone`, `triggered_zone_burst`. Single-target skills (`entity_burst`, `entity_debuff`) and `self_aura` carry no `AoE` tag and are unaffected.
+Applies to all skills with the `AoE` tag — currently `self_channeled_tick`, `self_duration_tick`, `self_burst`, `tracked_tick`, `fixed_zone_tick`, `fixed_zone_burst`, `stackable_zone`, `triggered_zone_burst`. Single-target skills (`entity_burst`, `entity_debuff`) and `self_aura` carry no `AoE` tag and are unaffected.
 
 ### Formula
 

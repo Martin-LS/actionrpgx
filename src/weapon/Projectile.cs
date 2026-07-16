@@ -16,14 +16,15 @@ public partial class Projectile : Area3D
 
     private const float SplashRadius = 60f;
 
+    public int                    SubHits = 1;
     private Vector3               _direction;
     private float                 _traveled;
     private float                 _critMultiplier = 1.0f;
-    private List<(string Id, float Chance)> _eotIds = new();
+    private List<(string Id, float Chance, float Slice)> _eotIds = new();
     private readonly HashSet<ulong> _hitIds = new();
 
     public void Initialize(Vector3 direction, float damage, Items.DamageType type = Items.DamageType.Physical,
-        List<(string Id, float Chance)>? eots = null, bool hasSplash = false, bool hasPierce = false, float critMultiplier = 1.0f)
+        List<(string Id, float Chance, float Slice)>? eots = null, bool hasSplash = false, bool hasPierce = false, float critMultiplier = 1.0f, int subHits = 1)
     {
         _direction      = direction.Normalized();
         Damage          = damage;
@@ -32,6 +33,7 @@ public partial class Projectile : Area3D
         HasSplash       = hasSplash;
         HasPierce       = hasPierce;
         _critMultiplier = critMultiplier;
+        SubHits         = subHits;
     }
 
     public override void _Ready()
@@ -108,11 +110,11 @@ public partial class Projectile : Area3D
 
     private void ApplyEots(Enemies.EnemyController enemy)
     {
-        foreach (var (eotId, chance) in _eotIds)
+        foreach (var (eotId, chance, slice) in _eotIds)
         {
             var eot = EotRegistry.Get(eotId);
-            if (eot != null && GD.Randf() < chance)
-                enemy.ApplyEot(eot, _critMultiplier);
+            if (eot != null && GD.Randf() < (chance / SubHits))
+                enemy.ApplyEot(eot, _critMultiplier, slice);
         }
     }
 }
