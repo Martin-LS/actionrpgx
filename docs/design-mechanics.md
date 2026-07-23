@@ -63,6 +63,20 @@ The **skill bar** on the run HUD shows the slotted skill, its cooldown state, an
 
 Damage output scales through the archetype's primary stat growth — a Warrior gains Strength faster per level, which converts to higher PhysicalDamage; a Mage gains Intelligence faster, which converts to higher MagicDamage. A mismatched build (e.g. Warrior equipping a magic-type skill) is viable but produces lower output because the stat multiplier for that damage type grows slowly. The weapon bonus never blocks or reduces mismatched output — only the stat multiplier is weaker. See Archetype Stat Multipliers for the full formula.
 
+### Skill Concurrency & Cast Timing
+
+**One animation, overlapping damage.** There is no global cooldown — each of the 5 slots runs its own independent cooldown/drain. Manual Active (OneShot) skills are **not** mutually exclusive: their damage all resolves, and only **one attack animation renders at a time** (a cosmetic constraint — one OneShot animation plays; overlapping casts still deal their damage). This overlap is exactly what lets a stacked duplicate build rapid-fire (see below). Dodge roll is the universal hard-cancel (see Dodge).
+
+**Channels are the one exclusive case.** A channel (e.g. `self_channeled_tick`, a `Melee`-tagged spin) is a held, looping body animation. Firing any **body-attack** skill while channeling **cancels the channel** and plays the attack — the same mechanism by which Dodge cancels a channel. *Only* body-attacks cancel it: toggling an aura or dropping an animation-free Self/Position effect **does not** — those coexist with the channel, since they don't compete for the body. This deliberately forbids manual "spin-and-slash": a spin's damage and a swing's damage can never resolve at once.
+
+This is the genre-consensus behaviour (PoE 1/2, Diablo 3/4, Last Epoch all resolve manual casts this way). The "spin and blast" fantasy is delivered in those games by **triggers** (PoE Cyclone + Cast-on-Crit) or **instant utility** (Diablo Whirlwind + Shouts), never by holding two attack buttons. Manual animation layering is an explicit **non-goal**; automated triggers — not currently in the game — are the only path to true concurrency if ever added. The single persistent-concurrency carve-out that *does* exist today is the **toggled aura** (reserves Focus, runs alongside everything — see Focus → Aura reservation).
+
+**Duplicate & same-delivery skills are allowed and encouraged.** Slotting five `entity_burst`-derived skills is a legitimate "signature-attack toolkit" build — each slot a different *craft* (Fire, Cold, heavy, Salvo, slow-debuff) switched for the situation. Because per-slot cooldowns are independent and OneShot casts overlap, a stack **rapid-fires**: it front-loads a burst and raises tempo. What it does **not** do is raise *sustained* DPS — and it costs all five slots (no zones, auras, or utility). Sustained output is held by the shared Focus pool, below.
+
+**The shared Focus pool is the single sustained-output throttle.** Every skill costs Focus — cheap spammables included; **nothing is "free."** Sustained output = `regen ÷ cost`, and since all copies drink from one shared pool, a 5× stack drains it ~5× faster and settles back to the *same* regen-bound sustained rate as a single copy. Per-slot **cooldown is a rhythm/pacing lever only** — bypassable by stacking, which is fine, because Focus does the real gating. **Design principle: a skill's Focus cost, not its cooldown, is its true sustained-output throttle; cooldown only sets the skill's rhythm.** This supersedes any "no-duplicate" inventory rule — duplication is a build, not an exploit.
+
+**A duplicate stack buys a burst — and the alpha strike is the same phenomenon.** Focus caps *sustained* output but not the *instantaneous* dump: several heavy casts fired at once is a one-time nuke bounded only by the current pool. This is a **legitimate playstyle** (the panic-burst / boss-burst fantasy `self_burst` already embodies), not an exploit. It is guarded only per-skill, where a single dump could trivialise a fight — via a Focus cost high enough that the casts don't fit in one pool, or a short wind-up on the heaviest bursts.
+
 ### Targeting
 
 **Entity skills** fire at the **locked target** — a single enemy that has a persistent target marker on them. **Self skills** ignore the lock entirely and always fire from the player. The targeting system is always active; players on keyboard experience it as "skills just work." Controller players can redirect the lock with the right stick.
@@ -106,9 +120,11 @@ Every skill declares one of three targeting shapes. The targeting system resolve
 | **Self** | Skill's own `Range` field | The skill defines its own radius — a wide Self-Duration-Tick radius on a sword warrior should not be shrunk by the sword's 1.5-tile reach |
 
 - **Entity skills always use Effective Range.** A new Entity skill must not define a separate cast range — it inherits the character's gear-driven range automatically.
-- **Position, Self, and Channeled skills always use their own `Range` field.** This is a skill property, not a gear property. Weapon and armour have no influence on zone placement distance or self/channeled radius.
-- **Buffs that modify range** (e.g. a future Shout skill) must call `AddRangeBuffBonus` / `RemoveRangeBuffBonus` on the player — they affect Effective Range, which propagates to Entity skills only. Position/Self/Channeled ranges are unaffected.
+- **Range source follows targeting *shape*, never skill *type*.** A skill's type (Active, Channeled, Aura) is irrelevant to range — only its shape decides. **Position and Self skills always use their own `Range` field** (a skill property, not a gear property; weapon and armour have no influence on zone placement distance or self radius). A Channeled skill simply inherits whichever rule its shape dictates: today's only channel (`self_channeled_tick`) is Self-shaped, so it uses its own `Range`; a future **Entity**-shaped channel (e.g. a beam on the locked target) would use Effective Range like any other Entity skill.
+- **Buffs that modify range** (e.g. a future Shout skill) must call `AddRangeBuffBonus` / `RemoveRangeBuffBonus` on the player — they affect Effective Range, which propagates to Entity-shaped skills only. Position and Self ranges are unaffected.
 - **Out-of-range clamping (Position skills):** if the cursor is beyond the skill's cast range, the zone lands at the range boundary in the direction of the cursor — never blocked, never silent. This matches standard ARPG behaviour (Diablo 4, PoE).
+
+> **Considered and rejected (2026-07-23): weapon-limited Position placement.** Capping (or replacing) a Position skill's placement range with the weapon's reach — so a sword warrior could only drop zones/traps at melee range — was discussed and cut. Reasons: (1) it plays weird/unfun (a build's whole zone/trap category shrinks to melee reach purely from holding a sword); (2) it violates the one-source-per-skill principle above — a skill draws its cast range from exactly one source, and for Position that source is the skill, never the weapon. Position placement distance stays fully weapon-independent.
 
 ---
 
@@ -190,7 +206,7 @@ Focus is the universal skill resource. All archetypes spend Focus to fire skills
 
 | Skill | Cost |
 |---|---|
-| entity_burst | 5 Focus (flat) — effectively free; regens faster than you spend |
+| entity_burst | 5 Focus (flat, placeholder) — low but non-trivial; a single copy is near-sustainable, and a rapid duplicate stack still drains the shared pool |
 | self_burst | 20 Focus (flat) — meaningful burst cost |
 | self_channeled_tick | 12 Focus/sec (drain while held) — expensive over time, requires management |
 | self_duration_tick | 15 Focus (flat, on activation) — burst cost like self_burst; ticks for duration then cooldown |
